@@ -1,0 +1,32 @@
+# velocity is taken from encoder values
+# each sample contains displacement (dx, dy, dphi) and velocity (vx, vy, vphi)
+# velocity is provided in RCS, worldModel needs to transform it based on current position
+# this test case verifies the transformation
+# 
+# configuration
+CONFIGURE  settlingTime            0.0
+CONFIGURE  visionOwnWeightFactor   0.0
+# input stream, first vision to initialize validity and position
+VISION           0.000000      0.000000   0.00   0.00   1.57   0.95
+CALCULATE        0.100000
+ENCODER_RCS      0.200000      0.200000   0.50  -0.50  -0.78   0.50  -0.50  -0.78
+ENCODER_RCS      0.200000      0.200000   0.50  -0.50  -0.79   0.50  -0.50  -0.78
+CALCULATE        0.300000
+ENCODER_RCS      0.400000      0.400000   0.50  -0.50  -0.78   0.50  -0.50  -0.78
+ENCODER_RCS      0.400000      0.400000   0.50  -0.50  -0.79   0.50  -0.50  -0.78
+CALCULATE        0.500000
+ENCODER_RCS      0.600000      0.600000   0.50  -0.50  -0.78   0.50  -0.50  -0.78
+ENCODER_RCS      0.600000      0.600000   0.50  -0.50  -0.79   0.50  -0.50  -0.78
+CALCULATE        0.700000
+ENCODER_RCS      0.800000      0.800000   0.50  -0.50  -0.78   0.50  -0.50  -0.78
+ENCODER_RCS      0.800000      0.800000   0.50  -0.50  -0.79   0.50  -0.50  -0.78
+CALCULATE        0.900000
+# results               t valid       x      y    phi     vx     vy   vphi
+RESULT           0.100000     1    0.00   0.00   1.57   0.00   0.00   0.00
+RESULT           0.300000     1    0.50  -1.21   0.00  -0.50  -0.50  -0.78  
+# over the time between t=0.1 and t=0.3, the speed was (+0.50, -0.50), but when applied to  
+# new position, it is (-0.50, -0.50) so one might consider this 'feed-forward'?
+RESULT           0.500000     1   -0.71  -1.71   4.71  -0.50   0.50  -0.78
+RESULT           0.700000     1   -1.21  -0.50   3.14   0.50   0.50  -0.78
+RESULT           0.900000     1    0.00   0.00   1.57   0.50  -0.50  -0.78
+

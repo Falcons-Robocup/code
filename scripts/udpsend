@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+# JFEI 2015-12-01
+# intended for testing purposes only - python is not to be used for high-performance code, instead please refer to C++ facilities::networkUDP
+# based on:
+#  * https://wiki.python.org/moin/UdpCommunication
+#  * http://svn.python.org/projects/python/trunk/Demo/sockets/mcast.py
+
+
+import socket
+import argparse
+import sys, os
+import time
+import struct
+
+
+
+class UDPsender():
+    """
+    Class to easily send data (strings) via UDP.
+    Supports multicasting.
+    """
+    def __init__(self, address, port, multicast = False, ttl = 2):
+        self.address = address
+        self.port = port
+        self.multicast = multicast
+        self.ttl = ttl
+        # Setup the socket
+        addrinfo = socket.getaddrinfo(self.address, None)[0]
+        s = socket.socket(addrinfo[0], socket.SOCK_DGRAM)
+        if self.multicast:
+            ttl_bin = struct.pack('@i', self.ttl)
+            if addrinfo[0] == socket.AF_INET: # IPv4
+                s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl_bin)
+            else:
+                s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_MULTICAST_HOPS, ttl_bin)
+        self.socket = s
+          
+    def burstSend(self, message, count = 1, port = None):
+        """
+        Send a message, optionally in a miniburst.
+        Port is either used as specified during construction, but can be overridden.
+        """
+        sock = self.socket
+        if port == None:
+            port = self.port
+        for c in range(count):
+            sock.sendto(message, (self.address, port))
+            time.sleep(0.001)
+
+
+if __name__ == '__main__':
+
+    # Determine default maxhops (time-to-live) determine on simulation mode or not
+    ttl = 5
+    if os.environ.has_key("SIMULATED") and os.environ["SIMULATED"] == "1":
+        ttl = 0
+
+    # Argument parsing.
+    parser     = argparse.ArgumentParser(description='generic tool to send string(s) over UDP')
+    parser.add_argument('-a', '--address', help='IP address to use', default=None, type=str, required=True)
+    parser.add_argument('-p', '--port', help='port to use', default=None, type=int, required=True)
+    parser.add_argument('-m', '--multicast', help='multicast mode', action='store_true')
+    parser.add_argument('-b', '--burst', help='number of burst repeats (default 0)', default=0, type=int)
+    parser.add_argument('-t', '--ttl', help='number of network hops (default %d)'%(ttl), default=ttl, type=int)
+    parser.add_argument('messages', nargs='*', action='store', type=str)
+    args       = parser.parse_args()
+
+    # Setup the UDP sender class
+    u = UDPsender(args.address, args.port, args.multicast, args.ttl)
+    
+    # Send message(s)
+    if len(args.messages) == 0:
+        # copy stdin
+        print "reading lines from stdin ..."
+        while True:
+            try:
+                line = raw_input()
+            except:
+                break
+            if len(line) == 0:
+                break
+            u.burstSend(line.strip(), 1 + args.burst)
+    else:
+        # send the strings specified on command line option
+        for msg in args.messages:
+            u.burstSend(msg, 1 + args.burst)
+

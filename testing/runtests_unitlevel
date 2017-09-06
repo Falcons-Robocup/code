@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# Unittests: component level rosmake -t (using GoogleTestFramework).
+
+
+
+# start a roscore 
+processStopAll
+processStart roscore &
+
+# re-use the registered list of components in falconsbuild.sh
+# note that most components don't have an explicit test suite
+
+# JFEI ticket #328: diagnostics test suite broken
+rosmake --test-only `package_list | grep -v diagnostics` 
+retval=$?
+
+# stop roscore silently 
+# TODO did not succeed in making it silent ...
+(
+    processStop roscore
+    processStopAll
+) >/dev/null 2>&1 
+
+# exit
+exit $retval
+

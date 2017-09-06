@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# Mapping of process name to the actual commands.
+# NOTE: do NOT use tabs !!
+# 
+# JFEI 2015-11-11
+# MKOE 2016-05-17 added the definition of interactiveFieldSetup.py
+# MKOE 2016-12-27 added tpCoach = teamplay_coach  to provide list of behaviors/actions etc to appl running on Coach
+# 
+
+
+
+( 
+cat << EOF
+analyzer         	rosrun analyzer analyzerRealtime.py
+commandGui    		python /home/robocup/falcons/code/packages/coachCommands/commandGui.py
+commandChannelCoach     rosrun robotControl commandChannelCoach.py
+commandChannelRobot     rosrun robotControl commandChannelRobot.py
+cmdChanProcFieldSetup   rosrun robotControl fieldSetupCommandProcessor.py
+diagRecvNew      	rosrun diagnostics diagCoachListener
+frontVisionNode         rosrun frontVision frontVisionNode
+globalConfig     	rosrun configManager globalConfig 
+halCompass              rosrun peripheralsInterface compass
+halIoBoard              rosrun peripheralsInterface ioBoard
+halMotors               rosrun peripheralsInterface motors
+halMwSim                rosrun peripheralsInterface peripherals_sim.py
+heartbeat        	rosrun heartBeat heartBeatNode
+interactiveFieldSetup   rosrun teamplay interactiveFieldSetup.py
+logBag           	bag_matchlogger.sh
+pp               	rosrun pathPlanning pathplanningNode
+refboxGui        	startRefbox
+refboxRelay      	rosrun refbox refboxRelay
+robotControl     	rosrun robotControl robotControlDaemon
+robotHealth      	rosrun robotControl robotHealth
+roscore          	roscore
+simBall          	rosrun simulator simball
+simRobot         	rosrun simulator simrobot
+simTeam          	rosrun simulator simteam
+simVisOld        	rosrun simulator visualize
+sp               	rosrun shootPlanning shoot_planner
+tp               	rosrun teamplay teamplay_main
+tpCoach                 rosrun teamplay teamplay_coach
+visOld           	rosrun visualizer visualize_matchlog.py
+visionNode       	rosrun vision visionNode
+wm               	rosrun worldModel worldModelNode
+wmSync           	rosrun worldModelSync worldModelSyncNode
+wmSyncCoach      	rosrun worldModelSync worldModelSyncNodeCoach
+visualizer          rosrun visualizer visualizer
+EOF
+) | sed 's/#.*//' # filter comments, like these ;)
+

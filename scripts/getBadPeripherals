@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# Used in diagnostics via robotHealth
+# 
+# JFEI 2016-01-19 creation
+# 
+
+
+if [ "$SIMULATED" = 1 ]; then
+    exit 0
+fi
+
+numMotors=`ls -altr1 /dev/ttyMotor* 2>/dev/null | wc -l`
+numExpected=5
+if [ "$TURTLE5K_ROBOTNUMBER" = 1 ]; then
+    numExpected=3
+fi
+
+if [ "$numMotors" = 0 ]; then
+    echo "no motors found"
+elif [ "$numMotors" = 1 ]; then
+    echo "only 1 motor found"
+elif [ "$numMotors" -lt $numExpected ]; then
+    echo "only $numMotors motors found"
+elif [ "$numMotors" != $numExpected ]; then
+    echo "too many motors ($numMotors) found"
+fi
+
+
+numCompass=`ls -altr1 /dev/ttyCompass* 2>/dev/null | wc -l`
+if [ "$numCompass" = 0 ]; then
+    echo "no compass found"
+elif [ "$numCompass" != 1 ]; then
+    echo "multiple compasses found"
+fi
+

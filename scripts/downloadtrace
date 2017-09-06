@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Andre Pool, April 2015
+
+robot=$1
+
+if [ -z "$robot" ]; then
+   echo "provide robot name"
+   exit 1
+fi
+
+tracedir=`ssh $robot ls -ltr /var/tmp/ | grep falcons_control_201 | awk '{print $9}' | tail -n 1`
+
+tracedir=/var/tmp/$tracedir
+echo "remote tracedir: $tracedir"
+
+scp -r $robot:$tracedir /var/tmp

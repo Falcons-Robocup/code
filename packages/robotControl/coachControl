@@ -1,0 +1,118 @@
+#!/bin/bash
+#
+# This script controls the on-coach processes.
+# It replaces old falcons_control.py for REAL mode.
+# (For simulation, one should still use falcons_control.py).
+#
+# JFEI 2015-12-29 creation
+# MKOE 2016-05-17 change startup check needed for interactiveFieldSetup from reasoning_viewer file existence to ifs file existance
+
+
+
+# option parsing
+teamchar=A
+interactive=1
+tracing=1
+while getopts "bqt" opt; do
+    case "$opt" in
+    b)  teamchar=B
+        interactive=0
+        ;;
+    q)  interactive=0
+        ;;
+    t)  tracing=0
+        ;;
+    esac
+done
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+jobnames="${teamchar}0_coachPart1"
+# for teamB, run only part1 and not part2 
+# (use case: for 2-team simulation, we only want to see teamA visualizer etc, not teamB, but teamB does need refboxRelay etc)
+if [ $teamchar != "B" ]; then
+    jobnames="$jobnames ${teamchar}0_coachPart2"
+fi
+
+# simulation mode? wrapping simControl will set SIMULATED=1
+if [ -z "$SIMULATED" ]; then
+    export SIMULATED=0
+fi
+
+# somewhat graceful exit
+function finish {
+    # first kill the logger, to prevent active .bag file with no content
+    (
+        recordnode=`rosnode list | grep record`
+        if [ -n "$recordnode" ]; then
+            rosnode kill $recordnode
+        fi
+        sleep 3
+    ) > /dev/null 2>&1
+    # stop the jobs
+    for j in $jobnames; do
+        jobStop $j
+    done
+    # stop all processes
+    processStopAll
+}
+trap finish EXIT
+trap finish SIGINT
+
+
+# first time (teamA) only
+if [ $teamchar != "B" ]; then
+
+    # make logging directory for stdout, stderr and tracing
+    createLogdir
+
+    if [ "$tracing" = 1 ]; then
+        # enable tracing
+        set_tracing_trigger.sh `newest_logdir.py`
+    fi
+
+    # start roscore separately and sleep briefly so no nodes will complain about master not yet being available
+    processStart roscore &
+    sleep 3
+fi
+
+# start coach processes
+export TURTLE5K_TEAMNAME=team$teamchar
+export ROS_NAMESPACE=${TURTLE5K_TEAMNAME}
+for j in $jobnames; do
+    jobStart $j &
+done
+
+# old-teamplay-specific cmdChannel
+if [ -f "$TURTLEROOT/config/ifs" ]; then
+    processStart commandChannelCoach &
+    processStart interactiveFieldSetup &
+fi
+
+# block?
+if [ "$interactive" = "0" ]; then
+    # called from simControl -- sleep forever (until simControl stops)
+    wait
+else
+    # prompt
+    while :; do
+        echo "  q   : quit"
+        echo "  r   : start refbox (2015) application"
+        echo -n "input command: "
+        read ans
+        if [ "$ans" = "q" ]; then
+            echo "shutting down..."
+            break
+        fi
+        if [ "$ans" = "r" ]; then
+            (
+                processStart refboxGui &
+            ) >/dev/null 2>&1
+        fi
+    done
+fi
+
+
+
+
+
+

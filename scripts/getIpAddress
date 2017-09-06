@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# Used in diagnostics via robotHealth
+# 
+# JFEI 2016-01-19 creation
+# 
+
+
+result=`ifconfig -a | grep -A 1 wlan | tail -1 | awk '{print $2}' | sed 's/.*://'`
+# fallback to eth?
+if [ "$result" = MULTICAST ]; then
+    result=`ifconfig -a | grep -A 1 eth | tail -1 | awk '{print $2}' | sed 's/.*://'`
+fi
+echo $result
+

@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# list of packages
+# used in falconsbuild.sh and runtests_unitlevel
+# JFEI 2016-01-24
+
+
+(
+cat << EOF
+rosMsgs
+analyzer
+common
+configManager
+pathPlanning
+worldModel
+worldModelSync
+compass
+networkUDP
+refbox
+simulator
+shootPlanning
+diagnostics
+peripheralsInterface
+yoctoLib
+teamplay
+vision
+frontVision
+robotControl
+visualizer
+EOF
+) | sed 's/#.*//' # filter comments, like these ;)
+

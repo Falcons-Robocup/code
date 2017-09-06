@@ -1,0 +1,22 @@
+<package>
+  <description brief="common">
+
+     common
+
+  </description>
+  <author>Jan Feitsma</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/TODO</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+
+  <export>
+  	<cpp cflags="-I${prefix}/include/ext"
+             lflags="-L${prefix}/lib -Wl,-rpath,${prefix}/lib -lFalconsCommon"/>
+    <python path="${prefix}/src"/>
+  </export>
+
+</package>
+
+

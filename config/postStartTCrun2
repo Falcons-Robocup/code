@@ -1,0 +1,7 @@
+if [ ${TURTLE5K_ROBOTNUMBER} = 4 ]; then
+    robotCLI.py scenario TCrun2_role1
+else
+    robotCLI.py scenario TCrun2_role2
+fi
+
+

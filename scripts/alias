@@ -1,0 +1,146 @@
+#!/bin/bash
+
+
+alias aptsearch="apt-cache search $@"
+alias aptshow="dpkg -l $@"
+
+
+alias ntpCheck="ntpq -p"
+
+alias build="falconsbuild.sh --pre-clean"
+alias setCam="$TURTLEROOT/packages/vision/setCam"
+alias alone="cd $TURTLEROOT/packages/vision/alone && make"
+alias alonef="cd $TURTLEROOT/packages/vision/alone && make clean && make"
+alias aloneff="cd $TURTLEROOT/packages/frontVision/alone && make clean && make"
+alias remotev="cd $TURTLEROOT/packages/vision/remote && make"
+alias remotevf="cd $TURTLEROOT/packages/vision/remote && make clean && make"
+alias front="cd $TURTLEROOT/packages/frontVision/alone && make"
+alias frontf="cd $TURTLEROOT/packages/frontVision/alone && make clean && make"
+alias cdcmps="cd $TURTLEROOT/tools/cmps10Calibrate"
+alias cdv="cd $TURTLEROOT/packages/vision"
+alias cdf="cd $TURTLEROOT/packages/frontVision"
+alias cds="cd $TURTLEROOT/scripts"
+alias cdm="cd $TURTLEROOT/peripherals/xmegaMotor/linux"
+alias ne="nedit-nc $@"
+alias cdconf="cd $TURTLEROOT/config"
+alias cdc="cd $TURTLEROOT/config"
+alias dicksetter="rosrun testsuite topic_setter_menu.py"
+alias dynamic_reconfigure="rosrun rqt_reconfigure rqt_reconfigure"
+alias start_refbox="cd ~/falcons/data/external/refbox; java -jar rb-gui-main-2013-2.02.jar"
+alias harry="python $TURTLEROOT/packages/pathPlanning/scripts/liveplot.py"
+alias subfab="cd $TURTLEROOT && git pull && fb"
+alias tmpl="cd $TURTLEROOT/packages/teamplay && rosmake -s"
+alias rgrep="$TURTLEROOT/scripts/rgrep"
+alias behavior3="google-chrome ~/falcons/data/external/behavior3/build/index.html"
+
+alias fb='pushd $TURTLEROOT; falconsbuild.sh; popd'
+alias fc='cd $TURTLEROOT'
+alias fk='echo "FALCONS KILL";$TURTLEROOT/packages/coachCommands/falcons_kill.sh'
+alias h='history'
+alias l='ls -altr1'
+alias logcd='cd `ls -1dt /var/tmp/falco* | head -1`'
+alias apicd='cd $TURTLEROOT/packages/peripheralInterface/'
+alias cdfc='cd ~/falcons/code'
+alias cdfs='cd ~/falcons/code/scripts'
+alias td='cd ~/falcons/teamplayData'
+alias tp='cd ~/falcons/code/packages/teamplay'
+alias logtp='logcd; nedit trace_A?_tp*'
+
+alias pingg='ping www.google.com'
+alias wifi="sudo gnome-control-center"
+alias wifils="nmcli device wifi list"
+alias wifishow="nmcli c show"
+alias wifis="gnome-control-center"
+alias wific="sudo nm-connection-editor"
+alias wifics="nm-connection-editor"
+
+alias cmake="echo \"Falcons do not use cmake, we use rosmake instead.\""
+
+# following do not work on ubuntu 12.04 :-(
+alias wifirobotica="nmcli device wifi connect \"ROBOTICA 2015\""
+alias wififalcon="nmcli device wifi connect ASMLFalcons password asmlasml"
+
+# for udp pakkets to falconscontrol and svn update through fiction
+alias addfiction="sudo route add default gw 172.16.74.11"
+alias delfiction="sudo route del default gw 172.16.74.11"
+alias addkoekwous="sudo route add default gw 172.16.74.15"
+alias delkoekwous="sudo route del default gw 172.16.74.15"
+alias svncon="addfiction 2>/dev/null || ping svn"
+alias svndis="delfiction"
+
+# ssid alias michel
+alias ssidma="sudo nmcli c up id \"MSL_FIELD_A_a\""
+alias ssidmb="sudo nmcli c up id \"MSL_FIELD_A_b\""
+alias ssidfa="sudo nmcli c up id \"Falcons_A_a\""
+alias ssidfb="sudo nmcli c up id \"Falcons_A_b\""
+
+alias vlog="logcd && tail -f st*vision*" 
+
+# run the complete testsuite (v: with visualization) 
+alias runtests="$TURTLEROOT/testing/runtests" 
+alias runtestsv="$TURTLEROOT/testing/runtests -v" 
+
+alias diggoogle="dig @172.16.74.1 www.google.com"
+
+# useful GIT shortcuts
+alias gitdiff="git diff origin/HEAD HEAD"
+
+# useful GIT shortcuts for teamplayData repository
+alias gpull="cd ~/falcons/code/ && git pull && cd ~/falcons/teamplayData/ && git pull && cd ~/falcons/code/"
+alias gpush="cd ~/falcons/code/ && git push && cd ~/falcons/teamplayData/ && git push && cd ~/falcons/code/"
+
+# shell functions (alias does not support parameter interpretation when executing the alias, so for this we need shell function
+function reaslog() { 
+
+    #cd to latest logdirectory
+    cd `ls -1dt /var/tmp/falco* | head -1`
+
+    if [[ $1 = "-h" ]]; then
+        echo "Usage: "
+        echo "<n> is Robot number, if not specified the env variable TURTLE5K_ROBOTNUMBER will be used"
+        echo "$0 t <n>  tail the Trace log"
+        echo "$0 o <n>  tail the stdout log"
+        echo "$0 e <n>  tail the stderr log"
+        echo "$0 ct <n>  cat the Trace log"
+        echo "$0 co <n>  cat the stdout log"
+        echo "$0 ce <n>  cat the stderr log"
+    fi;
+    if [[ $2 = "" ]]; then
+        ROBOTNR=${TURTLE5K_ROBOTNUMBER} 
+    else
+        ROBOTNR=${2}
+    fi;
+    if [[ $1 = "t" ]]; then
+        type="trace"
+        latestfile=`ls -t ${type}_A${ROBOTNR}_tpReas*.txt -1 | head -1`
+        tail -n40 -f ${latestfile} | stdbuf -o0 cut -f2 -d'>' | cut -f4- -d' '
+    fi;
+    if [[ $1 = "ct" ]]; then
+        type="trace"
+        latestfile=`ls -t ${type}_A${ROBOTNR}_tpReas*.txt -1 | head -1`
+        cat ${latestfile} | stdbuf -o0 cut -f2 -d'>' | cut -f4- -d' '
+    fi;
+    if [[ $1 = "o" ]]; then
+        type="stdout"
+        latestfile=`ls -t ${type}_A${ROBOTNR}_tpReas*.txt -1 | head -1`
+        tail -n40 -f ${latestfile}
+    fi;
+    if [[ $1 = "co" ]]; then
+        type="stdout"
+        latestfile=`ls -t ${type}_A${ROBOTNR}_tpReas*.txt -1 | head -1`
+        cat ${latestfile}
+    fi;
+    if [[ $1 = "e" ]]; then
+        type="stderr"
+        latestfile=`ls -t ${type}_A${ROBOTNR}_tpReas*.txt -1 | head -1`
+        tail -n40 -f ${latestfile}
+    fi;
+    if [[ $1 = "ce" ]]; then
+        type="stderr"
+        latestfile=`ls -t ${type}_A${ROBOTNR}_tpReas*.txt -1 | head -1`
+        cat ${latestfile}
+    fi;
+
+}
+
+

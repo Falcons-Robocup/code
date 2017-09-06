@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# Used in tracing to figure out which file name to use.
+# This script is not supposed to be run standalone!
+#
+# Process tree typically looks like this (ps axf):
+#  3219 pts/26   S      0:00          |   |   \_ /bin/bash /home/robocup/falcons/code/packages/processManager/processStart A0 diagRecvNew
+#  3236 pts/26   S      0:00          |   |       \_ /bin/bash /home/robocup/falcons/code/packages/coachCommands/outputwrapper2 /var/tmp/falcons_control_20160225_193846 rosrun diagnostics diagCoachListener
+#  3241 pts/26   Sl     0:00          |   |           \_ /home/robocup/falcons/code/packages/facilities/diagnostics/bin/diagCoachListener
+#  3262 pts/26   S      0:00          |   |               \_ sh -c getProcessId
+#  3263 pts/26   S      0:00          |   |                   \_ /bin/bash /home/robocup/falcons/code/scripts/getProcessId
+#
+# so we need to traverse a few parents up, then get the last word, in this case 'diagRecvNew'.
+# 
+
+# JFEI 2016 feb creation
+# 
+
+
+function getPpid
+{
+    stat=($(</proc/$1/stat))
+    ppid=${stat[3]}  
+    echo $ppid
+}
+
+pid=$$
+maxdepth=6
+for i in `seq 1 $maxdepth` ; do
+    pid=$(getPpid $pid)
+    pattern=`printf "^robocup %6d " $pid`
+    output=`ps -ef | grep "processStart " | grep -v "grep processStart" | grep "$pattern" | awk '{print $NF}'`
+    if [ ! -z "$output" ]; then
+        echo $output
+        exit 0
+    fi
+done
+
+echo "unknown$$"
+

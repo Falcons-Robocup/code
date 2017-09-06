@@ -1,0 +1,149 @@
+#!/bin/bash
+#
+# Description:  Health check, can be called manually or via falcons_control
+#
+#
+# MKOE 20150421 first release to repos
+# MKOE 20150505 added serial port check, placeholder for battery health and colorization (see #147)
+# MKOE 20150526 added CPU clock to find out if downclock is still okay
+# MKOE 20150623 clarify that CPU clock is BIOS CPU, added diskspace status, output more compact
+# MKOE 20150625 show the latest battery value from batterylog
+# MKOE 20150630 show the timestamp of the batteryvalue
+
+#
+# 
+
+BATLOG="$TURTLEROOT/packages/power/logs/battery" 
+
+#Color stuff taken from: http://www.tldp.org/LDP/abs/html/colorizing.html
+prefix='\E['
+black='30;40m'
+red='31;43m'
+green='32;40m'
+yellow='33;40m'
+blue='34;40m'
+magenta='35;40m'
+cyan='36;40m'
+white='37;40m'
+underline='4m'
+end='0m'
+
+cecho ()                     # Color-echo.
+                             # Argument $1 = message
+                             # Argument $2 = color
+{
+local default_msg="No message passed."
+                             # Doesn't really need to be a local variable.
+
+message=${1:-$default_msg}   # Defaults to default message.
+color=${2:-$black}           # Defaults to black, if not specified.
+
+  echo -ne "${prefix}${color}"
+  echo -n "$message"
+  #tput sgr0                  #Reset text attributes to normal without clearing screen. 
+  echo -ne "${prefix}${end}"
+  return
+}  
+
+CPUBIOS=`sudo dmidecode | grep '^Processor' -A50 | grep 'Current' | nawk '{print $3}'`
+DISKUSAGE=`df | grep '/dev/sda1' | nawk '{print $5}' | sed 's/%//'`
+BATTERY=`tail -10 $BATLOG 2>/dev/null | egrep -v '^#' | tail -1 ` 
+BATDATE=`echo $BATTERY | cut -f1 -d';'`
+BATTIME=`echo $BATTERY | cut -f2 -d';' | cut -c1-4`   #keep only HHMM cut off SS
+# get the battery timestamp , calculate into Unix timestamp for comparison: 
+BATTIMETICKS=`date --date="$BATDATE $BATTIME" +"%s"`
+NOWTIMETICKS=`date +"%s"`
+#calculate the difference in timeticks between timestamps to see if the baterylog is recent (to cope with sometimes hangup of M4logger)
+TIMETICKDIFF=`expr $NOWTIMETICKS - $BATTIMETICKS`
+
+echo -n "  " 
+cecho "System"  $underline
+echo
+echo -n "    BIOS CPU clock: "
+if [ "$CPUBIOS" -lt "3200" ]
+then
+  cecho "${CPUBIOS}MHz" $red
+else
+  cecho "${CPUBIOS}MHz" $green
+fi
+
+echo -n " Diskusage: "
+if [ "$DISKUSAGE" -gt "90" ]
+then
+  cecho "${DISKUSAGE}%" $red
+else
+  cecho "${DISKUSAGE}%" $green
+fi
+echo
+echo -n "    M4: "
+echo $BATTERY  | nawk -v timetickdiff=$TIMETICKDIFF -v red=$red -v green=$green  -v end=$end -v pf='\033[' 'function cprint(color,value) {
+  printf("%s%s%s%s%s ",pf,color,value,pf,end)
+}
+BEGIN { FS=";"
+}
+{
+   printf("VIN: ")
+   if ($3 > 21) {  cprint( green, $3 " V" ) }
+   else         { cprint( red, $3 " V") }
+   printf("TEMP: ")
+   if ($8 < 60 && $8 > 0 ) {  cprint( green, $8 " C" ) }
+   else         { cprint( red, $8 ) }
+   printf("TIMESTAMP: ")
+   if (timetickdiff<130) { cprint(green, $1 " " $2) }
+   else         { cprint(red, $1 " " $2 " m4log issue!") }
+}
+END { 
+}'
+echo
+
+echo -n "  "
+cecho "I/O" $underline
+echo
+echo -n "    Compass "
+if [ -c /dev/ttyUSB0 ] 
+then
+  cecho "OK" $green
+else
+  cecho "Not detected!" $red
+fi
+echo
+echo -n "    Serial status: "
+
+dmesg | grep ttyS[4-9] | cut -f4- -d':' | nawk -v red=$red -v green=$green  -v end=$end -v pf='\033[' 'function cprint(color,value) {
+  printf("%s%s%s%s%s ",pf,color,value,pf,end)
+}
+BEGIN { s4=red;s5=red;s6=red;s7=red;s8=red;s9=red}
+/ttyS4/ { if ($10 =="16550A") s4=green  }
+/ttyS5/ { if ($10 =="16550A") s5=green  }
+/ttyS6/ { if ($10 =="16550A") s6=green  }
+/ttyS7/ { if ($10 =="16550A") s7=green  }
+/ttyS8/ { if ($10 =="16550A") s8=green  }
+/ttyS9/ { if ($10 =="16550A") s9=green  }
+END { 
+ cprint( s4,"ttyS4" )
+ cprint( s5,"ttyS5" )
+ cprint( s6,"ttyS6" )
+ cprint( s7,"ttyS7" )
+ cprint( s8,"ttyS8" )
+ cprint( s9,"ttyS9" )
+}'
+echo
+echo -n "  "
+cecho "Firmware" $underline
+echo "   TBD" 
+
+echo -n "  "
+cecho "Software" $underline
+echo
+/home/robocup/falcons/code/packages/coachCommands/print_robot_config | sed 's/^/    /'
+echo -n "    Number of svnstatus differences: " 
+NUMDIFFS=`cd $TURTLEROOT ; git status | egrep '^M' | wc -l `  
+
+if [ "$NUMDIFFS" -gt "0" ]
+then
+  cecho "${NUMDIFFS}" $red
+else
+  cecho "${NUMDIFFS}" $green
+fi
+echo
+

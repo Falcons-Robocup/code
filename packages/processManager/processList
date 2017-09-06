@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# List the running processes and their pids.
+# 
+# JFEI 2015-11-12
+# 
+
+
+
+# no argument parsing, just list all
+pgrep -a processStart
+
+

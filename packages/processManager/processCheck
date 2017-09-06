@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Check if a process is running, return its pid.
+# 
+# JFEI 2015-11-11
+# 
+
+
+
+# check argument
+if [ -z "$1" ]; then
+    echo "ERROR: this function expects a process id as argument"
+    exit 1
+fi
+
+# assume the process was started using the processStart utility; exclude self-grep
+ps -ef | grep "processStart.* $1$" | grep -v grep
+

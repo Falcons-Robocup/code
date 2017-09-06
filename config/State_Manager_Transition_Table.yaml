@@ -1,0 +1,2008 @@
+---
+- GameState: INVALID
+- - RefBoxSignal: INVALID
+  - - NewGameState: INVALID
+- - RefBoxSignal: STOP
+  - - NewGameState: INVALID
+- - RefBoxSignal: HALT
+  - - NewGameState: INVALID
+- - RefBoxSignal: CANCEL
+  - - NewGameState: INVALID
+- - RefBoxSignal: READY
+  - - NewGameState: INVALID
+- - RefBoxSignal: START
+  - - NewGameState: INVALID
+- - RefBoxSignal: RESTART
+  - - NewGameState: INVALID
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: INVALID
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: INVALID
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: INVALID
+- - RefBoxSignal: END_GAME
+  - - NewGameState: INVALID
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: INVALID
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: INVALID
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: INVALID
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: INVALID
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: INVALID
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: INVALID
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: INVALID
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: INVALID
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: INVALID
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: INVALID
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: INVALID
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: INVALID
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: INVALID
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: INVALID
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: INVALID
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: INVALID
+- - RefBoxSignal: DUMMY
+  - - NewGameState: INVALID
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: INVALID
+- GameState: NEUTRAL_STOPPED
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: READY
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: START
+  - - NewGameState: NEUTRAL_PLAYING
+- - RefBoxSignal: RESTART
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: NEUTRAL_PLAYING
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: NEUTRAL_PLAYING
+- - RefBoxSignal: READY
+  - - NewGameState: NEUTRAL_PLAYING
+- - RefBoxSignal: START
+  - - NewGameState: NEUTRAL_PLAYING
+- - RefBoxSignal: RESTART
+  - - NewGameState: NEUTRAL_PLAYING
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: NEUTRAL_PLAYING
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_KICKOFF_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_KICKOFF_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_KICKOFF_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_KICKOFF_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_KICKOFF_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: OWN_KICKOFF_EXECUTE
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: OWN_KICKOFF_EXECUTE
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_KICKOFF_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_KICKOFF_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_KICKOFF_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_KICKOFF_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: OPP_KICKOFF_EXECUTE
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: OPP_KICKOFF_EXECUTE
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_KICKOFF_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_FREEKICK_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_FREEKICK_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_FREEKICK_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_FREEKICK_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_FREEKICK_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_FREEKICK_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_FREEKICK_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_FREEKICK_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_FREEKICK_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_FREEKICK_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_GOALKICK_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_GOALKICK_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_GOALKICK_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_GOALKICK_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_GOALKICK_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_GOALKICK_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_GOALKICK_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_GOALKICK_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_GOALKICK_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_GOALKICK_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_THROWIN_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_THROWIN_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_THROWIN_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_THROWIN_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_THROWIN_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_THROWIN_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_THROWIN_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_THROWIN_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_THROWIN_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_THROWIN_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_CORNER_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_CORNER_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_CORNER_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_CORNER_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_CORNER_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_CORNER_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_CORNER_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_CORNER_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_CORNER_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_CORNER_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_PENALTY_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_PENALTY_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OWN_PENALTY_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_PENALTY_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_PENALTY_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_PENALTY_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OPP_PENALTY_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_PENALTY_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_PENALTY_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_PENALTY_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: DROPPED_BALL_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: DROPPED_BALL_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: DROPPED_BALL_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: DROPPED_BALL_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OWN_FREEKICK_PREPARE
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OPP_FREEKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OWN_GOALKICK_PREPARE
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OPP_GOALKICK_PREPARE
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OWN_THROWIN_PREPARE
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OPP_THROWIN_PREPARE
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OWN_CORNER_PREPARE
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OPP_CORNER_PREPARE
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: DROPPED_BALL_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: DROPPED_BALL_PREPARE
+- GameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: INVALID
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: READY
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: START
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: RESTART
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- GameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- GameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: INVALID
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- GameState: OWN_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- GameState: OPP_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: INVALID
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: READY
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: START
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: RESTART
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: END_GAME
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: OWN_KICKOFF_PREPARE
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: OPP_KICKOFF_PREPARE
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: DUMMY
+  - - NewGameState: OPP_PENALTY_SHOOTOUT_EXECUTE
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+...

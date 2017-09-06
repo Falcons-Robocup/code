@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# RSOP, July 2017
+
+
+destination=$1
+time=$2
+
+if [ -z "$destination" ]; then
+   echo "1st arg: provide destination name"
+   exit 1
+fi
+
+if [ -z "$time" ]; then
+   echo "2nd arg: provide time"
+   exit 1
+fi
+
+#if [ "$destination" = `hostname` ]; then
+#   echo "Source is the same as destination. Run this on robot"
+#   exit 1
+#fi
+
+watch -n$time rsync -vr /home/robocup/kst_templates/ $destination:/home/robocup/kst_templates_test/
+
+#lsyncd -log all -nodaemon -rsyncssh ~/kst_templates/ $destination ~/kst_templates/

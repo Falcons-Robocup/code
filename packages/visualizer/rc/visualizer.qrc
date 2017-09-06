@@ -1,0 +1,35 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/LogFForward.png</file>
+        <file>icons/LogFForward10.png</file>
+        <file>icons/LogOpenFile.png</file>
+        <file>icons/LogPause.png</file>
+        <file>icons/LogPlay.png</file>
+        <file>icons/LogRewind.png</file>
+        <file>icons/LogRewind10.png</file>
+        <file>icons/cambada.png</file>
+        <file>icons/cambada_black.png</file>
+        <file>icons/cambada_white.png</file>
+        <file>icons/sync_paused.png</file>
+        <file>icons/apple-green.png</file>
+        <file>icons/apple-red.png</file>
+        <file>icons/sync_broken.png</file>
+        <file>icons/sync_icon.png</file>
+        <file>icons/syncing_icon.png</file>
+        <file>icons/agent_start2.png</file>
+        <file>icons/Rob-start2.png</file>
+        <file>icons/agent_start.png</file>
+        <file>icons/rob_start.png</file>
+        <file>icons/rob_stop.png</file>
+        <file>icons/connect.png</file>
+        <file>icons/debug.png</file>
+        <file>icons/exit.png</file>
+        <file>icons/field_wind.png</file>
+        <file>icons/flip.png</file>
+        <file>icons/flip_horizontal.png</file>
+        <file>icons/flip_vertical.png</file>
+        <file>icons/full_screen.png</file>
+        <file>icons/info_wind.png</file>
+        <file>icons/score_board.png</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+
+# called by robotControl upon being claimed
+
+
+if [ "$SIMULATED" = 0 ]; then
+    claimfile=/var/tmp/claim
+    echo $1 > $claimfile
+    # trigger ntpSync periodic workaround
+    touch /var/tmp/ntpBusy
+fi
+
+

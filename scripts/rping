@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# Description: continuous robot ping 
+#
+#
+# MKOE 20150410 first release to repos
+#
+#
+
+while [ "1" == "1" ]
+do
+   for robot in r1 r2 r3 r4 r5 r6
+   do
+     ping -W 1 -c 1 $robot >/dev/null 2>/dev/null
+     if [ "$?" == "0" ]
+     then
+       echo Robot $robot PING OK
+     else
+       echo Robot $robot PING NOK
+     fi
+   done
+   sleep 1
+   clear
+done

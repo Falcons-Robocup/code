@@ -1,0 +1,18 @@
+<package>
+  <description brief="yoctoLib">
+
+     yoctoLib
+
+  </description>
+  <author>Yoctopuce Sarl, Switzerland</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://www.yoctopuce.com</url>
+
+  <export>
+    <cpp cflags="-I${prefix}/include/ext"
+         lflags="-L${prefix}/lib" />
+
+  </export>
+
+</package>

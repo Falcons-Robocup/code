@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+# TODO define a global 'software running' state, graceful shutdown if software is stopped, to prevent cleanly terminated processes spitting errors from here and subsequently restarting
+while ( true ) ; do
+    # run the command
+    $@
+    exitCode=$?
+    # send error event towards visualizer
+    sendError "[exit=$exitCode] process exited: $@"
+done
+

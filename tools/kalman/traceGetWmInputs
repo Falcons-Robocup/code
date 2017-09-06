@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# Extract interesting data from worldmodel tracing so we can do Kalman tuning.
+# 
+# JFEI 2016-04-19 creation
+# 
+
+
+
+# determine the WM tracing file to use
+if [ -z "$1" ]; then
+    # assume current folder is a trace folder
+    tracefile=`ls trace_*_wm.txt 2>/dev/null`
+else
+    if [ -d "$1" ]; then
+        # assume given argument is a trace folder
+        tracefile=`ls $1/trace_*_wm.txt 2>/dev/null`
+    else
+        # assume given argument is a trace folder
+        tracefile=$1
+    fi
+fi
+if [ ! -f "$tracefile" ]; then
+    echo "ERROR: could not determine input trace file"
+    exit 1
+fi
+
+
+# now crunch the file with a little 
+script=$(cat <<'EOF'
+my $t0 = 0;
+while(<>) {
+    chomp;
+    my @words = split /\s+/, $_;
+    my @twords = split /[-\.:,]+/, $words[0];
+    my $t = $twords[2] * 3600 * 24 + $twords[3] * 3600 + $twords[4] * 60 + $twords[5] + 1e-6 * $twords[6];
+    if ($t0 == 0) {
+        $t0 = $t;
+    }
+    my $dt = $t - $t0;
+    if (index($_, "set_own_location_cb") != -1) {
+        print sprintf("%10.6f  vision   %10.6f  %10.6f  %10.6f\n", $dt, $words[6], $words[8], $words[10]);
+    } else {
+        $words[14] =~ tr/,//;
+        $words[16] =~ tr/,//;
+        $words[18] =~ tr/,//;
+        print sprintf("%10.6f  encoder  %10.6f  %10.6f  %10.6f\n", $dt, $words[14], $words[16], $words[18]);
+    }
+}
+EOF
+)
+egrep 'set_own_encoder_displacement_cb|set_own_location_cb' $tracefile | perl -e "$script"
+
+

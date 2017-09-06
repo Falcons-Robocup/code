@@ -1,0 +1,27 @@
+<package>
+  <description brief="shootPlanning">
+
+     shootplanning
+
+  </description>
+  <author>robocup</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/shootplanning</url>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="std_msgs"/>
+  <depend package="rosMsgs"/>
+  <!--<depend package="tue_5k_msgs_srvs"/>-->
+  <depend package="common"/>
+  <depend package="worldModel"/>
+  <depend package="peripheralsInterface"/>
+
+  <export>
+  	<cpp cflags="-I${prefix}/include/ext"
+  	     lflags="-L${prefix}/lib -Wl,-rpath,${prefix}/lib -lShootPlanningRosStub"/>
+  </export>
+
+</package>
+
+

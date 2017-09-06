@@ -1,0 +1,15 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\b refbox
+
+<!-- 
+The refbox components subscribes to the refbox JAVA applet
+and puts the signals on an UDP broadcast channel.
+-->
+
+-->
+
+
+*/

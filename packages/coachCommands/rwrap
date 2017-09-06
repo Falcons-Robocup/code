@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Simple remote wrapper, to run a command in standard falcons environment.
+# 
+# JFEI 2015-07-17 creation
+
+#
+# TODO
+# * 
+# 
+
+
+# hack to force .bashrc sourcing
+export PS1=">"
+shopt -s expand_aliases
+source ~/falcons/code/scripts/falconsconfig.sh >/dev/null 2>&1
+$*
+sync
+

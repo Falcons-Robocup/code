@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+# JFEI 2015-12-01 
+# intended for testing purposes only - python is not to be used for high-performance code, instead please refer to C++ facilities::networkUDP
+# based on:
+#  * https://wiki.python.org/moin/UdpCommunication
+#  * http://svn.python.org/projects/python/trunk/Demo/sockets/mcast.py
+
+
+import socket
+import argparse
+import sys
+import struct
+
+
+if __name__ == '__main__':
+
+    # Argument parsing.
+    parser     = argparse.ArgumentParser(description='generic tool to receive a string over UDP')
+    parser.add_argument('-a', '--address', help='IP address to use', default=None, type=str, required=True)
+    parser.add_argument('-p', '--port', help='port to use', default=None, type=int, required=True)
+    parser.add_argument('-n', '--count', help='number of strings to listen (default 1)', default=1, type=int)
+    parser.add_argument('-m', '--multicast', help='multicast mode', action='store_true')
+    parser.add_argument('-b', '--buffersize', help='buffer size per string', default=1024, type=int)
+    parser.add_argument('-q', '--quiet', help='only output the strings', action='store_true')
+    args       = parser.parse_args()
+
+    # Look up multicast group address in name server and find out IP version
+    addrinfo = socket.getaddrinfo(args.address, None)[0]
+    
+    # Create a socket
+    s = socket.socket(addrinfo[0], socket.SOCK_DGRAM)
+
+    if args.multicast:
+        # Allow multiple copies of this program on one machine
+        # (not strictly needed)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    # Bind it to the port
+    s.bind(('', args.port))
+
+    if args.multicast:
+        group_bin = socket.inet_pton(addrinfo[0], addrinfo[4][0])
+        # Join group
+        if addrinfo[0] == socket.AF_INET: # IPv4
+            mreq = group_bin + struct.pack('=I', socket.INADDR_ANY)
+            s.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        else:
+            mreq = group_bin + struct.pack('@I', 0)
+            s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP, mreq)
+        
+    # Listen
+    num_received = 0
+    while True:
+        data, addr = s.recvfrom(args.buffersize)
+        while data[-1:] == '\0': data = data[:-1] # Strip trailing \0's
+        if args.quiet:
+            print data
+        else:
+            print "received message:", data
+        # done?
+        num_received += 1
+        if num_received >= args.count:
+            break
+
+    # Close the port
+    s.close()
+

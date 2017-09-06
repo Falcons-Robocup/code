@@ -1,0 +1,63 @@
+# latency correction is meant to reduce the 'drag' which vision is causing w.r.t. encoders
+# the camera typically needs some time to send the image to vision (we assume something like 0.1s)
+# then vision algorithm also needs some time to crunch (although we think this is negligible w.r.t. camera latency)
+# the calibration property is owned by vision, 
+# so the timestamp in the measurement is corrected for before sending it from vision to worldModel
+#
+# in this test case, we simulate 0.2s latency while driving with 1.0m/s
+# robot will move in a straight line with constant FCS X speed (RCS Y speed)
+#
+# config
+CONFIGURE  visionOwnWeightFactor             0.5   # introduce quite some drag
+CONFIGURE  settlingTime                      0.0
+# input stream - first simulate no latency correction by playing with timestamps, to quantify the drag issue
+VISION           0.000000      0.000000   0.00   0.00   0.00   0.95
+CALCULATE        0.000000
+ENCODER_RCS      0.050000      0.050000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.050000      0.050000   0.00   0.00   0.00   0.95                 # robot had not moved yet
+CALCULATE        0.100000
+ENCODER_RCS      0.150000      0.150000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.150000      0.150000   0.00   0.00   0.00   0.95                 # robot had not moved yet
+CALCULATE        0.200000
+ENCODER_RCS      0.250000      0.250000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.250000      0.250000   0.05   0.00   0.00   0.95                 
+CALCULATE        0.300000
+ENCODER_RCS      0.350000      0.350000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.350000      0.350000   0.15   0.00   0.00   0.95                 
+CALCULATE        0.400000
+# now correct the vision timestamps by setting them back 0.2s, to see drag reducing
+ENCODER_RCS      0.450000      0.450000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.450000      0.250000   0.25   0.00   0.00   0.95                 
+CALCULATE        0.500000
+ENCODER_RCS      0.550000      0.550000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.550000      0.350000   0.35   0.00   0.00   0.95                 
+CALCULATE        0.600000
+ENCODER_RCS      0.650000      0.650000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.650000      0.450000   0.45   0.00   0.00   0.95                 
+CALCULATE        0.700000
+ENCODER_RCS      0.750000      0.750000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.750000      0.550000   0.55   0.00   0.00   0.95                 
+CALCULATE        0.800000
+ENCODER_RCS      0.850000      0.850000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.850000      0.650000   0.65   0.00   0.00   0.95                 
+CALCULATE        0.900000
+ENCODER_RCS      0.950000      0.950000   0.00   0.10   0.00   0.00   1.00   0.00
+VISION           0.950000      0.750000   0.75   0.00   0.00   0.95                 
+CALCULATE        1.000000
+# results               t valid       x      y    phi     vx     vy   vphi
+RESULT           0.000000     1    0.00   0.00   0.00   0.00   0.00   0.00 
+RESULT           0.100000     1    0.05   0.00   0.00   1.00   0.00   0.00   #  5 cm drag error
+RESULT           0.200000     1    0.08   0.00   0.00   1.00   0.00   0.00   # 12 cm drag error
+RESULT           0.300000     1    0.11   0.00   0.00   1.00   0.00   0.00   # 19 cm drag error
+RESULT           0.400000     1    0.18   0.00   0.00   1.00   0.00   0.00   # 22 cm drag error
+# from here, drag should start to reduce
+RESULT           0.500000     1    0.37   0.00   0.00   1.00   0.00   0.00   # 13 cm drag error
+RESULT           0.600000     1    0.51   0.00   0.00   1.00   0.00   0.00   #  9 cm drag error
+RESULT           0.700000     1    0.63   0.00   0.00   1.00   0.00   0.00   #  7 cm drag error
+RESULT           0.800000     1    0.74   0.00   0.00   1.00   0.00   0.00   #  6 cm drag error
+RESULT           0.900000     1    0.84   0.00   0.00   1.00   0.00   0.00   #  6 cm drag error
+RESULT           1.000000     1    0.95   0.00   0.00   1.00   0.00   0.00   #  5 cm drag error
+# note that we cannot get better than 5cm error in this test setup, 
+# due to the 0.05s offset between calculate and feed
+
+

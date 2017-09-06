@@ -1,0 +1,26 @@
+<package>
+  <description brief="teamplay_dev">
+
+     teamplay_dev
+
+  </description>
+  <author>robocup</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/teamplay_dev</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="environment"/>
+  <depend package="networkUDP"/>
+  <depend package="worldModel"/>
+  <depend package="networkUDP"/>
+  <depend package="common"/>
+  <depend package="shootPlanning"/>
+  <depend package="pathPlanning"/>
+  <depend package="peripheralsInterface"/>
+  <depend package="diagnostics"/>
+
+  <depend package="gmock"/>
+</package>
+
+

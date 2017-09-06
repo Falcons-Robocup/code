@@ -1,0 +1,10 @@
+build/
+bin/
+lib/
+.cproject
+.project
+.pydevproject
+catkin/
+catkin_generated/
+devel/
+gtest/

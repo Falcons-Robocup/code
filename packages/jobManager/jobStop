@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# Stop a job.
+# 
+# JFEI 2015-11-13
+# 
+
+
+
+# check argument
+jobid=$1
+if [ -z "$jobid" ]; then
+    echo "ERROR: this function expects a job id as argument"
+    exit 1
+fi
+
+# context handling: pass the context key as well, to e.g. make sure the right robot instances are killed
+contextkey=`echo $jobid | grep -o "^[AB][0-6]"`
+jobid=`echo $jobid | sed 's/^[AB][0-6]_//'`
+
+# translate given argument into sequence of processes
+processes=`jobToProcess $jobid`
+
+# for each, kill the pid
+# do it directly instead of calling processStop (which is blind to context)
+c=""
+c_=""
+if [ ! -z "$contextkey" ]; then
+    c="$contextkey "
+    c_="${contextkey}_"
+fi
+for p in $processes; do
+    pid=`ps -ef | grep "processStart $c$p$" | grep -v grep | awk '{print $2}'`
+    if [ ! -z "$pid" ]; then
+        killtree $pid
+    fi
+done
+
+# finally, kill the jobStart process so it is not seen by jobList anymore
+pid=`ps -ef | grep "jobStart ${c_}$jobid$" | grep -v grep | awk '{print $2}'`
+if [ ! -z "$pid" ]; then
+    killtree $pid
+fi
+

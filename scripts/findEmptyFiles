@@ -1,0 +1,79 @@
+#!/usr/bin/perl
+use strict;
+
+# Andre Pool
+# July 2015
+ 
+# Script to search for empty files.
+# Sometimes the build system fails, but does not give a clear warning or abort
+# In these case compiled files are empty.
+# With this script a post check can be done to check if empty files exist.
+# If these files exist there was probably something wrong with the build.
+
+# show no warnings about recursion (we know what we do Wink )
+no warnings "recursion";
+
+# use global variable to keep track if a file of 0 bytes has been found
+my $foundEmptyFile = 0;
+
+# start the recursive search by calling the subroutine, starting with the
+# highest level of the search directory
+# cal the subroutine to start the recursive searchCalling the Subroutine, which searches the File
+readDirectory("/home/robocup/falcons/code");
+
+if( $foundEmptyFile == 1 ) {
+   print "ABORT from findEmptyFiles\n";
+   exit 1;
+}
+exit 0;
+ 
+# check if this level contains empty files and or directories which also need to be scanned
+sub readDirectory
+{
+   my $searchdir = shift;
+   # print "dir: $searchdir\n";
+ 
+   opendir DIR, $searchdir or die("An error occured: $!");
+   my @files = readdir(DIR);
+   closedir DIR;
+ 
+   foreach my $currentFile (@files)
+   {
+      next if $currentFile =~ /^\./; # skip the . and .. directories for recursive scanning
+      
+      # get the file size
+      my $fileSize = -s "$searchdir/$currentFile";
+      if( $fileSize == 0 )
+         {
+         if( $currentFile =~ m/__\.py$/ ) { 
+            # print "phyton file $searchdir/$currentFile of size $fileSize bytes is okay\n";
+         } elsif( $currentFile =~ m/^simplexMethod\.cpp$/ ) {
+            # print "simplexMethod.cpp file $searchdir/$currentFile of size $fileSize bytes is okay\n";
+         } elsif( $currentFile =~ m/^WorldSensing\.h$/ ) {
+            # print "WorldSensing.h file $searchdir/$currentFile of size $fileSize bytes is okay\n";
+         } elsif( $currentFile =~ m/^notes\.txt$/ ) {
+            # print "notes.txt file $searchdir/$currentFile of size $fileSize bytes is okay\n";
+         } elsif( $currentFile =~ m/^CATKIN_IGNORE$/ ) {
+            # print "CATKIN_IGNORE file $searchdir/$currentFile of size $fileSize bytes is okay\n";
+         } elsif( $currentFile =~ m/^turtle_ballhandling\.typelist$/ ) {
+            # print "turtle_ballhandling.typelist file $searchdir/$currentFile of size $fileSize bytes is okay\n";
+         } elsif( $currentFile =~ m/^stamp$/ ) {
+            # print "stamp file $searchdir/$currentFile of size $fileSize bytes is okay\n";
+         } elsif( $searchdir =~ m/docs\/API\/latex/ ) { 
+            # print "latex file $searchdir/$currentFile of size $fileSize bytes is okay\n";
+         } else {
+            print "ERROR: file $searchdir/$currentFile is empty\n";
+	    $foundEmptyFile = 1;
+        }
+     }
+     elsif( $fileSize > 400000000 )
+     {
+        print "WARNING: file $searchdir/$currentFile has size $fileSize which is to large\n";
+     }
+     if ( -d "$searchdir/$currentFile" )
+     {
+        # The Subroutine is calling hisself with the new parameters
+        readDirectory("$searchdir/$currentFile");
+     }
+   }
+}

@@ -1,0 +1,23 @@
+<package>
+  <description brief="Compass">
+
+     Compass
+
+  </description>
+  <author>Tim Kouters</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/Compass</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="common"/>
+  <depend package="dynamic_reconfigure"/>
+  <depend package="std_msgs"/>
+  
+  <export>
+  	<cpp cflags="-I${prefix}/include/ext"/>
+  </export>
+  
+</package>
+
+

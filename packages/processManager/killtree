@@ -1,0 +1,20 @@
+#!/bin/bash
+# adapted from http://stackoverflow.com/questions/392022/best-way-to-kill-all-child-processes
+
+_sig="-9"
+
+killtree() {
+    local _pid=$1
+    kill -stop ${_pid} # needed to stop quickly forking parent from producing children between child killing and parent killing
+    for _child in $(ps -o pid --no-headers --ppid ${_pid}); do
+        killtree ${_child}
+    done
+    kill ${_sig} ${_pid}
+}
+
+if [ $# -eq 0 -o $# -gt 2 ]; then
+    echo "Usage: $(basename $0) <pid>"
+    exit 1
+fi
+
+killtree $@

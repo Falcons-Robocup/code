@@ -1,0 +1,5 @@
+geometry_msgs/Pose2D pos
+rosMsgs/t_polygon2D[] forbiddenAreas
+uint8   motion_profile # see rosMsgs/msg/t_target for the enums
+---
+

@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# Halftime actions / workarounds during match, on robot.
+# Called from match_halftime (which is run on coach).
+# 
+# JFEI 2015-07-19
+
+# 
+
+
+falcons_kill.sh
+
+

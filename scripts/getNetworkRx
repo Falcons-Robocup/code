@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Used in diagnostics via robotHealth
+# 
+# JFEI 2016-01-19 creation
+# 
+
+
+ifconfig -a | grep -A 7 wlan | tail -1 | awk '{print $2}' | sed 's/.*://'
+

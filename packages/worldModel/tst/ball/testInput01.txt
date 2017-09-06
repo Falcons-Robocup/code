@@ -1,0 +1,6 @@
+# comment lines like these are ignored
+# configuration (key=value) pairs
+config numberOfBallsWarningThreshold=5 solverBounceAge=0.5 solverBounceDt=0.100000001 solverBounceMinMeasurements=5 solverCoreMinVdt=0.0500000007 solverCoreSpeed=1 solverCoreWeight=0.100000001 solverMinDv=6 solverTrackerTimeout=2 solverTrackerXYTolerance=2.5
+# no ball measurement data in this test case
+
+

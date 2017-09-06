@@ -1,0 +1,21 @@
+# drive zigzag pattern
+move -4 -8 0
+wait4pos -4 -8 0.5
+sleep 5
+move 4 -6 0
+wait4pos 4 -6 1
+move -4 -4 0
+wait4pos -4 -4 1
+move 4 -2 0
+wait4pos 4 -2 1
+move -4 0 0
+wait4pos -4 0 1
+move 4 2 0
+wait4pos 4 2 1
+move -4 4 0
+wait4pos -4 4 1
+move 4 6 0
+wait4pos 4 6 1
+move -4 8 0
+wait4pos -4 8 1
+

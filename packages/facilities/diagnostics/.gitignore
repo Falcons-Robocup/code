@@ -1,0 +1,5 @@
+build/
+src/diagnostics/
+srv_gen/
+bin/
+lib/

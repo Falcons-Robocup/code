@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Job/process context (things like: environment, ROS namespace).
+# Sourced by job_start.
+# 
+# JFEI 2015-11-17
+# 
+
+
+
+# for simulation, we need a single input: the context key
+# if not provided, then guess (assume we are on real robot)
+if [ -z "$CONTEXTKEY" ]; then
+    # on real robot -> guess
+    robotnum=`hostname | grep FALCON | sed 's/FALCON-//'`
+    if [ -z "$robotnum" ]; then
+        echo "ERROR: could not guess robot number based on hostname - use a context key in case you are on simulator"
+    fi
+    export TURTLE5K_ROBOTNUMBER=$robotnum
+    export TURTLE5K_TEAMNAME=teamA
+    export CONTEXTKEY=A$robotnum
+else
+    # simulator - check the given key
+    contextCheck $contextkey
+    export TURTLE5K_ROBOTNUMBER=${CONTEXTKEY:1:1}
+    export TURTLE5K_TEAMNAME=team${CONTEXTKEY:0:1}
+fi
+
+# set SIMULATED env variable if not set already
+if [ -z "$SIMULATED" ]; then
+    robotnum=`hostname | grep FALCON | sed 's/FALCON-//'`
+    if [ -z "$robotnum" ]; then
+        export SIMULATED=1
+    else
+        export SIMULATED=0
+    fi
+fi
+
+# Set the robot network, if necessary
+# default (see http://timmel.no-ip.biz:8000/wiki/MSLNetworkSetup)
+export ROBOTNET=172.16.74.5
+# TODO replace this with configManager
+# fallback for RobocupASML router
+ifconfig -a | grep -q 192.168.5 && export ROBOTNET=192.168.5.5
+ifconfig -a | grep -q 10.0.0 && export ROBOTNET=10.0.0.
+# TODO robotnet 10.0.0.1 in case of wired? or via falcons_control -e? 
+
+# Robot status and config file
+# TODO replace this with configManager
+export ROBOT_STATUS_FILE=~/robot.status
+export ROBOT_CONFIG_FILE=~/robot.cfg
+
+# ROS namespace (follows from other variables)
+if [ "${TURTLE5K_ROBOTNUMBER}" = "0" ]; then
+    # on coach
+    export ROS_NAMESPACE=/${TURTLE5K_TEAMNAME}
+else
+    # on robot
+    export ROS_NAMESPACE=/${TURTLE5K_TEAMNAME}/robot${TURTLE5K_ROBOTNUMBER}
+fi
+
+

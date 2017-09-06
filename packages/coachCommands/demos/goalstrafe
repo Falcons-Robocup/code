@@ -1,0 +1,10 @@
+# move single robot across the goal, checking goal post obstacle avoidance
+move 4 -8 0 
+sleep 5
+move 4 -8.9 0 
+sleep 1
+move -4 -8.9 0 
+sleep 5
+move -4 -8 0 
+sleep 1
+

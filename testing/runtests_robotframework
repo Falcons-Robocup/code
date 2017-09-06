@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# Run robotframework test cases.
+# This should only be performed if all unittests are OK.
+# 
+# NOTE: some robotframework test suites can be considered unittests (e.g. worldModel),
+# some systemlevel tests (pathplanning, using full simulator).
+# 
+# NOTE: use a single call to pybot so all logging is gathered. 
+# Otherwise we need to arrange something on buildserver because only the last 
+# run would be accessible.
+#
+# NOTE: by default display is hidden, otherwise it would take focus every few seconds,
+# preventing you from being able to type / browse / whatever. Use option -v to override.
+# In case something goes wrong, you probably want to manually run the pybot command
+# on that particular test case anyway, without the display-hiding wrapper.
+
+
+
+cd ~
+testsuitedir=${TURTLEROOT}/testing/implementation/testsuites
+
+
+# check options
+if [ "$1" = "-v" -o "$LOGNAME" = jenkins ]; then
+    # on Jenkins buildserver it is not needed to use xvfb-run
+    wrapper=""
+else
+    # check if xvfb-run is installed
+    wrapper="xvfb-run -a"
+    if [ -z `which $wrapper` ]; then
+        echo "ERROR: $wrapper is not installed. Either use option -v to avoid, or run:"
+        echo "  sudo apt-get install xvfb"
+        exit 1
+    fi
+fi
+
+# Override output dir if the Jenkins variable BUILD_NUMBER is set
+if [ -n "$BUILD_NUMBER" ]
+then
+    OUTPUT_DIR="$HOME/robot-output/$BUILD_NUMBER"
+    mkdir -p $OUTPUT_DIR
+    echo "Outputting results to: $OUTPUT_DIR"
+    OUTPUT_DIR="--outputdir $OUTPUT_DIR"
+else
+    OUTPUT_DIR=""
+fi
+
+$wrapper pybot -L TRACE $OUTPUT_DIR $testsuitedir
+# Default outputs (unless running under Jenkins): 
+#   Output:  /home/robocup/output.xml
+#   Log:     /home/robocup/log.html
+#   Report:  /home/robocup/report.html
+

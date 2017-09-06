@@ -1,0 +1,21 @@
+# check that RCS displacement is correctly handled
+# 
+# configuration
+CONFIGURE  settlingTime            0.0
+CONFIGURE  visionOwnWeightFactor   0.0   # prevent vision from interfering 
+CONFIGURE  trackerTimeout         20.0
+# input stream, first vision to initialize validity and position
+# drive backwards, sideways, quarter rotation per tick, ending up exactly where we started
+VISION           0.000000      0.000000   0.00   0.00   1.57   0.95
+CALCULATE        1.000000
+ENCODER_RCS      1.500000      1.500000   1.00  -1.00   1.57   0.00   0.00   0.00
+CALCULATE        2.000000
+ENCODER_RCS      2.400000      2.400000   1.00  -1.00   1.57   0.00   0.00   0.00
+ENCODER_RCS      2.600000      2.600000   1.00  -1.00   1.57   0.00   0.00   0.00
+ENCODER_RCS      2.800000      2.800000   1.00  -1.00   1.57   0.00   0.00   0.00
+CALCULATE        3.000000
+# results               t valid       x      y    phi     vx     vy   vphi
+RESULT           1.000000     1    0.00   0.00   1.57   0.00   0.00   0.00
+RESULT           2.000000     1    1.00  -1.00   3.14   0.00   0.00   0.00
+RESULT           3.000000     1    0.00   0.00   1.57   0.00   0.00   0.00
+

@@ -1,0 +1,77 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# 20150625 MKOE adapted to cope with the new m4 batterylog daemon, no crontab needed anymore
+# 20150625 MKOE add 'reboot'  to sudoers , don't need password for reboot
+# 20150707 MKOE moved the mkdir of log folder for battery log to here
+
+M4DIAGDIR=/home/robocup/falcons/code/packages/power/m4api
+M4LOGDIR=/var/tmp/m4logs
+
+#======================================================================
+# set up the hosts file
+#======================================================================
+rm -f /etc/hosts
+echo "# This file is created during startup at:" `date` > /etc/hosts
+echo "# by rc.local, which should be a symlink to /home/robocup/falcons/code/config/rc.local" >> /etc/hosts
+echo "" >> /etc/hosts
+echo "127.0.0.1       localhost" >> /etc/hosts
+echo "# required for ros" >> /etc/hosts
+echo "127.0.1.1      " `hostname` >> /etc/hosts
+echo "" >> /etc/hosts
+echo "# rest of this file is from /home/robocup/falcons/code/config/hosts" >> /etc/hosts
+echo "" >> /etc/hosts
+
+cat /home/robocup/falcons/code/config/hosts >> /etc/hosts
+
+#======================================================================
+# check if on robot, if yes, do robot specific thing
+#======================================================================
+
+#NEED SLEEP as the previous commands did not finish /etc/hosts yet, following commands will fail silently....
+sleep 1
+
+/bin/hostname | /bin/egrep 'r[1-6]|FALCON-[1-6]' >/dev/null
+if [ $? -eq 0 ]; then
+  #======================================================================
+  #egrep found a hit on the hostname, so script is running on a robot
+  echo "ONROBOT" > /tmp/ONROBOT
+  #======================================================================
+  # setup the sudoers file to be included from /etc/sudoers
+  # this defines sudo commands for which e.g. no password is needed
+  #======================================================================
+  rm -f /etc/sudoers.d/robocup
+  cat > /etc/sudoers.d/robocup <<HERE
+robocup	ALL=(root)NOPASSWD:/usr/sbin/dmidecode
+robocup	ALL=(root)NOPASSWD:/sbin/reboot
+robocup ALL=(root)NOPASSWD:/home/robocup/falcons/code/packages/power/m4api/m4atx_permissions
+HERE
+  chmod 440 /etc/sudoers.d/robocup
+  #======================================================================
+  # set correct permissions on /dev devices
+  #======================================================================
+  $M4DIAGDIR/m4atx_permissions
+  if [ ! -d $M4LOGDIR ]; then
+    mkdir -p $M4LOGDIR
+    chown robocup:robocup $M4LOGDIR
+    chmod 777 $M4LOGDIR
+  fi
+
+  #======================================================================
+  # now we are booting, log the battery field descriptions
+  #======================================================================
+  #starting the m4 log daemon
+  echo "start m4log"
+  $M4DIAGDIR/m4log
+fi
+# end on robot only #
+
+exit 0

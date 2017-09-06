@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# Stop all jobs.
+# 
+# JFEI 2015-11-23
+# 
+
+
+
+for j in `jobList | grep ^job | awk '{print $2}'`; do
+    jobStop $j
+done
+pkill jobStart

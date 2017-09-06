@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# Used in diagnostics logging (low-frequent).
+# 
+# JFEI 2015-07-12 creation
+# 
+
+
+echo now implemented via PI diagnostics

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# created by Andre Pool
+
+# reset usb subsystem for the motor controllers
+# the complete hub is gone (probably because of gnd issues)
+
+echo "unbind"
+echo -n "0000:00:1d.0" | sudo tee /sys/bus/pci/drivers/ehci-pci/unbind #!/bin/bash
+echo ""
+echo "bind"
+echo -n "0000:00:1d.0" | sudo tee /sys/bus/pci/drivers/ehci-pci/bind 
+echo ""
+echo "done"
+
+

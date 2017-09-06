@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Stop all processes.
+# 
+# JFEI 2016-01-24
+# 
+
+
+(
+    pids=`processList | awk '{print $1}'`
+    if [ ! -z "$pids" ]; then
+        for pid in $pids; do
+            killtree $pid
+        done
+    fi
+    kill -9 `pgrep -f robotCLI.py`
+) > /dev/null 2>&1
+

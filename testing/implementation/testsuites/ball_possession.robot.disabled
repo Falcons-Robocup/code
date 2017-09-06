@@ -1,0 +1,59 @@
+*** Settings ****
+Library         Process 
+Resource        ../resources/FalconsControl.robot
+Test Teardown   Shutting down
+
+
+
+# ball_possession.robot
+#
+# Created on: 2015-06-13
+#     Author: Jan Feitsma
+# Purpose: to check BallPossession 
+
+
+
+
+*** Keywords ***
+
+# Teleport ball into a robots mouth, wait a little while, then verify the result
+Teleportation into robot
+    [Arguments]  ${ROBOT_NUM}  ${TEAM_NAME}  
+   Given simulator with ${TEAM_NAME} as friendly is started
+     And robot 1 of teamA is started
+     And robot 4 of teamA is started
+     And robot 2 of teamB is started
+     And robot 5 of teamB is started
+   When setting target of robot ${ROBOT_NUM} of ${TEAM_NAME} to -1 0 0
+     And sleeping for 7 seconds
+     And teleporting ball to -0.8 0 0 0
+     And sleeping for 3 seconds
+     And shutting down
+   Then analyze logging
+     And finally ball is in possession of robot ${ROBOT_NUM} of ${TEAM_NAME}
+     And no errors occurred
+
+
+
+*** Test Cases ***
+Initial on field
+   Given Simulator is started 
+     And robot 1 of teamA is started
+   When sleeping for 5 seconds
+     And shutting down
+   Then analyze logging
+     And finally ball is on field
+     And no errors occurred
+
+Teleportation checks
+    [Template]  Teleportation into robot
+ #ROBOT_NUM TEAM_NAME  
+  	  1	teamA
+  	  4	teamA
+  	  2	teamB
+  	  5	teamB
+
+# TODO action gotoball, then also check
+
+
+

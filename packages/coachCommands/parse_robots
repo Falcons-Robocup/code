@@ -1,0 +1,33 @@
+#!/bin/bash
+#
+# Common arg parse util.
+# 
+# JFEI 2015-07-20
+
+# 
+
+
+# construct list of robots from comand line arguments
+robots=""
+while :; do
+    # check if it is a number
+    found=0
+    for irobot in `seq 1 6`; do
+        if [ "$1" = "$irobot" -o "$1" = "r$irobot" ]; then
+            robots="$robots r$irobot"
+            found=1
+        fi
+    done
+    if [ "$found" = "1" ]; then
+        shift
+    else
+        break
+    fi
+done
+if [ -z "$robots" ]; then
+    # none specified = all
+    robots="r1 r2 r3 r4 r5 r6"
+fi
+echo $robots
+
+

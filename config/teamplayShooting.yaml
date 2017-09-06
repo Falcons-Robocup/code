@@ -1,0 +1,20 @@
+teamplay_main/shooting: {
+  shootAtGoalPower                 : 180.0,
+  shortPassPower                   : 25.0,
+  shortToMediumPassPower           : 25.0,
+  mediumPassPower                  : 35.0,
+  mediumToLongPassPower            : 40.0,
+  longPassPower                    : 45.0,
+  maxDistanceForShortPass          : 3.5,
+  maxDistanceForShortToMediumPass  : 3.5,
+  maxDistanceForMediumPass         : 6.0,
+  maxDistanceForMediumToLongPass   : 8.0,
+  shootTimer                       : 1.0,
+  shootTimerAngleThreshold         : 0.1,
+  shootPathWidth                   : 0.3,
+  settleTimeAfterShooting          : 2.0}
+rosdistro: 'groovy'
+roslaunch:
+  uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}
+rosversion: '1.9.55'
+run_id: d837e3c8-6813-11e4-acf7-00197e8a14ee

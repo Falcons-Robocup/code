@@ -1,0 +1,4 @@
+#!/bin/bash
+
+gcc cmps10Calibrate.c -o cmps10Calibrate
+./cmps10Calibrate -r

@@ -1,0 +1,82 @@
+# everything below is the same for all robots and laptops
+
+# (wlan) wifi network
+172.16.74.51	r1
+172.16.74.52	r2
+172.16.74.53	r3
+172.16.74.54	r4
+172.16.74.55	r5
+172.16.74.56	r6
+
+# via ethernet (used during tournaments when wifi is saturated)
+10.0.0.51	e1
+10.0.0.52	e2
+10.0.0.53	e3
+10.0.0.54	e4
+10.0.0.55	e5
+10.0.0.56	e6
+
+172.16.74.58	nest
+172.16.74.59	git
+172.16.74.60	build
+
+172.16.1.1	switch
+172.16.1.2	refereebox
+172.16.1.3	accesspoint1
+172.16.1.4	accesspoint2
+
+172.16.74.1	kroonsteentje
+172.16.74.10	fapper
+172.16.74.11	fiction
+172.16.74.12	ingress
+172.16.74.13	wingman
+172.16.74.14	banana
+172.16.74.15	koekwaus
+172.16.74.16	pingu
+172.16.74.17	bender
+172.16.74.18	pannekoek
+172.16.74.19	segway
+172.16.74.20    piewie
+172.16.74.21    witte
+172.16.74.22    hippie
+172.16.74.23    porky
+172.16.74.24	lt-jmbm
+172.16.74.25    wowman
+172.16.74.26    labrat
+172.16.74.27    coach
+172.16.74.28    puding
+172.16.74.29    choco
+172.16.74.30    nosebell
+172.16.74.31    popcorn
+172.16.74.32    eyebrow
+172.16.74.33    butter
+172.16.74.34    clipper
+172.16.74.35    pencil
+172.16.74.36    wheely
+172.16.74.37    whooper
+172.16.74.38    redcat
+172.16.74.39    wallnut
+172.16.74.40    appletree
+172.16.74.41    chair
+172.16.74.42	jarvis
+172.16.74.43	hobbes
+
+# deprecated names of the robots
+172.16.74.51	TURTLE-5K-1
+172.16.74.52	TURTLE-5K-2
+172.16.74.53	TURTLE-5K-3
+172.16.74.54	TURTLE-5K-4
+172.16.74.55	TURTLE-5K-5
+172.16.74.56	TURTLE-5K-6
+
+# real numbers
+128.127.40.3    timmel.no-ip.biz
+128.127.40.3    svn
+62.234.4.160    tweety
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters

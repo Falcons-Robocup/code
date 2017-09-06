@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# Start a job within.
+# Context id prefix is optional.
+#
+# Example use:
+#   jobStart visionOnly &
+#   jobStart A2_wmWithSync &
+# 
+# JFEI 2015-11-13
+# 
+
+
+
+# check argument
+jobid=$1
+if [ -z "$jobid" ]; then
+    echo "ERROR: this function expects a job id as argument"
+    exit 1
+fi
+
+# context handling: pass the context key as well, to e.g. make sure the right robot instances are killed
+contextkey=`echo $jobid | grep -o "^[AB][0-6]"`
+jobid=`echo $jobid | sed 's/^[AB][0-6]_//'`
+
+# use checking utility
+if [ ! -z "$contextkey" ]; then
+    export CONTEXTKEY="$contextkey"
+    contextCheck || exit 1
+fi
+
+# translate given argument into sequence of processes
+processes=`jobToProcess $jobid`
+
+# load the job context (simulator specific: e.g. B4 for teamB/robot4)
+# NOTE: subsequent tooling will trigger on variable $CONTEXTKEY !
+source `which contextSet`
+
+# for each, call processStart rapidly in succession
+# NOTE: the only process which needs a few seconds to come online, is roscore
+# all other processes must be robust, so we should solve race conditions / initialization deadlock rather than adding sleeps
+for p in $processes; do
+    (
+        # workaround: put CONTEXTKEY variable in the command so we can track it via ps -ef ... 
+        # this is not nice :( but preferred over making processManager aware of context
+        # please let me (JFEI) know if you have better ideas!
+        processStart $CONTEXTKEY $p &
+    ) # subshell to suppress output upon killing (don't want to disown)
+done
+
+# keep this process alive so job tooling can see which jobs are active and inspect/stop them
+sleep 999d
+

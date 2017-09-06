@@ -1,0 +1,29 @@
+#!/bin/bash
+
+
+# script which is executed regular on robot to keep clocks into sync
+# upgraded version of Andre's alias ntpSync
+#    alias ntpSync='date ; sudo service ntp stop ; sudo ntpdate -s 172.16.74.27 ; sudo service ntp start ; date'
+
+# we cannot assume a certain machine like coach is always visible on our network
+# but a robot always has a claimer, so we can sync to it
+
+# see robotControl: claim hostname is written to /var/tmp/claim
+
+
+if [ "$SIMULATED" = 0 ]; then
+   # prevent passord promt for next lines
+   echo asml | sudo -S true 2>/dev/null; 
+   
+   # stop ntp 
+   echo asml | sudo -S service ntp stop > /dev/null
+   
+   # the ntp.conf should be used from repository instead of local
+   # we still do this automatically to be robuust for cases where an old build is used on the robot
+   echo asml | sudo -S rm -f /etc/ntp.conf
+   echo asml | sudo -S ln -s /home/robocup/falcons/code/config/ntp.conf /etc/ntp.conf
+   
+   # start the server again
+   echo asml | sudo -S service ntp start > /dev/null
+fi
+

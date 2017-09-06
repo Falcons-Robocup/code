@@ -1,0 +1,20 @@
+worldModelNode/obstacleTracker: {
+  filterXYownTolerance          : 0.4,
+  filterXYmemberTolerance       : 1.0,
+  trackerXYTolerance            : 1.0,
+  trackerTimeout                : 1.0,
+  extrapolationTimeout          : 0.2,
+  outlierNSigma                 : 4.0,
+  outlierMaxIter                : 4,
+  outlierIterFraction           : 0.1,  # max portion to throw out per iteration, to prevent rejecting good data 
+  speedMinSize                  : 0.3,  # rounding threshold: slower -> speed zero
+  speedMaxSize                  : 5.0,  # faster is probably glitch -> generate warning
+  speedResidualThreshold        : 1.0,  # in case fit residual is smaller, then we can trust the speed vector, otherwise we choose zero-order fit (this may be quite a sensitive tuning parameter)
+  speedFitOrder                 : 1,
+  discriminatorLimitX           : 6.3,
+  discriminatorLimitY           : 9.3}
+rosdistro: 'groovy'
+roslaunch:
+  uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}
+rosversion: '1.9.55'
+run_id: d837e3c8-6813-11e4-acf7-00197e8a14ee

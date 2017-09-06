@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# Create logdir and initialize tracing
+# 
+# JFEI 2015-11-22 creation
+# 
+
+
+createLogdir
+set_tracing_trigger.sh `newest_logdir.py`
+

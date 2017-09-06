@@ -1,0 +1,11 @@
+.cproject
+.project
+.pydevproject
+bin/
+build/
+docs/
+lib/
+srv_gen/
+cfg/cpp/
+cfg/shootplanning.cfgc
+src/shootPlanning/

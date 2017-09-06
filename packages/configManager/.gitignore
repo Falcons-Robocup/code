@@ -1,0 +1,11 @@
+.cproject
+.project
+.pydevproject
+build/
+cfg/*.cfgc
+bin/
+cfg/cpp/
+docs/
+lib/
+msg_gen/
+src/configManager/

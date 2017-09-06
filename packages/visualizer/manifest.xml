@@ -1,0 +1,14 @@
+<package>
+  <description brief="visualizer">visualizer</description>
+  <author>Diana Koenraadt</author>
+  <license>TODO</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://falconswiki/visualizer</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="rosMsgs"/>
+  <depend package="common"/>
+  <depend package="geometry"/>
+</package>
+
+

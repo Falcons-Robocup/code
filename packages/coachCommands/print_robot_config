@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# Used in healthcheck and control suite
+# to display / process robot status files.
+# 
+# JFEI 2015-07-10 creation
+# JFEI 2015-07-12 allow use outside of falconsconfig.sh environment;
+# 
+
+
+export ROBOT_STATUS_FILE=/home/robocup/robot.status
+export ROBOT_CONFIG_FILE=/home/robocup/robot.cfg
+(
+    if [ -f "$ROBOT_STATUS_FILE" ]; then
+        cat $ROBOT_STATUS_FILE
+    fi
+    if [ -f "$ROBOT_CONFIG_FILE" ]; then
+        cat $ROBOT_CONFIG_FILE
+    fi
+)
+

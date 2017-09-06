@@ -1,0 +1,12 @@
+# have a single robot drive in a square
+move -4 -4 0
+wait4pos -4 -4 0.5
+move -4 4 0
+wait4pos -4 4 0.5
+move 4 4 0
+wait4pos 4 4 0.5
+move 4 -4 0
+wait4pos 4 -4 0.5
+move -4 -4 0
+wait4pos -4 -4 0.5
+

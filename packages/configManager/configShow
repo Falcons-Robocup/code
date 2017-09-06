@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# JFEI 2016-03-31
+# 
+
+
+
+# guess namespace
+ns=${ROS_NAMESPACE}
+if [ -z "$ns" ]; then
+    if [ -z "$TURTLE5K_ROBOTNUMBER" ]; then
+        ns="/teamA"
+    else
+        ns="/teamA/robot${TURTLE5K_ROBOTNUMBER}"
+    fi
+fi
+
+# get live params from rosserver
+# and ERROR if there is a mismatch with configOverride.txt
+params=`rosparam list $ns/globalConfig`
+overrideFile=/home/robocup/configOverride.txt
+if [ ! -f $overrideFile ]; then
+    echo "ERROR: no override file found!"
+fi
+if [ -z "$params" ]; then
+    echo "ERROR: no parameters found!"
+fi
+badParams=""
+for param in $params; do
+    liveValue=`rosparam get $param`
+    overrideValue=`grep ^$param $overrideFile | awk '{print $2}'`
+    echo $param $liveValue
+    if [ "$liveValue" != "$overrideValue" ]; then
+        badParams="$badParams $param"
+    fi
+done
+if [ ! -z "$badParams" ]; then
+    echo "ERROR: inconsistent parameters:$badParams"
+fi
+

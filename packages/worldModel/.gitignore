@@ -1,0 +1,13 @@
+.cproject
+.project
+.pydevproject
+bin/
+build/
+cfg/worldModel.cfgc
+cfg/cpp/
+docs/
+lib/
+msg_gen/
+src/worldModel/
+srv_gen/
+cfg/*.cfgc

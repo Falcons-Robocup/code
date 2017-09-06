@@ -1,0 +1,20 @@
+<package>
+  <description brief="common">
+
+     common
+
+  </description>
+  <author>Michel Koenen</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/TODO</url>
+
+  <export>
+  	<cpp cflags="-I${prefix}/include/ext"
+             lflags="-L${prefix}/lib  -Wl,-rpath,${prefix}/lib -lJSON"/>
+    <python path="${prefix}/src"/>
+  </export>
+
+</package>
+
+

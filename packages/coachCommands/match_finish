@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Finalize a match, on coach.
+# 
+# JFEI 2015-07-19
+
+# 
+
+
+# construct list of robots to apply to
+robots=`parse_robots $*`
+
+# run per-robot commands
+team_apply_q.sh $robots match_finish_robot
+
+# TODO download .bag file
+echo "TODO download .bag file to hippie"
+
+

@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Used in diagnostics via robotHealth
+# 
+# JFEI 2016-01-19 creation
+# 
+
+
+df | grep '/dev/sda' | head -1 | nawk '{print $5}' | sed 's/%//'
+

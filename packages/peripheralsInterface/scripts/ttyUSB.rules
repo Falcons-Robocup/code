@@ -1,0 +1,15 @@
+#one time config for the first time when the motion boards, compass is connected to the linux host.
+#do the below steps in linux host
+
+#step 1: sudo cp /home/robocup/falcons/code/packages/peripheralsInterface/scripts/ttyUSB.rules  /etc/udev/rules.d/
+#step 2: unplug and plug in back the usb hub to the linux host
+
+#if motion boards, compass are connected , /dev/ttyMotor0  /dev/ttyMotor1  /dev/ttyMotor2 /dev/ttyCompass0 files should be available.
+#TODO: add IO board, ball handler board.
+
+
+#ttyUSB motor
+SUBSYSTEMS=="usb-serial", DRIVERS=="pl2303", SYMLINK+="ttyMotor%n"
+
+#ttyUSB compass
+SUBSYSTEMS=="usb-serial", DRIVERS=="ftdi_sio", SYMLINK+="ttyCompass%n"

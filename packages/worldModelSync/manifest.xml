@@ -1,0 +1,23 @@
+<!-- $Id: manifest.xml 2031 2015-07-17 06:36:43Z jfei $ -->
+<package>
+  <description brief="WorldModelSync">
+
+     WorldModelSync
+
+  </description>
+  <author>Tim Kouters</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/WorldModelSync</url>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="worldModel"/>
+  <depend package="common"/>
+  <depend package="rosMsgs"/>
+  <depend package="diagnostics"/>
+  <depend package="dynamic_reconfigure"/>
+  <depend package="networkUDP"/>
+
+</package>
+
+

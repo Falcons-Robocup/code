@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+# Kill a simulation.
+# (Used to be falconskill.sh).
+#
+# JFEI 2016-03-11 creation
+
+
+
+(
+    killall coachControl
+    sleep 1
+    # stop remaining jobs/processes
+    jobStopAll
+    processStopAll
+) >/dev/null 2>&1
+

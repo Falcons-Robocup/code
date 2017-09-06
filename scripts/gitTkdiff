@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Andre Pool, October 2012
+
+# script to show git diff in a gui with use of tkdiff
+# add this (without #) to your ~/.gitconfig file
+
+# [diff]
+#   external = $HOME/falcons/code/scripts/gitTkdiff
+
+
+# if number arguments is 7 then diff argument 2 with 5
+# argument 2 is an text file then do diff, otherwise skip
+# always return true to caller
+
+# echo "$0 $1 $2 $3 $4 $5 $6 $7"
+[ $# -eq 7 ] && file "$5" | grep -q text && tkdiff "$2" "$5" || true

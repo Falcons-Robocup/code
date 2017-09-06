@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# Used in diagnostics via robotHealth
+# 
+# JFEI 2016-01-19 creation
+# 
+
+
+cd /home/robocup/falcons/code
+if [ -z "`imageStatus`" ]; then
+    git rev-parse --abbrev-ref HEAD
+else
+    imageStatus
+fi
+

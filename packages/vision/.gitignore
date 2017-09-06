@@ -1,0 +1,11 @@
+.cproject
+.project
+.pydevproject
+bin/
+build/
+cfg/cpp/
+cfg/vision.cfgc
+docs/
+lib/
+src/vision/
+

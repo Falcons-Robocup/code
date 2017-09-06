@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# Check context key (simulation).
+# It must be a 2-digit string, e.g. A1 or B6.
+# 
+# JFEI 2015-11-17
+# 
+
+
+
+# checks
+key=$CONTEXTKEY
+if [ -z "$key" ]; then
+    echo "ERROR: variable has no value: CONTEXTKEY" >&2
+    exit 1
+fi
+TURTLE5K_ROBOTNUMBER=${key:1:1}
+TURTLE5K_TEAMNAME=team${key:0:1}
+if [ ${TURTLE5K_TEAMNAME} != "teamA" -a ${TURTLE5K_TEAMNAME} != "teamB" ]; then
+    echo "ERROR: invalid teamname '${TURTLE5K_TEAMNAME}'" >&2
+    exit 1
+fi
+output=`echo "0123456" | grep -o "${TURTLE5K_ROBOTNUMBER}"`
+if [ -z "$output" ]; then
+    echo "ERROR: invalid robotnumber '${TURTLE5K_ROBOTNUMBER}'" >&2
+    exit 1
+fi
+

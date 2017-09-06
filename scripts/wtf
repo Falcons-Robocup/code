@@ -1,0 +1,85 @@
+#!/bin/bash
+#
+# General purpose dummy-proof checks.
+# 
+# JFEI 2016-03-23 creation with MBRC
+# 
+
+
+
+function errorExit
+{
+    echo
+    echo "ERROR: $1"
+    echo
+    if [ ! -z "$2" ]; then
+        echo -e "$2"
+        echo
+    fi
+    exit 1
+}
+
+
+
+echo -n "checking GIT repositories..."
+d=/home/robocup/falcons/code
+if [ ! -d $d ]; then
+    errorExit "did not find code repository at $d"
+fi
+d=/home/robocup/falcons/data
+if [ ! -d $d ]; then
+    errorExit "did not find data repository at $d"
+fi
+echo " OK"
+
+
+echo "checking installed ubuntu packages..."
+MISSING_PACKAGES=""
+for p in $(cat /home/robocup/falcons/code/config/apt_packages) ; do
+    o=$(apt-cache policy $p | grep Installed)
+    if [ "$o" = "  Installed: (none)" -o -z "$o" ]; then
+        MISSING_PACKAGES="$MISSING_PACKAGES $p"
+    fi
+done
+if [ ! -z "$MISSING_PACKAGES" ]; then
+    errorExit "found some missing packages" "run the following command to fix:\nsudo apt-get update ; sudo apt-get install -y$MISSING_PACKAGES"
+fi
+echo " OK"
+
+
+echo -n "checking wifi..."
+WLAN_ADAPTERS=$(/sbin/ifconfig -a | grep HWaddr | awk '{print $1}' | grep wlan)
+if [ -z "$WLAN_ADAPTERS" ]; then
+    WIFI_ONLINE=0
+    echo " no wifi found!"
+else
+    WIFI_ONLINE=1
+    echo
+    iwconfig
+fi
+
+
+if [ "$WIFI_ONLINE" = 1 ]; then
+    echo -n "checking wifi power management workaround..."
+    f=/etc/pm/power.d/wireless
+    if [ ! -L $f ]; then
+        errorExit "power management workaround not installed: $f" "run the following command to fix:\ncd /etc/pm/power.d ; sudo ln -s /home/robocup/falcons/code/scripts/wireless ; cd -"
+    fi
+    echo " OK"
+    echo -n "checking wifi power management status..."
+    if iwconfig $WLAN_ADAPTERS | grep -q "Power Management:on" ; then
+        errorExit "power management seems to be enabled, workaround is bad! inform Mathijs/Jan"
+    fi
+    echo " OK"
+fi
+
+
+
+# TODO check symlink for hosts
+
+
+# TODO check .bashrc
+
+
+# 
+

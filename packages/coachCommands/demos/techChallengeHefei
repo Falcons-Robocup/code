@@ -1,0 +1,5 @@
+# start special action for techChallenge Hefei 2015
+sleep 15
+action 901
+sleep 1
+action 901

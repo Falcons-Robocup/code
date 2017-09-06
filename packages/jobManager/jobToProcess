@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Convert a job id to a list of processes
+# 
+# JFEI 2015-11-12
+# 
+
+
+
+# check argument
+jobid=$1
+if [ -z "$jobid" ]; then
+    echo "ERROR: this function expects a job id as argument"
+    exit 1
+fi
+
+# in case jobid starts with a context string, then cut it off
+jobid=`echo $jobid | sed 's/^[AB][0123456]_//'`
+
+# find the job name
+line=`jobMapping | grep "^$jobid "`
+
+# check for success
+if [ -z "$line" ]; then
+    echo "ERROR: job not found: $jobid"
+    exit 1
+fi
+
+# process each process/job
+for pj in `echo $line | cut -f 1 -d ' ' --complement`; do
+    isjob=0
+    isprocess=0
+    # check if it is a job
+    if jobMapping | grep -q "^$pj "; then
+        isjob=1
+    fi
+    # check if it is a process
+    if processMapping | grep -q "^$pj "; then
+        isprocess=1
+    fi
+    # check that the key is not both a process and a job
+    if [ "$isprocess$isjob" = "11" ]; then
+        echo "ERROR: ambiguous key: $pj"
+        exit 1
+    fi
+    # check that it is either a process or a job
+    if [ "$isprocess$isjob" = "00" ]; then
+        echo "ERROR: bad key: $pj"
+        exit 1
+    fi
+    # recurse for jobs
+    if [ "$isjob" = "1" ]; then
+        jobToProcess $pj
+    else
+        # display process key
+        echo $pj
+    fi
+    
+done
+
+
+

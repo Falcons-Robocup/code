@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# Used in diagnostics via robotHealth
+# 
+# JFEI 2016-01-19 creation
+# 
+
+
+if [ ! -z "$1" ]; then
+    files=$(ls $1/*.std* 2>/dev/null)
+else
+    files=$(ls $(newest_logdir.py)/*.std* 2>/dev/null)
+fi
+
+if [ ! -z "$files" ]; then
+    # grep anything which looks like an error
+    # but ignore things like "waiting for ROS to come online..."
+    egrep -i -A1 'error|failed|std::runtime|std::except' $files \
+       | grep -v "Retrying..."
+fi | head -10
+
+

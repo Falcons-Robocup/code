@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Used in diagnostics via robotHealth
+# 
+# JFEI 2016-01-19 creation
+# 
+
+
+nm-tool | grep \* | tail -1 | awk '{print $1}' | tr -d ':*'
+

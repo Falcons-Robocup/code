@@ -1,0 +1,39 @@
+worldModelNode/ballTracker: {
+  confidenceOmniPref            : True,
+  solverCoreSpeed               : True,
+  useFrontVision                : False,
+  useFriendlyMeas               : True,
+  friendlyMeasurementsDistance  : 3.0, # if ball is closer than this distance, only use own measurements
+  numberOfBallsWarningThreshold : 10,
+  solverCoreMinVmeas            : 3,
+  solverBounceMinMeasurements   : 5,
+  measPerOrder                  : 5,
+  groupingDt                    : 0.033,
+  outlierNSigma                 : 3.0,
+  outlierMaxIter                : 2,
+  outlierIterFraction           : 0.1,  # max portion to throw out per iteration, to prevent rejecting good data 
+  confidenceNumCams             : 1,
+  confidenceMeasLim             : 5,
+  maxMaybeBalls                 : 1,
+  solverTrackerXYTolerance      : 2.5,
+  solverTrackerTimeout          : 0.8,
+  solverCoreMinVdt              : 0.05,
+  solverCoreWeight              : 0.1,
+  solverBounceDt                : 0.1,
+  solverBounceAge               : 0.5,
+  solverMinDv                   : 6.0,
+  confidenceFreshLim            : 0.0,
+  confidenceAgeLim              : 0.5,
+  confidenceFitLim1             : 0.20,
+  confidenceFitLim2             : 0.60,
+  confidenceVLim1               : 2.0,
+  confidenceVLim2               : 20.0,
+  confidenceZLim1               : 1.0,
+  confidenceZLim2               : 5.0,
+  confidenceGoodLimit           : 0.5,
+  confidenceMaybeLimit          : 0.2}
+rosdistro: 'groovy'
+roslaunch:
+  uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}
+rosversion: '1.9.55'
+run_id: d837e3c8-6813-11e4-acf7-00197e8a14ee

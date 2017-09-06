@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# Finalize a match, on robot.
+# 
+# JFEI 2015-07-19
+
+# 
+
+
+set_robot_config mode develop
+falcons_kill.sh
+

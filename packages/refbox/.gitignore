@@ -1,0 +1,7 @@
+bin
+build
+lib
+cfg/*.cfgc
+cfg/cpp
+docs
+src/refbox

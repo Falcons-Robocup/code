@@ -1,0 +1,26 @@
+# best fitting candidate is selected from a bunch of vision candidates
+#
+# config
+CONFIGURE  trackerScoreAcceptanceThreshold   1.5
+CONFIGURE  visionOwnWeightFactor             0.2
+CONFIGURE  settlingTime                      0.0
+# input stream
+VISION           0.000000      0.000000  -3.00   5.00   2.00   0.95
+CALCULATE        0.100000
+VISION           0.200000      0.200000   0.00   0.00   0.00   0.95  # few meters away --> reject
+VISION           0.200000      0.200000   3.00  -5.00   5.14   0.95  # mirrored position --> ACCEPT
+VISION           0.200000      0.200000  -3.00   5.00   5.14   0.95  # same position but halfway rotated --> reject
+#TODO VISION     0.200000      0.200000  -3.00   4.00   2.10   0.95  # only a single meter away
+VISION           0.200000      0.200000   2.00   2.00   1.00   0.95  # another one which is a few meters away --> reject
+CALCULATE        0.300000
+VISION           0.400000      0.400000   0.00   0.00   0.00   0.95  # few meters away --> reject
+VISION           0.400000      0.400000  -3.00   5.00   5.14   0.95  # same position but halfway rotated --> reject
+VISION           0.400000      0.400000  -3.00   4.00   2.10   0.95  # only a single meter away --> ACCEPT
+VISION           0.400000      0.400000   2.00   2.00   1.00   0.95  # another one which is a few meters away --> reject
+CALCULATE        0.500000
+# results               t valid       x      y    phi     vx     vy   vphi
+RESULT           0.100000     1   -3.00   5.00   2.00   0.00   0.00   0.00
+RESULT           0.300000     1   -3.00   5.00   2.00   0.00   0.00   0.00  # accept mirror, do not flip
+RESULT           0.500000     1   -3.00   4.80   2.02   0.00   0.00   0.00  # accept but with 20% weight
+# TODO: if the one-meter-away candidate would be fed at t=0.2, then it wins from the mirrored position...
+

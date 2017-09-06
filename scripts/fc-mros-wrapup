@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Jan Feitsma, June 2015
+
+# At the end of a multi-ros falcons_control session, all data should be gathered  
+# and stored on coach laptop for further analysis.
+# The falcons_control session uses an id, for instance falcons_control_20150614_190643
+# This becomes a directory in /var/tmp on coach laptop and on each involved robot.
+# So at the end, this script should salvage those directories.
+# Furthermore, .bag files need to be merged so we can analyze individual worldmodels.
+
+
+echo "this script is not used anymore, see instead store_logging.sh"
+# this file may be deleted soon
+exit 1
+
+
+session=$1
+if [ -z "$session" ]; then
+   echo "ERROR: no argument given, expected something like"
+   echo " falcons_control_20150614_190643"
+   exit 1
+fi
+shift
+d=/var/tmp/$session
+if [ ! -d $d ]; then
+   echo "ERROR: logging dir not found: $d"
+   exit 1
+fi
+
+# note: /var/tmp/falcons_control* folders are cleaned up automatically by falcons_control
+# so let's copy to a location where we can choose ourselves
+if [ ! -d ~/LOGS ]; then
+   mkdir ~/LOGS
+fi
+targetdir=~/LOGS/$session
+mkdir $targetdir
+
+
+
+# copy coach directory
+echo "copying coach folder $d"
+echo -n " size = "
+du -h $d --max-depth 1 | awk '{print $1}'
+cp -rp $d $targetdir
+mv $targetdir/$session $targetdir/coach
+
+
+# iterate over specified robots
+for robot in r1 r2 r3 r4 r5 r6; do
+   echo "copying remote folder on robot $robot"
+   echo -n " size = "
+   ssh $robot du -h $d --max-depth 1 | awk '{print $1}'
+   scp -r $robot:$d $targetdir
+   mv $targetdir/$session $targetdir/$robot
+done
+
+
+# merge matchlog .bag files
+#matchlogmerge.py $targetdir
+# not yet implemented... how to deal with time diff? NTP sync?
+
+
+

@@ -1,0 +1,559 @@
+%YAML:1.0
+global:
+   dimensions : dimensionsDeLocht
+   centerPixel : 340
+   goodEnoughAngleToPixelRatio : 3.0 # error = xDelta + yDelta + angleToPixelRatio * rzDelta
+   goodEnoughXDeltaKeepThreshold : 0.65 # in floor meters (double type)
+   goodEnoughYDeltaKeepThreshold : 0.65 # in floor meters (double type)
+   goodEnoughRzDeltaKeepThreshold : 40 # in degrees (int type)
+   goodEnoughKeepWatchdog : 120 # @ 30fps change state to do not know where we are in 4 seconds
+   goodEnoughNewMinAge : 80 #  
+   goodEnoughNewThreshold : 0.40 # e.g. 0.17 for the score and 0.23 for the lifetime
+   multicastFrequency : 5
+   multicastIp : "224.16.32.74"
+   multicastPort : 55555
+   scoreThresHold : 0.175
+   cameraTimingOffset : 34
+
+# ASML Falcons De Locht Field
+dimensionsDeLocht: # use definitions MSL specifications
+   A : 18.000 # field width including lines (x)
+   B : 12.000 # field height including lines (y)
+   C :  6.506 # penalty area height including lines (y)
+   D :  3.503 # goal area height including lines (y)
+   E :  2.253 # penaly araa width including lines (x)
+   F :  0.756 # goal area width including lines (x)
+   G :  0.753 # corner circle radius including lines
+   H :  4.002 # inner circle diameter including lines
+   I :  3.052 # penalty mark distance (x) including line and mark
+   J :  0.104 # penalty mark diameter
+   K :  0.162 # center mark diameter
+   goalWidth : 2.243 # # including goal posts
+   goalDepth : 0.000 # 0.668 goalpost already marked as sunspot
+   lineThickness : 0.130
+   goalLineBorder : 0.75 # 1.500 exclude back side goal 0.760 # area outside white lines
+   touchLineBorder : 1.00 # 1.499 allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 32
+
+# Nagoya average of fiel a and field b (the field sizes are the same within 10mm)
+# WARNING: do not forget to set the camera frequency to 60Hz
+dimensionsNagoya: # use definitions MSL specifications
+   A : 18.001 # field width including lines (x)
+   B : 12.003 # field height including lines (y)
+   C :  6.503 # penalty area height including lines (y)
+   D :  3.502 # goal area height including lines (y)
+   E :  2.252 # penaly araa width including lines (x)
+   F :  0.760 # goal area width including lines (x)
+   G :  0.760 # corner circle radius including lines
+   H :  4.011 # inner circle diameter including lines
+   I :  3.052 # penalty mark distance (x) including line and mark
+   J :  0.103 # penalty mark diameter
+   K :  0.130 # center mark diameter
+   goalWidth : 2.255 # including goal posts
+   goalDepth : 0.000 # 0.503 incuuding goal post, goalpost already marked as sunspot
+   lineThickness : 0.132
+   goalLineBorder : 1.00 # 1.333 exclude back side goal 0.760 # area outside white lines
+   touchLineBorder : 1.00 # 1.213 allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 31
+
+# Coimbra Portugal
+dimensionsCoimbra: # use definitions MSL specifications
+   A : 17.985 # field width including lines (x)
+   B : 11.995 # field height including lines (y)
+   C : 6.495 # penalty area height including lines (y)
+   D : 3.493 # goal area height including lines (y)
+   E : 2.249 # penaly araa width including lines (x)
+   F : 0.753 # goal area width including lines (x)
+   G : 0.751 # corner circle radius including lines
+   H : 3.978 # inner circle diameter including lines
+   I : 3.054 # penalty mark distance (x) including line and mark
+   J : 0.101 # penalty mark diameter (for rounding odd mm instead of even)
+   K : 0.173 # center mark diameter (for rounding odd mm instead of even)
+   goalWidth : 2.275 # including goal posts
+   goalDepth : 0.000 # 0.619 no need for a goalpost in Leipzig (goal post is already marked as sunspot)
+   lineThickness : 0.139
+   goalLineBorder : 0.771 # 0.937 area outside white lines
+   touchLineBorder : 0.778 # 0.967 allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 32
+
+# Liepzig Secondairy indoor field (almost same as main field)
+dimensionsLeipzig: # use definitions MSL specifications
+   A : 17.998 # field width including lines (x)
+   B : 11.997 # field height including lines (y)
+   C : 6.497 # penalty area height including lines (y)
+   D : 3.503 # goal area height including lines (y)
+   E : 2.254 # penaly araa width including lines (x)
+   F : 0.758 # goal area width including lines (x)
+   G : 0.880 # corner circle radius including lines
+   H : 4.001 # inner circle diameter including lines
+   I : 3.055 # penalty mark distance (x) including line and mark
+   J : 0.101 # penalty mark diameter (for rounding odd mm instead of even)
+   K : 0.163 # center mark diameter (for rounding odd mm instead of even)
+   goalWidth : 2.258 # including goal posts
+   goalDepth : 0.000 # no need for a goalpost in Leipzig (goal post is already marked as sunspot)
+   lineThickness : 0.133
+   goalLineBorder : 0.771 # area outside white lines
+   touchLineBorder : 0.778 # allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 32
+
+# Portugal Robotica 2016 Field
+dimensionsBraganca: # use definitions MSL specifications
+   A : 18.000 # field width including lines (x)
+   B : 12.499 # field height including lines (y)
+   C : 6.512 # penalty area height including lines (y)
+   D : 3.505 # goal area height including lines (y)
+   E : 2.249 # penaly araa width including lines (x)
+   F : 0.761 # goal area width including lines (x)
+   G : 0.758 # corner circle radius including lines
+   H : 4.002 # inner circle diameter including lines
+   I : 3.057 # penalty mark distance (x) including line and mark
+   J : 0.105 # penalty mark diameter
+   K : 0.167 # center mark diameter
+   goalWidth : 2.287 # location of the left and right goal pole (outside measured) APOX double check this in the locht!
+   goalDepth : 0.3625 # 0.617 use not full depth length otherwise to much wrong locks
+   lineThickness : 0.133
+   goalLineBorder : 0.50 # 0.958 exclude back side goal 0.760 # area outside white lines
+   touchLineBorder : 0.883 # allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 32
+
+# Evolution Dutch Open Field
+dimensionsEvoluon: # use definitions MSL specifications
+   A : 18.010 # field width including lines (x)
+   B : 11.998 # field height including lines (y)
+   C : 6.502 # penalty area height including lines (y)
+   D : 3.505 # goal area height including lines (y)
+   E : 2.257 # penaly araa width including lines (x)
+   F : 0.767 # goal area width including lines (x)
+   G : 0.753 # corner circle radius including lines
+   H : 4.000 # inner circle diameter including lines
+   I : 3.057 # penalty mark distance (x) including line and mark
+   J : 0.104 # penalty mark diameter
+   K : 0.160 # center mark diameter
+   goalWidth : 2.203 # location of the left and right goal pole (outside measured) APOX double check this in the locht!
+   goalDepth : 0.3625 # 0.709 use not full depth length otherwise to much wrong locks
+   lineThickness : 0.130
+   goalLineBorder : 0.50 # exclude back side goal 0.760 # area outside white lines
+   touchLineBorder : 1.2 # allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 32
+
+# Hefei China Large fields (average of both fields)
+dimensionsHefeiLarge: # use definitions MSL specifications
+   A : 18.04 # field width including lines (x)
+   B : 12.02 # field height including lines (y)
+   C : 6.490 # penalty area height including lines (y)
+   D : 3.503 # goal area height including lines (y)
+   E : 2.246 # penaly araa width including lines (x)
+   F : 0.755 # goal area width including lines (x)
+   G : 0.768 # corner circle radius including lines
+   H : 4.046 # inner circle diameter including lines
+   I : 3.05 # penalty mark distance (x) including line and mark, does not exist on field
+   J : 0.100001 # penalty mark diameter, does not exist on field
+   K : 0.100001 # center mark diameter, does not exist on field
+   goalWidth : 2.255 # location of the left and right goal pole
+   goalDepth : 0.3625 # use not full depth length otherwise to much wrong locks
+   lineThickness : 0.130
+   goalLineBorder : 0.50 # exclude back side goal 0.760 # area outside white lines
+   touchLineBorder : 0.75 # allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 32
+
+# Hefei China small field, used for challenge
+dimensionsHefeiSmall: # use definitions MSL specifications
+   A : 12.00 # field width including lines (x)
+   B : 7.98 # field height including lines (y)
+   C : 5.200 # penalty area height including lines (y)
+   D : 3.294 # goal area height including lines (y)
+   E : 1.699 # penaly araa width including lines (x)
+   F : 0.762 # goal area width including lines (x)
+   G : 0.400 # corner circle radius including lines, does not exist on field
+   H : 2.027 # inner circle diameter including lines
+   I : 2.000 # penalty mark distance (x) including line and mark, does not exist on field
+   J : 0.100001 # penalty mark diameter, does not exist on field
+   K : 0.100001 # center mark diameter, does not exist on field
+   goalWidth : 2.248 # location of the left and right goal pole
+   goalDepth : 0.3625 # use not full depth length otherwise to much wrong locks
+   lineThickness : 0.105
+   goalLineBorder : 0.50 # exclude back side goal 0.760 # area outside white lines
+   touchLineBorder : 0.75 # allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 32
+
+# Falcons Demo Field dimensions including lines
+dimensionsFalconsDemoFull: # use definitions MSL specifications
+   A : 8.092 # field width including lines (x), measured by Thomas
+   B : 6.082 # field height including lines (y), measured by Thomas
+   C : 4.275 # penalty area height including lines (y), measured by Thomas
+   D : 3.191 # goal area height including lines (y), measured by Thomas
+   E : 1.287 # penaly araa width including lines (x), measured by Thomas
+   F : 0.496 # goal area width including lines (x), measured by Thomas
+   G : 0.484 # corner circle radius including lines, measured by Thomas
+   H : 1.602 # inner circle diameter including lines, measured by Thomas
+   I : 2.137 # penalty mark distance (x) including line and mark, unknown if measured/correct
+   J : 0.131 # penalty mark diameter, unknown if measured/correct
+   K : 0.131 # center mark diameter, measured by Thomas
+   goalWidth : 1.975 # location of the left and right goal pole, unknown if measured/correct
+   goalDepth : 0.2 # use not full depth length otherwise to much wrong locks, unknown if measured/correct
+   lineThickness : 0.079 # unknown if measured/correct
+   goalLineBorder : 0.304 # exclude back side goal 0.760 # area outside white lines
+   touchLineBorder : 0.61 # allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 32
+
+# TechUnited Field dimensions including lines
+dimensionsTechUnited: # use definitions MSL specifications
+   A : 8.08 # field width including lines (x), measured by Thomas
+   B : 6.09 # field height including lines (y), measured by Thomas
+   C : 4.28 # penalty area height including lines (y), measured by Thomas
+   D : 3.175 # goal area height including lines (y), measured by Thomas
+   E : 1.28 # penaly araa width including lines (x), measured by Thomas
+   F : 0.48 # goal area width including lines (x), measured by Thomas
+   G : 0.48 # corner circle radius including lines, measured by Thomas
+   H : 1.57 # inner circle diameter including lines, measured by Thomas
+   I : 2.125 # penalty mark distance (x) including line and mark, unknown if measured/correct
+   J : 0.100001 # penalty mark diameter, unknown if measured/correct
+   K : 0.21 # center mark diameter, measured by Thomas
+   goalWidth : 1.975 # location of the left and right goal pole, unknown if measured/correct
+   goalDepth : 0.2 # use not full depth length otherwise to much wrong locks, unknown if measured/correct
+   lineThickness : 0.125 # unknown if measured/correct
+   goalLineBorder : 0.50 # exclude back side goal 0.760 # area outside white lines
+   touchLineBorder : 0.75 # allow robot's to get a lock when out of the field
+   metersToPixels : 50
+   remoteMetersToPixels : 32
+
+diagnostics:
+   period : 5.0 # time in seconds between sending two images throug diagnostics, mind the bandwidth! (40kb per frame)
+   jpgCompress : 40 # from 0 to 100. A lower value means smaller size.
+   pngCompress : 9 # from 0 to 9. A higher value means a smaller size.
+   
+line:
+   hue.center : 89 #  hue range from 0 to 179
+   hue.delta : 179 # white has all "colors", so full range
+   sat.min : 0
+   sat.max : 75 # white has low saturation, calibrate on back of goal
+   val.min : 90 # keep low to detect goal in shadow as white!, highly depending on illumination (check in shade of goal if goal gets excluded)
+   calVal.min : 150 # calibration with black and white chessboard floor requires different min value
+   val.max : 255 # not upto 255 because of light source reflections 
+   linePointsMinimal : 5 # amount of points to be clasified as line
+   linePointsNumber : 90 # maximal amount of line points used for search
+   lineRejectWidth : 24 # wider lines will be rejected, worst case is robot in exact center
+   lineHoleWidth : 15 # combine parts of lines e.g. because of dirty spots
+   erodeSlider : 11 # set high so lines will excluded from the sun spot / goal
+   dilateSlider : 16 # set high to be sure contour increases again after it has been reduced by erode, otherwise white line around contour
+   sunSpotWidth : 60
+   sunSpotHeigth : 60
+   sunSpotRatio : 30 # ( ratio * real sun width * real sun height ) / 100 = minimal real sun spot pixels, so 100 is completely filled
+   goalRearMask : 200 # amount of pixels blocked by robot1 to prevent issues with the goal net
+   goalRearDistance : 90 # maximal pixel distance from robot to goal line where mask is allowed
+   goalRearAngle : 20 # angle offset in which the goal rear mask is allowed
+   goalRearWatchdog : 100 # watchdog (in frames) removing mask when no new good enough position has been provided
+   
+
+floor: # do not set the filter window of the floor to small because it is used as input for the dynamic color calibration
+   hue.center : 77 #  hue range from 0 to 179
+   hue.delta : 20
+   sat.min : 105
+   sat.max : 255
+   val.min : 85 # highly depending on illumination
+   val.max : 255 
+
+ball:
+   hue.center : 32 #  hue range from 0 to 179 (check when ball is on edge of camera)
+   hue.delta : 15 # NOTE: green starts 50, so stay below that
+   sat.min : 95 # ball at edge of round viewer loses color saturation
+   sat.max : 255
+   val.min : 105 # highly depending on illumination
+   val.max : 255 
+   erodeSlider : 2 # remove the noise
+   dilateSlider : 8
+   size : 40 # minimal amount of ball pixels after dilate step (in round viewer)
+   sizeMax : 1500 # maximal amount of ball pixels after dilate step (in round viewer), e.g. floor reflection or yellow floor outside field
+
+possession: # ball possession parameters
+   hue.center : 25 #  hue range from 0 to 179
+   hue.delta : 20 # NOTE: green starts 50, so stay below that, use large range, better to have a false positive then miss a ball possession
+   sat.min : 80 # ball at edge of round viewer loses color saturation
+   sat.max : 255
+   val.min : 60 # highly depending on illumination
+   val.max : 255 
+   width : 30
+   height : 10 # keep low to prevent near balls as possession
+   threshold : 40 # minimum amount of pixel before signaling ball possession
+
+obstacle:
+   hue.center : 89 # // hue range from 0 to 179
+   hue.delta : 180
+   sat.min : 0
+   sat.max : 60
+   val.min : 0
+   val.max : 20 # NOTE: obstacles in goal, caused by shadows, are allowed
+   erodeSlider : 1
+   dilateSlider : 5
+   size : 600 # amount object dilate pixel in round viewer, should be high to prevent false positive in goal shadow!
+
+# APOX todo: set to correct color
+cyan:
+   hue.center : 102 #  hue range from 0 to 179 (check when cyan is on edge of camera)
+   hue.delta : 7
+   sat.min : 110 # cyan at edge of round viewer loses color saturation
+   sat.max : 255
+   val.min : 90 # highly depending on illumination
+   val.max : 255 
+   erodeSlider : 2 # remove the noise
+   dilateSlider : 8
+   size : 40 # minimal amount of cyan pixels after dilate step (in round viewer)
+   sizeMax : 1500 # maximal amount of cyan pixels after dilate step (in round viewer), e.g. floor reflection or yellow floor outside field
+
+# APOX todo: set to correct color
+magenta:
+   hue.center : 169 #  hue range from 0 to 179 (check when magenta is on edge of camera)
+   hue.delta : 10
+   sat.min : 85 # magenta at edge of round viewer loses color saturation
+   sat.max : 255
+   val.min : 40 # highly depending on illumination
+   val.max : 255 
+   erodeSlider : 2 # remove the noise
+   dilateSlider : 8
+   size : 40 # minimal amount of magenta pixels after dilate step (in round viewer)
+   sizeMax : 1500 # maximal amount of magenta pixels after dilate step (in round viewer), e.g. floor reflection or yellow floor outside field
+
+red:
+   hue.center : 5 #  hue range from 0 to 179 (check when red is on edge of camera)
+   hue.delta : 5
+   sat.min : 100 # red at edge of round viewer loses color saturation
+   sat.max : 255
+   val.min : 95 # highly depending on illumination
+   val.max : 255 
+   erodeSlider : 2 # remove the noise
+   dilateSlider : 8
+   size : 40 # minimal amount of red pixels after dilate step (in round viewer)
+   sizeMax : 1500 # maximal amount of red pixels after dilate step (in round viewer), e.g. floor reflection or yellow floor outside field
+
+camera: # (Logitech HD Webcam C525) usb camera settings
+   backlightCompensation : 1 # off=0 on=1 factory default=1
+   # NO spotlight 150, spotlight 130
+   brightness : 130 # min=0 max=255 step=1 factory default=128
+   contrast : 32 # min=0 max=255 step=1 factory default=32
+   exposureAbsolute : 166 # min=3 max=2047 step=1 factory default=166 (see DynamicCalibration.cpp before changing)
+   exposureAuto : 0 # manual mode = 0 aperture priority mode = 1 factory default 1
+   exposureAutoPriority : 0 # factory default= 1
+   # focusAbsolute : configured per robot # factory default 65
+   focusAuto : 0 # factory default=1
+   # NO spotlights 150, spotlights 120
+   gain : 140 # min=0 max=255 step=1 factory default= 35
+   led1Frequency : 0 # min=0 max=255 step=1 factory default=0 (not available in v4l2, requires logitech library)
+   led1Mode : 0 # off=0 on=1 blink=2 auto=3, factory default 3 (not available in v4l2, requires logitech library)
+   panAbsolute : 100 # min=0 max=200 step=1 factory default=100
+   powerLineFrequency : 1 # disabled=0 50Hz=1 60Hz=2 factory default 2
+   saturation : 32 # min=0 max=255 step=1 factory default=32
+   sharpness : 22 # min=0 max=255 step=1 factory default=22
+   tiltAbsolute : 100 # min=0 max=200 step=1 factory default=100
+   whiteBalanceTemperature : 4600 # min=2800 max=6500 step=1 factory default=5500
+   whiteBalanceAuto : 0 # factory default=1, if 1 then whiteBalanceTemperature is ignored
+   zoomAbsolute : 1 # min=1 max=5 step=1 factory default=1
+
+robot1:
+   focusAbsolute : 95 # min=0 max=255 step=5 default=60
+   xOpticalBias : 21 # correct xCenter is 60, range is 0 to 120 : 121 pixels
+   yOpticalBias : 14 # correct yCenter is 20, range is 0 to 39 : 40 pixels
+   yOffsetBallPossession : 39 # from center of screen
+
+   xExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   yExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   rzExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzBallExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzObstacleExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+
+   cameraRadiusObstacleMin : 55 # exclude center area for line and object, but not for ball to be able to see the ball "in" shooter
+   cameraRadiusObstacleMax : 340 # exclude distorted area at end of parabolic mirror for lines and obstacles (rapid increase meter/pixel ratio)
+   cameraRadiusLineMax : 350 # exclude distorted area at end of parabolic mirror for lines (rapid increase meter/pixel ratio)
+   cameraRadiusBallMax : 365 # exclude distorted area at end of parabolic mirror for balls (rapid increase meter/pixel ratio)
+   goalPostIn : 0 # draw additional goal post projected outside the field
+   goalPostOut : 0 # draw additional goal post projected outside the field
+   
+   # deWarp values from cameraCalibrate.py and chessBoard video
+   # the deWarp formula : meters : a * tan ( b*pixel ) + c * pixel + d * pixel^2
+   # deWarp values from cameraCalibrate.py and chessBoard video
+   # error : 3.72822549912
+   deWarp.pixelPow1 : 0.0421220834645
+   deWarp.pixelPow2 : -0.000385283888378
+   deWarp.outSideTan : 131.64572514
+   deWarp.inSideTan : 0.00323506448749
+robot2:
+   focusAbsolute : 75 # min=0 max=255 step=5 default=60
+   xOpticalBias : 36
+   yOpticalBias : 3
+   yOffsetBallPossession : 45 # from center of screen
+
+   xExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   yExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   rzExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzBallExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzObstacleExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+
+   cameraRadiusObstacleMin : 55
+   cameraRadiusObstacleMax : 336
+   cameraRadiusLineMax : 328
+   cameraRadiusBallMax : 345
+   goalPostIn : 0
+   goalPostOut : 0
+
+   # error: 6.375
+   deWarp.pixelPow1 : 0.21036317
+   deWarp.pixelPow2 : 0.00010839
+   deWarp.outSideTan : 48.99716575
+   deWarp.inSideTan : 0.00365684
+robot3:
+   focusAbsolute : 75 # min=0 max=255 step=5 default=60
+   xOpticalBias : 33
+   yOpticalBias : 20
+   yOffsetBallPossession : 47 # from center of screen
+
+   xExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   yExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   rzExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzBallExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzObstacleExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+
+   cameraRadiusObstacleMin : 60
+   cameraRadiusObstacleMax : 335
+   cameraRadiusLineMax : 335
+   cameraRadiusBallMax : 355
+   goalPostIn : 0
+   goalPostOut : 0
+
+   # error: 6.400
+   deWarp.pixelPow1 : 0.21815914
+   deWarp.pixelPow2 : 0.00007054
+   deWarp.outSideTan : 46.77255870
+   deWarp.inSideTan : 0.00372195
+robot4:
+   focusAbsolute : 85 # min=0 max=255 step=5 default=60
+   xOpticalBias : 33
+   yOpticalBias : 22
+   yOffsetBallPossession : 43 # from center of screen
+
+   xExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   yExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   rzExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzBallExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzObstacleExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+
+   cameraRadiusObstacleMin : 63
+   cameraRadiusObstacleMax : 338
+   cameraRadiusLineMax : 338
+   cameraRadiusBallMax : 357
+   goalPostIn : 0
+   goalPostOut : 0
+
+   # error: 9.545
+   deWarp.pixelPow1 : -0.02707278
+   deWarp.pixelPow2 : -0.00021095
+   deWarp.outSideTan : 141.95932084
+   deWarp.inSideTan : 0.00316509
+robot5:
+   focusAbsolute : 100 # min=0 max=255 step=5 default=60
+   xOpticalBias : 56
+   yOpticalBias : 9
+   yOffsetBallPossession : 40 # from center of screen
+
+   xExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   yExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   rzExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzBallExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzObstacleExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+
+   cameraRadiusObstacleMin : 45
+   cameraRadiusObstacleMax : 350
+   cameraRadiusLineMax : 350
+   cameraRadiusBallMax : 367
+   goalPostIn : 0
+   goalPostOut : 0
+ 
+   # error : 8.34930758967
+   deWarp.pixelPow1 : -0.0349106546108
+   deWarp.pixelPow2 : -0.000444550241271
+   deWarp.outSideTan : 161.343352065
+   deWarp.inSideTan : 0.003153498701
+robot6:
+   focusAbsolute : 80 # min=0 max=255 step=5 default=60
+   xOpticalBias : 75
+   yOpticalBias : 32
+   yOffsetBallPossession : 38 # from center of screen
+
+   xExportOffset : 100 # 113 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   yExportOffset : 100 # 84 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   rzExportOffset : 100 # 83 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzBallExportOffset : 100 # 69 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzObstacleExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+
+   cameraRadiusObstacleMin : 50
+   cameraRadiusObstacleMax : 335
+   cameraRadiusLineMax : 335
+   cameraRadiusBallMax : 350
+   goalPostIn : 0
+   goalPostOut : 0
+
+   # error: 6.044
+   deWarp.pixelPow1 : -0.00619623
+   deWarp.pixelPow2 : -0.00039238
+   deWarp.outSideTan : 150.96233794
+   deWarp.inSideTan : 0.00316997
+
+robot7: # webcam and mirror on tri-pod connected to pannekoek
+   focusAbsolute : 125 # min=0 max=255 step=5 default=60
+   xOpticalBias : 75
+   yOpticalBias : 21
+   yOffsetBallPossession : 36 # from center of screen
+
+   xExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   yExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   rzExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzBallExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzObstacleExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+
+   cameraRadiusObstacleMin : 30
+   cameraRadiusObstacleMax : 335
+   cameraRadiusLineMax : 335
+   cameraRadiusBallMax : 350
+   goalPostIn : 0
+   goalPostOut : 0
+
+   # deWarp just copied values from robot6 
+   # error : 7.4388063018
+   deWarp.pixelPow1 : 0.118325795832
+   deWarp.pixelPow2 : -0.000298597939063
+   deWarp.outSideTan : 101.756249702
+   deWarp.inSideTan : 0.00336691565693
+
+robot8: # just a webcam connected to fiction
+   focusAbsolute : 115 # min=0 max=255 step=5 default=60
+   xOpticalBias : 75
+   yOpticalBias : 21
+   yOffsetBallPossession : 36 # from center of screen
+
+   xExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   yExportOffset : 100 # align optical center to mechanical center, value as on slider, pixels offset = value - 100/10.0, default is 100
+   rzExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzBallExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+   rzObstacleExportOffset : 100 # align optical center to mechanical center, value as on slider, angle offset = value - 100/10.0, default is 100
+
+   cameraRadiusObstacleMin : 30
+   cameraRadiusObstacleMax : 335
+   cameraRadiusLineMax : 335
+   cameraRadiusBallMax : 350
+   goalPostIn : 0
+   goalPostOut : 0
+
+   # deWarp just copied values from robot6 
+   # error : 7.4388063018
+   deWarp.pixelPow1 : 0.118325795832
+   deWarp.pixelPow2 : -0.000298597939063
+   deWarp.outSideTan : 101.756249702
+   deWarp.inSideTan : 0.00336691565693
+

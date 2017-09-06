@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# JFEI 2016-05-02 creation
+#
+# Deploy an image to given robots. 
+# If image name is not given (option -i), a choice menu will be shown.
+#
+# See for more info wiki:buildImages
+
+
+
+# settings
+imageLocation=~/IMAGES
+imageServer=`imageServer`
+image=""
+
+
+# option parsing
+while getopts "i:s:" opt; do
+    case "$opt" in
+    i)  image=$OPTARG
+        ;;
+    s)  imageServer=$OPTARG
+        ;;
+    esac
+done
+shift $((OPTIND-1))
+
+
+# which robots to deploy to?
+robots=`parse_robots $*`
+
+
+# determine which image to deploy
+if [ -z "$image" ]; then
+    while :; do
+        i=0
+        echo "available images:"
+        images[0]=
+        for img in $imageLocation/*.tgz; do
+            let "i = i + 1"
+            printf "%3d  " $i
+            basename $img
+            images[i]=$img
+        done
+        echo "choose an image: "
+        read choice
+        if [ "$choice" -le $i -a "$choice" -gt 0 ]; then
+            break
+        fi
+        echo "ERROR: invalid choice, try again"
+    done
+    image=${images[choice]}
+fi
+
+
+# deploy to robots
+echo
+echo "deploying image $image to robots $robots"
+team_apply_q.sh $robots imageApply -s $imageServer `basename $image`
+

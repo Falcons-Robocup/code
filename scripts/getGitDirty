@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Used in diagnostics via robotHealth
+# 
+# JFEI 2016-01-19 creation
+# 
+
+
+cd /home/robocup/falcons/code
+out=`git status --porcelain 2>/dev/null`
+if [ ! -z "$out" ]; then
+    echo dirty
+fi
+

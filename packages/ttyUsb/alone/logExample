@@ -1,0 +1,338 @@
+USB  WARNING : #### board list incomplete, search for missing board(s) ####
+DISC INFO    : open device /dev/ttyUSB0 115200 8n1
+DISC INFO    : wait until far end receive buffer is empty ......................................................
+DISC INFO    : motor board found, reset and request board properties
+DISC INFO    : wait for response packet from board ...................................................................................
+DISC INFO    : Application ID 0x0003 (3), Software Version : 0x0011 (17)
+DISC INFO    : open device /dev/ttyUSB1 115200 8n1
+DISC INFO    : wait until far end receive buffer is empty .....................................
+DISC INFO    : motor board found, reset and request board properties
+DISC INFO    : wait for response packet from board ..................................................................................
+DISC INFO    : Application ID 0x0005 (5), Software Version : 0x0011 (17)
+DISC INFO    : open device /dev/ttyUSB2 115200 8n1
+DISC INFO    : wait until far end receive buffer is empty .
+DISC INFO    : timeout occurred, check if it is a compass
+DISC INFO    : open device /dev/ttyUSB2 9600 8n2
+DISC INFO    : cmps10 compass found
+USB  INFO    : found device /dev/ttyUSB0, used 0, function wheel rear
+USB  INFO    : found device /dev/ttyUSB1, used 0, function ball left
+USB  INFO    : found device /dev/ttyUSB2, used 0, function compass
+WRER INFO    : thread for wheel rear receive has been started, counter 0
+WRER INFO    : open device /dev/ttyUSB0 115200 8n1
+USB  INFO    : add device /dev/ttyUSB0 to device list
+WRES INFO    : thread for wheel rear send has been started, counter 0
+USB  INFO    : add device /dev/ttyUSB0 to device list
+BLER INFO    : thread for ball left receive has been started, counter 0
+BLER INFO    : open device /dev/ttyUSB1 115200 8n1
+USB  INFO    : add device /dev/ttyUSB1 to device list
+BLES INFO    : thread for ball left send has been started, counter 0
+USB  INFO    : add device /dev/ttyUSB1 to device list
+CMPS INFO    : thread for compass has been started, counter 0
+CMPS INFO    : open device /dev/ttyUSB2 9600 8n2
+USB  INFO    : add device /dev/ttyUSB2 to device list
+COMU INFO    : thread for communication has been started, counter 0
+CMPS INFO    : compass value 111
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+WRER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER WARNING : received the following error message from far end
+BLER INFO    : receive   0   0  21 250 | 5a 4a 00 fa 03 b3 0e | 00 04 00 00 00 00 00 00 00 00 00 00 00 00 
+BLER ERROR   : far end communication to board ack id out of sync!
+WRER WARNING : received the following error message from far end
+WRER INFO    : receive   0   0  21 250 | 5a ed 00 fa 03 56 0e | 00 04 00 00 00 00 00 00 00 00 00 00 00 00 
+WRER ERROR   : far end communication to board ack id out of sync!
+BLER INFO    : mode disabled = motor disabled (after reset / or Linux software initialization)
+WRER INFO    : mode disabled = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : send drv8301 control 1 (0x028c): gate 1.7A, reset gate driver latched faults (reverts to 0), 3 PWM mode, overcurrent protection mode current limit, OC Vds 0.197V
+BLER INFO    : send drv8301 control 2 (0x0008): report OT and OC, shunt 40V/V, OC_TOFF cycle by cycle
+BLER INFO    : send mode angle = first pid input is angle + setPoint, second pid input is first pid + tacho
+WRER INFO    : send drv8301 control 1 (0x028c): gate 1.7A, reset gate driver latched faults (reverts to 0), 3 PWM mode, overcurrent protection mode current limit, OC Vds 0.197V
+WRER INFO    : send drv8301 control 2 (0x0008): report OT and OC, shunt 40V/V, OC_TOFF cycle by cycle
+WRER INFO    : send mode encoder = pid input is encoder + setPoint
+BLER INFO    : motor will be disabled if no valid packet has been received within 500.0 ms
+WRER INFO    : motor will be disabled if no valid packet has been received within 500.0 ms
+BLER INFO    : pwm delta (maximal increase per 2.5ms) is limited to 200
+WRER INFO    : pwm delta (maximal increase per 2.5ms) is limited to 200
+BLER INFO    : pwm will be limited to 600
+WRER INFO    : pwm will be limited to 600
+BLER INFO    : pid primary value are set to: Kp 10000, Ki 0, Kd 0 iTh 0
+WRER INFO    : pid primary value are set to: Kp 10000, Ki 0, Kd 0 iTh 0
+BLER INFO    : pid angle value are set to: Kp 4000, Ki 0, Kd 0 iTh 0
+WRER INFO    : drv8301 status  1 (0x0000): no errors
+WRER INFO    : drv8301 status  2 (0x0801): device ID 1
+WRER INFO    : drv8301 control 1 (0x1288): gate 1.7A, 3 PWM mode, over current protection mode current limit, OC Vds 0.197V
+WRER INFO    : drv8301 control 2 (0x1808): report OT and OC, shunt 40V/V, OC_TOFF cycle by cycle
+WRER INFO    : mode encoder = pid input is encoder + setpoint
+BLER INFO    : drv8301 status  1 (0x0000): no errors
+BLER INFO    : drv8301 status  2 (0x0801): device ID 1
+BLER INFO    : drv8301 control 1 (0x1288): gate 1.7A, 3 PWM mode, over current protection mode current limit, OC Vds 0.197V
+BLER INFO    : drv8301 control 2 (0x1808): report OT and OC, shunt 40V/V, OC_TOFF cycle by cycle
+BLER INFO    : angle direction behavior inverted
+BLER INFO    : angle zero 3504, tacho zero 2348
+BLER INFO    : mode angle = first pid input is angle + setpoint, second pid input is first pid + tacho
+BLER INFO    : angle zero 3504, tacho zero 2348
+BLER INFO    : primary setpoint value 2348
+BLER INFO    : primary setpoint value 2348
+CMPS INFO    : compass value 111
+BLER INFO    :               set  2348,            pidErr   10, intgrl       0, pid    1600000, pwm     24, timeM   1760, timeC   1602, curA 0.00, curB 0.00, volt 19.86, tempB 27.83, tacho 1.33  2386, angle 2.01  3503
+CMPS INFO    : compass value 111
+WRER INFO    : disp   -62266 set     8, vel     3, pidErr    4, intgrl       0, pid     640000, pwm     10, timeM   1717, timeC    965, curA 0.00, curB 0.00, volt 19.93, tempB 27.58, tempM 3.46
+BLER ERROR   : ball left receive only 0 bytes read from device /dev/ttyUSB1 (probably device disconnected or EMO activated)
+BLER INFO    : close device /dev/ttyUSB1
+BLES ERROR   : ball left send thread exit (probably non functional)
+BLER ERROR   : ball left receive thread exit (probably non functional)
+USB  WARNING : #### function list incomplete, check boards and try to restart function(s) ####
+USB  INFO    : remove device /dev/ttyUSB1 from device listUSB  INFO    : remove device /dev/ttyUSB1 from device listDISC INFO    : open device /dev/ttyUSB1 115200 8n1
+DISC INFO    : wait until far end receive buffer is empty .
+DISC INFO    : timeout occurred, check if it is a compass
+DISC INFO    : open device /dev/ttyUSB1 9600 8n2
+DISC INFO    : not a cmps10 because because value 0x00 instead of 0x0f
+DISC WARNING : unknown type of serial device, reset device by toggling DTR
+USB  INFO    : found device /dev/ttyUSB0, used 1, function wheel rear
+USB  INFO    : found device /dev/ttyUSB1, used 0, function unknown
+USB  INFO    : found device /dev/ttyUSB2, used 1, function compass
+CMPS INFO    : compass value 112
+USB  WARNING : #### board list incomplete, search for missing board(s) ####
+DISC INFO    : open device /dev/ttyUSB1 115200 8n1
+DISC INFO    : wait until far end receive buffer is empty ...............................
+DISC INFO    : motor board found, reset and request board properties
+DISC INFO    : wait for response packet from board .....................................................................................
+DISC INFO    : Application ID 0x0005 (5), Software Version : 0x0011 (17)
+USB  INFO    : found device /dev/ttyUSB0, used 1, function wheel rear
+USB  INFO    : found device /dev/ttyUSB1, used 0, function ball left
+USB  INFO    : found device /dev/ttyUSB2, used 1, function compass
+BLER INFO    : thread for ball left receive has been started, counter 0
+BLER INFO    : open device /dev/ttyUSB1 115200 8n1
+USB  INFO    : add device /dev/ttyUSB1 to device list
+BLES INFO    : thread for ball left send has been started, counter 0
+USB  INFO    : add device /dev/ttyUSB1 to device list
+BLER ERROR   : checksum error on this received package:
+BLER INFO    : receive   0   0   7   0 | 5a 34 ff 02 42 28 00 | 
+BLER ERROR   : packet checksum is 0x28 but calculated checksum is 0xd1
+BLER ERROR   : checksum error on this received package:
+BLER INFO    : receive   0   1 183   0 | 5a 0c 79 0a 2b 09 b0 | 0d 5a 1e 03 ff 02 45 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 3b 07 00 00 ff 01 00 00 bb 08 b6 08 59 0c 7c 0a 2b 09 b2 0d 5a 1f 03 ff 02 40 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 3b 07 00 00 ff 01 00 00 ba 08 b9 08 55 0c 78 0a 2e 09 af 0d 5a 20 03 ff 02 47 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 3b 07 00 00 ff 01 00 00 b5 08 be 08 5a 0c 7a 0a 2c 09 b0 0d 5a 21 03 ff 02 45 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 3b 07 00 00 ff 01 00 
+BLER ERROR   : packet checksum is 0x09 but calculated checksum is 0x97
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER WARNING : received the following error message from far end
+BLER INFO    : receive   0   2  21 250 | 5a 24 00 fa 03 8d 0e | 00 04 00 00 00 00 00 00 00 00 00 00 00 00 
+BLER ERROR   : far end communication to board ack id out of sync!
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    :               set     0,            pidErr    0, intgrl       0, pid          0, pwm      0, timeM   1851, timeC    511, curA 0.00, curB 0.00, volt 19.85, tempB 27.97, tacho 1.31  2348, angle 2.01  3503
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+CMPS INFO    : compass value 112
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send mode disable = motor disabled (after reset / or Linux software initialization)
+BLER INFO    : mode timeout = motor disabled because communication timeout
+BLER INFO    : send drv8301 control 1 (0x028c): gate 1.7A, reset gate driver latched faults (reverts to 0), 3 PWM mode, overcurrent protection mode current limit, OC Vds 0.197V
+BLER INFO    : send drv8301 control 2 (0x0008): report OT and OC, shunt 40V/V, OC_TOFF cycle by cycle
+BLER INFO    : send mode angle = first pid input is angle + setPoint, second pid input is first pid + tacho
+BLER INFO    : motor will be disabled if no valid packet has been received within 500.0 ms
+BLER INFO    : pwm delta (maximal increase per 2.5ms) is limited to 200
+BLER INFO    : pwm will be limited to 600
+BLER INFO    : pid primary value are set to: Kp 10000, Ki 0, Kd 0 iTh 0
+BLER INFO    : pid angle value are set to: Kp 4000, Ki 0, Kd 0 iTh 0
+BLER INFO    : drv8301 status  1 (0x0000): no errors
+BLER INFO    : drv8301 status  2 (0x0801): device ID 1
+BLER INFO    : drv8301 control 1 (0x1288): gate 1.7A, 3 PWM mode, over current protection mode current limit, OC Vds 0.197V
+BLER INFO    : drv8301 control 2 (0x1808): report OT and OC, shunt 40V/V, OC_TOFF cycle by cycle
+BLER INFO    : angle direction behavior inverted
+BLER INFO    : angle zero 3503, tacho zero 2347
+BLER INFO    : mode angle = first pid input is angle + setpoint, second pid input is first pid + tacho
+BLER INFO    : angle zero 3503, tacho zero 2347
+BLER INFO    : primary setpoint value 2347
+BLER INFO    : primary setpoint value 2347
+WRER INFO    : disp   -62061 set    -8, vel    -5, pidErr   -4, intgrl       0, pid    -640000, pwm    -10, timeM   1717, timeC    984, curA 0.00, curB 0.00, volt 19.95, tempB 27.71, tempM 3.46
+CMPS INFO    : compass value 112

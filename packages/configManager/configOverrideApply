@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# Apply a set of config overrides, from file.
+# Preconditions:
+#  * roscore must be active
+#  * applicable nodes must be active
+# Clients:
+#  * autoboot
+#  * robotControl (after starting robot)
+#
+# JFEI 2016-03-28
+# 
+
+
+
+# defaults
+DEFAULT_OVERRIDE_FILE=/home/robocup/configOverride.txt
+
+# check argument
+overrideFile=$1
+if [ -z "$overrideFile" ]; then
+    overrideFile=${DEFAULT_OVERRIDE_FILE}
+fi
+
+# check file existence
+if [ ! -f "$overrideFile" ]; then
+    echo "WARNING: override file not found: $overrideFile"
+    exit 0
+fi
+
+# parse and apply overrides
+cat $overrideFile | while read line ; do
+    configSet $line
+done
+
+

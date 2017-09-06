@@ -1,0 +1,12 @@
+build/
+.cproject
+.project
+.pydevproject
+bin/
+src/peripheralsInterface/
+srv_gen/
+lib/
+cfg/*.cfgc
+cfg/cpp/
+docs/
+

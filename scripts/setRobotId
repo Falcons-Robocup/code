@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# Configure as certain robot. Useful after having cloned a disk.
+#
+# 
+# July 2017 -- creation by Jan
+# 
+
+
+
+# sub functions
+
+function subCheckRobotNum
+{
+    robotNum=$1
+    if [ -z "${robotNum##*[!0-9]*}" ]; then
+        echo "ERROR: need robot id (1 .. 6)"
+        exit 1
+    fi
+    if [ $robotNum -lt 1 -o $robotNum -gt 9 ]; then
+        echo "ERROR: need robot id (1 .. 6)"
+        exit 1
+    fi
+}
+
+function subCheckSudo
+{
+    if timeout 2 sudo -n id > /dev/null ; then
+        echo "Sudo privileges OK."
+    else
+        echo "This script requires sudo privileges."
+        exit 1
+    fi
+}
+
+function subSetHostName
+{
+    echo "writing FALCON-$1 into /etc/hostname"
+    sudo echo "FALCON-$1" > /etc/hostname
+}
+
+function subConfigureIp
+{
+    # the following was written ages ago by Mathijs, but not tested yet
+    # register by default on MSL_FIELD_A_a
+    sudo setup-wifi A
+}
+
+# parse input
+robotNum=$1
+subCheckRobotNum $robotNum
+subCheckSudo
+
+# TODO some sanity check or prompt, to prevent user accidentally running this on own laptop?
+exit 0
+
+# do the work
+subSetHostName $robotNum
+export TURTLE5K_ROBOTNUMBER=$robotNum # temporary for following scripts; normally done when starting shell 
+subConfigureIp $robotNum
+
+# TODO sshkeys + gitconfig - Tim can you help with these two?
+
+# TODO anything else? need to actually try this in Japan to figure it all out...
+
+# done
+echo "Done, please reboot."
+

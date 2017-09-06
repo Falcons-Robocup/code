@@ -1,0 +1,12 @@
+.cproject
+.project
+.pydevproject
+bin/
+build/
+cfg/PathPlanning.cfgc
+cfg/cpp/
+docs/
+lib/
+src/pathPlanning/
+srv_gen/
+scripts/tracingOutput/

@@ -1,0 +1,21 @@
+<package>
+  <description brief="diagnostics">
+
+     filters
+
+  </description>
+  <author>Wouter Geelen</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/notavailable</url>
+  <depend package="roscpp"/>
+  <depend package="rostest"/>
+    
+  <export>
+  	<cpp cflags="-I${prefix}/include/ext -I${prefix}/include"
+             lflags="-L${prefix}/lib -Wl,-rpath,${prefix}/lib -ldiagnostics"/>
+  </export>
+    
+</package>
+
+

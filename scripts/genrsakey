@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Andre Pool, April 2015
+
+echo "generate rsa key to ssh and scp without password"
+echo "host name:" `hostname`
+
+if ! [ -f ~/.ssh/id_rsa ]; then
+    echo "Creating RSA-key"
+    string="generated on `hostname` by `whoami` on `date`"
+    echo "rsa string: $string"
+    ssh-keygen -t rsa -f ~/.ssh/id_rsa -N "" -C "$string"
+    
+fi
+
+
+if ! [ ! -d "$TURTLEROOT/config" ]; then
+    echo "replace .ssh/authorized_keys by symlink to ~/falcons/code/config/authorized_keys"
+    rm -f ~/.ssh/authorized_keys
+    ln -s $TURTLEROOT/config/authorized_keys ~/.ssh/authorized_keys
+
+    echo "add created public key to autorized keys"
+    cat ~/.ssh/id_rsa.pub >> $TURTLEROOT/config/authorized_keys
+fi
+
+
+echo "## all done ##"
+
+exit 0

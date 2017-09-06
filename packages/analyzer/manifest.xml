@@ -1,0 +1,18 @@
+<package>
+  <description brief="analyzer">
+
+     analyzer
+
+  </description>
+  <author>Jan Feitsma</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/analyzer</url>
+  <depend package="roscpp"/>
+  <depend package="rosMsgs"/>
+  <depend package="common"/>
+  <depend package="diagnostics"/>
+
+</package>
+
+

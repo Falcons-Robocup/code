@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# Customized recursive grep,
+# tailored to our Falcons code archive.
+# Note that this script shadows /usr/bin/rgrep, but since that is nothing more than calling 'grep -r', I think it is fine to shadow it.
+# 
+# JFEI 2016-01-31 creation
+# 
+
+
+
+# call grep -r, pass down any arguments
+# but apply a series of filters to ignore things like generated code, temporary backups and binary files
+if [ -t 1 ] ; then 
+    grep -r $@ . \
+        | grep -v ^Binary \
+        | grep -v "~:" \
+        | grep -v "/build/" \
+        | grep -v "/msg/_" \
+        | grep -v "_gen/" \
+        | grep --color=always $@ 
+    # final grep to apply nice colors again, which got lost in the pipeline
+else
+    grep -r $@ . \
+        | grep -v ^Binary \
+        | grep -v "~:" \
+        | grep -v "/build/" \
+        | grep -v "/msg/_" \
+        | grep -v "_gen/" 
+    # in case output is piped, don't apply coloring
+    # because the control characters may interfere with subsequent greps
+fi
+
+
+

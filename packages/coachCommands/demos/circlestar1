@@ -1,0 +1,14 @@
+# fine movements on circle
+move -2 0 0
+wait4pos -2 0 0.1
+move 2 0 0
+wait4pos 2 0 0.1
+move 0 2 0
+wait4pos 0 2 0.1
+move 0 -2 0
+wait4pos 0 -2 0.1
+move 1.41 1.41 0
+wait4pos 1.41 1.41 0.1
+move -1.41 -1.41 0
+wait4pos -1.41 -1.41 0.1
+

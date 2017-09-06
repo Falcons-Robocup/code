@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# Used in control suite (falcons_processes.py) to remote connect to real robot
+#
+
+
+
+robotn=$1
+shift
+teamname=$1
+shift
+multiros=$1
+shift
+
+if [ -z "$ROBOTNET" ]; then
+    echo "ERROR: set ROBOTNET environment variable"
+    exit 1
+fi
+
+# using coproc with input trick would be a way to force processes to 
+# shutdown on ctrl-C, however I cannot get it to work
+# so instead, we should invoke a killall script
+#   coproc sshpass -p Robocup ssh -o StrictHostKeyChecking=no robocup@192.168.5.5$robotn 'command & read; kill $!'
+#   trap 'echo >&"${COPROC[1]}"' EXIT
+#   /home/robocup/falcons/code/packages/coachCommands/remotewrapper $robotn teamA 192.168.5.135 $*
+
+
+# this will cause processes to not die once ssh link is severed
+ipaddress=$ROBOTNET$robotn
+rosmasterip=`hostname -I`
+if [ $multiros = 1 ]; then
+    rosmasterip=$ipaddress
+fi
+ssh -l robocup -o StrictHostKeyChecking=no robocup@$ipaddress /home/robocup/falcons/code/packages/coachCommands/remotewrapper $robotn $teamname $rosmasterip $* 
+
+

@@ -1,0 +1,18 @@
+In this folder the python module will be generated to ensure that also python scripts will use the same enviromment defintions.
+
+For Python module generation, SWIG is used:
+sudo apt-get install swig
+sudo apt-get install python-dev   #for Python.h
+
+Read: http://www.swig.org/Doc1.3/Python.html
+ 
+Interface file is needed and stored in this folder.
+
+manual check:
+swig -Wall -c++ -python -debug-symbols -I/home/robocup/falcons/code/packages/facilities/environment/include environment.i
+
+
+The CMakeList.txt will build automatically
+
+
+

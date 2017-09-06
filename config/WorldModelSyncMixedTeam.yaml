@@ -1,0 +1,16 @@
+WorldModelSync/mixedTeam: {
+  multicastMixedAddress   : "224.16.32.75",
+  multicastMixedPort      : 2005,
+  allowLoop               : False,
+  multicastHop            : 2,
+  groupID                 : 0,
+  sendMixedTeam           : False}
+rosdistro: 'groovy
+
+  '
+roslaunch:
+  uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}
+rosversion: '1.9.55
+
+  '
+run_id: d837e3c8-6813-11e4-acf7-00197e8a14ee

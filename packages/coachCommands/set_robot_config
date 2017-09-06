@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# Set a robot configuration variable.
+# See wiki for design details and examples:
+#   http://timmel.no-ip.biz:8000/wiki/FalconsControl#Robotconfigurationandstatus
+# 
+# JFEI 2015-07-17 creation
+
+#
+# TODO
+# * 
+# 
+
+
+# initial checks
+if [ -z "$ROBOT_CONFIG_FILE" ]; then
+    echo "ERROR: something wrong with env, could not find \$ROBOT_CONFIG_FILE"
+    exit 1
+fi
+if [ ! -f $ROBOT_CONFIG_FILE ]; then
+    echo "ERROR: file not found: $ROBOT_CONFIG_FILE"
+    exit 1
+fi
+
+# need at least one argument
+varname=$1
+if [ -z "$varname" ]; then
+    echo "ERROR: no variable name specified"
+    exit 1
+fi
+# DEFAULT mode
+if [ $varname = "default" ]; then
+    printf "mode=develop\nteam=teamA\nfieldDimensions=dimensionsHefeiLarge\npostinitdemo=\nbootopts=\n" > $ROBOT_CONFIG_FILE
+    exit 0
+fi
+
+# input checks
+varvalue=$2
+if ! grep -q "$varname=" $ROBOT_CONFIG_FILE ; then
+    echo "ERROR: illegal variable name '$varname' specified"
+    exit 1
+fi
+if [ -z "$varvalue" ]; then
+    echo "ERROR: no variable value specified"
+    exit 1
+fi
+
+# do the variable set
+sed -i "s/$varname=.*/$varname=$varvalue/" $ROBOT_CONFIG_FILE
+

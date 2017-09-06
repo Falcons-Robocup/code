@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# Prepare for match, on robot.
+# Called from match_prep (which is run on coach).
+
+# JFEI 2015-07-19
+# CTEM 2016-03-30 - Change SVN to GIT, remove compass workaround, default branch is now "teamplay_european_open"
+# 
+
+
+
+# update and build
+cd $TURTLEROOT
+git checkout teamplay_european_open
+git pull
+build
+
+# do sync so we can safely powercycle
+sync
+
+# warn if disk usage is too large
+DISKUSAGE=`df | grep '/dev/sda1' | nawk '{print $5}' | sed 's/%//'`
+if [ "$DISKUSAGE" -gt "70" ]; then
+    echo "WARNING: disk usage at $DISKUSAGE%"
+fi
+
+# TODO cleanup tracing
+

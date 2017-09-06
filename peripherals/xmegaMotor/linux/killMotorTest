@@ -1,0 +1,41 @@
+#!/bin/bash
+
+sleep 20
+killall motorTest
+
+
+# packet size is 63 - 5 = 58 bytes
+
+# pl2303hx
+# 20 seconds
+# INFO    : received       3509 send       2808
+# INFO    : received       3505 send       2804
+# 2804/20 = 140Hz
+
+# ftdi
+# 20 seconds
+# INFO    : received       4423 send       2003
+# INFO    : received       4424 send       2004
+# 2004/20 = 100Hz
+
+
+# packet size is 2 bytes (only sending setpoint)
+# pl2302
+# 20 seconds
+# INFO    : received      23515 send      22413
+# INFO    : received      23249 send      22147
+# 22147/20=1107Hz
+
+# ftdi
+# 20 seconds
+# INFO    : received       6933 send       1988
+# INFO    : received       6937 send       1992
+
+# ch340g
+# INFO    : received       5881 send        733
+# INFO    : received       5879 send        732
+
+# cp2102
+# 
+# INFO    : received       5345 send         96
+# INFO    : received       5345 send         96

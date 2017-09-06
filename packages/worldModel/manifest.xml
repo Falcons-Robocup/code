@@ -1,0 +1,29 @@
+<package>
+  <description brief="worldModel">
+
+     WorldModel
+
+  </description>
+  <author>Tim Kouters</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/WorldModel</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="dynamic_reconfigure"/>
+  <depend package="common"/>
+  <depend package="geometry"/>
+  <depend package="diagnostics"/>
+  <depend package="rosMsgs"/>
+  <depend package="heartBeat"/>
+  <depend package="environment" />
+  <depend package="gmock"/>
+  
+  <export>
+  	<cpp cflags="-I${prefix}/include/ext"
+             lflags="-L${prefix}/lib -Wl,-rpath,${prefix}/lib"/>
+  </export>
+
+</package>
+
+

@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# Used in control suite to remote connect to real robot
+# and perform the following steps:
+# * svn up
+# * falconsbuild.sh
+# 
+# JFEI 2015-01-27 creation
+
+#
+# TODO
+# * 
+# 
+
+
+
+# hack to force .bashrc sourcing
+export PS1=">"
+source ~/.bashrc
+
+
+# update and build
+git pull $TURTLEROOT
+falconsbuild.sh
+
+

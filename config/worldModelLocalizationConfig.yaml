@@ -1,0 +1,17 @@
+worldModelNode/localization: {
+  errorRatioRadianToMeter       :  0.5,
+  visionOwnWeightFactor         :  0.10,
+  trackerScoreAcceptanceThreshold : 0.5,
+  trackerTimeout                : 10.0,
+  scoreActivityScale            :  5.0,
+  scoreAgeScale                 : 20.0,
+  scoreFreshScale               :  0.5,
+  settlingTime                  : 10.0,
+  minimumConfidence             :  0.8,
+  speedLimitXY                  :  5.0,
+  speedLimitPhi                 :  6.0,
+  positionLimitX                :  7.5,
+  positionLimitY                : 10.5,
+  visionStabilityLength         : 30}
+rosdistro: 'groovy'
+

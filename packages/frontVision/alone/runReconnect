@@ -1,0 +1,9 @@
+#!/bin/bash
+
+make frontVisionAlone || true
+
+while ( true ) ; do
+   echo "INFO    : try restarting frontVisionAlone from script"
+   ./frontVisionAlone
+   sleep 0.5
+done

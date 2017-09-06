@@ -1,0 +1,22 @@
+<package>
+  <description brief="rosMsgs">
+
+     rosMsgs
+
+  </description>
+  <author>Jan Feitsma</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://TODO/falconsMsgs</url>
+
+  <depend package="geometry_msgs"/>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include/ext"/>
+  </export>
+
+</package>
+
+

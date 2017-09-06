@@ -1,0 +1,3 @@
+# both robots face forward, on same X location 
+robotCLI.py scenario TCrun4
+

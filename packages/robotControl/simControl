@@ -1,0 +1,85 @@
+#!/bin/bash
+#
+# This wrapper script controls the simulator.
+# It replaces old falcons_control.py for SIM mode.
+#
+# JFEI 2016-01-24 creation
+
+
+
+
+function finish {
+    (
+        simControl.py stop
+    ) >/dev/null 2>&1
+}
+trap finish EXIT
+trap finish SIGINT
+
+
+# some commands require root privileges...
+# make sure sudo rights are in place
+(
+    echo asml | sudo -S true || exit 1
+) >/dev/null 2>&1
+
+
+echo "initializing..."
+# subshell to suppress bash complaints about killed processes later
+(
+    # TODO start configManager   
+    simControl.py init
+) >/dev/null 2>&1
+
+# prompt
+teamBinit=0
+while :; do
+    echo "  q   : quit"
+    echo "  r   : start refbox (2015) application"
+    echo "  b   : activate simulated enemies (teamB)"
+    echo "  t   : teleport ball"
+    echo -n "input command: "
+    read ans
+    if [ "$ans" = "q" ]; then
+        echo "shutting down..."
+        break
+    fi
+    if [ "$ans" = "r" ]; then
+        (
+            processStart refboxGui &
+        ) >/dev/null 2>&1
+    fi
+    if [ "$ans" = "t" ]; then
+        echo -n "  enter x coordinate: "
+        read x
+        echo -n "  enter y coordinate: "
+        read y
+        simControl.py teleportball $x $y
+    fi
+    if [ "$ans" = "b" ]; then
+        if [ "$teamBinit" = 0 ]; then
+            # start a subset of teamB coach processes to bootstrap that team (don't need visualizer, logging etc)
+            (
+                export CONTEXTKEY=B0
+                contextWrap processStart B0 simTeam &
+                coachControl -b &
+            ) >/dev/null 2>&1
+            teamBinit=1
+        fi    
+        echo -n "  enter teamB robot numbers: "
+        read ans
+        teamChar=B
+        for robotNum in 1 2 3 4 5 6; do
+            if echo $ans | grep -q $robotNum; then
+                (
+                    echo "  starting robot ${teamChar}${robotNum} ..."
+                    simControl.py activate ${teamChar}${robotNum}
+                ) >/dev/null 2>&1
+            fi
+        done
+    fi
+done
+
+
+
+

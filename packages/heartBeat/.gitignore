@@ -1,0 +1,11 @@
+.cproject
+.project
+.pydevproject
+build/
+cfg/heartBeat.cfgc
+bin/
+cfg/cpp/
+docs/
+lib/
+msg_gen/
+src/heartBeat/

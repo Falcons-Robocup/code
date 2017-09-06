@@ -1,0 +1,338 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import subprocess
+import argparse
+import uuid
+import glob
+import re
+
+use_pass_words = False
+pass_words = {'A': 'MSL2017a', 'B': 'MSL2017b'}
+
+
+template = """
+[connection]
+id=MSL_FIELD_{FIELD}_{FREQ}
+uuid={UUID}
+type=802-11-wireless
+
+[802-11-wireless]
+ssid=MSL_FIELD_{FIELD}_{FREQ}
+mode=infrastructure
+mac-address={MACADDRESS}
+
+[ipv6]
+method=ignore
+
+[ipv4]
+method=manual
+dns=172.16.74.1;
+addresses1=172.16.74.{SUBIP};24;172.16.74.27;
+"""
+
+if use_pass_words:
+    template += """
+[802-11-wireless-security]
+key-mgmt=wpa-psk
+psk={PASSWORD}
+"""
+
+
+keywords = {'FIELD': '^ssid=MSL_FIELD_([^_]+?)_[^_]+?$',
+            'FREQ': '^ssid=MSL_FIELD_[^_]+?_([^_]+?)$',
+            'MACADDRESS': '^mac-address=([0-9a-f:]+?)$',
+            'UUID': '^uuid=([^ ]+?)$',
+            'PASSWORD': '^psk=(.+?)$',
+            'SUBIP': '^addresses1=172.16.74.(\d+?);'}
+
+networkmanager_configs = '/etc/NetworkManager/system-connections'
+
+
+def write_config(configdata):
+    if configdata is None:
+        raise RuntimeError('Trying to write config without supplying any data!')
+
+    for keyw in keywords:
+        if keyw not in configdata:
+            raise RuntimeError('A value for {} was not supplied when trying to write the config!'.format(keyw))
+
+    filename = networkmanager_configs + '/MSL_FIELD_{FIELD}_{FREQ}'.format(FIELD=configdata['FIELD'],
+                                                                           FREQ=configdata['FREQ'])
+
+    os.umask(0077)
+
+    try:
+        config = open(filename, 'w')
+    except IOError as e:
+        raise RuntimeError('Unable to write config {}: {}'.format(filename, e.strerror))
+    except Exception as e:
+        raise RuntimeError('Unexpected error while trying to write config {}: {}'.format(filename, str(e)))
+
+    try:
+        print >> config, template.format(**configdata)
+        config.close()
+    except IOError as e:
+        raise RuntimeError('Error while writing config {}: {}'.format(filename, e.strerror))
+    except Exception as e:
+        raise RuntimeError('Unexpected error while writing config {}: {}'.format(filename, str(e)))
+
+
+def read_config(filename):
+    if filename is None:
+        raise RuntimeError('Trying to read config without specifying the file name!')
+
+    try:
+        config = open(filename, 'r')
+    except IOError as e:
+        raise RuntimeError('Unable to read config {}: {}'.format(filename, e.strerror))
+    except Exception as e:
+        raise RuntimeError('Unexpected error while trying to read config {}: {}'.format(filename, str(e)))
+
+    try:
+        configdata = ''.join(config.readlines())
+        config.close()
+    except IOError as e:
+        raise RuntimeError('Error while reading config {}: {}'.format(filename, e.strerror))
+    except Exception as e:
+        raise RuntimeError('Unexpected error while reading config {}: {}'.format(filename, str(e)))
+
+    values = {}
+    for keyw in keywords:
+        try:
+            m = re.search(keywords[keyw], configdata, re.MULTILINE)
+        except re.error as e:
+            raise RuntimeError('Exception while while analyzing config; this is likely a bug: {}'.format(e))
+
+        if m is None:
+            raise RuntimeError('Unable to find value for {} in {}'.format(keyw, filename))
+
+        try:
+            values[keyw] = m.group(1)
+        except IndexError as e:
+            raise RuntimeError('Possible bug; unable to retrieve value for regex match!')
+
+    return values
+
+
+def robot_number():
+    nr = os.environ.get('TURTLE5K_ROBOTNUMBER')
+
+    if nr is None:
+        raise RuntimeError('Unable to determine robot number; TURTLE5K_ROBOTNUMBER is not set!')
+
+    invalid_number = False
+
+    try:
+        nr = int(nr)
+    except ValueError as e:
+        invalid_number = True
+    else:
+        if nr < 1 or nr > 6:
+            invalid_number = True
+
+    if invalid_number:
+        raise RuntimeError('TURTLE5K_ROBOTNUMBER must contain an integer in the range 1..6, not {}!'.format(nr))
+
+    return nr
+
+
+def run_process(cmd, args):
+    process = [cmd]
+    process.extend(args)
+
+    try:
+        output = subprocess.check_output(process, stderr=subprocess.STDOUT, shell=False)
+    except subprocess.CalledProcessError as e:
+        return (e.returncode, e.output)
+
+    return (0, output)
+
+
+def normalize_mac_address(mac_address):
+    normalized = None
+
+    if mac_address is not None and mac_address != '':
+        fields = mac_address.split(':')
+        if len(fields) == 6:
+            for fieldnr in range(6):
+                try:
+                    i = int(fields[fieldnr], 16)
+                except ValueError as e:
+                    fields = None
+                    break
+                else:
+                    if i < 0 or 255 < i:
+                        fields = None
+                        break
+                fields[fieldnr] = '%02X' % i
+            if fields is not None:
+                normalized = ':'.join(fields)
+
+    if normalized is not None:
+        normalized = normalized.upper()
+
+    return normalized
+
+
+def wlan_interfaces():
+    res = run_process('/sbin/ip', ['link', 'list'])
+
+    #f = open('bla', 'r')
+    #res = (0, ''.join(f.readlines()))
+
+    interfaces = {}
+    state = 'find-interface'
+
+    if res[0] == 0:
+        for line in res[1].splitlines():
+            if state == 'find-interface':
+                intf = None
+
+                try:
+                    m = re.match('\d+:\W+(wlan\d+):\W+', line)
+                except re.error as e:
+                    continue
+
+                if m is None or len(m.groups()) == 0:
+                    continue
+                else:
+                    intf = m.group(1)
+                    state = 'find-mac-address'
+            elif state == 'find-mac-address':
+                try:
+                    m = re.match('\W+link/ether\W+([0-9a-zA-Z:]+)\W+', line)
+                except re.error as e:
+                    mac = None
+
+                if m is None or len(m.groups()) == 0:
+                    mac = None
+                else:
+                    mac = normalize_mac_address(m.group(1))
+
+                if mac is not None:
+                    interfaces[intf] = mac
+
+                state = 'find-interface'
+
+    return [k for k in sorted(interfaces.iteritems())]
+
+
+def argument_error(msg, returncode=1):
+    print >> sys.stderr, 'Argument error:', msg
+    os._exit(returncode)
+
+
+def handle_arguments():
+    argp = argparse.ArgumentParser()
+    argp.add_argument('field', help='The MSL field to play on; one of A, B or C')
+    argp.add_argument('-f', '--frequency', default='5',
+                      help='The WIFI frequency to use; can be either 5 or 2.4 GHz and defaults to 5')
+    argp.add_argument('-n', '--number', default=None, type=int,
+                      help='The number of the WIFI interface to use; 1 is the first interface and the interfaces '
+                           'names are sorted in alphabetical order')
+    argp.add_argument('-m', '--mac-address', default=None,
+                      help='The MAC address to use for the configuration; this can specify an interface that is'
+                           ' currently not in the system')
+    args = argp.parse_args()
+
+    if args.field not in ['A', 'B', 'C']:
+        argument_error("The specified MSL field must be one of A, B or C, not '{}'!".format(args.field))
+
+    if args.frequency not in ['2.4', '5']:
+        argument_error("The specified WIFI frequency must be either 5 or 2.4, not '{}'!".format(args.frequency))
+
+    if args.mac_address is not None and args.number is not None:
+        argument_error('When specifying a MAC address, it is not allowed to also specify a WIFI interface number!')
+
+    interfaces = wlan_interfaces()
+    intf_count = len(interfaces)
+
+    if args.mac_address is not None:
+        mac = normalize_mac_address(args.mac_address)
+        if mac is None:
+            argument_error("'{}' is not a valid MAC address!".format(args.mac_address))
+        else:
+            args.mac_address = mac
+
+        intf_name = [intf[0] for intf in interfaces if intf[1] == mac]
+        args.interface = ('unknown' if len(intf_name) == 0 else intf_name[0], mac)
+    else:
+        if args.number is None:
+            if intf_count > 1:
+                print >> sys.stderr, 'Warning: more than one WIFI interface found, using the first one ({})'.format(
+                    interfaces[0][0])
+            args.number = 1
+        elif args.number == 0:
+            argument_error('If specified, the number of the WIFI interface cannot be 0!')
+        elif args.number > intf_count:
+            argument_error('{} was specified as the WIFI interface to use, but there {} only {} WIFI interface{}!'.
+                           format(args.number,
+                                  'is' if intf_count == 1 else 'are',
+                                  'one' if intf_count == 1 else intf_count,
+                                  's' if intf_count > 1 else ''))
+        args.interface = interfaces[args.number - 1]
+
+    return {'INT': args.interface, 'FREQ': args.frequency, 'FIELD': args.field}
+
+
+def remove_all_msl_configs():
+    for file in glob.glob(networkmanager_configs + '/MSL_FIELD_*_*'):
+        os.remove(file)
+
+def write_autoboot_trigger(config):
+    configname = 'MSL_FIELD_{}_{}'.format(config['FIELD'], config['FREQ'])
+    os.system('echo /teamA/robot{}/globalConfig/accessPoint {}'.format(config['FIELD'], configname) + ' > ~/configOverride.txt')
+
+def sub_ip():
+    # subIp is the last part of static IP address 172.16.74.SUBIP
+    # for example: 51 for robot1 and 33 for butter
+    command = 'grep `hostname` /etc/hosts | tail -1 | awk \'{print $1}\' | sed \'s/.*\.//\''
+    try:
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        if int(output) == 1:
+            output = 50 + robot_number()
+    except:
+        raise RuntimeError('could not determine sub-ip!')
+    return int(output)
+    
+def main():
+    config = handle_arguments()
+    config['UUID'] = str(uuid.uuid4())
+    config['MACADDRESS'] = config['INT'][1]
+    del config['INT']
+    config['SUBIP'] = sub_ip()
+    config['PASSWORD'] = pass_words[config['FIELD']]
+    config['FREQ'] = 'b' if config['FREQ'] == '2.4' else 'a'
+
+    configname = 'MSL_FIELD_{}_{}'.format(config['FIELD'], config['FREQ'])
+
+    remove_all_msl_configs()
+    print 'Removed all existing MSL WIFI configurations'
+    write_config(config)
+    print 'Wrote a new WIFI configuration for {}; it should come up automatically'.format(configname)
+    if config['SUBIP'] > 50:
+        write_autoboot_trigger(config)
+        print 'Wrote autoboot trigger'
+
+if __name__ == '__main__':
+    if os.geteuid() != 0:
+        handle_arguments()
+        try:
+            r = 0
+            try:
+                r = robot_number()
+            except:
+                pass
+            subprocess.call('sudo TURTLE5K_ROBOTNUMBER={} {} {}'.format(r, os.path.realpath(__file__),
+                                                ' '.join(sys.argv[1:])), shell=True)
+        except subprocess.CalledProcessError as e:
+            print >>sys.stderr, 'Unable to run {} as user root: {}'.format(__file__, e.output)
+            os._exit(e.returncode)
+    else:
+        try:
+            main()
+        except RuntimeError as e:
+            print >> sys.stderr, e.message
+            os._exit(1)

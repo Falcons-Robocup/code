@@ -1,0 +1,12 @@
+.cproject
+.project
+.pydevproject
+bin/
+build/
+cfg/cpp/
+cfg/simulator.cfgc
+docs/
+msg_gen/
+src/simulator/
+srv_gen/
+

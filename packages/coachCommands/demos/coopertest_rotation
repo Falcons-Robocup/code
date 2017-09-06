@@ -1,0 +1,15 @@
+# cooper test with rotation (XY vs phi)
+# to check that XY pathplanning corrects for rotation, so that it does not 
+# make a curve deviation from shortest path
+move -4 0 1.5
+wait4pos -4 0 0.1
+move -4 -9 -1.5
+wait4pos -4 -9 0.1
+move -4 0 1.5
+wait4pos -4 0 0.1
+move -4 -9 -1.5
+wait4pos -4 -9 0.1
+move -4 0 1.5
+wait4pos -4 0 0.1
+move -4 -9 -1.5
+

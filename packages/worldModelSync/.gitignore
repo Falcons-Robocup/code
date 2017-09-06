@@ -1,0 +1,11 @@
+.cproject
+.project
+.pydevproject
+bin/
+build/
+cfg/WorldModelSync.cfgc
+cfg/cpp/
+docs/
+lib/
+src/worldModelSync/
+

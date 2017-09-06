@@ -1,0 +1,6 @@
+*.csv
+*.o
+*.jpg
+201*
+vision
+log*

@@ -1,0 +1,55 @@
+#!/bin/bash
+#
+# List job status&details.
+# 
+# JFEI 2015-11-13
+# 
+
+
+
+# check argument
+if [ ! -z "$1" ]; then
+    echo "ERROR: this function takes no arguments"
+    exit 1
+fi
+
+# check which jobs are registered
+jobs=`pgrep -a "jobStart" | sed 's/.*jobStart //' | tr ' ' _` 
+
+# none? then done
+if [ -z "$jobs" ]; then
+    echo "no jobs active"
+    exit 0
+fi
+
+# for each job, show process status
+for j in $jobs; do
+    echo "job: $j"
+    processes=`jobToProcess $j`
+    if echo "$processes" | grep -q "ERROR"; then
+        # jobToProcess encountered an internal error (typo in mapping file or something?)
+        echo "$processes"
+        exit 1
+    fi
+    active=""
+    inactive=""
+    for p in $processes; do
+        pd=`processCheck $p | grep ${j:0:2}` # TODO what if no context is used??
+        if [ -z "$pd" ]; then
+            inactive="$inactive$p "
+        else
+            active="$active$p "
+        fi
+    done
+    if [ -z "$active" ]; then
+        active="none"
+    fi
+    echo "  active  : $active"
+    if [ ! -z "$inactive" ]; then
+        # TODO red?
+        echo "  inactive: $inactive"
+    fi
+done
+
+
+

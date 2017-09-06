@@ -1,0 +1,74 @@
+#!/bin/bash
+#
+# Used in control suite
+# nasty tricks to capture all stdout/stderr of any spawned subprocess.
+# take into account that caller may give stuff like 
+#   rosservice call /simulator/spawn "name: \'' + robotname + '\'"
+# 
+# JFEI 2014-08-21 creation
+# JFEI 2014-12-21 remove empty output files
+# JFEI 2015-01-20 copy from dev/jfeitsma/testsuite to trunk/falconsControl, 
+#                 rename to outputwrapper2 to avoid shadow, write to file in cwd
+# JFEI 2015-01-28 get logdir as first argument
+# MKOE 2015-04-03 added the robotnr as argument so it can be added to the filename for quick logfile access
+
+#
+# TODO
+# * 
+# 
+
+
+pid=$$
+# get logging dir
+logdir=$1
+shift
+tstamp=`date +%Y%m%d_%H%M%S`
+if [ ! -d $logdir ]; then
+   mkdir $logdir
+fi
+
+# build command string, quite each argument to allow for spaces
+cmd_str="$*"
+#shift
+#while test $# -gt 0
+#do
+#    cmd_str="$cmd_str \"$1\""
+#    shift
+#done
+
+
+# determine the output files
+sid=`echo "$cmd_str" | tr -cd '[[:alnum:]]_'`
+botid=${TURTLE5K_TEAMNAME:4:1}${TURTLE5K_ROBOTNUMBER}
+pname=`getProcessId`
+stdout=$logdir/stdout_${botid}_${pname}.txt
+stderr=$logdir/stderr_${botid}_${pname}.txt
+counter=1
+while [ -f "$stdout" ]; do
+    let "counter = counter + 1"
+    stdout=$logdir/stdout_${botid}_${pname}_${counter}.txt
+    stderr=$logdir/stderr_${botid}_${pname}_${counter}.txt
+done
+
+# force python scripts to log directly
+export PYTHONUNBUFFERED=1
+
+# run it, subshell
+(
+   # echo "# outputwrapper2" $cmd_str  
+   # above echo does not add much anymore, info is also in filename.
+   $cmd_str
+) > $stdout 2>$stderr || exit 1
+
+
+# on clean exit, remove empty files
+for f in $stdout $stderr; do
+   if [ -f "$f" ]; then
+      if [ ! -s "$f" ]; then
+         rm $f
+      fi
+   fi
+done
+
+
+

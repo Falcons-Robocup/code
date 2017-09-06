@@ -1,0 +1,9 @@
+#!/bin/bash
+
+WLAN_ADAPTERS=$(/sbin/ifconfig -a | grep HWaddr | awk '{print $1}' | grep wlan)
+
+for DEV in ${WLAN_ADAPTERS}
+do
+	logger "Disabling power saving mode for WIFI adapter ${DEV}"
+	/sbin/iwconfig ${DEV} power off
+done

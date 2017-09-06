@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# Stop a process.
+# 
+# JFEI 2015-11-10
+# 
+
+
+
+# check argument
+if [ -z "$1" ]; then
+    echo "ERROR: this function expects a process id as argument"
+    exit 1
+fi
+
+# get the pid
+pid=`processCheck $1 | awk '{print $2}'`
+
+# kill its tree
+if [ ! -z "$pid" ]; then
+    killtree $pid
+else
+    echo "warning: process $1 was not running"
+fi
+

@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+# Used in diagnostics via robotHealth
+# 
+# JFEI 2016-01-19 creation
+# 
+
+
+# WARNING: sudo might prompt for password
+# to prevent this, follow instruction from: 
+#    sudo visudo
+# add the following line:
+#    robocup ALL=(ALL) NOPASSWD: ALL
+
+
+sudo dmidecode | grep '^Processor' -A50 | grep 'Current' | nawk '{print $3}'
+

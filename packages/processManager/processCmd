@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# Look up the process command from mapping file.
+# 
+# JFEI 2015-11-10
+# 
+
+
+
+# check argument
+if [ -z "$1" ]; then
+    echo "ERROR: this function expects a process id as argument"
+    exit 1
+fi
+
+# find the process name
+line=`processMapping | grep "^$1 "`
+
+# check for success
+if [ -z "$line" ]; then
+    echo "ERROR: process not found: $1"
+    exit 1
+fi
+
+# output the command by ignoring the first word
+echo $line | cut -f 1 -d ' ' --complement
+
+

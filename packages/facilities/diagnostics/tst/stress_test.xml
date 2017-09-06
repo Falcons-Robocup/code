@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="diagnostics" type="diagCoachListener" name="diagCoachListener" />
+  <test test-name="stress_test" pkg="diagnostics" type="stress_test.py" />
+</launch>
+

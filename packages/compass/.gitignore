@@ -1,0 +1,10 @@
+.cproject
+.project
+.pydevproject
+build/
+cfg/compass.cfgc
+cfg/cpp/
+docs/
+src/compass/
+srv_gen/
+bin/

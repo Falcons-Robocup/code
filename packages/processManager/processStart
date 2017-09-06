@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# Start a process (first argument, mandatory).
+# Note: if invoked with extra arguments, these will be ignored. JobManager can use this to relate processes to job context.
+# 
+# JFEI 2015-11-10 creation
+# JFEI 2017-01-15 add restartWrapper
+
+
+
+# check argument
+if [ -z "$1" ]; then
+    echo "ERROR: this function expects a process id as argument"
+    exit 1
+fi
+
+# translate last given argument into command string
+lastarg=`echo $* | awk '{print $NF}'`
+cmd=`processCmd $lastarg`
+
+# determine logdir
+logdir=`currentLogdir`
+
+# call good-old outputwrapper2
+restartWrapper outputwrapper2 $logdir $cmd
+
+
+
