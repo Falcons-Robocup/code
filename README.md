@@ -60,7 +60,7 @@ To minimize merge issues (and to make commits understandable) use multiple small
 To browse through the logging, use one liners starting with the subject followed by the functional change
 
 ## Tags
-When using tags please start with your 4 char abreviation
+When using tags please start with your 4 char abbreviation
 
 ## Alias
 Add often used commands to your .gitconfig file
