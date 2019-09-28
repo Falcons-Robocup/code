@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,8 +22,12 @@
 #include <boost/numeric/ublas/lu.hpp>
 
 struct piVelAcc {
-	Velocity2D vel;
-	Velocity2D acc;
+	float m1_vel;
+	float m2_vel;
+	float m3_vel;
+	float m1_acc;
+	float m2_acc;
+	float m3_acc;
 };
 
 struct passBall {
@@ -33,7 +37,9 @@ struct passBall {
 };
 
 struct piDisplacement {
-	geometry::Pose2D pos;
+	float m1_pos;
+	float m2_pos;
+	float m3_pos;
 };
 
 struct pidSettings {
@@ -50,9 +56,6 @@ struct BallhandlerBoardSettings {
 	pidSettings anglePid;
 	size_t maxPwmValue;
 	size_t maxPwmStepValue;
-	int ballPossessionTreshold;
-	float feedForwardFactor;
-	int maxAngle;
 };
 
 struct MotionBoardSettings {
@@ -104,16 +107,16 @@ struct MotorControllerBoardData {
 };
 
 struct MotionBoardData {
-	float velocity;
-	float velocityError;
-	float displacementEncTicks;
-	float displacementDistance;
-	float measuredValue;
+	double velocity;
+	double velocityError;
+	double displacementEncTicks;
+	double displacementDistance;
+	double measuredValue;
 	float motorTemperature;
-	float pidOutputMs; // pidOutput from motorControllerBoardData in m/s
-	float integralMs; // integral from motorControllerBoardData in m/s
-	float errorMs; // proportional error from motorControllerBoardData in m/s
-	float derivativeMs; // proportional error from motorControllerBoardData in m/s
+	float pidOutput; // pidOutput from motorControllerBoardData
+	float integral; // integral from motorControllerBoardData
+	float error; // proportional error from motorControllerBoardData
+	float derivative; // proportional error from motorControllerBoardData
 };
 
 struct MotionBoardDataOutput {
@@ -122,16 +125,29 @@ struct MotionBoardDataOutput {
 };
 
 struct BallhandlerBoardData {
-	float angleZero;
-	float tachoZero;
+	int tachoZero;
 	pidSettings anglePidProperties;
-	float tacho;
-	float angle;
+	int tacho;
+	int angle;
 };
 
 struct BallhandlerBoardDataOutput {
 	MotorControllerBoardData motorController;
 	BallhandlerBoardData ballhandler;
+};
+
+struct BallhandlerSetpoints {
+    int angleLeft;
+    int angleRight;
+    float velocityLeft;
+    float velocityRight;
+};
+
+struct BallhandlerFeedback {
+    int angleLeft;
+    int angleRight;
+    float velocityLeft;
+    float velocityRight;
 };
 
 // Update function for PeripheralsInterfaceMotion

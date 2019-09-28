@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,19 +9,15 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  ***/ 
- #include <cDiagnosticsEvents.hpp>
+ #include <cDiagnostics.hpp>
 #include <int/PeripheralsInterfaceData.hpp>
 
 using namespace std;
 
 PeripheralsInterfaceData::PeripheralsInterfaceData() {
 	_velInputChanged = false;
-	_hasBall = false;
-	_compassValue = 0.0;
 	_robotActive = false;
-	_ballhandlerAngle = 0.0;
 	_motionSettingsChanged = false;
-	_ballhandlerSettingsChanged = false;
 }
 
 PeripheralsInterfaceData::~PeripheralsInterfaceData() {
@@ -89,7 +85,9 @@ void PeripheralsInterfaceData::setVelocityOutput(const piVelAcc& vel) {
 piDisplacement PeripheralsInterfaceData::getDisplacementOutput() {
 	_displacementOutputLock.lock();
 	piDisplacement displacement = _displacementOutput;
-	_displacementOutput.pos = geometry::Pose2D();
+	_displacementOutput.m1_pos = 0.0;
+	_displacementOutput.m2_pos = 0.0;
+	_displacementOutput.m3_pos = 0.0;
 	_displacementOutputLock.unlock();
 
 	return displacement;
@@ -97,33 +95,10 @@ piDisplacement PeripheralsInterfaceData::getDisplacementOutput() {
 
 void PeripheralsInterfaceData::setDisplacementOutput(const piDisplacement& displacement) {
 	_displacementOutputLock.lock();
-	_displacementOutput.pos.shift(
-			displacement.pos.getX(),
-			displacement.pos.getY());
-	_displacementOutput.pos.turn(displacement.pos.getPhi());
+	_displacementOutput.m1_pos += displacement.m1_pos;
+	_displacementOutput.m2_pos += displacement.m2_pos;
+	_displacementOutput.m3_pos += displacement.m3_pos;
 	_displacementOutputLock.unlock();
-}
-
-passBall PeripheralsInterfaceData::getPassBallParams() {
-	_passBallParamsLock.lock();
-	passBall passBallParams = _passBallParams;
-	_passBallParamsLock.unlock();
-
-	return passBallParams;
-}
-
-void PeripheralsInterfaceData::setPassBallParams(const passBall &passBallParams) {
-	_passBallParamsLock.lock();
-	_passBallParams = passBallParams;
-	_passBallParamsLock.unlock();
-}
-
-bool PeripheralsInterfaceData::getHasBall() {
-	return _hasBall;
-}
-
-void PeripheralsInterfaceData::setHasBall(bool hasBall) {
-	_hasBall = hasBall;
 }
 
 bool PeripheralsInterfaceData::isRobotActive() {
@@ -132,38 +107,6 @@ bool PeripheralsInterfaceData::isRobotActive() {
 
 void PeripheralsInterfaceData::setRobotActive(bool active) {
 	_robotActive = active;
-}
-
-float PeripheralsInterfaceData::getBallhandlerAngle() {
-	return _ballhandlerAngle;
-}
-
-void PeripheralsInterfaceData::setBallhandlerAngle(float angle) {
-	_ballhandlerAngle = angle;
-}
-
-MotionSettings PeripheralsInterfaceData::getMotionSettings() {
-	_motionSettingsLock.lock();
-	MotionSettings settings = _motionSettings;
-	_motionSettingsLock.unlock();
-
-	return settings;
-}
-
-void PeripheralsInterfaceData::setMotionSettings(const MotionSettings& motionsettings) {
-	_motionSettingsLock.lock();
-	_motionSettings = motionsettings;
-	_motionSettingsChanged = true;
-	_motionSettingsLock.unlock();
-}
-
-bool PeripheralsInterfaceData::isMotionSettingsChanged() {
-	_motionSettingsLock.lock();
-	bool motionSettingsChanged = _motionSettingsChanged;
-	_motionSettingsChanged = false;
-	_motionSettingsLock.unlock();
-
-	return motionSettingsChanged;
 }
 
 BallhandlerSettings PeripheralsInterfaceData::getBallhandlerSettings() {
@@ -177,17 +120,37 @@ BallhandlerSettings PeripheralsInterfaceData::getBallhandlerSettings() {
 void PeripheralsInterfaceData::setBallhandlerSettings(const BallhandlerSettings& settings) {
 	_ballhandlerSettingsLock.lock();
 	_ballhandlerSettings = settings;
-	_ballhandlerSettingsChanged = true;
 	_ballhandlerSettingsLock.unlock();
 }
 
-bool PeripheralsInterfaceData::isBallhandlerSettingsChanged() {
-	_ballhandlerSettingsLock.lock();
-	bool ballhandlerSettingsChanged = _ballhandlerSettingsChanged;
-	_ballhandlerSettingsChanged = false;
-	_ballhandlerSettingsLock.unlock();
+BallhandlerSetpoints PeripheralsInterfaceData::getBallhandlerSetpoints()
+{
+    _ballhandlerSetpointsLock.lock();
+    BallhandlerSetpoints result = _ballhandlerSetpoints;
+    _ballhandlerSetpointsLock.unlock();
+    return result;
+}
 
-	return ballhandlerSettingsChanged;
+void PeripheralsInterfaceData::setBallhandlerSetpoints(BallhandlerSetpoints const &setpoints)
+{
+    _ballhandlerSetpointsLock.lock();
+    _ballhandlerSetpoints = setpoints;
+    _ballhandlerSetpointsLock.unlock();
+}
+
+BallhandlerFeedback PeripheralsInterfaceData::getBallhandlerFeedback()
+{
+    _ballhandlerFeedbackLock.lock();
+    BallhandlerFeedback result = _ballhandlerFeedback;
+    _ballhandlerFeedbackLock.unlock();
+    return result;
+}
+
+void PeripheralsInterfaceData::setBallhandlerFeedback(BallhandlerFeedback const &feedback)
+{
+	_ballhandlerFeedbackLock.lock();
+    _ballhandlerFeedback = feedback;
+    _ballhandlerFeedbackLock.unlock();
 }
 
 size_t PeripheralsInterfaceData::getNumberOfConnectedDevices() {

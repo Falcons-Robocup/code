@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Copyright 2018, 2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to trigger reboot on raspi by genrating i2c error in raspiSystem
+
+sshOptions="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no"
+scpCommand="sshpass -p raspberry scp $sshOptions"
+sshCommand="sshpass -p raspberry ssh $sshOptions"
+
+host="10.0.0.70"
+
+if [ "$1" = "cam0" ]; then
+   host="10.0.0.70"
+elif [ "$1" = "cam1" ]; then
+   host="10.0.0.71"
+elif [ "$1" = "cam2" ]; then
+   host="10.0.0.72"
+elif [ "$1" = "cam3" ]; then
+   host="10.0.0.73"
+else
+   echo "ERROR   : unknown host $1"
+   exit 0
+fi
+
+pending=true
+while $pending; do
+   ping -W 1 -c 1 $host >/dev/null 2>/dev/null
+   if [ "$?" != "0" ]; then
+      echo "ERROR     : raspi camera $host not available, keep trying"
+      sleep 5
+   else
+      pending=false
+   fi
+done
+
+echo "INFO      : $host available, kill runGrab script and raspiGrab processes"
+$sshCommand pi@$host $sshOptions -t "killall runGrab"
+$sshCommand pi@$host $sshOptions -t "sudo killall raspiGrab"
+
+echo "INFO      : $host all done"
+
+exit 1

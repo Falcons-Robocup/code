@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,7 +21,7 @@
 #include "int/configurators/configuratorMixedTeamPacket.hpp"
 #include "int/types/mixedTeamConversionConstants.hpp"
 
-#include "cDiagnosticsEvents.hpp"
+#include "cDiagnostics.hpp"
 
 packetConstructorMixedTeam::packetConstructorMixedTeam()
 {
@@ -100,7 +100,7 @@ void packetConstructorMixedTeam::setRobotLocation(const robotLocationMixedTeamSt
 	_mtPacket.selfPosition = location;
 }
 
-void packetConstructorMixedTeam::setByteArray(Facilities::Network::cByteArray byteArray)
+void packetConstructorMixedTeam::setByteArray(Facilities::cByteArray byteArray)
 {
 	std::vector<uint8_t> array;
 	byteArray.getData(array);
@@ -117,10 +117,10 @@ void packetConstructorMixedTeam::setByteArray(Facilities::Network::cByteArray by
 	}
 }
 
-Facilities::Network::cByteArray packetConstructorMixedTeam::getByteArray()
+Facilities::cByteArray packetConstructorMixedTeam::getByteArray()
 {
 	std::vector<uint8_t> array;
-	Facilities::Network::cByteArray retArray;
+	Facilities::cByteArray retArray;
 
 	uint8_t *pd = reinterpret_cast<uint8_t *>(&_mtPacket);
     array.insert(array.end(), pd, pd + sizeof(_mtPacket));

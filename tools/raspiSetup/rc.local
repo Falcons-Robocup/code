@@ -1,0 +1,40 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+# Below added by Andre May 17, 2018
+
+# start the raspi grabber and run as raspi
+cd /home/pi
+
+# simple log rotate
+rm -f log9
+test -e log8 && mv log8 log9
+test -e log7 && mv log7 log8
+test -e log6 && mv log6 log7
+test -e log5 && mv log5 log6
+test -e log4 && mv log4 log5
+test -e log3 && mv log3 log4
+test -e log2 && mv log2 log3
+test -e log1 && mv log1 log2
+test -e log && mv log log1
+
+date > log
+su pi ./runRaspi >> log 2>&1 &
+
+exit 0

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -43,8 +43,8 @@
 // INCLUDES:
 #include "int/TCPIP_client.h"
 #include "int/MSL_Protocol2009.h"
-#include "FalconsCommon.h" // TRACE
-#include <cDiagnosticsEvents.hpp>
+#include "tracing.hpp"
+#include "cDiagnostics.hpp"
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
@@ -54,21 +54,14 @@ using namespace std;
 /****************************************
  * Constructor
  ***************************************/
-CTCPIP_Client::CTCPIP_Client(const char * host, int port, event_cb_t callback)
+CTCPIP_Client::CTCPIP_Client(const char * host, int port, boost::function<void(char const *command)> callback)
 {
     TRACE("construct start");
+    _host = host;
+    _port = port;
     _connected = Connect2Host(host, port);
     _callback = callback;
 
-    if (_connected)
-    {
-        /* Start receiving thread */
-        TRACE("Start receiving thread");
-        if(pthread_create(&_receiveThread, NULL, notifyNewPacket, this))
-        {
-            throw runtime_error("Failed to create receiving thread");
-        }
-    }
     TRACE("construct done");
 }
 
@@ -80,8 +73,6 @@ CTCPIP_Client::~CTCPIP_Client()
     TRACE("destroy start");
     if (_connected)
     {
-        pthread_cancel(_receiveThread);
-        TRACE("thread cancelled, disconnecting");
         DisConnect();
     }
     TRACE("destroy done");
@@ -97,6 +88,15 @@ void* CTCPIP_Client::notifyNewPacket(void *context)
 
     TRACE("notifyNewPacket done");
     return 0;
+}
+
+/****************************************
+ * Reconnect()
+ ***************************************/
+bool CTCPIP_Client::Reconnect()
+{
+    DisConnect();
+    Connect2Host(_host, _port);
 }
 
 /****************************************
@@ -157,7 +157,7 @@ bool CTCPIP_Client::Connect2Host(const char * host, int port)
      * available at the time. So multiple reads must be issued until exactly 9
      * characters are trurned. Otherwise the rest is interpreted as refbox
      * commands.
-     * Side note: re refbox sender termiantes each command with a '\n' character
+     * Side note: re refbox sender terminates each command with a '\n' character
      * but the are neverreceived by the ref_box_listener.
      */
     char rcvd = '\0';
@@ -175,6 +175,14 @@ bool CTCPIP_Client::Connect2Host(const char * host, int port)
 	}
 	cout << "CTCPIP_Client (Connect2Host): Got welcome message = [" << msg << "]." << endl;
     TRACE("got welcome message %s", msg);
+
+    /* Start receiving thread */
+    TRACE("Start receiving thread");
+    if(pthread_create(&_receiveThread, NULL, notifyNewPacket, this))
+    {
+        throw runtime_error("Failed to create receiving thread");
+    }
+
     return true;
 }
 
@@ -183,9 +191,14 @@ bool CTCPIP_Client::Connect2Host(const char * host, int port)
  ***************************************/
 void CTCPIP_Client::DisConnect()
 {
+    pthread_cancel(_receiveThread);
+    TRACE("thread cancelled, disconnecting");
+
     TRACE("Closing socket");
     cout << "CTCPIP_Client (DisConnect): Closing socket ..." << endl;
     close(sockfd);
+
+    _connected = false;
 
     cout << "CTCPIP_Client (DisConnect): reinit adress ..." << endl;
     // reinit adress
@@ -229,16 +242,6 @@ int CTCPIP_Client::Listen()
                     strCommand = "COMM_START";
                     break;
                 }
-                case COMM_HALT:
-                {
-                    strCommand = "COMM_HALT";
-                    break;
-                }
-                case COMM_READY:
-                {
-                    strCommand = "COMM_READY";
-                    break;
-                }
                 case COMM_FIRST_HALF:
                 {
                     strCommand = "COMM_FIRST_HALF";
@@ -257,11 +260,6 @@ int CTCPIP_Client::Listen()
                 case COMM_END_GAME:
                 {
                     strCommand = "COMM_END_GAME";
-                    break;
-                }
-                case COMM_CANCEL:
-                {
-                    strCommand = "COMM_CANCEL";
                     break;
                 }
                 case COMM_GOAL_MAGENTA:
@@ -353,24 +351,17 @@ int CTCPIP_Client::Listen()
                     break;
                 }
                 case COMM_DROPPED_BALL:
+                {
                     strCommand = "COMM_DROPPED_BALL";
                     break;
+                }   
                 default:
                 {
                     TRACE("Unknown command received from RefBox");
+                    TRACE("input command =%c", ch);
                     strCommand = "unknown command";
                     break;
                 }
-            }
-
-            // convert HALT and CANCEL refbox command to a refbox STOP command
-            if (strCommand == "COMM_HALT")
-            {
-            	strCommand = "COMM_STOP";
-            }
-            if (strCommand == "COMM_CANCEL")
-            {
-            	strCommand = "COMM_STOP";
             }
 
             TRACE("input command =%s", strCommand.c_str());
@@ -434,6 +425,7 @@ void CTCPIP_Client::Send(uint8_t *buf, int packetSize) {
 		if( ( bytesTransmitted = send( sockfd, buf, packetSize-bytesTotal, MSG_NOSIGNAL ) ) < 0 )
 		{
 			TRACE_ERROR( "errno message '%s' when transmitting data\n", strerror(errno) );
+			Reconnect();
 		}
 		bytesTotal += bytesTransmitted;
 	}
@@ -458,7 +450,6 @@ void CTCPIP_Client::setOwnColor(std::string color)
     else if (_owncolor == "MAGENTA")
     {
         _oppcolor = "CYAN";
-
     }
     else
     {

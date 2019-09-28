@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Call some helper scripts to enforce some rules on our repo. Sort of a mini lint.
+# See Falcons wiki: 
+#    http://git.falcons-robocup.nl/falcons/code/wikis/CodingGuidelines
+# Inspired by:
+#    https://github.com/martinjoiner/portable-code-pre-commit-hook
+
+
+# Print an introduction line in cyan
+printf "\033[0;36mPre-commit hook is linting your changes for coding guideline violations...\033[0m \n"
+
+# Grab feed of staged files 
+cd ~/falcons/code
+files=$(git diff --name-only --cached)
+numfiles=$( printf '%s' "$files" | grep -c '^' )
+
+if [ $numfiles -eq 0 ]
+then
+    printf "\033[0;35mNo files staged. Nothing to check.\033[0m\n"
+    exit 1
+fi
+
+# Default to zero which means the changes are good and the commit can go ahead
+exitstatus=0
+numnonpassingfiles=0
+
+# Iterate over the filenames to discover the longest 
+longest=0
+for i in $files
+do
+    if [ ${#i} -gt $longest ]
+    then
+        longest=${#i}
+    fi
+done
+
+# Iterate over the staged filenames
+for i in $files
+do
+    # If file is staged for deletion, then ignore
+    if [ ! -f $i ]
+    then
+        continue
+    fi
+    
+    # Print file name eg: "Checking: text.txt"
+    printf "\033[0;35mChecking:\033[0m %s " "$i"
+
+    # Print some padding spaces so the failed/success statuses line up
+    padding=$(expr $longest - ${#i})
+    for ((n=0;n<$padding;n++))
+    do
+        printf " " 
+    done
+
+    # Perform all checks
+    # Interface requirement of any checker:
+    #  * it shall take the filename as single argument
+    #    (it might choose to inspect all lines or only the modified ones)
+    #  * it shall use exit status to communicate success: 0 is OK, otherwise NOK
+    #  * on its std output it shall specify the first offending line number
+    ok=1
+    for check in ; # tabs 4spaces
+    do
+        lineNr=$( pre-commit-$check $i )
+        if [ $? -gt 0 ]
+        then
+            ok=0
+            break # we choose not to continue with other checks
+        fi
+    done
+    
+    # Print the coloured [failed] or [success] report 
+    if [ $ok -eq 0 ]
+    then
+        printf "\033[0;31m[failed (reason: check '$check' failed on line $lineNr)]\n"
+        ((numnonpassingfiles++))
+        exitstatus=1
+    else
+        printf "\033[0;32m[passed]\n"
+    fi
+
+    # Reset print color back to default for the next iteration
+    printf "\033[0m"
+
+done
+
+# Print summary line in cyan
+if [ $exitstatus -eq 0 ]
+then
+    printf "\033[0;36mCoding guideline checks OK, continuing commit\033[0m \n"
+else
+    printf "\033[0;36mCoding guideline violation detected in $numnonpassingfiles files, cannot commit\033[0m \n"
+fi
+
+exit $exitstatus
+

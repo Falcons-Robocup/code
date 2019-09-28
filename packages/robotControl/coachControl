@@ -30,7 +30,11 @@ jobnames="${teamchar}0_coachPart1"
 # for teamB, run only part1 and not part2 
 # (use case: for 2-team simulation, we only want to see teamA visualizer etc, not teamB, but teamB does need refboxRelay etc)
 if [ $teamchar != "B" ]; then
-    jobnames="$jobnames ${teamchar}0_coachPart2"
+    if [ -z "$SIMULATED" -o "$SIMULATED" = 0 ] ; then
+        jobnames="$jobnames ${teamchar}0_coachPart2Real"
+    else
+        jobnames="$jobnames ${teamchar}0_coachPart2Sim"
+    fi
 fi
 
 # simulation mode? wrapping simControl will set SIMULATED=1
@@ -42,11 +46,8 @@ fi
 function finish {
     # first kill the logger, to prevent active .bag file with no content
     (
-        recordnode=`rosnode list | grep record`
-        if [ -n "$recordnode" ]; then
-            rosnode kill $recordnode
-        fi
-        sleep 3
+        pkill -2 logger
+        sleep 1
     ) > /dev/null 2>&1
     # stop the jobs
     for j in $jobnames; do
@@ -58,6 +59,8 @@ function finish {
 trap finish EXIT
 trap finish SIGINT
 
+# clear RTDB
+rtdbClear
 
 # first time (teamA) only
 if [ $teamchar != "B" ]; then
@@ -82,12 +85,6 @@ for j in $jobnames; do
     jobStart $j &
 done
 
-# old-teamplay-specific cmdChannel
-if [ -f "$TURTLEROOT/config/ifs" ]; then
-    processStart commandChannelCoach &
-    processStart interactiveFieldSetup &
-fi
-
 # block?
 if [ "$interactive" = "0" ]; then
     # called from simControl -- sleep forever (until simControl stops)
@@ -95,6 +92,7 @@ if [ "$interactive" = "0" ]; then
 else
     # prompt
     while :; do
+        sleep 1
         echo "  q   : quit"
         echo "  r   : start refbox (2015) application"
         echo -n "input command: "
@@ -106,7 +104,7 @@ else
         if [ "$ans" = "r" ]; then
             (
                 processStart refboxGui &
-            ) >/dev/null 2>&1
+            ) < /dev/null >/dev/null 2>&1
         fi
     done
 fi

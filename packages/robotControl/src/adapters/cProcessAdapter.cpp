@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,6 +22,8 @@
 #include <string>
 
 #include "FalconsCommon.h"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 using namespace std;
 
@@ -32,6 +34,7 @@ cProcessAdapter::cProcessAdapter()
 
 void cProcessAdapter::jobStart(string jobname)
 {
+    TRACE_INFO("software is starting");
     TRACE("jobStart (%s)", jobname.c_str());
     string command = "robotControl start";
     TRACE("calling system(%s)", command.c_str());
@@ -41,6 +44,7 @@ void cProcessAdapter::jobStart(string jobname)
 
 void cProcessAdapter::jobStop(string jobname)
 {
+    TRACE_INFO("software is shutting down");
     TRACE("jobStop (%s)", jobname.c_str());
     string command = "robotControl stop";
     TRACE("calling system(%s)", command.c_str());
@@ -50,6 +54,7 @@ void cProcessAdapter::jobStop(string jobname)
 
 void cProcessAdapter::restartSw()
 {
+    TRACE_INFO("software is starting");
     TRACE("restartSw");
     string command = "robotControl restart";
     TRACE("calling system(%s)", command.c_str());

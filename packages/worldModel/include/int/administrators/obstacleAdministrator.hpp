@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,13 +23,12 @@
 #include <map>
 #include <vector>
 
-#include "int/types/robot/robotType.hpp"
-#include "int/types/obstacle/obstacleMeasurementType.hpp"
-#include "int/administrators/obstacleDiscriminator.hpp"
-#include "int/types/uniqueWorldModelIDtype.hpp"
+#include "diagWorldModel.hpp"
 
-#include "cDiagnostics.hpp"
-#include "rosMsgs/t_diag_wm_obstacles.h"
+#include "int/types/robot/robotType.hpp"
+#include "obstacleMeasurement.hpp"
+#include "int/administrators/obstacleDiscriminator.hpp"
+#include "uniqueObjectID.hpp"
 
 
 class obstacleAdministrator
@@ -38,29 +37,26 @@ class obstacleAdministrator
         obstacleAdministrator();
         virtual ~obstacleAdministrator();
 
-        virtual void appendObstacleMeasurements(const std::vector<obstacleMeasurementType> measurements);
+        virtual void appendObstacleMeasurements(const std::vector<obstacleMeasurement> measurements);
         virtual void overruleObstacles(const std::vector<obstacleClass_t> obstacles);
-        virtual void performCalculation(const double timeNow);
-        virtual void getLocalObstacleMeasurements(std::vector<obstacleMeasurementType> &measurements);
+        virtual void performCalculation(rtime const timeNow);
+        virtual void getLocalObstacleMeasurements(std::vector<obstacleMeasurement> &measurements);
         virtual void getObstacles(std::vector<obstacleClass_t> &obstacles);
         virtual void notifyOwnLocation(robotClass_t const &ownLocation);
         virtual void notifyTeamMembers(std::vector<robotClass_t> const &teamMembers);
-
-        void enableDiagnostics();
         
+        void fillDiagnostics(diagWorldModel &diagnostics);
+
     private:
         uint8_t _ownRobotID;
-        std::map<uniqueWorldModelID, obstacleMeasurementType> _obstacleMeasurements;
+        std::map<uniqueObjectID, obstacleMeasurement> _obstacleMeasurements;
         std::map<uint8_t, std::vector<obstacleClass_t>> _overruledObstacles;
-        obstacleDiscriminator _obstacleDiscriminator;
-        Point2D _ownPos;
-        std::vector<Point2D> _teamMembers;
+        IobstacleDiscriminator* _obstacleDiscriminator;
+        robotClass_t _ownPos;
+        std::vector<robotClass_t> _teamMembers;
         std::vector<obstacleClass_t> _resultObstacles;
-        diagnostics::cDiagnosticsSender<rosMsgs::t_diag_wm_obstacles> *_diagSender;
 
-        virtual void cleanUpTimedOutObstacleMeasurements(const double timeNow);
-        virtual void filterOutTeamMembers(std::vector<obstacleClass_t> &obstacles);
-        void sendDiagnostics(std::vector<obstacleClass_t> const &obstacles);
+        virtual void cleanUpTimedOutObstacleMeasurements(rtime const timeNow);
 
 };
 

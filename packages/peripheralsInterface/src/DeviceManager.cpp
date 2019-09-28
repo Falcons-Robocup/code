@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,7 +26,8 @@
 #include <dirent.h>
 #include <unistd.h>
 
-#include <cDiagnosticsEvents.hpp>
+#include <cDiagnostics.hpp>
+#include "tracing.hpp"
 
 #include <int/PeripheralsInterfaceExceptions.hpp>
 #include <int/PeripheralsInterfaceTypes.hpp>

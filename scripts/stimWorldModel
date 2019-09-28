@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# Stimulate worldModel
+# 
+# JFEI 2019Q1
+
+
+# check input
+rdlInputFile=$1
+if [ ! -f $rdlInputFile ]; then
+    echo "ERROR: require valid input RDL file"
+    exit 1
+fi
+
+# automatically determine output file by applying '_stim' postfix
+rdlOutputFile=`echo $rdlInputFile | sed 's/\.rdl/_stim.rdl/'`
+agentId=`echo $rdlInputFile | sed 's/.*_r\(.\)\.rdl/\1/'`
+if [ -f $rdlOutputFile ]; then
+    rm $rdlOutputFile # containment for an feature/issue that cLogFileWriter opens with r/w, causing possible frame corruption at the end of file
+fi
+
+# configuration overrule -- it would be nicer if we would do this from WorldModelStimulator constructor (TODO)
+configTgt=/home/robocup/falcons/code/config/worldModelLocalizationConfig.yaml
+configBak=$configTgt.bak
+configSrc=/home/robocup/falcons/code/config/worldModelLocalizationConfigStim.yaml
+cp $configTgt $configBak
+cp $configSrc $configTgt
+
+# run
+(
+    # needed for configurability only ... to be designed away
+    roscore &
+) > /dev/null 2>&1
+echo "agentId=$agentId"
+sleep 5
+export TURTLE5K_ROBOTNUMBER=$agentId
+rosrun worldModel worldModelStimulator -a $agentId -i $rdlInputFile -o $rdlOutputFile -v 4
+
+# shutdown
+killall roscore
+
+# revert config
+mv $configBak $configTgt
+
+exit 0
+

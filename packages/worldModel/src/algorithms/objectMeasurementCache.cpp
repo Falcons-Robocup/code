@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,17 +19,17 @@
 #include "int/algorithms/objectMeasurementCache.hpp"
 #include "linalgcv.hpp" // from package geometry
 
-objectMeasurementCache::objectMeasurementCache(objectMeasurementType const &objectMeasurement)
+objectMeasurementCache::objectMeasurementCache(objectMeasurement const &objectMeasurement)
 {
     _objectMeasurement = objectMeasurement;
     // calculate FCS position
-    _positionFcs = object2fcs(objectMeasurement.getCameraX(), 
-                            objectMeasurement.getCameraY(), 
-                            objectMeasurement.getCameraZ(), 
-                            objectMeasurement.getCameraPhi(), 
-                            objectMeasurement.getAzimuth(), 
-                            objectMeasurement.getElevation(), 
-                            objectMeasurement.getRadius());
+    _positionFcs = object2fcs(objectMeasurement.cameraX, 
+                            objectMeasurement.cameraY, 
+                            objectMeasurement.cameraZ, 
+                            objectMeasurement.cameraPhi, 
+                            objectMeasurement.azimuth, 
+                            objectMeasurement.elevation, 
+                            objectMeasurement.radius);
     // calculate and cache design matrix
     calculateCvMatrix();
 }
@@ -48,19 +48,19 @@ cv::Mat objectMeasurementCache::getCvMatrix() const
     return _matrix;
 }
 
-objectMeasurementType objectMeasurementCache::getObjectMeasurement() const
+objectMeasurement objectMeasurementCache::getObjectMeasurement() const
 {
     return _objectMeasurement;
 }
 
 void objectMeasurementCache::calculateCvMatrix()
 {
-    float cx = _objectMeasurement.getCameraX();
-    float cy = _objectMeasurement.getCameraY();
-    float cz = _objectMeasurement.getCameraZ();
-    float cphi = _objectMeasurement.getCameraPhi();
-    float az = _objectMeasurement.getAzimuth();
-    float el = _objectMeasurement.getElevation();
+    float cx = _objectMeasurement.cameraX;
+    float cy = _objectMeasurement.cameraY;
+    float cz = _objectMeasurement.cameraZ;
+    float cphi = _objectMeasurement.cameraPhi;
+    float az = _objectMeasurement.azimuth;
+    float el = _objectMeasurement.elevation;
     _matrix = constructD(cx, cy, cz, cphi, az, el);
 }
 

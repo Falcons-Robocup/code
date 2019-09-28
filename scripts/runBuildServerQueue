@@ -1,0 +1,46 @@
+#!/bin/bash
+
+
+# this script should be triggered from Jenkins
+# the job configuration can be found via (Falcons_A_a network)
+#    http://172.16.74.60:8080/job/Falcons/configure
+# in there, the build snipped should refer to this script:
+#   
+#    # Erase robocup working dir (if it exists)
+#    sudo su - robocup -c 'rm -rf /home/robocup/falcons/code/*'
+#
+#    # Create hardlinks to the working dir (checked out by jenkins)
+#    sudo su - robocup -c "cd $WORKSPACE ; pax -vrwl * \$HOME/falcons/code"
+#
+#    # Start the build, test etcetera (as user robocup)
+#    sudo -E su -p -l robocup -c "export HOME=/home/robocup ; source \$HOME/falcons/code/scripts/runBuildServerQueue"
+#
+# so all actions go below
+
+
+
+# Configure environment
+source $HOME/falcons/code/scripts/falconsconfig.sh 
+
+# Inspect wiki activity log and report a summary into gitlab (issue #45)
+# run this script only once per week: friday morning
+if [ `date +%w` = 5 ]; then
+    if [ `date +%H` -lt 3 ]; then
+        postAsJenkinsRecentWikiActivity
+    fi
+fi
+
+# Make sure teamplayData is consistent
+cd $HOME/falcons/teamplayData
+git pull # use public ssh key
+
+# Beyond: exit upon error
+set -e
+
+# Start the build
+falconsbuild.sh --pre-clean
+
+# Run unit testers
+$HOME/falcons/code/testing/runtests_unitlevel
+
+

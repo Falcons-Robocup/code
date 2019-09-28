@@ -1,0 +1,4 @@
+*.bin
+*.jpg
+*.o
+zynqGrab

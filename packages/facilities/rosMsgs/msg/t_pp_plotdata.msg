@@ -13,3 +13,13 @@ float32 phi_pid_p
 float32 phi_pid_i
 float32 phi_pid_d
 float32 tokyo_drift
+float32 error_x
+float32 error_y
+float32 jerk_x
+float32 jerk_y
+float32 acc_x
+float32 acc_y
+float32 vel_x
+float32 vel_y
+float32 pos_x
+float32 pos_y

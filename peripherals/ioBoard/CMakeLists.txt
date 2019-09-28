@@ -12,8 +12,8 @@ include_directories("${PROJECT_SOURCE_DIR}/include")
 set(project_elf_file ${PROJECT_NAME}.elf)
 set(project_map_file ${PROJECT_NAME}.map)
 set(project_hex_file ${PROJECT_NAME}.hex)
-set(bootloader_hex_file ${CMAKE_SOURCE_DIR}/bootloader/xboot.hex)
-set(hex_file ${PROJECT_NAME}_with_bootloader.hex)
+#set(bootloader_hex_file ${CMAKE_SOURCE_DIR}/bootloader/xboot.hex)
+#set(hex_file ${PROJECT_NAME}_with_bootloader.hex)
 
 set(AVR_MCU "atxmega64a3")
 
@@ -34,6 +34,7 @@ add_executable(${project_elf_file} src/main.c
                            src/Charge_Pulse.c
                            src/Digital_Input.c
                            src/Package.c
+                           src/Keeper_Frame_Pulse.c
                            src/Shoot_Level.c
                            src/Shoot_Pulse.c
                            src/UART.c)
@@ -44,25 +45,30 @@ add_custom_target(${project_hex_file}
                    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
                    DEPENDS ${project_elf_file})
 
-add_custom_target(bootloader
-                  COMMAND make
-                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/bootloader)
+#add_custom_target(bootloader
+#                  COMMAND make
+#                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/bootloader)
 
-add_custom_target(${hex_file}
-                  srec_cat ${bootloader_hex_file} -intel ${project_hex_file} -intel -o ${hex_file} -intel
-                  WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-                  DEPENDS bootloader ${project_hex_file})
+#add_custom_target(${hex_file}
+#                  srec_cat ${bootloader_hex_file} -intel ${project_hex_file} -intel -o ${hex_file} -intel
+#                  WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+#                  DEPENDS bootloader ${project_hex_file})
 
 add_custom_target(${PROJECT_NAME}
                   ALL
-                  DEPENDS ${hex_file})
+                  DEPENDS ${project_hex_file})
 
 add_custom_target(upload
-                  COMMAND avrdude -p ${AVR_MCU} -P usb -e -c avrispmkII -U flash:w:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${hex_file}
-                  DEPENDS ${hex_file}
-                  COMMENT "Uploading ${hex_file} to ${AVR_MCU}.")
-
-add_custom_target(upload_without_bootloader
                   COMMAND avrdude -p ${AVR_MCU} -P usb -e -c avrispmkII -U flash:w:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${project_hex_file}
-                  DEPENDS ${hex_file}
-                  COMMENT "Uploading ${hex_file} to ${AVR_MCU}.")
+                  DEPENDS ${project_hex_file}
+                  COMMENT "Uploading ${project_hex_file} to ${AVR_MCU}.")
+
+#add_custom_target(upload_without_bootloader
+#                  COMMAND avrdude -p ${AVR_MCU} -P usb -e -c avrispmkII -U flash:w:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${project_hex_file}
+#                  DEPENDS ${hex_file}
+#                  COMMENT "Uploading ${hex_file} to ${AVR_MCU}.")
+
+add_custom_target(upload_ice
+                  COMMAND avrdude -p ${AVR_MCU} -e -c jtagmkII -U flash:w:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${project_hex_file}
+                  DEPENDS ${project_hex_file}
+                  COMMENT "Uploading ${project_hex_file} to ${AVR_MCU}.")

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,14 +29,9 @@ const static std::string shootplanning_nodename = "ShootPlanningNode";
 
 namespace ShootPlanningInterface
 {
-const static std::string s_kick_position = "s_kick_position";
-const static std::string s_kick_speed = "s_kick_speed";
-const static std::string s_pass = "s_pass";
-const static std::string s_self_pass = "s_self_pass";
-const static std::string s_shoot = "s_shoot";
-const static std::string s_lobshot = "s_lobshot";
-const static std::string s_shootplanning_set_active = "s_shootplanning_set_active";
-const static std::string s_shootplanning_get_active = "s_shootplanning_get_active";
+const static std::string s_prepare_for_shot = "s_prepare_for_shot";
+const static std::string s_execute_shot = "s_execute_shot";
+const static std::string s_execute_pass = "s_execute_pass";
 }
 
 #endif /* SHOOTPLANNINGNAMES_H_ */

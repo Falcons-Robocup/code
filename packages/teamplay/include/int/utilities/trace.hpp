@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,85 +20,9 @@
 #define TRACE_HPP_
 
 #include <string>
+#include "tracing.hpp"
+#include "cDiagnostics.hpp"
 
-typedef void (*traceFunction_p)(std::string const &, int const, std::string const &, std::string const &);
 
-// undefine in case Falcons tracer.hpp was included first
-#ifdef TRACE
-#undef TRACE
-#undef TRACE_ERROR
-#undef TRACE_INFO
-#endif
-
-#define TRACE(msg) (teamplay::trace(__FILE__, __LINE__, __FUNCTION__, msg))
-#define TRACE_ERROR(msg) (teamplay::traceError(__FILE__, __LINE__, __FUNCTION__, msg))
-#define TRACE_INFO(msg)  (teamplay::traceInfo(__FILE__, __LINE__, __FUNCTION__, msg))
-
-namespace teamplay
-{
-
-class traceBase {
-public:
-    traceBase(const char*, const int, const char*, const std::string&);
-    virtual ~traceBase();
-
-    traceBase& operator<<(const std::string&);
-
-protected:
-    std::string m_file;
-    int m_line;
-    std::string m_func;
-    std::string m_info;
-};
-
-class trace : public traceBase {
-public:
-    trace(const char*, const int, const char*, const std::string&);
-    virtual ~trace();
-};
-
-class traceError : public traceBase {
-public:
-    traceError(const char*, const int, const char*, const std::string&);
-    virtual ~traceError();
-};
-
-class traceInfo : public traceBase {
-public:
-    traceInfo(const char*, const int, const char*, const std::string&);
-    virtual ~traceInfo();
-};
-
-class traceRedirect
-{
-public:
-    static traceRedirect& getInstance()
-    {
-        static traceRedirect instance;
-        return instance;
-    }
-
-    void redirectError(const std::string& file, const int line, const std::string& func, const std::string& msg);
-    void redirectInfo(const std::string& file, const int line, const std::string& func, const std::string& msg);
-    void redirectTrace(const std::string& file, const int line, const std::string& func, const std::string& msg);
-
-    void setTraceFunction(const traceFunction_p);
-    void setTraceErrorFunction(const traceFunction_p);
-    void setTraceInfoFunction(const traceFunction_p);
-
-    void setAllTracesToStdout();
-
-private:
-    traceRedirect();
-    ~traceRedirect();
-    traceRedirect(traceRedirect const&); // Don't implement
-    void operator= (traceRedirect const&); // Don't implement
-
-    traceFunction_p m_trace_function;
-    traceFunction_p m_trace_error_function;
-    traceFunction_p m_trace_info_function;
-};
-
-} /* namespace teamplay */
 
 #endif /* TRACE_HPP_ */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,6 +20,10 @@
 
 void cPhiPID::execute()
 {
+    std::string msg = "target: ";
+    msg.append(_ppData.pos.tostr());
+    TRACE_FUNCTION(msg.c_str());
+
     TRACE(">");
     // Get current position from cPathPlanningData
     Position2D currPos;

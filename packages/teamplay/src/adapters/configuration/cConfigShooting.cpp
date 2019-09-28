@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -47,27 +47,15 @@ void cConfigShooting::loadConfigYaml()
 	_srv->setCallback(_f);
 
 	/* Get standard configuration and update values */
-	while(!ros::param::get("teamplay_main/shooting/shootAtGoalPower", config.shootAtGoalPower))
+	while(!ros::param::get("teamplay_main/shooting/shootPathWidth", config.shootPathWidth))
 	{
 		std::cout << "Teamplay shooting parameters not loaded yet??" << std::endl;
 		sleep(5);
 	}
 	/* Get parameter values from ROS param-server */
-	ros::param::get("teamplay_main/shooting/shortPassPower", config.shortPassPower);
-	ros::param::get("teamplay_main/shooting/shortToMediumPassPower", config.shortToMediumPassPower);
-	ros::param::get("teamplay_main/shooting/mediumPassPower", config.mediumPassPower);
-	ros::param::get("teamplay_main/shooting/mediumToLongPassPower", config.mediumToLongPassPower);
-	ros::param::get("teamplay_main/shooting/longPassPower", config.longPassPower);
-
-    ros::param::get("teamplay_main/shooting/maxDistanceForShortPass", config.maxDistanceForShortPass);
-    ros::param::get("teamplay_main/shooting/maxDistanceForShortToMediumPass", config.maxDistanceForShortToMediumPass);
-    ros::param::get("teamplay_main/shooting/maxDistanceForMediumPass", config.maxDistanceForMediumPass);
-    ros::param::get("teamplay_main/shooting/maxDistanceForMediumToLongPass", config.maxDistanceForMediumToLongPass);
-
-    ros::param::get("teamplay_main/shooting/shootTimer", config.shootTimer);
-    ros::param::get("teamplay_main/shooting/shootTimerAngleThreshold", config.shootTimerAngleThreshold);
-    ros::param::get("teamplay_main/shooting/shootPathWidth", config.shootPathWidth);
-    ros::param::get("teamplay_main/shooting/settleTimeAfterShooting", config.settleTimeAfterShooting);
+    ros::param::get("teamplay_main/shooting/straightShotThreshold", config.straightShotThreshold);
+    ros::param::get("teamplay_main/shooting/aimForCornerThreshold", config.aimForCornerThreshold);
+    ros::param::get("teamplay_main/shooting/shotThreshold", config.shotThreshold);
 
 	/* Call configuration file */
 	reconfig_cb(config, 0);
@@ -75,24 +63,8 @@ void cConfigShooting::loadConfigYaml()
 
 void cConfigShooting::reconfig_cb(teamplay::teamplayShootingConfig &config, uint32_t level)
 {
-    teamplay::passPowers _passPowers;
-    _passPowers[teamplay::passDistance::SHORT] = config.shortPassPower;
-    _passPowers[teamplay::passDistance::SHORT_TO_MEDIUM] = config.shortToMediumPassPower;
-    _passPowers[teamplay::passDistance::MEDIUM] = config.mediumPassPower;
-    _passPowers[teamplay::passDistance::MEDIUM_TO_LONG] = config.mediumToLongPassPower;
-    _passPowers[teamplay::passDistance::LONG] = config.longPassPower;
-
-    teamplay::passRanges _passRanges;
-    _passRanges[teamplay::passDistance::SHORT] = config.maxDistanceForShortPass;
-    _passRanges[teamplay::passDistance::SHORT_TO_MEDIUM] = config.maxDistanceForShortToMediumPass;
-    _passRanges[teamplay::passDistance::MEDIUM] = config.maxDistanceForMediumPass;
-    _passRanges[teamplay::passDistance::MEDIUM_TO_LONG] = config.maxDistanceForMediumToLongPass;
-
-    teamplay::configurationStore::getConfiguration().setShootAtGoalPower(config.shootAtGoalPower);
-    teamplay::configurationStore::getConfiguration().setPassPowers(_passPowers);
-    teamplay::configurationStore::getConfiguration().setPassRanges(_passRanges);
-    teamplay::configurationStore::getConfiguration().setShootTimer(config.shootTimer);
-    teamplay::configurationStore::getConfiguration().setShootTimerAngleThreshold(config.shootTimerAngleThreshold);
     teamplay::configurationStore::getConfiguration().setShootPathWidth(config.shootPathWidth);
-    teamplay::configurationStore::getConfiguration().setSettleTimeAfterShooting(config.settleTimeAfterShooting);
+    teamplay::configurationStore::getConfiguration().setStraightShotThreshold(config.straightShotThreshold);
+    teamplay::configurationStore::getConfiguration().setAimForCornerThreshold(config.aimForCornerThreshold);
+    teamplay::configurationStore::getConfiguration().setShotThreshold(config.shotThreshold);
 }

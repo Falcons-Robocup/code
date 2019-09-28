@@ -9,7 +9,6 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/robotControl</url>
   <depend package="roscpp"/>
-  <depend package="rosMsgs"/>
   <depend package="networkUDP"/>
   <depend package="common"/>
   <depend package="diagnostics"/>

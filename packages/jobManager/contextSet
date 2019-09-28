@@ -12,7 +12,12 @@
 # if not provided, then guess (assume we are on real robot)
 if [ -z "$CONTEXTKEY" ]; then
     # on real robot -> guess
-    robotnum=`hostname | grep FALCON | sed 's/FALCON-//'`
+    if [ `hostname` == "fiction" ]; then
+       # legacy mode for testing
+       robotnum=$TURTLE5K_ROBOTNUMBER
+    else
+       robotnum=`hostname | grep FALCON | sed 's/FALCON-//'`
+    fi
     if [ -z "$robotnum" ]; then
         echo "ERROR: could not guess robot number based on hostname - use a context key in case you are on simulator"
     fi
@@ -39,16 +44,10 @@ fi
 # Set the robot network, if necessary
 # default (see http://timmel.no-ip.biz:8000/wiki/MSLNetworkSetup)
 export ROBOTNET=172.16.74.5
-# TODO replace this with configManager
 # fallback for RobocupASML router
 ifconfig -a | grep -q 192.168.5 && export ROBOTNET=192.168.5.5
 ifconfig -a | grep -q 10.0.0 && export ROBOTNET=10.0.0.
 # TODO robotnet 10.0.0.1 in case of wired? or via falcons_control -e? 
-
-# Robot status and config file
-# TODO replace this with configManager
-export ROBOT_STATUS_FILE=~/robot.status
-export ROBOT_CONFIG_FILE=~/robot.cfg
 
 # ROS namespace (follows from other variables)
 if [ "${TURTLE5K_ROBOTNUMBER}" = "0" ]; then

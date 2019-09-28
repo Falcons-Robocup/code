@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Copyright 2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to prepare, extract tgz and finalize file synchronization between x86_64 and raspi
+
+set -e
+
+# runRaspi script is likely in use on raspi, move to other name instead of overwriting 
+mv runRaspi tmp/runRaspi_`date +%Y-%m-%d_%H:%M:%S`
+
+# killMostRaspi might be in use when copy is ongoing
+mv killMostRaspi tmp/killMostRaspi_`date +%Y-%m-%d_%H:%M:%S`
+
+tar mxzf cam*Dir.tgz
+rm -f cam*Dir.tgz
+
+sudo cp -f tmp/config.txt /boot/
+sudo cp -f tmp/rc.local /etc/
+
+# stopping the system on the raspi board triggers the rebuild and restart
+./killMostRaspi
+
+exit 0 # success
+
+

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,10 +29,11 @@
 #include <boost/ptr_container/ptr_map.hpp>
 #include <boost/assign/ptr_map_inserter.hpp>
 
+#include "int/adapters/cRTDBOutputAdapter.hpp"
 #include "int/stores/diagnosticsStore.hpp"
 #include "int/stores/fieldDimensionsStore.hpp"
 #include "int/stores/gameStateStore.hpp"
-#include "int/stores/ownRobotStore.hpp"
+#include "int/stores/robotStore.hpp"
 #include "int/utilities/trace.hpp"
 #include "int/types/cGameStateTypes.hpp"
 #include "int/types/cRefboxSignalTypes.hpp"
@@ -43,34 +44,34 @@
 /* Teamplay includes: actions */
 #include "int/actions/cActionStop.hpp"
 #include "int/actions/cActionShoot.hpp"
+#include "int/actions/cActionPass.hpp"
 #include "int/actions/cActionPositionBeforePOI.hpp"
 #include "int/actions/cActionPositionBehindPOI.hpp"
-#include "int/actions/cActionFaceNearestTeammember.hpp"
+#include "int/actions/cActionPositionForOppSetpiece.hpp"
+#include "int/actions/cActionPositionForOwnSetpiece.hpp"
 #include "int/actions/cActionGetBall.hpp"
 #include "int/actions/cActionGoalKeeper.hpp"
 #include "int/actions/cActionInterceptBall.hpp"
 #include "int/actions/cActionMove.hpp"
 #include "int/actions/cActionMoveToFreeSpot.hpp"
-#include "int/actions/cActionMoveToPenaltyAngle.hpp"
 #include "int/actions/cActionSuccess.hpp"
 #include "int/actions/cActionAvoidPOI.hpp"
-#include "int/actions/cActionGetBallOnVector.hpp"
-#include "int/actions/cActionLongTurnToGoal.hpp"
-#include "int/actions/cActionAimForShotOnGoal.hpp"
-#include "int/actions/cActionDefendAssist.hpp"
+#include "int/actions/cActionDefendPenaltyArea.hpp"
+#include "int/actions/cActionTurnAwayFromOpponent.hpp"
+#include "int/actions/cActionDefendAttackingOpponent.hpp"
+#include "int/actions/cActionDribbleForPass.hpp"
+#include "int/actions/cActionDribbleForShot.hpp"
 
 using namespace teamplay;
 
 // define header variable (cActionMapping.hpp). Populated in the constructor of cDecisionTree()
-boost::ptr_map<actionEnum, boost::shared_ptr<cAbstractAction> > enumToActionMapping;
+boost::ptr_map<tpActionEnum, boost::shared_ptr<cAbstractAction> > enumToActionMapping;
 
 cParsedNode::cParsedNode(const boost::property_tree::ptree &root)
 {
     _root = root;
 
-    /*
-     * Parse node's id
-     */
+    // Parse node's id
     std::string strId = root.get<std::string>("id");
     _id = boost::lexical_cast<boost::uuids::uuid>(strId);
 
@@ -143,14 +144,14 @@ cParsedNode::cParsedNode(const boost::property_tree::ptree &root)
             }
             catch (std::exception &e)
             {
-                TRACE_ERROR("Caught exception: ") << e.what();
-            	throw std::runtime_error("Node '" + _name + "' identified as worldStateFunction, but worldStateFunction '" + wsf + "' is not found in worldStateFunctionMappingEnumToFunc.");
+                TRACE_ERROR("Caught exception: %s", e.what());
+                throw std::runtime_error("Node '" + _name + "' identified as worldStateFunction, but worldStateFunction '" + wsf + "' is not found in worldStateFunctionMappingEnumToFunc.");
             }
         }
         catch (std::exception &e)
         {
-            TRACE_ERROR("Caught exception: ") << e.what();
-        	throw std::runtime_error("Node '" + _name + "' identified as worldStateFunction, but worldStateFunction '" + wsf + "' is not found in worldStateFunctionMappingStrToEnum.");
+            TRACE_ERROR("Caught exception: %s", e.what());
+            throw std::runtime_error("Node '" + _name + "' identified as worldStateFunction, but worldStateFunction '" + wsf + "' is not found in worldStateFunctionMappingStrToEnum.");
         }
     }
     else
@@ -169,7 +170,7 @@ cParsedNode::cParsedNode(const boost::property_tree::ptree &root)
             // Resolve action
             try
             {
-                actionEnum action = actionMapping.at(_name);
+                tpActionEnum action = actionMapping.at(_name);
 
                 try
                 {
@@ -178,14 +179,14 @@ cParsedNode::cParsedNode(const boost::property_tree::ptree &root)
                 catch(std::exception &e)
                 {
 
-                    TRACE_ERROR("Caught exception: ") << e.what();
+                    TRACE_ERROR("Caught exception: %s", e.what());
                     throw std::runtime_error("Node '" + _name + "' identified as action, but action is not found in enumToActionMapping.");
                 }
             }
             catch(std::exception &e)
             {
-                TRACE_ERROR("Caught exception: ") << e.what();
-            	throw std::runtime_error("Node '" + _name + "' identified as action, but action is not found in actionMapping.");
+                TRACE_ERROR("Caught exception: %s", e.what());
+                throw std::runtime_error("Node '" + _name + "' identified as action, but action is not found in actionMapping.");
             }
 
             //// Resolve action parameters and values
@@ -250,14 +251,14 @@ cParsedNode::cParsedNode(const boost::property_tree::ptree &root)
                             // Parse to float, if possible.
                             try
                             {
-								std::stof(itParam->second); // if not a valid flow, will throw illegal argument exception
+                                std::stof(itParam->second); // if not a valid flow, will throw illegal argument exception
                                 foundAllowedValue = true;
                             }
                             catch(std::exception &e)
                             {
                                 // Nope, definitely not a float.
-                                TRACE_ERROR("Caught exception: ") << e.what();
-                                throw std::runtime_error(std::string("Linked to: ") + e.what());
+                                TRACE_ERROR("Caught exception: %s", e.what());
+                                throw std::runtime_error(std::string("cParsedNode::cParsedNode Linked to: ") + e.what());
                             }
                         }
                         // if bool in allowedValues:
@@ -299,7 +300,7 @@ cParsedNode::cParsedNode(const boost::property_tree::ptree &root)
             }
             catch(std::exception &e)
             {
-                TRACE_ERROR("Caught exception: ") << e.what();
+                TRACE_ERROR("Caught exception: %s", e.what());
                 throw std::runtime_error("Node '" + _name + "' identified as behavior, but behavior is not found in treeEnumMapping.");
             }
         }
@@ -315,7 +316,7 @@ cParsedNode::cParsedNode(const boost::property_tree::ptree &root)
             }
             catch(std::exception &e)
             {
-                TRACE_ERROR("Caught exception: ") << e.what();
+                TRACE_ERROR("Caught exception: %s", e.what());
                 throw std::runtime_error("Node '" + _name + "' identified as role, but role is not found in treeEnumMapping.");
             }
         }
@@ -331,21 +332,15 @@ cParsedTree::cParsedTree(const boost::property_tree::ptree &root)
 {
     _root = root;
 
-    /*
-     * Store tree uuid
-     */
+    // Store tree uuid
     std::string strId = root.get<std::string>("id");
     _id = boost::lexical_cast<boost::uuids::uuid>(strId);
 
-    /*
-     * Store root node uuid
-     */
+    // Store root node uuid
     std::string strRootNode = root.get<std::string>("root");
     _rootNode = boost::lexical_cast<boost::uuids::uuid>(strRootNode);
 
-    /*
-     * Iterate nodes, store as cParsedNodes in _nodeMapping.
-     */
+    // Iterate nodes, store as cParsedNodes in _nodeMapping.
     BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, root.get_child("nodes"))
     {
         std::string strNodeName = v.first;
@@ -360,33 +355,33 @@ cParsedTree::cParsedTree(const boost::property_tree::ptree &root)
  * 1. gameState -> role
  * 2. role -> behavior
  */
-cDecisionTree::cDecisionTree() : diagSender(diagnostics::DIAG_TEAMPLAY, 0)
+cDecisionTree::cDecisionTree()
 {
+    TRACE_FUNCTION("");
+    boost::assign::ptr_map_insert( enumToActionMapping )
+        ( tpActionEnum::INVALID, boost::make_shared<cActionStop>() )
+        ( tpActionEnum::SUCCESS, boost::make_shared<cActionSuccess>() )
+        ( tpActionEnum::MOVE, boost::make_shared<cActionMove>() )
+        ( tpActionEnum::STOP, boost::make_shared<cActionStop>() )
+        ( tpActionEnum::SHOOT, boost::make_shared<cActionShoot>() )
+        ( tpActionEnum::PASS, boost::make_shared<cActionPass>() )
+        ( tpActionEnum::POSITION_BEFORE_POI, boost::make_shared<cActionPositionBeforePOI>() )
+        ( tpActionEnum::POSITION_BEHIND_POI, boost::make_shared<cActionPositionBehindPOI>() )
+        ( tpActionEnum::POSITION_FOR_OPP_SETPIECE, boost::make_shared<cActionPositionForOppSetpiece>() )
+        ( tpActionEnum::POSITION_FOR_OWN_SETPIECE, boost::make_shared<cActionPositionForOwnSetpiece>() )
+        ( tpActionEnum::GET_BALL, boost::make_shared<cActionGetBall>() )
+        ( tpActionEnum::GOALKEEPER, boost::make_shared<cActionGoalKeeper>() )
+        ( tpActionEnum::INTERCEPT_BALL, boost::make_shared<cActionInterceptBall>() )
+        ( tpActionEnum::MOVE_TO_FREE_SPOT, boost::make_shared<cActionMoveToFreeSpot>())
+        ( tpActionEnum::AVOID_POI,  boost::make_shared<cActionAvoidPOI>())
+        ( tpActionEnum::DEFEND_PENALTY_AREA,  boost::make_shared<cActionDefendPenaltyArea>())
+        ( tpActionEnum::TURN_AWAY_FROM_OPPONENT,  boost::make_shared<cActionTurnAwayFromOpponent>())
+        ( tpActionEnum::DEFEND_ATTACKING_OPPONENT,  boost::make_shared<cActionDefendAttackingOpponent>())
+        ( tpActionEnum::DRIBBLE_FOR_PASS,  boost::make_shared<cActionDribbleForPass>())
+        ( tpActionEnum::DRIBBLE_FOR_SHOT,  boost::make_shared<cActionDribbleForShot>())
+        ;
 
-	boost::assign::ptr_map_insert( enumToActionMapping )
-	            ( actionEnum::INVALID, boost::make_shared<cActionStop>() )
-	            ( actionEnum::SUCCESS, boost::make_shared<cActionSuccess>() )
-	            ( actionEnum::MOVE_WHILE_TURNING, boost::make_shared<cActionMove>() )
-	            ( actionEnum::MOVE, boost::make_shared<cActionMove>() )
-	            ( actionEnum::STOP, boost::make_shared<cActionStop>() )
-	            ( actionEnum::SHOOT, boost::make_shared<cActionShoot>() )
-	            ( actionEnum::TURN, boost::make_shared<cActionMove>() )
-	            ( actionEnum::POSITION_BEFORE_POI, boost::make_shared<cActionPositionBeforePOI>() )
-	            ( actionEnum::POSITION_BEHIND_POI, boost::make_shared<cActionPositionBehindPOI>() )
-	            ( actionEnum::FACE_NEAREST_TEAMMEMBER, boost::make_shared<cActionFaceNearestTeammember>() )
-	            ( actionEnum::GET_BALL, boost::make_shared<cActionGetBall>() )
-	            ( actionEnum::GOALKEEPER, boost::make_shared<cActionGoalKeeper>() )
-	            ( actionEnum::INTERCEPT_BALL, boost::make_shared<cActionInterceptBall>() )
-	            ( actionEnum::MOVE_TO_PENALTY_ANGLE, boost::make_shared<cActionMoveToPenaltyAngle>())
-				( actionEnum::MOVE_TO_FREE_SPOT, boost::make_shared<cActionMoveToFreeSpot>())
-				( actionEnum::AVOID_POI,  boost::make_shared<cActionAvoidPOI>())
-				( actionEnum::GET_BALL_ON_VECTOR,  boost::make_shared<cActionGetBallOnVector>())
-				( actionEnum::LONG_TURN_TO_GOAL,  boost::make_shared<cActionLongTurnToGoal>())
-				( actionEnum::AIM_FOR_SHOT_ON_GOAL,  boost::make_shared<cActionAimForShotOnGoal>())
-				( actionEnum::DEFEND_ASSIST,  boost::make_shared<cActionDefendAssist>())
-	            ;
-
-	loadDecisionTrees();
+    _rtdb = RtDB2Store::getInstance().getRtDB2(getRobotNumber(), getTeamChar());
 }
 
 cDecisionTree::~cDecisionTree()
@@ -409,6 +404,10 @@ behTreeReturnEnum cDecisionTree::executeTree(const treeEnum& treeAsEnum, std::ma
 {
     try
     {
+        std::string msg = "tree: ";
+        msg.append( treeEnumToStr(treeAsEnum) );
+        TRACE_FUNCTION(msg.c_str());
+
         // Get the tree and its root node
         const cParsedTree& tree = getBehaviorTree(treeAsEnum);
         const cParsedNode& node = tree._nodeMapping.at(tree._rootNode);
@@ -444,8 +443,10 @@ behTreeReturnEnum cDecisionTree::executeTree(const treeEnum& treeAsEnum, std::ma
                 {
                     // No. We are actually traversing a different tree than the previous iteration.
                     // Remove all from stack up to and including the current stackIdx.
+                    int iteration = 0;
                     while ((int)(memoryStack.size()) > memoryStackIdx)
                     {
+                        iteration++;
                         // Find the tree that is to be removed
                         boost::uuids::uuid poppedTreeUuid = memoryStack.back();
                         treeEnum poppedTree = treeEnum::INVALID;
@@ -474,6 +475,10 @@ behTreeReturnEnum cDecisionTree::executeTree(const treeEnum& treeAsEnum, std::ma
 
                         // Remove the tree from the stack
                         memoryStack.pop_back();
+                        if (iteration > 100)
+                        {
+                            TRACE_WARNING("%d iterations in memory cleanup??", iteration);
+                        }
                     }
 
                     // Finally, add the current traversing tree.
@@ -482,8 +487,8 @@ behTreeReturnEnum cDecisionTree::executeTree(const treeEnum& treeAsEnum, std::ma
             }
             catch (std::exception &e)
             {
-                TRACE_ERROR("Caught exception: ") << e.what();
-                throw std::runtime_error(std::string("Linked to: ") + e.what());
+                TRACE_ERROR("Caught exception: %s", e.what());
+                throw std::runtime_error(std::string("cDecisionTree::executeTree Linked to: ") + e.what());
             }
         }
 
@@ -498,7 +503,7 @@ behTreeReturnEnum cDecisionTree::executeTree(const treeEnum& treeAsEnum, std::ma
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
+        TRACE_ERROR("Caught exception: %s", e.what());
         throw std::runtime_error(std::string("Execute action failed. Linked to: ") + e.what());
     }
 }
@@ -508,54 +513,58 @@ behTreeReturnEnum cDecisionTree::executeTree(const treeEnum& treeAsEnum, std::ma
  *  Loads all .json files.
  *  Each .json can contain multiple trees, which are stored separately.
  */
-void cDecisionTree::loadDecisionTrees()
+void cDecisionTree::loadDecisionTrees(const std::string& directory)
 {
-  try
-  {
-      struct passwd *pw = getpwuid(getuid());
-      std::string decisionTreePath("");
+    TRACE_FUNCTION("");
+    try
+    {
+        struct passwd *pw = getpwuid(getuid());
+        std::string decisionTreePath("");
 
-      decisionTreePath.append(pw->pw_dir);
-      decisionTreePath.append(DECISIONTREE_PATH);
+        decisionTreePath.append(pw->pw_dir);
+        decisionTreePath.append(DECISIONTREE_PATH);
+        decisionTreePath.append(directory);
 
-      /*
-       * Iterate all *.json files
-       */
-      boost::filesystem::path p(decisionTreePath);
-      for(boost::filesystem::directory_iterator iDirectory(p); iDirectory != boost::filesystem::directory_iterator(); iDirectory++)
-      {
-          if(boost::filesystem::is_regular_file(iDirectory->path()))
-          {
-              // Check if it is a .json file
-              std::string path = iDirectory->path().string();
-              if ( path.substr(path.size() - 5).compare(".json") == 0 )
-              {
-                  /*
-                   * Parse the tree
-                   */
-                  boost::property_tree::ptree tree;
-                  read_json(path, tree);
+        // Iterate all *.json files
+        boost::filesystem::path p(decisionTreePath);
+        for(boost::filesystem::directory_iterator iDirectory(p); iDirectory != boost::filesystem::directory_iterator(); iDirectory++)
+        {
+            if(boost::filesystem::is_regular_file(iDirectory->path()))
+            {
+                // Check if it is a .json file
+                std::string path = iDirectory->path().string();
+                if ( path.substr(path.size() - 5).compare(".json") == 0 )
+                {
+                    // Parse the tree
+                    boost::property_tree::ptree tree;
+                    read_json(path, tree);
 
-                  BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, tree.get_child("trees"))
-                  {
-                      /*
-                       * Fetch tree enum from the tree's title
-                       */
-                      std::string strTitle = v.second.get<std::string>("title");
-                      treeEnum tree = treeStrToEnum(strTitle);
-
-                      /* Store the tree */
-                      _trees[tree] = cParsedTree(v.second);
-                  }
-              }
-          }
-      }
-  }
-  catch (std::exception &e)
-  {
-      TRACE_ERROR("Caught exception: ") << e.what();
-      throw std::runtime_error(std::string("Failed to load decision trees. Linked to: ") + e.what());
-  }
+                    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, tree.get_child("trees"))
+                    {
+                        // Fetch tree enum from the tree's title
+                        try
+                        {
+                            std::string strTitle = v.second.get<std::string>("title");
+                            treeEnum tree = treeStrToEnum(strTitle);
+                            // Store the tree
+                            _trees[tree] = cParsedTree(v.second);
+                        }
+                        catch (std::exception &e)
+                        {
+                            std::string strTitle = v.second.get<std::string>("title");
+                            TRACE_ERROR("Caught exception in file: %s while trying to convert %s", path.c_str(), strTitle.c_str());
+                            throw std::runtime_error(std::string("Failed to load decision trees. Linked to: ") + e.what());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    catch (std::exception &e)
+    {
+        TRACE_ERROR("Caught exception while loading tree: %s", e.what());
+        throw std::runtime_error(std::string("Failed to load decision trees. Linked to: ") + e.what());
+    }
 }
 
 /*! \brief This function is for debugging purposes only.
@@ -607,6 +616,12 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
 {
     try
     {
+        std::string msg = "tree: ";
+        msg.append( treeEnumToStr(treeAsEnum) );
+        msg.append("; node: ");
+        msg.append( node._name );
+        TRACE_FUNCTION(msg.c_str());
+
         // We are executing on this key (Tree, Node)
         memoryStackKey traversingKey = std::make_pair(treeAsEnum, node._id);
 
@@ -619,6 +634,36 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
         // Turn this on to debug the memory of trees / nodes.
         //prettyPrintMemoryStack(memoryStack, memoryStackNodes);
 
+        //// Add params for recursive calls.
+        // 1. Make a copy of the node's properties, and all parameters passed down from the tree.
+        // 2. Remove blacklisted parameters from the node's properties.
+        // 3. Set "mapParams" to the node's properties.
+        // 4. Add the parameters passed down from the tree. Existing parameters are ignored by std::map::insert.
+
+        // 1. Make a copy of the node's properties, and all parameters passed down from the tree.
+        std::map<std::string, std::string> mapPropertiesCopy = node._mapProperties;
+        std::map<std::string, std::string> mapParamsCopy = mapParams;
+
+        // These ignoredParameters will NOT be added to the list of parameters
+        std::vector<std::string> ignoredParameters = {"wsf", "hasMemory", "parameter", "value"};
+
+        // 2. Remove blacklisted parameters from the node's properties.
+        // Remove blacklisted parameters (not to be added to mapParams) from copy
+        std::vector<std::string>::iterator it;
+        for (it = ignoredParameters.begin(); it != ignoredParameters.end(); ++it)
+        {
+            // Found blacklisted parameter, remove from mapPropertiesCopy
+            if (mapPropertiesCopy.find(*it) != mapPropertiesCopy.end())
+            {
+                mapPropertiesCopy.erase(*it);
+            }
+        }
+        // 3. Set "mapParams" to the node's properties.
+        mapParams = mapPropertiesCopy;
+        // 4. Add the parameters passed down from the tree. Existing parameters are ignored by std::map::insert.
+        mapParams.insert(mapParamsCopy.begin(), mapParamsCopy.end());
+        //// End code "Add params for recursive calls."
+
         switch(node._nodeType)
         {
             case nodeEnum::WORLDSTATE_FUNCTION:
@@ -627,8 +672,11 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
 
                 TRACE("Entering WSF: ") << node._name;
                 // Based on worldStateFunction that returns true/false, get node of corresponding result.
-                if (!node._wsf())
+                if (!node._wsf(mapParams))
                 {
+                    std::string wsfmsg = node._name;
+                    wsfmsg.append(": FALSE");
+                    TRACE_SCOPE("WSF", wsfmsg.c_str());
                     // false
                     if (cWorldStateFunctions::getInstance().getRobotID() == myRobotNr) // Only trace my own WSF calls
                     {
@@ -645,6 +693,10 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
                 }
                 else
                 {
+                    std::string wsfmsg = node._name;
+                    wsfmsg.append(": TRUE");
+                    TRACE_SCOPE("WSF", wsfmsg.c_str());
+
                     // true
                     if (cWorldStateFunctions::getInstance().getRobotID() == myRobotNr) // Only trace my own WSF calls
                     {
@@ -685,8 +737,12 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
                 behTreeReturnEnum newChildStatus = behTreeReturnEnum::INVALID;
 
                 // Based on worldStateFunction that returns true/false, get node of corresponding result.
-                if (!node._wsf())
+                if (!node._wsf(mapParams))
                 {
+                    std::string wsfmsg = node._name;
+                    wsfmsg.append(": FALSE");
+                    TRACE_SCOPE("MEMWSF", wsfmsg.c_str());
+
                     // false
                     if (cWorldStateFunctions::getInstance().getRobotID() == myRobotNr) // Only trace my own WSF calls
                     {
@@ -698,6 +754,10 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
                 }
                 else
                 {
+                    std::string wsfmsg = node._name;
+                    wsfmsg.append(": TRUE");
+                    TRACE_SCOPE("MEMWSF", wsfmsg.c_str());
+
                     // true
                     if (cWorldStateFunctions::getInstance().getRobotID() == myRobotNr) // Only trace my own WSF calls
                     {
@@ -753,13 +813,11 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
 
             case nodeEnum::ROLE:
             {
+                TRACE_SCOPE("ROLE", node._name.c_str());
                 TRACE("Found Role: ") << node._name;
 
-                // Add params for recursive calls.
-                mapParams.insert(node._mapProperties.begin(), node._mapProperties.end());
-
                 // Store the role of the current robot's ID, new style:
-                teamplay::ownRobotStore::getOwnRobot().setRole(node._role);
+                teamplay::robotStore::getInstance().setOwnRobotRole(node._role);
 
                 // Old style:
                 cWorldStateFunctions::getInstance().setRobotRole(cWorldStateFunctions::getInstance().getRobotID(), node._role);
@@ -769,11 +827,12 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
                 if (cWorldStateFunctions::getInstance().getRobotID() == myRobotNr)
                 {
                     // Execute the role's tree recursively.
-                    behTreeReturnEnum nodeStatus = executeTree(node._role, mapParams, memoryStack, (memoryStackIdx+1), memoryStackNodes);
-                    memoryStackNodes.at(traversingKey) = nodeStatus;
-                    std::string returnStr = behTreeReturnReverseMapping.at(nodeStatus);
-                    TRACE("Role ") << node._name << " returning " << returnStr;
-                    return nodeStatus;
+//                    behTreeReturnEnum nodeStatus = executeTree(node._role, mapParams, memoryStack, (memoryStackIdx+1), memoryStackNodes);
+//                    memoryStackNodes.at(traversingKey) = nodeStatus;
+//                    std::string returnStr = behTreeReturnReverseMapping.at(nodeStatus);
+//                    TRACE("Role ") << node._name << " returning " << returnStr;
+//                    return nodeStatus;
+                    return behTreeReturnEnum::INVALID;
                 }
                 else
                 {
@@ -787,10 +846,8 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
 
             case nodeEnum::BEHAVIOR:
             {
+                TRACE_SCOPE("BEHAVIOR", node._name.c_str());
                 TRACE("Found Behavior: ") << node._name;
-
-                // Add params for recursive calls.
-                mapParams.insert(node._mapProperties.begin(), node._mapProperties.end());
 
                 // Execute the behavior's tree recursively.
                 behTreeReturnEnum nodeStatus = executeTree(node._behavior, mapParams, memoryStack, (memoryStackIdx+1), memoryStackNodes);
@@ -811,7 +868,7 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
                     TRACE("Entering Action: ") << node._name;
                 }
 
-                behTreeReturnEnum nodeStatus = executeAction(node);
+                behTreeReturnEnum nodeStatus = executeAction(node, mapParams);
                 memoryStackNodes.at(traversingKey) = nodeStatus;
 
                 TRACE("Action: ") << node._name << " returning " << behTreeReturnReverseMapping.at(nodeStatus);
@@ -1127,8 +1184,8 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
                 }
                 catch (std::exception &e)
                 {
-                    TRACE_ERROR("Caught exception: ") << e.what() << " Does the parameter exist? parameter: " << node._mapProperties.at("parameter");
-                    throw std::runtime_error(std::string("Linked to: ") + e.what());
+                    TRACE_ERROR("Caught exception: %s - Does the parameter exist? parameter: %s", e.what(), node._mapProperties.at("parameter").c_str());
+                    throw std::runtime_error(std::string("cDecisionTree::traverseBehaviorTree Linked to: ") + e.what());
                 }
 
                 break;
@@ -1142,8 +1199,8 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+        throw std::runtime_error(std::string("cDecisionTree::traverseBehaviorTree Linked to: ") + e.what());
     }
     return behTreeReturnEnum::FAILED;
 }
@@ -1157,13 +1214,14 @@ const cParsedTree& cDecisionTree::getBehaviorTree(const treeEnum &behavior)
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Failed to find tree for behavior: ") << e.what();
+        TRACE_ERROR("Failed to find tree for behavior: %s", e.what());
         throw std::runtime_error(std::string("Failed to find tree for behavior.") + e.what());
     }
 }
 
-behTreeReturnEnum cDecisionTree::executeAction(const cParsedNode &node)
+behTreeReturnEnum cDecisionTree::executeAction(const cParsedNode &node, std::map<std::string, std::string> &mapParams)
 {
+    TRACE_FUNCTION(node._name.c_str());
     // Get the name of the action and put into the diagnostics message
     diagMsg.trees.push_back(node._name);
 
@@ -1182,11 +1240,38 @@ behTreeReturnEnum cDecisionTree::executeAction(const cParsedNode &node)
     diagMsg.shootTargetX = shootTarget.x;
     diagMsg.shootTargetY = shootTarget.y;
 
+    // Publish the role for the avoid-duplicate-role functionality
+    cRTDBOutputAdapter::getInstance().setRole(diagMsg.role);
+
     // Send diagnostics message and clear the diagnostics store for the next iteration
-    diagSender.set(diagMsg);
+    if (_rtdb != NULL)
+    {
+        _rtdb->put(DIAG_TEAMPLAY, &diagMsg); // TODO: move to diagnostics store? But, it would not be a store anymore .. diagnosticsAdapter then?
+    }
     diagnosticsStore::getInstance().clear();
 
-    return node._action->execute(node._mapProperties);
+    //// Set the node's parameters to mapParams.
+    // 1. Make a copy of the node's properties, and all parameters passed down from the tree.
+    std::map<std::string, std::string> mapPropertiesCopy = node._mapProperties;
+    std::map<std::string, std::string> mapParamsCopy = mapParams;
+    // 2. Set "mapParams" to the node's properties.
+    mapParams = mapPropertiesCopy;
+    // 3. Add the parameters passed down from the tree. Existing parameters are ignored by std::map::insert.
+    mapParams.insert(mapParamsCopy.begin(), mapParamsCopy.end());
+    //// End "Set the node's parameters to mapParams."
+
+    // Trace all parameters passed to the action
+    std::stringstream str;
+    str << "Parameters: {";
+    std::map<std::string, std::string>::const_iterator it;
+    for (it = mapParams.begin(); it != mapParams.end(); ++it)
+    {
+        str << "'" << it->first << "': '" << it->second << "', ";
+    }
+    str << "}";
+    TRACE(str.str().c_str());
+
+    return node._action->execute(mapParams);
 }
 
 treeEnum treeStrToEnum(const std::string enumString)
@@ -1197,7 +1282,7 @@ treeEnum treeStrToEnum(const std::string enumString)
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
+        TRACE_ERROR("Caught exception: %s", e.what());
         throw std::runtime_error(std::string("Failed to parse tree name '" + enumString + "' to treeEnum. Linked to: " + e.what()));
     }
     return treeEnum::INVALID;
@@ -1218,7 +1303,7 @@ std::string treeEnumToStr(const treeEnum treeEnumVal)
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
+        TRACE_ERROR("Caught exception: %s", e.what());
         throw std::runtime_error(std::string("Failed to parse treeEnum '" + std::to_string((int)treeEnumVal) + "' to std::string. Linked to: " + e.what()));
     }
     return "INVALID";
@@ -1226,5 +1311,6 @@ std::string treeEnumToStr(const treeEnum treeEnumVal)
 
 void cDecisionTree::clearDiagMsg()
 {
+    TRACE_FUNCTION("");
     diagMsg.trees.clear();
 }

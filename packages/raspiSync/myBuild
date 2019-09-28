@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# build and run the raspiSync through ros
+
+set -e
+
+# when failing type
+# rosmake --pre-clean
+
+rosmake -s raspiSync
+# rosmake raspiSync
+./myRun

@@ -1,4 +1,4 @@
-// Copyright 2015 Andre Pool
+// Copyright 2015, 2016 Andre Pool
 // Licensed under the Apache License version 2.0
 // You may not use this file except in compliance with this License
 // You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -395,22 +395,22 @@ void printReceivedPacket(){
 			printf( "INFO    : pwm will be limited to %d\n", rxPacket.pl.u16[0] );
 		}
 	} else if ( rxPacket.responseType == RESP_PWM_DELTA ) {
-		if( rxPacket.payloadSize != 2 ) {
+		if( rxPacket.payloadSize != 4 ) {
 			printf( "ERROR   : invalid payload size for pwm delta response %d\n", rxPacket.payloadSize ); exit(1);
 		} else {
-			printf( "INFO    : pwm delta (maximal increase per 2.5ms) is limited to %d\n", rxPacket.pl.u16[0] );
+			printf( "INFO    : pwm delta (maximal increase per 2.5ms) is limited to %d (%.2f%% per second)\n", rxPacket.pl.u32[0], 400.0*rxPacket.pl.u32[0]/(648*65536.0) );
 		}
 	} else if ( rxPacket.responseType == RESP_PID_ANGLE_PROPERTIES ) {
-		if( rxPacket.payloadSize != 8 ) {
+		if( rxPacket.payloadSize != 12 ) {
 			printf( "ERROR   : invalid payload size for the pid angle properties %d\n", rxPacket.payloadSize ); exit(1);
 		} else {
-			printf( "INFO    : pid angle value are set to: Kp %d, Ki %d, Kd %d iTh %d\n", rxPacket.pl.u16[0], rxPacket.pl.u16[1], rxPacket.pl.u16[2], rxPacket.pl.u16[3] );
+			printf( "INFO    : pid angle value are set to: Kp %d, Ki %d, Kd %d iTh %d, iMax %d\n", rxPacket.pl.u16[0], rxPacket.pl.u16[1], rxPacket.pl.u16[2], rxPacket.pl.u16[3], rxPacket.pl.u32[2] );
 		}
 	} else if ( rxPacket.responseType == RESP_PID_PRIMARY_PROPERTIES ) {
-		if( rxPacket.payloadSize != 8 ) {
+		if( rxPacket.payloadSize != 12 ) {
 			printf( "ERROR   : invalid payload size for the pid primary properties %d\n", rxPacket.payloadSize ); exit(1);
 		} else {
-			printf( "INFO    : pid primary value are set to: Kp %d, Ki %d, Kd %d iTh %d\n", rxPacket.pl.u16[0], rxPacket.pl.u16[1], rxPacket.pl.u16[2], rxPacket.pl.u16[3] );
+			printf( "INFO    : pid primary value are set to: Kp %d, Ki %d, Kd %d iTh %d, iMax %d\n", rxPacket.pl.u16[0], rxPacket.pl.u16[1], rxPacket.pl.u16[2], rxPacket.pl.u16[3], rxPacket.pl.u32[2] );
 		}
 	} else if ( rxPacket.responseType == RESP_ANGLE_DIRECTION ) {
 		if( rxPacket.payloadSize != 1 ) {
@@ -844,17 +844,19 @@ void setSetPoint( uint8_t command, int value ) {
 	sendPacket( );
 }
 
-void setPidProperties( uint8_t command, int p, int i, int d, int iTh ) {
-	if( p < 0 || p > 65535 ) { printf("Error   : pid p out of range %d\n", p ); exit(1); }
-	if( i < 0 || i > 65535 ) { printf("Error   : pid i out of range %d\n", i ); exit(1); }
-	if( d < 0 || d > 65535 ) { printf("Error   : pid d out of range %d\n", d ); exit(1); }
-	if( iTh < 0 || d > 65535 ) { printf("Error   : pid iTh out of range %d\n", iTh ); exit(1); }
+void setPidProperties( uint8_t command, int p, int i, int d, int iTh, int iMax ) {
+	if( p < 0 || p > 0x7fff ) { printf("Error   : pid p out of range %d\n", p ); exit(1); }
+	if( i < 0 || i > 0x7fff ) { printf("Error   : pid i out of range %d\n", i ); exit(1); }
+	if( d < 0 || d > 0x7fff ) { printf("Error   : pid d out of range %d\n", d ); exit(1); }
+	if( iTh < 0 || iTh > 0x7fff ) { printf("Error   : pid iTh out of range %d\n", iTh ); exit(1); }
+	if( iMax < 0 || iMax > 0x7fffffff ) { printf("Error   : pid iMax out of range %d\n", iMax ); exit(1); }
 	txPacket.command = command;
-	txPacket.payloadSize = 8;
+	txPacket.payloadSize = 12;
 	txPacket.pl.u16[0] = p;
 	txPacket.pl.u16[1] = i;
 	txPacket.pl.u16[2] = d;
 	txPacket.pl.u16[3] = iTh;
+	txPacket.pl.u32[2] = iMax;
 	sendPacket( );
 }
 
@@ -874,8 +876,8 @@ void setPwmLimit( int value ) {
 
 void setPwmDelta( int value ) {
 	txPacket.command = CMD_SET_PWM_DELTA;
-	txPacket.payloadSize = 2;
-	txPacket.pl.u16[0] = value;
+	txPacket.payloadSize = 4;
+	txPacket.pl.u32[0] = value;
 	sendPacket( );
 }
 
@@ -979,21 +981,24 @@ int main(int argc, char** argv) {
 	getCommand( CMD_GET_MODE );
 	setMotorTimeout( 200 ); // 2.5ms * 200 = 500ms, maximal 2.5ms * 65535 = 163.8 seconds
 	getCommand( CMD_GET_MOTOR_TIMEOUT );
-	setPwmDelta( 200 ); // max increase by the PWM per tick 648 = 100%
+	// setPwmDelta( 1<<14 ); // 0.5/648 = 0.077% per 2.5ms = 30% per second, full speed (100% = 648) in 3.3 seconds
+	// setPwmDelta( 200<<16 ); //
+	setPwmDelta( 147704 ); //
 	getCommand( CMD_GET_PWM_DELTA );
 	setPwmLimit( 600 ); // 648 = 100%
 	getCommand( CMD_GET_PWM_LIMIT );
 	// wheel motor kp > 18000 results in oscillation on free running motor
-	setPidProperties( CMD_SET_PID_PRIMARY_PROPERTIES, 10000, 0000, 0, 0 ); // p, i, d, iTh
+	setPidProperties( CMD_SET_PID_PRIMARY_PROPERTIES, 30000, 700, 0, 2, 30208 ); // p, i, d, iTh, iMax
 	getCommand( CMD_GET_PID_PRIMARY_PROPERTIES );
-	setPidProperties( CMD_SET_PID_ANGLE_PROPERTIES, 4000, 0, 0, 0 ); // p, i, d, iTh, there is no feedback in the angle, so the i does not make sense
+	setPidProperties( CMD_SET_PID_ANGLE_PROPERTIES, 4000, 0, 0, 0, 100000 ); // p, i, d, iTh, iMax, there is no feedback in the angle, so the i does not make sense
 	getCommand( CMD_GET_PID_ANGLE_PROPERTIES );
 	// setDrv8301( 0x288, (0x00 | (3<<2)) ); // 80V/V
 	// setDrv8301( (0x288 | (1<<2) ), 0x00 ); // reset gate driver
 	// setDrv8301( 0x288, 0x00 );
 	uint16_t control1 = 0;
-	control1 |=  0<<0; // GATE_CURRENT : Gate drive peak current 1.7 A
+	// control1 |=  0<<0; // GATE_CURRENT : Gate drive peak current 1.7 A, gives a spike of 750mV peak on shunt resistor
 	// control1 |=  1<<0; // GATE_CURRENT : Gate drive peak current 0.7 A
+	control1 |=  1<<1; // GATE_CURRENT : Gate drive peak current 0.25 A, gives a spike of 200mV peak on shunt resistor
 	control1 |=  1<<2; // GATE_RESET : Reset gate driver latched faults (reverts to 0) (required if you got the drv8301 error shutdown occurred (FAULT))
 	control1 |=  1<<3; // PWM_MODE : 3 PWM inputs
 	control1 |=  0<<4; // OCP_MODE : Current limit (works together with OC_ADJ_SET)
@@ -1030,8 +1035,8 @@ int main(int argc, char** argv) {
 	// setMode( MODE_PID_TACHO ); // setMode also sets the motor speed to zero (no spinning ballHandler is a setPoint around 2330)
 	setAngleDirection( true ); // invert the angle behavior between left and right ball handler (clockwise/anti-clockwise behavior increase/decrease)
 	// setMode( MODE_PID_ANGLE ); // this is the mode for ball handler motors, setMode also sets the motor speed to zero (no spinning ballHandler is a setPoint around 2330)
-	setMode( MODE_PID_ENCODER ); // this is the mode for wheel motors
-	// setMode( MODE_PWM_ONLY );
+	// setMode( MODE_PID_ENCODER ); // this is the mode for wheel motors
+	setMode( MODE_PWM_ONLY ); // no magic, just provide this amount of power to the motors
 	getCommand( CMD_GET_MODE ); // do not disable the get mode because the return value is used for the functionality
 	getCommand( CMD_GET_ANGLE_TACHO_ZERO );
 	getCommand( CMD_GET_ANGLE_DIRECTION );
@@ -1039,9 +1044,10 @@ int main(int argc, char** argv) {
 	while( 1 ) {
 		receiveBytes( );
 		if( ii == 1000 ) { // when sending two or more large packets 2*(header 5 + payload 255) without some time in between the rx buffer (255 bytes) on the far end will overflow
-			if ( increment ) { jj+=40;} else { jj-=40; }
-			if( jj > 1000) { increment = false; }
-			if( jj < -1000 ) { increment = true; }
+			if ( increment ) { jj+=50;} else { jj = jj; } // jj-=5; }
+			if( jj > 500) { increment = false; }
+			if( jj < -200 ) { increment = true; }
+
 		} else if( ii == 1001 ) {
 			ii = 0;
 		} else if( ( ii % 10) == 5 ) {
@@ -1052,7 +1058,7 @@ int main(int argc, char** argv) {
 		}
 		if( (farEndBufferSize - bytesSendDuringCurrentfarEndBufferSizeRefresh - bytesSendDuringMin1farEndBufferSizeRefresh - bytesSendDuringMin2farEndBufferSizeRefresh > 127 ) ) {
 			if( mode == MODE_PWM_ONLY ) {
-				setSetPoint( CMD_SET_PRIMARY_SETPOINT, 50 + rand() % 5 ); // 0.8*jj );
+				setSetPoint( CMD_SET_PRIMARY_SETPOINT, jj );
 			} else if( mode == MODE_PID_ENCODER ) {
 				setSetPoint( CMD_SET_PRIMARY_SETPOINT, jj ); // 780 = 5.031 m/s
 			} else if ( mode == MODE_PID_TACHO ) {

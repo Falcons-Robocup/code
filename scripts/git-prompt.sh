@@ -392,6 +392,18 @@ __git_ps1 ()
 	local b=""
 	local step=""
 	local total=""
+
+	# Check for branch consistency between code and teamplayData
+	if [ -f $TURTLEROOT/scripts/checkGitBranchConsistency.sh ]
+	then
+		. $TURTLEROOT/scripts/checkGitBranchConsistency.sh
+		check_git_branches
+		if [ $? != 0 ]; then r="|WARNING"; fi
+	fi
+
+	# Check for rebase, merge, etc. In case the warning was applicable,
+	# the warning will be overwritten.
+	# That is acceptable: rebase or merge has preference over warning.
 	if [ -d "$g/rebase-merge" ]; then
 		__git_eread "$g/rebase-merge/head-name" b
 		__git_eread "$g/rebase-merge/msgnum" step

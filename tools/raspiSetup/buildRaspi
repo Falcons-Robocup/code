@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Copyright 2018 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to build and run the grabber application on the raspi board
+
+NOT USED ANYMORE
+
+set -e 
+
+# kill an already running rasp grabber (if any)
+killall raspividyuv 2>/dev/null || true
+killall -9 raspividyuv 2>/dev/null || true
+killall -15 raspividyuv 2>/dev/null || true
+
+cd /home/pi/userland/build/raspberry/release
+make raspividyuv
+cd ~
+
+./runRaspi
+
+exit 0

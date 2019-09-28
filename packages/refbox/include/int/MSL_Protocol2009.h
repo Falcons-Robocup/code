@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -46,16 +46,19 @@
 // play commands
 #define COMM_STOP             'S'
 #define COMM_START            's'
-#define COMM_HALT             'H'
-#define COMM_READY            ' '
 
 // game flow commands
 #define COMM_FIRST_HALF       '1'
 #define COMM_HALF_TIME        'h'
 #define COMM_SECOND_HALF      '2'
 #define COMM_END_GAME         'e'
-
-#define COMM_CANCEL           'x'
+#define COMM_OT_FIRST_HALF    '3'
+#define COMM_OT_SECOND_HALF   '4'
+#define COMM_GAMEOVER         'z'
+#define COMM_REQWORLDSTATE    'w'
+#define COMM_TESTMODEON       'V'
+#define COMM_TESTMODEOFF      'v'
+#define COMM_PARK             'L'
 
 // goal status
 #define COMM_GOAL_MAGENTA       'a'
@@ -64,7 +67,7 @@
 #define COMM_SUBGOAL_CYAN       'D'
 
 /* game flow commands */
-#define COMM_RESTART           'n'
+#define COMM_RESTART           'Z'
 
 #define COMM_KICKOFF_MAGENTA   'k'
 #define COMM_KICKOFF_CYAN      'K'
@@ -87,7 +90,21 @@
 #define COMM_DROPPED_BALL      'N'
 #define COMM_DUMMY             '*'
 
+#define COMM_REPAIR_OUT_CYAN   'O'
+#define COMM_REPAIR_OUT_MAGENTA 'o'
+#define COMM_REPAIR_IN_CYAN    'I'
+#define COMM_REPAIR_IN_MAGENTA 'i'
+
+#define COMM_REDCARD_CYAN      'R'
+#define COMM_REDCARD_MAGENTA   'r'
+#define COMM_YELLOWCARD_CYAN   'Y'
+#define COMM_YELLOWCARD_MAGENTA 'y'
+#define COMM_DOUBLE_YELLOW_IN_CYAN   'J'
+#define COMM_DOUBLE_YELLOW_IN_MAGENTA 'j'
+#define COMM_DOUBLE_YELLOW_OUT_CYAN   'B'
+#define COMM_DOUBLE_YELLOW_OUT_MAGENTA 'b'
+
 // acceptable referee commands
-#define COMM_CMD_STRING      "pPkKNnCcTtdDgGfFxaAZe2h1 HsS*"
+#define COMM_CMD_STRING      "SsNhezZWwVv1234LKkFfGgTtCcPpAaDdOoIiRrYyJjBb"
 
 #endif /* __COMMANDS_H__ */

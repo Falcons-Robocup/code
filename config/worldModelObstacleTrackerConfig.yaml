@@ -11,8 +11,8 @@ worldModelNode/obstacleTracker: {
   speedMaxSize                  : 5.0,  # faster is probably glitch -> generate warning
   speedResidualThreshold        : 1.0,  # in case fit residual is smaller, then we can trust the speed vector, otherwise we choose zero-order fit (this may be quite a sensitive tuning parameter)
   speedFitOrder                 : 1,
-  discriminatorLimitX           : 6.3,
-  discriminatorLimitY           : 9.3}
+  discriminatorLimitX           : 6.3, # not used anymore, overridden by cEnvironmentField, TODO cleanup
+  discriminatorLimitY           : 9.3} # not used anymore, overridden by cEnvironmentField, TODO cleanup
 rosdistro: 'groovy'
 roslaunch:
   uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}

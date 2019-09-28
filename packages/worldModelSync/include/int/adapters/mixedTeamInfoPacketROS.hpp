@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -34,14 +34,14 @@ class mixedTeamInfoPacketROS
 
 		void initializeROS();
 
-		void setUpdateFunction(boost::function<void(Facilities::Network::cByteArray)> func)
+		void setUpdateFunction(boost::function<void(Facilities::cByteArray)> func)
       {
     	  _function = func;
       }
 	private:
 		boost::shared_ptr<ros::NodeHandle> _hROS;
         ros::Subscriber _subWmInfo;
-        boost::function<void(Facilities::Network::cByteArray)> _function;
+        boost::function<void(Facilities::cByteArray)> _function;
 
         void wmInfo_cb(const worldModel::t_wmInfo::ConstPtr& msg);
 };

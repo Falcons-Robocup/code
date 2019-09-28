@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,13 +17,12 @@
  */
 
 #include "int/actions/cActionStop.hpp"
-#include "int/cWorldModelInterface.hpp"
 #include "int/utilities/trace.hpp"
 
 
 cActionStop::cActionStop()
 {
-	intention.actionType = actionEnum::STOP;
+    _intention.action = actionTypeEnum::STOP;
 }
 
 cActionStop::~cActionStop()
@@ -46,7 +45,7 @@ void cActionStop::stopRobot()
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+        throw std::runtime_error(std::string("cActionStop::execute Linked to: ") + e.what());
     }
 }

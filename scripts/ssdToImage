@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# Andre Pool, March 2017
+# Script to create image file from disk
+
+set -e
+
+# to prevent destroying accidentally the wrong disc, the script has default been disabled
+exit 1
+
+# assume the disk from which we want to create the disk image is /dev/sdd and contains 3 primary partitions
+# 1 = /
+# 2 = swap
+# 3 = /var/tmp
+
+sudo mount /dev/sdd1 ~/tmp/sdd1 || true
+sudo mount /dev/sdd3 ~/tmp/sdd3 || true
+
+# before running this script, create a large file with zero's on all partitions so the the image can be compressed very well
+# e.g. 
+# dd if=/dev/zero of=~/tmp/sdd1/tmp/empty_file
+# dd if=/dev/zero of=~/tmp/sdd3/tmp/empty_file
+
+sudo rm -rf ~/tmp/sdd1/tmp/*
+sudo rm -rf ~/tmp/sdd3/tmp/*
+
+
+sync
+
+sudo umount /dev/sdd1 || true
+sudo umount /dev/sdd2 || true
+sudo umount /dev/sdd3 || true
+sudo umount /dev/sdd4 || true
+
+# 1024*1024 = 1048576 = 1MiB
+# 20+16+75 = 111GiB = 111*1024 = 113664 MiB
+# 512*232785919/1024/1024 = 113664.99
+
+# sudo pv -tpreb /dev/sdd | dd bs=1M count=113665 conv=notrunc,noerror,sync | gzip > /tmp/ssd_image_1.img.gz 
+sudo dd if=/dev/sdd bs=1M count=113665 conv=notrunc,noerror,sync | pv -tpreb | gzip > /tmp/ssd_image_1.img.gz 
+
+ls -ltr /tmp/ssd_image_1.img.gz
+
+du -h /tmp/ssd_image_1.img.gz
+
+echo "all done"
+
+# below some output examples
+
+# 102400+0 records out
+# 107374182400 bytes (107 GB) copied, 1650,67 s, 65,0 MB/s
+# -rw-rw-r-- 1 andre andre 5079271425 jun 19 21:15 /tmp/ssd_image_1.img.gz
+# 4,8G    /tmp/ssd_image_1.img.gz
+
+# Number  Start (sector)    End (sector)  Size       Code  Name
+#    1            2048        39999487   19.1 GiB    8300  
+#    2        39999488        71929855   15.2 GiB    8200  
+#    3        71929856       231929855   76.3 GiB    8300  
+
+
+# Disk /dev/sdd: 242255664 sectors, 115.5 GiB
+# Logical sector size: 512 bytes
+# Disk identifier (GUID): C8EBA2BC-A65C-4A43-AFFD-8DE0682F7406
+# Partition table holds up to 128 entries
+# First usable sector is 34, last usable sector is 242255630
+# Partitions will be aligned on 2048-sector boundaries
+# Total free space is 32544493 sectors (15.5 GiB)
+
+# Number  Start (sector)    End (sector)  Size       Code  Name
+#    1            2048        41943039   20.0 GiB    8300  
+#    2        41943040        75495423   16.0 GiB    8200  
+#    3        75495424       209713151   64.0 GiB    8300  
+
+
+# Number  Start (sector)    End (sector)  Size       Code  Name
+#    1            2048        41943039   20.0 GiB    8300  
+#    2        41943040        75495423   16.0 GiB    8200  
+#    3        75495424       222296063   70.0 GiB    8300  
+
+
+# 108544+0 records in
+# 108544+0 records out
+# 113816633344 bytes (114 GB) copied, 1748,04 s, 65,1 MB/s
+# -rw-rw-r-- 1 andre andre 5085526532 jun 19 17:43 /tmp/ssd_image_1.img.gz
+# 4,8G    /tmp/ssd_image_1.img.gz
+
+
+# 118288+1 records in
+# 118288+1 records out
+# 124034899968 bytes (124 GB) copied, 1897,06 s, 65,4 MB/s
+# -rw-rw-r-- 1 andre andre 5094900998 jun 18 22:43 /tmp/ssd_image_1.img.gz
+# 4,8G    /tmp/ssd_image_1.img.gz
+
+
+# ~/tmp$ sudo gdisk -l /dev/sdd
+# GPT fdisk (gdisk) version 0.8.8
+
+# Partition table scan:
+#   MBR: protective
+#   BSD: not present
+#   APM: not present
+#   GPT: present
+
+# Found valid GPT with protective MBR; using GPT.
+# Disk /dev/sdd: 242255664 sectors, 115.5 GiB
+# Logical sector size: 512 bytes
+# Disk identifier (GUID): C8EBA2BC-A65C-4A43-AFFD-8DE0682F7406
+# Partition table holds up to 128 entries
+# First usable sector is 34, last usable sector is 242255630
+# Partitions will be aligned on 2048-sector boundaries
+# Total free space is 19961581 sectors (9.5 GiB)
+
+# Number  Start (sector)    End (sector)  Size       Code  Name
+#    1            2048        41943039   20.0 GiB    8300  
+#    2        41943040        75495423   16.0 GiB    8200  
+#    3        75495424       222296063   70.0 GiB    8300  
+
+
+

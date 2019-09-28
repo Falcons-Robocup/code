@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Copyright 2018 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to read the GPU and CPU temperature (should be lower the 85C, preferable lower then 80C
+
+set -e
+
+echo "GPU `vcgencmd measure_temp`"
+
+cpuTemp=`cat /sys/class/thermal/thermal_zone0/temp`
+echo "CPU temp=$((cpuTemp/1000)).0'C"
+

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,15 +26,15 @@
 
 class ballAdministratorMock : public ballAdministrator
 {
-	public:
-		MOCK_METHOD1(appendBallMeasurements, void(const std::vector<ballMeasurementType> measurements));
-		MOCK_METHOD1(overruleBall, void(const ballClass_t ball));
-		MOCK_METHOD1(getLocalBallMeasurements, void(std::vector<ballMeasurementType> &measurements));
-		MOCK_METHOD1(performCalculation, void(const double timeNow));
-		MOCK_METHOD1(getBalls, void(std::vector<ballClass_t> &balls));
+    public:
+    	MOCK_METHOD1(appendBallMeasurements, void(const T_BALL_CANDIDATES measurements));
+    	MOCK_METHOD1(overruleBall, void(const ballClass_t ball));
+    	MOCK_METHOD1(getLocalBallMeasurements, void(T_BALL_CANDIDATES &measurements));
+    	MOCK_METHOD2(performCalculation, void(rtime const timeNow, Vector2D const &pos));
+    	MOCK_METHOD1(getBalls, void(std::vector<ballClass_t> &balls));
 
-	private:
-		MOCK_METHOD1(cleanUpTimedOutBallMeasurements, void(const double timeNow));
+    private:
+    	MOCK_METHOD1(cleanUpTimedOutBallMeasurements, void(rtime const timeNow));
 };
 
 #endif /* BALLADMINISTRATORMOCH_HPP_ */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -27,7 +27,7 @@ protected:
         ROBOT
     };
     ViewMode _viewMode = TEAM;
-    uint8_t _robotModeId = -1; // Only relevant when viewMode == ROBOT
+    uint8_t _robotModeId = 0; // default team
 
     virtual void onTeamModeChanged() {};
     virtual void onRobotModeChanged() {};

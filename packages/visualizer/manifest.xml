@@ -6,8 +6,10 @@
   <url>http://falconswiki/visualizer</url>
   <depend package="rospy"/>
   <depend package="roscpp"/>
-  <depend package="rosMsgs"/>
   <depend package="common"/>
+  <depend package="sharedTypes"/>
+  <depend package="logging"/>
+  <depend package="environment"/>
   <depend package="geometry"/>
 </package>
 

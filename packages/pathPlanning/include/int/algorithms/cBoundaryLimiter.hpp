@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -30,10 +30,7 @@ class cBoundaryLimiter : public cAbstractPathPlanning
         void execute();
 
     private:
-        const double _top = 6.5;
-        const double _bottom = -6.5;
-        const double _left = -9.5;
-        const double _right = 9.5;
+        const double _margin = 0.5; // Allow the robot up to 0.5m outside of the field.
 };
 
 #endif /* CBOUNDARYLIMITER_HPP_ */

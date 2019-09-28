@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,6 +18,9 @@
 
 #include <boost/range/adaptor/map.hpp>
 #include <sstream>
+#include "FalconsCommon.h"
+#include <QMetaType>
+#include "tracing.hpp"
 
 // Internal:
 #include "int/widgets/Table/TableViewModel.h"
@@ -28,8 +31,8 @@ TableViewModel::TableViewModel(const int nrColumns)
     // Floating point exception if the table is empty. Be sure to add at least one (empty) element.
     add("empty", "");
     setData("empty", "", 0, QVariant(""));
-
     setHorizontalHeaderItem(0, new QStandardItem());
+
     for (int i = 0; i < _nrValuesPerKey; ++i)
     {
         std::string label;
@@ -89,7 +92,7 @@ void TableViewModel::setData(std::string category, std::string key, int column, 
             rowItems << item;
         }
         this->invisibleRootItem()->appendRow(rowItems);
-        this->sort(0);
+        // this->sort(0);
     }
 
     if (key.empty())
@@ -130,29 +133,54 @@ void TableViewModel::setData(std::string category, std::string key, int column, 
 
     // Find the value for this item (must exist at this point) and set its new data
     QStandardItem* valueItem = this->itemFromIndex(index(keyItem->index().row(), column + 1, categoryItem->index()));
-    valueItem->setText(value.toString());
+    _toDisplay[std::make_tuple(category, key)] |= valueItem->text().size();
+    // TRACE("setData(cat=%s,key=%s,col=%d,value=%s)", category.c_str(), key.c_str(), column, value.toString().toStdString().c_str());
+    // Convert floats to strings with 2 decimals; if try for all numerical values also Ints get converted, so convert specific items only. See TRAC ticket #428
+    if ((key == "cpuLoad")||(key == "networkLoad")||(key == "eventFreq")||(key == "fps")||(key == "visScore")||(category == "HALMW")) 
+    {        
+        valueItem->setText(QString("%1").arg(value.QVariant::toDouble(), 0, 'f', 2));
+    }
+    else
+    {    
+        valueItem->setText(value.toString());
+    }
     emit dataChanged(valueItem->index(), valueItem->index());
-
     emit layoutChanged();
 }
 
 void TableViewModel::add(std::string category, std::string key)
 {
-    _toDisplay.push_back(std::make_tuple(category, key));
+    _toDisplay[std::make_tuple(category, key)] = false;
 }
 
 bool TableViewModel::displayValue(std::string category, std::string key)
 {
-    for (size_t i = 0; i < _toDisplay.size(); ++i)
+    for (auto it = _toDisplay.begin(); it != _toDisplay.end(); ++it)
     {
-        if (category.compare(std::get<0>(_toDisplay[i])) == 0)
+        if (category.compare(std::get<0>(it->first)) == 0)
         {
-            if (key.compare(std::get<1>(_toDisplay[i])) == 0)
+            if (key.compare(std::get<1>(it->first)) == 0)
             {
+                //TRACE("displayValue(%s,%s)=true", category.c_str(), key.c_str());
                 return true;
             }
         }
     }
 
+    //TRACE("displayValue(%s,%s)=false", category.c_str(), key.c_str());
     return false;
 }
+
+void TableViewModel::clearColumn(int column)
+{
+    TRACE("clear column %d", column);
+    for (auto it = _toDisplay.begin(); it != _toDisplay.end(); ++it)
+    {
+        if (it->second)
+        {
+            setData(std::get<0>(it->first), std::get<1>(it->first), column, QVariant(""));
+        }
+    }
+}
+
+

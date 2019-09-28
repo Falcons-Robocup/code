@@ -33,44 +33,58 @@ echo "" >> /etc/hosts
 cat /home/robocup/falcons/code/config/hosts >> /etc/hosts
 
 #======================================================================
+# increase UDP receive buffer size (reduce packet drop mulitCam)
+#======================================================================
+# on systems with 16GiB memory the max is 50000000 bytes and default is 212992 bytes
+# Increase default to 2MiB (=2097152)
+sysctl -w net.core.rmem_default=2097152
+
+
+#======================================================================
+# Clear git user if on a shared computer
+#======================================================================
+sh /home/robocup/falcons/code/scripts/setupGitUser
+
+
+#======================================================================
 # check if on robot, if yes, do robot specific thing
 #======================================================================
 
 #NEED SLEEP as the previous commands did not finish /etc/hosts yet, following commands will fail silently....
 sleep 1
 
-/bin/hostname | /bin/egrep 'r[1-6]|FALCON-[1-6]' >/dev/null
+/bin/hostname | /bin/egrep 'r[1-9]|FALCON-[1-9]' >/dev/null
 if [ $? -eq 0 ]; then
-  #======================================================================
-  #egrep found a hit on the hostname, so script is running on a robot
-  echo "ONROBOT" > /tmp/ONROBOT
-  #======================================================================
-  # setup the sudoers file to be included from /etc/sudoers
-  # this defines sudo commands for which e.g. no password is needed
-  #======================================================================
-  rm -f /etc/sudoers.d/robocup
-  cat > /etc/sudoers.d/robocup <<HERE
+    #======================================================================
+    #egrep found a hit on the hostname, so script is running on a robot
+    echo "ONROBOT" > /tmp/ONROBOT
+    #======================================================================
+    # setup the sudoers file to be included from /etc/sudoers
+    # this defines sudo commands for which e.g. no password is needed
+    #======================================================================
+    rm -f /etc/sudoers.d/robocup
+    cat > /etc/sudoers.d/robocup <<HERE
 robocup	ALL=(root)NOPASSWD:/usr/sbin/dmidecode
 robocup	ALL=(root)NOPASSWD:/sbin/reboot
 robocup ALL=(root)NOPASSWD:/home/robocup/falcons/code/packages/power/m4api/m4atx_permissions
 HERE
-  chmod 440 /etc/sudoers.d/robocup
-  #======================================================================
-  # set correct permissions on /dev devices
-  #======================================================================
-  $M4DIAGDIR/m4atx_permissions
-  if [ ! -d $M4LOGDIR ]; then
-    mkdir -p $M4LOGDIR
-    chown robocup:robocup $M4LOGDIR
-    chmod 777 $M4LOGDIR
-  fi
+    chmod 440 /etc/sudoers.d/robocup
+    #======================================================================
+    # set correct permissions on /dev devices
+    #======================================================================
+    $M4DIAGDIR/m4atx_permissions
+    if [ ! -d $M4LOGDIR ]; then
+        mkdir -p $M4LOGDIR
+        chown robocup:robocup $M4LOGDIR
+        chmod 777 $M4LOGDIR
+    fi
 
-  #======================================================================
-  # now we are booting, log the battery field descriptions
-  #======================================================================
-  #starting the m4 log daemon
-  echo "start m4log"
-  $M4DIAGDIR/m4log
+    #======================================================================
+    # now we are booting, log the battery field descriptions
+    #======================================================================
+    #starting the m4 log daemon
+    echo "start m4log"
+    $M4DIAGDIR/m4log
 fi
 # end on robot only #
 

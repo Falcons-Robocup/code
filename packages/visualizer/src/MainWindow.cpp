@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,16 +9,26 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  ***/ 
- // Internal:
+ #include <map>
+
+// Internal:
 #include "int/MainWindow.h"
-#include "int/RosGameSignalAdapter.h"
+#include "int/RtdbGameSignalAdapter.h"
+#include "int/RtdbRefboxConfigAdapter.h"
 #include "int/ConfigurationManager.h"
 #include "int/widgets/Table/TableWidget.h"
+#include "int/widgets/Playback/PlaybackWidget.h"
 #include "int/widgets/Field/EventHandlers/FieldMouseHoverEventHandler.h"
+#include "int/widgets/SettingsDialog.h"
 
 using namespace Visualizer;
+using std::map;
 
-MainWindow::MainWindow()
+static RefboxConfigAdapter::TeamColor teamColorFromString(QString value);
+static RefboxConfigAdapter::PlayingField playingFieldFromString(QString value);
+
+MainWindow::MainWindow(PlaybackControl *pb)
+    : _pbControl(pb)
 {
     setupUi(this);
     this->installEventFilter(this); // Set this window as handler of Qt events
@@ -36,6 +46,8 @@ MainWindow::MainWindow()
     // Connect window management signals
     connect(actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(actionViewWorldView, SIGNAL(triggered()), this, SLOT(switchViewToWorld()));
+    connect(actionViewGaussianWorldView, SIGNAL(triggered()), this, SLOT(switchViewToGaussianWorld()));
+    connect(actionViewGaussianMeasurementsView, SIGNAL(triggered()), this, SLOT(switchViewToGaussianMeasurements()));
     connect(actionViewVisionView, SIGNAL(triggered()), this, SLOT(switchViewToVision()));
     connect(actionViewPathPlanningView, SIGNAL(triggered()), this, SLOT(switchViewToPathPlanning()));
     connect(actionViewTeamplayView, SIGNAL(triggered()), this, SLOT(switchViewToTeamplay()));
@@ -48,7 +60,7 @@ MainWindow::MainWindow()
     menuWindows->addAction(eventLogDockWidget->toggleViewAction());
 
     // Add actions for Settings-dialogs
-    connect(toolButton, SIGNAL(pressed()), fieldWidget, SLOT(showSettingsDialog()));
+    connect(toolButton, SIGNAL(pressed()), this, SLOT(showSettingsDialog()));
 
     // === Add actions to switch to team/robot view
     connect(actionViewTeam, SIGNAL(triggered()), this, SLOT(switchViewToTeam()));
@@ -65,7 +77,7 @@ MainWindow::MainWindow()
         connect(robotAction, SIGNAL(triggered()), mapper, SLOT(map()));
 
         robotAction->setCheckable(true);
-        robotAction->setText(QApplication::translate("MainWindow", message_robot.c_str(), 0, QApplication::UnicodeUTF8));
+        robotAction->setText(QApplication::translate("MainWindow", message_robot.c_str(), 0));
         menuViewTeamRobot->addAction(robotAction);
         _robotViewActions.push_back(robotAction);
     }
@@ -81,9 +93,15 @@ MainWindow::MainWindow()
     _widgets.push_back(eventLogger);
     _widgets.push_back(tableWidget);
     _widgets.push_back(gameTimeClock);
+    _widgets.push_back(matchState);
+    _widgets.push_back(batteryStatus);
+    _widgets.push_back(playbackWidget);
+    
+    // Register playbackControl in playbackWidget
+    playbackWidget->registerPlaybackControl(_pbControl);
 
     // Connect the signal adapter to each signal subscriber
-    _gameSignalAdapter = new RosGameSignalAdapter();
+    _gameSignalAdapter = new RtdbGameSignalAdapter();
     for (size_t i = 0; i < _widgets.size(); ++i)
     {
         _widgets[i]->getSignalSubscriber()->subscribe(_gameSignalAdapter);
@@ -99,11 +117,15 @@ MainWindow::MainWindow()
         restoreState(settings.value("mainwindow/windowState").toByteArray());
     }
 
+    refboxConfig = new RtdbRefboxConfigAdapter();
+
     // Restore widget layouts
     for (size_t i = 0; i < _widgets.size(); ++i)
     {
         _widgets[i]->restoreState();
     }
+
+    fieldWidget->resetZoomPanRotate();
 }
 
 MainWindow::~MainWindow()
@@ -113,6 +135,8 @@ MainWindow::~MainWindow()
         delete action;
     }
     _robotViewActions.clear();
+
+    delete refboxConfig;
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) 
@@ -176,6 +200,24 @@ void MainWindow::switchViewToWorld(void)
     actionViewWorldView->setChecked(true);
 }
 
+void MainWindow::switchViewToGaussianWorld(void)
+{
+    for (size_t i = 0; i < _widgets.size(); ++i)
+    {
+        _widgets[i]->getSignalSubscriber()->setSignalMode(GAUSSIAN_WORLD);
+    }
+    actionViewWorldView->setChecked(true);
+}
+
+void MainWindow::switchViewToGaussianMeasurements(void)
+{
+    for (size_t i = 0; i < _widgets.size(); ++i)
+    {
+        _widgets[i]->getSignalSubscriber()->setSignalMode(GAUSSIAN_MEASUREMENTS);
+    }
+    actionViewWorldView->setChecked(true);
+}
+
 void MainWindow::switchViewToVision(void)
 {
     for (size_t i = 0; i < _widgets.size(); ++i)
@@ -219,4 +261,46 @@ void MainWindow::switchViewToRobot(int robotId)
         _widgets[i]->getTeamRobotSelection()->setRobotMode((uint8_t)robotId);
     }
     _robotViewActions[robotId - 1]->setChecked(true);
+}
+
+void MainWindow::showSettingsDialog()
+{
+    Settings::SettingsDialog dialog;
+    QDialog::DialogCode result = (QDialog::DialogCode)dialog.exec();
+    if (result == QDialog::Accepted)
+    {
+        fieldWidget->reloadSettings();
+
+        // Need to update our settings here somehow...
+        QSettings settings;
+        QString teamColor = settings.value(Settings::teamColorSetting).toString();
+        QString playingField = settings.value(Settings::playingFieldSetting).toString();
+
+        refboxConfig->setTeamColor(teamColorFromString(teamColor));
+        refboxConfig->setPlayingField(playingFieldFromString(playingField));
+    }
+}
+
+static RefboxConfigAdapter::TeamColor teamColorFromString(QString value)
+{
+    map<QString, RefboxConfigAdapter::TeamColor> teamColorMap = {
+            {"CYAN", RefboxConfigAdapter::TeamColor::CYAN},
+            {"MAGENTA", RefboxConfigAdapter::TeamColor::MAGENTA},
+    };
+
+    return teamColorMap[value];
+}
+
+static RefboxConfigAdapter::PlayingField playingFieldFromString(QString value)
+{
+    map<QString, RefboxConfigAdapter::PlayingField> playingFieldMap = {
+            {"FIELD_A", RefboxConfigAdapter::PlayingField::FIELD_A},
+            {"FIELD_B", RefboxConfigAdapter::PlayingField::FIELD_B},
+            {"FIELD_C", RefboxConfigAdapter::PlayingField::FIELD_C},
+            {"FIELD_D", RefboxConfigAdapter::PlayingField::FIELD_D},
+            {"FIELD_FALCONS", RefboxConfigAdapter::PlayingField::FIELD_FALCONS},
+            {"FIELD_LOCALHOST", RefboxConfigAdapter::PlayingField::FIELD_LOCALHOST},
+    };
+
+    return playingFieldMap[value];
 }

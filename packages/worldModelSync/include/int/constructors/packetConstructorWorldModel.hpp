@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -39,9 +39,9 @@ class packetConstructorWorldModel
 		void setBallPossession(const bool hasBallPossession);
 		void setObstacleMeasurements(std::vector<obstacleMeasurement> measurements);
 		void setRobotLocation(const robotLocationStructure location);
-		void setByteArray(Facilities::Network::cByteArray byteArray);
+		void setByteArray(Facilities::cByteArray byteArray);
 
-		Facilities::Network::cByteArray getByteArray();
+		Facilities::cByteArray getByteArray();
 		packetStructureWorldModel getWorldModelStructure() const;
 
 	private:

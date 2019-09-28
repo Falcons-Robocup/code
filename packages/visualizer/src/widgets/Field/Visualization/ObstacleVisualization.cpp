@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,7 +28,7 @@
 #include "int/ConfigurationManager.h"
 
 // Falcons shared code:
-#include "tracer.hpp"
+#include "tracing.hpp"
 #include "vector2d.hpp"
 
 ObstacleVisualization::ObstacleVisualization()

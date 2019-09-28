@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,28 +26,28 @@
 
 class IoBoardCommunication {
 public:
-	using Data = array<unsigned char, 8>;
+  using Data = array<unsigned char, 8>;
 
-	IoBoardCommunication(std::string port_name);
-	~IoBoardCommunication();
+  IoBoardCommunication(std::string port_name);
+  ~IoBoardCommunication();
 
-	void set(unsigned char command, Data data);
-	Data get(unsigned char command);
+  void set(unsigned char command, Data data);
+  Data get(unsigned char command);
 
 private:
-	struct Package {
-		unsigned char command;
-		IoBoardCommunication::Data data;
-	};
+  struct Package {
+    unsigned char command;
+    IoBoardCommunication::Data data;
+  };
 
-	Data do_transaction(unsigned char command, Data data);
+  Data do_transaction(unsigned char command, Data data);
 
-	Package transceive_package(Package transmit_package);
-	void transmit_package(Package package);
-	Package receive_package();
-	unsigned char calculate_checksum(vector<unsigned char> package);
+  Package transceive_package(Package transmit_package);
+  void transmit_package(Package package);
+  Package receive_package();
+  unsigned char calculate_checksum(vector<unsigned char> package);
 
-	Serial serial;
+  Serial serial;
 };
 
 #endif /* INCLUDE_INT_IOBOARDCOMMUNICATION_HPP_ */

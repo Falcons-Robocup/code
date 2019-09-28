@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,6 +21,7 @@
 #define VECTOR3D_HPP
 
 #include "vector2d.hpp"
+#include "RtDB2.h" // required for serialization
 
 class Vector3D
 {
@@ -294,6 +295,7 @@ class Vector3D
 
             return (*this);
         }
+        SERIALIZE_DATA_FIXED(x, y, z);
 };
 
 

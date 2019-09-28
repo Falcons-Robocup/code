@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,29 +24,29 @@
  */
 #include <string>
 #include <map>
+#include "boost/optional.hpp"
 #include <vector>
-#include "rosMsgs/t_diag_pathpl.h"
-#include "rosMsgs/t_pp_plotdata.h"
+#include "pose.hpp"
 #include "cDiagnostics.hpp"
 #include "int/cPathPlanningTypes.hpp"
 #include "polygon2D.hpp"
 
-class cDiagnosticsAdapter : public diagnostics::cDiagnosticsSender<rosMsgs::t_diag_pathpl>
+class cDiagnosticsAdapter
 {
     public:
-        /*!
-         * \brief The constructor of cDiagnosticsAdapter
-         */
+        // \brief The constructor of cDiagnosticsAdapter
         static cDiagnosticsAdapter& getInstance()
         {
-            static cDiagnosticsAdapter instance; 
+            static cDiagnosticsAdapter instance;
             return instance;
         }
-        
+
+        void reset();
+        void send();
+
         void setTarget(double x, double y, double phi);
         void setSubTarget(double x, double y);
-        void setObstacles(const std::vector<pp_obstacle_struct_t> obstacles, const std::vector<polygon2D>& areas, std::vector<linepoint2D>& projectedSpeedVectors);
-        void setActive(bool active);
+        void setObstacles(const std::vector<polygon2D>& areas, std::vector<linepoint2D>& projectedSpeedVectors);
 
         //Data for kst plot
         void initializePlotData();
@@ -54,8 +54,11 @@ class cDiagnosticsAdapter : public diagnostics::cDiagnosticsSender<rosMsgs::t_di
 
     private:
         cDiagnosticsAdapter();
-        boost::shared_ptr<ros::NodeHandle> _hROS;
-        ros::Publisher  _pPlotData;
+        boost::optional<pose> _target;
+        boost::optional<pose> _subTarget;
+        std::vector<polygon> _forbiddenAreas;
+        int _myRobotId = 0;
+        RtDB2 *_rtdb = NULL;
 };
 
 #endif /* CDIAGNOSTICSADAPTER_HPP_ */

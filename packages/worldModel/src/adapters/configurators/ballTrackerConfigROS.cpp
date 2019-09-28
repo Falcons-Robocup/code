@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,10 +21,10 @@
 #include "int/configurators/ballTrackerConfigurator.hpp"
 
 #include <ros/ros.h>
-#include <tracer.hpp>
+#include "tracing.hpp"
 #include <FalconsCommon.h> // for loadConfig
 
-#include "cDiagnosticsEvents.hpp"
+#include "cDiagnostics.hpp"
 
 ballTrackerConfigROS::ballTrackerConfigROS()
 {
@@ -85,8 +85,10 @@ void ballTrackerConfigROS::ballTrackerConfigROS_cb(worldModel::balltrackerConfig
 	{
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorBool::confidenceOmniPref, config.confidenceOmniPref);
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorBool::solverCoreSpeed, config.solverCoreSpeed);
-		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorBool::useFrontVision, config.useFrontVision);
-		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorBool::useFriendlyMeas, config.useFriendlyMeas);
+		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorBool::useOwnHighVision, config.useOwnHighVision);
+		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorBool::useFriendlyHighVision, config.useFriendlyHighVision);
+		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorBool::shareHighVision, config.shareHighVision);
+		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorBool::blackListDefault, config.blackListDefault);
 
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorIntegers::confidenceMeasLim, config.confidenceMeasLim);
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorIntegers::confidenceNumCams, config.confidenceNumCams);
@@ -111,11 +113,16 @@ void ballTrackerConfigROS::ballTrackerConfigROS_cb(worldModel::balltrackerConfig
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::solverBounceDt, config.solverBounceDt);
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::solverMinDv, config.solverMinDv);
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::solverTrackerTimeout, config.solverTrackerTimeout);
-		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::solverTrackerXYTolerance, config.solverTrackerXYTolerance);
+        ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::solverTrackerBuffer, config.solverTrackerBuffer);
+		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::solverTrackerConeTolerance, config.solverTrackerConeTolerance);
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::groupingDt, config.groupingDt);
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::outlierNSigma, config.outlierNSigma);
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::outlierIterFraction, config.outlierIterFraction);
 		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::friendlyMeasurementsDistance, config.friendlyMeasurementsDistance);
+		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::blackListThresholdZ, config.blackListThresholdZ);
+		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::blackListFloatingDuration, config.blackListFloatingDuration);
+		ballTrackerConfigurator::getInstance().set(ballTrackerConfiguratorFloats::blackListGroundDuration, config.blackListGroundDuration);
+
 		ballTrackerConfigurator::getInstance().traceAll();
 
 	}
@@ -164,15 +171,21 @@ void ballTrackerConfigROS::forceReload()
 		ros::param::get("worldModelNode/ballTracker/solverCoreWeight", config.solverCoreWeight);
 		ros::param::get("worldModelNode/ballTracker/solverMinDv", config.solverMinDv);
 		ros::param::get("worldModelNode/ballTracker/solverTrackerTimeout", config.solverTrackerTimeout);
-		ros::param::get("worldModelNode/ballTracker/solverTrackerXYTolerance", config.solverTrackerXYTolerance);
+		ros::param::get("worldModelNode/ballTracker/solverTrackerBuffer", config.solverTrackerBuffer);
+		ros::param::get("worldModelNode/ballTracker/solverTrackerConeTolerance", config.solverTrackerConeTolerance);
 		ros::param::get("worldModelNode/ballTracker/measPerOrder", config.measPerOrder);
 		ros::param::get("worldModelNode/ballTracker/groupingDt", config.groupingDt);
 		ros::param::get("worldModelNode/ballTracker/outlierNSigma", config.outlierNSigma);
 		ros::param::get("worldModelNode/ballTracker/outlierIterFraction", config.outlierIterFraction);		
 		ros::param::get("worldModelNode/ballTracker/outlierMaxIter", config.outlierMaxIter);
-		ros::param::get("worldModelNode/ballTracker/useFrontVision", config.useFrontVision);
-		ros::param::get("worldModelNode/ballTracker/useFriendlyMeas", config.useFriendlyMeas);
+		ros::param::get("worldModelNode/ballTracker/useOwnHighVision", config.useOwnHighVision);
+		ros::param::get("worldModelNode/ballTracker/useFriendlyHighVision", config.useFriendlyHighVision);
+		ros::param::get("worldModelNode/ballTracker/shareHighVision", config.shareHighVision);
 		ros::param::get("worldModelNode/ballTracker/friendlyMeasurementsDistance", config.friendlyMeasurementsDistance);
+		ros::param::get("worldModelNode/ballTracker/blackListDefault", config.blackListDefault);
+		ros::param::get("worldModelNode/ballTracker/blackListThresholdZ", config.blackListThresholdZ);
+		ros::param::get("worldModelNode/ballTracker/blackListFloatingDuration", config.blackListFloatingDuration);
+		ros::param::get("worldModelNode/ballTracker/blackListGroundDuration", config.blackListGroundDuration);
 
 		ballTrackerConfigROS_cb(config, 0);
 	}

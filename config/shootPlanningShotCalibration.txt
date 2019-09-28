@@ -1,0 +1,48 @@
+# robot lob-shot calibration
+# each line contains a measurement sample
+# a measurement sample is a value (maxZ, distance) as function of two kicker setpoints (height, power)
+# it forms a R2->R2 map, which is pruned by shootPlanning
+#
+# 2018-10-11 calibrated (R3, ball pression = 1bar) 
+#
+# height power  maxZ  distance 
+# Lob Shots
+   180      40   0.30     1.15
+   180      50   0.55     1.95
+   180      60   0.80     2.80
+   180      70   0.95     3.60
+   180      80   1.05     4.20
+   180      90   1.20     4.95
+   180     100   1.35     5.70
+   180     110   1.45     6.15
+   180     120   1.55     6.70
+   180     130   1.62     6.90
+   180     140   1.75     7.10
+   180     150   1.78     7.40
+   180     160   1.80     7.60
+   180     170   1.80     7.50
+   180     180   1.80     7.50
+# Straight Shots
+   170     180   1.95     7.70
+   160     180   2.00     7.85
+   150     180   2.10     8.20
+   140     180   1.95     8.25
+   130     180   1.78     8.30
+   120     180   1.65     8.40
+   110     180   1.55     8.30
+   100     180   1.38     8.30   
+    90     180   1.23     8.00
+    80     180   1.05     7.70
+    70     180   0.95     7.60
+    60     180   0.85     7.30
+    50     180   0.80     7.00
+    40     180   0.70     6.60
+    30     180   0.60     6.20
+    20     180   0.50     5.90
+    10     180   0.40     5.10
+
+
+
+
+
+

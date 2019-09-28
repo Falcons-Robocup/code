@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -35,14 +35,18 @@ enum class ballTrackerConfiguratorIntegers
 enum class ballTrackerConfiguratorFloats
 {
 	INVALID,
-	solverTrackerXYTolerance,
+	solverTrackerConeTolerance,
 	solverTrackerTimeout,
+	solverTrackerBuffer,
 	solverCoreMinVdt,
 	solverCoreWeight,
 	solverBounceDt,
 	solverBounceAge,
 	solverMinDv,
 	friendlyMeasurementsDistance,
+    blackListThresholdZ,
+    blackListFloatingDuration,
+    blackListGroundDuration,
 	confidenceFreshLim,
 	confidenceAgeLim,
 	confidenceFitLim1,
@@ -61,8 +65,10 @@ enum class ballTrackerConfiguratorFloats
 enum class ballTrackerConfiguratorBool
 {
 	INVALID,
-	useFrontVision, 
-	useFriendlyMeas, 
+    useOwnHighVision,
+    useFriendlyHighVision,
+    shareHighVision,
+    blackListDefault,
 	confidenceOmniPref,
 	solverCoreSpeed
 };

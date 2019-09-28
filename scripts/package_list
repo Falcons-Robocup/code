@@ -7,26 +7,25 @@
 
 (
 cat << EOF
-rosMsgs
-analyzer
+ballHandling
 common
-configManager
 pathPlanning
 worldModel
-worldModelSync
-compass
 networkUDP
+rtdb3
+sharedTypes
 refbox
-simulator
+simulation
 shootPlanning
 diagnostics
 peripheralsInterface
-yoctoLib
 teamplay
-vision
-frontVision
+multiCam
+raspiControl
+raspiSync
 robotControl
 visualizer
+velocityControl
 EOF
 ) | sed 's/#.*//' # filter comments, like these ;)
 

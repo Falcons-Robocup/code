@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,9 +22,10 @@
 #include <vector>
 #include <string>
 
-#include "int/types/ball/ballMeasurementType.hpp"
+#include "ballMeasurement.hpp"
 #include "int/types/ball/ballType.hpp"
 #include "int/types/ball/ballConfig.hpp"
+#include "int/types/object/blackListType.hpp"
 #include "int/algorithms/objectMeasurementCache.hpp"
 #include "int/algorithms/objectTracking.hpp"
 
@@ -42,41 +43,52 @@ struct confidenceDetails
     float freshScore;
     float zScore;
     float vScore;
+    float boundScore;
     float fitScore;
     float fitQuality;
 };
 
 class ballTracker
 {
-	public:
-		ballTracker(const objectMeasurementCache &measurement);
-		~ballTracker();
+    public:
+    	ballTracker(const objectMeasurementCache &measurement);
+    	~ballTracker();
 
-		void addBallMeasurement(const objectMeasurementCache &measurement, bool &measurementIsAdded);
-		void calculateBall(const double timeNow);
-		bool isTimedOut(const double timeNow);
-		ballClass_t getBall() const;
-		bool good() const;
-		void setGood(); // might be called during confidence fallback
-		std::string toStr(double timeNow, bool details = false);
-		confidenceDetails getDetails() const { return _confDetails; }
+    	void addBallMeasurement(const objectMeasurementCache &measurement, bool &measurementIsAdded);
+    	void calculateBall(rtime const timeNow, bool ownBallsFirst = false);
+    	bool isTimedOut(rtime const timeNow);
+    	ballClass_t getBall() const;
+    	bool isBlackListed() const;
+    	std::string toStr(rtime const timeNow, bool details = false);
+    	std::string xyzDetailsStr();
+    	confidenceDetails getDetails() const { return _confDetails; }
+        bool getOwnBallsFirst() const { return _ownBallsFirst; }
+    	size_t numMeasurements() const { return _ballMeasurements.size(); }
 
         static void reset();
-        
-	private:
-		std::vector<objectMeasurementCache> _ballMeasurements;
-		ballClass_t _lastBallResult;
-		confidenceDetails _confDetails;
-		ballConfig _ballCfg;
-		objectTracker _tracker;
-		size_t _trackerID;
-		static size_t _staticTrackerID;
-		bool _good;
-		double _t0;
-
-        void calculateConfidence(double t);
-		void cleanUpTimedOutBallMeasurements(double t);
         void traceMeasurements() const;
+    	std::vector<objectMeasurementCache> getBallMeasurements() { return _ballMeasurements; }
+        
+    private:
+    	std::vector<objectMeasurementCache> _ballMeasurements;
+    	ballClass_t _lastBallResult;
+    	confidenceDetails _confDetails;
+    	ballConfig _ballCfg;
+    	objectTracker _tracker;
+    	size_t _trackerID;
+    	static size_t _staticTrackerID;
+        blackListType _blackList;
+        bool _ownBallsFirst;
+        rtime _lastGroundTimeStamp;
+        rtime _lastAirTimeStamp;
+    	rtime _t0;
+        rtime _tmin;
+        rtime _tmax;
+
+    	void selectOwnOmniMeasurements(std::vector<objectMeasurementCache> &measurements);
+        void calculateConfidence(rtime const t);
+    	void setBlackList(blackListType b);
+    	void cleanUpTimedOutBallMeasurements(rtime const t);
 };
 
 #endif /* BALLTRACKER_HPP_ */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,7 +20,7 @@
 
 #include <boost/thread/thread.hpp>
 
-#include "cDiagnosticsDutyCycle.hpp"
+#include "cDiagnostics.hpp"
 
 #include "int/algorithms/cXYLinear.hpp"
 #include "int/algorithms/cPhiLinear.hpp"
@@ -41,11 +41,8 @@
 #include "int/algorithms/cTokyoDriftVelocity.hpp"
 #include "int/algorithms/cFCStoRCS.hpp"
 #include "int/algorithms/cLimitVelocities.hpp"
+#include "int/algorithms/cDeadZone.hpp"
 #include "int/algorithms/cBoundaryLimiter.hpp"
-
-#define EXPECTED_FREQUENCY (30.0) // TODO store somewhere common, provide by heartBeat? simulator uses 10Hz, real robot 30Hz
-#define WARNING_THRESHOLD (0.6)
-diagnostics::cDiagnosticsDutyCycle dutyCycleObserver("pathPlanning", EXPECTED_FREQUENCY, WARNING_THRESHOLD);
 
 cPathPlanningMain::cPathPlanningMain()
 {
@@ -56,27 +53,10 @@ cPathPlanningMain::cPathPlanningMain()
     _ppData = NULL;
     _isCurrentLowestActiveRobot = false;
     _obstacleAvoidanceCurrentlyEnabled = true;
-}
+    _currAlgType = pp_algorithm_type::moveWhileTurning;
 
-//
-//cPathPlanningMain::cPathPlanningMain(cPathPlanningData& data)
-//{
-//    _ppData = data;
-//    _algorithm = NULL;
-//    _dt = 1.0 / cPathPlanningMain::UPDATE_FREQUENCY;
-//
-//    /*
-//    // Set callback to ReconfigureAdapter
-//    CallbackType callback;
-//    callback = boost::bind(&cPathPlanningMain::setAlgorithms, this, _1);
-//    _rcAdapter.setCallback(callback);
-//    _tpAdapter.setCallback(callback);
-//
-//    _rcAdapter.initializeRC();
-//    _wmAdapter.initializeWM();
-//    _tpAdapter.initializeTP();
-//    */
-//}
+    TRACE("INIT");
+}
 
 cPathPlanningMain::~cPathPlanningMain()
 {
@@ -84,32 +64,29 @@ cPathPlanningMain::~cPathPlanningMain()
 
 void cPathPlanningMain::iterate()
 {
+
     while (true)
     {
         TRACE(">");
         try
         {
-            // Check WorldModel and Teamplay active
+            // Check WorldModel active
             bool wmActive;
-            bool tpActive;
             bool isLowestActiveRobot;
             bool obstacleAvoidanceIsEnabled;
             _ppData->getRobotActive(wmActive);
-            _ppData->getPathPlanningActivated(tpActive);
             _ppData->getIsLowestActiveRobot(isLowestActiveRobot);
             _ppData->getObstacleAvoidanceIsEnabled(obstacleAvoidanceIsEnabled);
 
-            if (wmActive && tpActive)
+            if (wmActive)
             {
-                dutyCycleObserver.pokeStart();
-
                 // Check if _algorithm needs to be updated
                 pp_algorithm_type newAlgo;
                 _ppData->getAlgorithmType(newAlgo);
                 if ((newAlgo != _currAlgType) ||
-                	(_algorithm == NULL) ||
-                	(_isCurrentLowestActiveRobot != isLowestActiveRobot) ||
-                	(_obstacleAvoidanceCurrentlyEnabled != obstacleAvoidanceIsEnabled)
+                    (_algorithm == NULL) ||
+                    (_isCurrentLowestActiveRobot != isLowestActiveRobot) ||
+                    (_obstacleAvoidanceCurrentlyEnabled != obstacleAvoidanceIsEnabled)
                    )
                 {
                     setAlgorithms(newAlgo, isLowestActiveRobot, obstacleAvoidanceIsEnabled);
@@ -118,17 +95,22 @@ void cPathPlanningMain::iterate()
                 // Do an execute of the algorithm
                 if (_algorithm != NULL)
                 {
+                    TRACE_SCOPE("cPathPlanningMain#execute", "");
                     _algorithm->execute();
                 }
 
-                dutyCycleObserver.pokeEnd();
             }
             else
             {
                 std::stringstream ss;
-                ss << "PathPlanning is running, but refuses to move. RobotInPlay(WM): " << wmActive << " ; PathPlanningActivated(TP): " << tpActive;
+                ss << "PathPlanning is running, but refuses to move. RobotInPlay(WM): " << wmActive;
                 TRACE(ss.str().c_str());
             }
+
+            cDiagnosticsAdapter::getInstance().send();
+
+            // Write tracing to disk once per tick
+            WRITE_TRACE;
 
             // Sleep
             boost::this_thread::sleep_for( boost::chrono::seconds(1800) );
@@ -145,6 +127,7 @@ void cPathPlanningMain::iterate()
         }
         TRACE("<");
     }
+    TRACE("shutting down...");
 }
 
 void cPathPlanningMain::setAlgorithms(const pp_algorithm_type &pp_algoType, const bool isLowestActiveRobot, const bool obstacleAvoidanceEnabled)
@@ -153,7 +136,7 @@ void cPathPlanningMain::setAlgorithms(const pp_algorithm_type &pp_algoType, cons
 
     // Only set new algorithm if it is a different type (or if it is still NULL)
     if ((pp_algoType != _currAlgType) || (_algorithm == NULL) ||
-    		(_isCurrentLowestActiveRobot != isLowestActiveRobot) || (_obstacleAvoidanceCurrentlyEnabled != obstacleAvoidanceEnabled))
+            (_isCurrentLowestActiveRobot != isLowestActiveRobot) || (_obstacleAvoidanceCurrentlyEnabled != obstacleAvoidanceEnabled))
     {
 
         if (_algorithm != NULL)
@@ -183,10 +166,12 @@ void cPathPlanningMain::setAlgorithms(const pp_algorithm_type &pp_algoType, cons
 
                 _algorithm->_ppBlocks.push_back(new cBoundaryLimiter(this));
                 _algorithm->_ppBlocks.push_back(new cTokyoDrift(this));
+                //_algorithm->_ppBlocks.push_back(new cXYLinearAcceleration(this));
                 _algorithm->_ppBlocks.push_back(new cXYPID(this));
                 //_algorithm->_ppBlocks.push_back(new cXYBrake(this));
                 _algorithm->_ppBlocks.push_back(new cPhiPID(this));
                 _algorithm->_ppBlocks.push_back(new cLimitVelocities(this));
+                //_algorithm->_ppBlocks.push_back(new cDeadZone(this));
                 _algorithm->_ppBlocks.push_back(new cFCStoRCS(this));
                 _algorithm->_ppBlocks.push_back(new cTokyoDriftVelocity(this));
                 //_algorithm->_ppBlocks.push_back(new cTokyoDrift(this)); // Do not use -- Assumes RCS but PP is in FCS!
@@ -351,7 +336,6 @@ void cPathPlanningMain::limitVelocities(const double &dt, const Position2D &targ
     plotData.vel_t.y = velocity.y;
     plotData.vel_t.phi = velocity.phi;
     _ppData->publishPlotData(plotData);
-
 
     /* Save velocity for next iteration acceleration clipping */
     _prev_vel = velocity;

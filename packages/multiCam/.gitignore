@@ -1,0 +1,12 @@
+.cproject
+.project
+.pydevproject
+bin/
+build/
+cfg/cpp/
+cfg/vision.cfgc
+docs/
+floorSize.yaml
+lib/
+old/
+

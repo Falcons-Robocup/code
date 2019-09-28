@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -36,7 +36,10 @@ class objectTracker
     objectResultType getResult() const;
     float getFitResidual() const;
     int getNumRemoved() const;
+    int getNumGood() const;
+    int getNumBad() const;
     float getTimeSpread() const;
+    std::string getDetailsStr() const;
     void setConfig(objectFitConfig cfg);
 
   private:
@@ -46,11 +49,16 @@ class objectTracker
     float _maxSpread;
     float _avgGroupSize;
     int _numRemoved;
+    int _numGood;
+    int _numBad;
+    std::string _detailsStr;
+    std::vector<bool> _removedMask;
     std::vector<objectMeasurementCache> const *_measurementsPtr = NULL;
     std::vector<double> _groupedTime;
     std::vector<std::vector<objectMeasurementCache>> _groupedMeasurements;
     std::vector<Vector3D> _positionsFcs;
 
+    void makeDetailsStr();
     void groupMeasurements();
     Vector3D triangulate(std::vector<objectMeasurementCache> const &measurements);
     void iterativeTrajectoryFit(double t);

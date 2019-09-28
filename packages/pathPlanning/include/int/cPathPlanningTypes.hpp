@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -49,7 +49,8 @@ static std::map<std::string, pp_motionProfile_type> motionProfileEnumMapping = b
 enum class pp_obstacle_type
 {
 	INVALID,
-	WORLDMODEL,
+	WORLDMODEL_OBSTACLES,
+	WORLDMODEL_TEAMMEMBERS,
 	PROJECTED,
 	FORBIDDEN_AREA
 };
@@ -148,6 +149,16 @@ typedef struct
     double phi_pid_d;
     double pos_reached;
     double tokyo_drift;
+    double error_x;
+    double error_y;
+    double jerk_x;
+    double jerk_y;
+    double acc_x;
+    double acc_y;
+    double vel_x;
+    double vel_y;
+    double pos_x;
+    double pos_y;
 } pp_plot_data_struct_t;
 
 enum pp_algorithm_type
@@ -179,6 +190,14 @@ typedef struct
     Velocity2D jerk;
 } pp_data_struct_t;
 
+typedef struct
+{
+    double pos;
+    double vel;
+    double acc;
+    double jerk;
+} pp_setpoint_output;
+
 // Callback type to set algorithm type
 //typedef boost::function<void(const pp_algorithm_type &pp_algoType)> CallbackType;
 
@@ -192,7 +211,7 @@ typedef boost::function<void(const Velocity2D& vel_rcs)> publishSpeedFunctionTyp
 typedef boost::function<void(const double& x, const double& y)> publishSubtargetFunctionType;
 
 // publishObstacles function for PathPlanning
-typedef boost::function<void(const std::vector<pp_obstacle_struct_t>& obstacles, const std::vector<polygon2D>& forbiddenAreas, std::vector<linepoint2D>& projectedSpeedVectors)> publishObstaclesFunctionType;
+typedef boost::function<void(const std::vector<polygon2D>& forbiddenAreas, std::vector<linepoint2D>& projectedSpeedVectors)> publishObstaclesFunctionType;
 
 // publishPlotData function for PathPlanning
 typedef boost::function<void(const pp_plot_data_struct_t& plotData)> publishPlotDataFunctionType;

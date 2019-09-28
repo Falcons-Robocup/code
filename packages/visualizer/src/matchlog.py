@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -43,6 +43,8 @@ def topic2typ(topic):
     # yucky hacky to deal with an old inconsistency....
     if bare_topic_name == "g_diag_worldmodel":
         type_name = 't_diag_worldmodel'
+    if bare_topic_name == "g_worldmodel": # wmV1
+        type_name = 't_worldmodel'
     if bare_topic_name == "g_ana_event":
         type_name = 't_event'
     return eval(type_name) # assume it was imported via 'from rosMsgs.msg import *'
@@ -71,12 +73,14 @@ def getRobotTopics():
     topics = output.split()
     # add analysis topics (written by analyzer)
     topics.append("g_ana_comm")
+    # add raw vision topic, which is routed via wmSync
+    topics.append("g_diag_vision_v2")
     return topics
     
 
 def getTeamTopics():    
     # analysis topics (written by analyzer)
-    return ["g_worldmodel_team", "g_ana_event", "g_ana_online", "g_ana_matchstate", "g_diag_refbox"]
+    return ["g_worldmodel_team", "g_worldmodel", "g_ana_event", "g_ana_online", "g_ana_matchstate", "g_diag_refbox"]
 
 
 

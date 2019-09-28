@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,34 +23,35 @@
 #include <map>
 #include <vector>
 
-#include "int/types/ball/ballMeasurementType.hpp"
+#include "diagWorldModel.hpp"
+
+#include "ballMeasurement.hpp"
 #include "int/types/ball/ballType.hpp"
 #include "int/administrators/ballDiscriminator.hpp"
-#include "int/types/uniqueWorldModelIDtype.hpp"
+#include "uniqueObjectID.hpp"
 
 class ballAdministrator
 {
-	public:
-		ballAdministrator();
-		virtual ~ballAdministrator();
+    public:
+    	ballAdministrator();
+    	virtual ~ballAdministrator();
 
-		virtual void appendBallMeasurements(const std::vector<ballMeasurementType> measurements);
-		virtual void overruleBall(const ballClass_t ball);
-		virtual void getLocalBallMeasurements(std::vector<ballMeasurementType> &measurements);
-		virtual void performCalculation(const double timeNow);
+    	virtual void appendBallMeasurements(const std::vector<ballMeasurement> measurements);
+    	virtual void overruleBall(const ballClass_t ball);
+    	virtual void getLocalBallMeasurements(std::vector<ballMeasurement> &measurements);
+    	virtual void performCalculation(rtime const timeNow, Vector2D const &pos);
 
-		virtual void getOwnBalls(std::vector<ballClass_t> &balls);
-		virtual void getGlobalBalls(std::vector<ballClass_t> &balls);
+    	virtual void getBalls(std::vector<ballClass_t> &balls);
+        void fillDiagnostics(diagWorldModel &diagnostics);
 
-	private:
-		uint8_t _ownRobotID;
-		std::map<uint8_t, ballClass_t> _overruledBalls;
-		std::map<uniqueWorldModelID, ballMeasurementType> _ballMeasurements;
+    private:
+    	uint8_t _ownRobotID;
+    	std::map<uint8_t, ballClass_t> _overruledBalls;
+    	std::map<uniqueObjectID, ballMeasurement> _ballMeasurements;
 
-		ballDiscriminator _globalBallDiscriminator;
-		ballDiscriminator _localBallDiscriminator;
+    	ballDiscriminator _ballDiscriminator;
 
-		virtual void cleanUpTimedOutBallMeasurements(const double timeNow);
+    	virtual void cleanUpTimedOutBallMeasurements(rtime const timeNow);
 };
 
 #endif /* BALLADMINISTRATOR_HPP_ */

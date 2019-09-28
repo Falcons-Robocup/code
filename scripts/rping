@@ -9,7 +9,7 @@
 
 while [ "1" == "1" ]
 do
-   for robot in r1 r2 r3 r4 r5 r6
+   for robot in r1 r2 r3 r4 r5 r6 r7
    do
      ping -W 1 -c 1 $robot >/dev/null 2>/dev/null
      if [ "$?" == "0" ]

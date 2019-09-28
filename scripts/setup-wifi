@@ -14,12 +14,12 @@ pass_words = {'A': 'MSL2017a', 'B': 'MSL2017b'}
 
 template = """
 [connection]
-id=MSL_FIELD_{FIELD}_{FREQ}
+id={NETWORK}_{FIELD}_{FREQ}
 uuid={UUID}
 type=802-11-wireless
 
 [802-11-wireless]
-ssid=MSL_FIELD_{FIELD}_{FREQ}
+ssid={NETWORK}_{FIELD}_{FREQ}
 mode=infrastructure
 mac-address={MACADDRESS}
 
@@ -29,7 +29,7 @@ method=ignore
 [ipv4]
 method=manual
 dns=172.16.74.1;
-addresses1=172.16.74.{SUBIP};24;172.16.74.27;
+addresses1=172.16.74.{SUBIP};24;{GATEWAY};
 """
 
 if use_pass_words:
@@ -39,6 +39,8 @@ key-mgmt=wpa-psk
 psk={PASSWORD}
 """
 
+gateways = {"MSL_FIELD": "172.16.74.27",
+            "Falcons": "172.16.74.1"}
 
 keywords = {'FIELD': '^ssid=MSL_FIELD_([^_]+?)_[^_]+?$',
             'FREQ': '^ssid=MSL_FIELD_[^_]+?_([^_]+?)$',
@@ -58,8 +60,8 @@ def write_config(configdata):
         if keyw not in configdata:
             raise RuntimeError('A value for {} was not supplied when trying to write the config!'.format(keyw))
 
-    filename = networkmanager_configs + '/MSL_FIELD_{FIELD}_{FREQ}'.format(FIELD=configdata['FIELD'],
-                                                                           FREQ=configdata['FREQ'])
+    filename = networkmanager_configs + '/{NETWORK}_{FIELD}_{FREQ}'.format(NETWORK=configdata['NETWORK'], FIELD=configdata['FIELD'],
+                                                                            FREQ=configdata['FREQ'])
 
     os.umask(0077)
 
@@ -129,7 +131,7 @@ def robot_number():
     except ValueError as e:
         invalid_number = True
     else:
-        if nr < 1 or nr > 6:
+        if nr < 1 or nr > 9:
             invalid_number = True
 
     if invalid_number:
@@ -191,7 +193,7 @@ def wlan_interfaces():
                 intf = None
 
                 try:
-                    m = re.match('\d+:\W+(wlan\d+):\W+', line)
+                    m = re.match('\d+:\W+(wl[0-9a-z]+):\W+', line)
                 except re.error as e:
                     continue
 
@@ -228,13 +230,13 @@ def handle_arguments():
     argp = argparse.ArgumentParser()
     argp.add_argument('field', help='The MSL field to play on; one of A, B or C')
     argp.add_argument('-f', '--frequency', default='5',
-                      help='The WIFI frequency to use; can be either 5 or 2.4 GHz and defaults to 5')
+                        help='The WIFI frequency to use; can be either 5 or 2.4 GHz and defaults to 5')
     argp.add_argument('-n', '--number', default=None, type=int,
-                      help='The number of the WIFI interface to use; 1 is the first interface and the interfaces '
-                           'names are sorted in alphabetical order')
+                        help='The number of the WIFI interface to use; 1 is the first interface and the interfaces '
+                            'names are sorted in alphabetical order')
     argp.add_argument('-m', '--mac-address', default=None,
-                      help='The MAC address to use for the configuration; this can specify an interface that is'
-                           ' currently not in the system')
+                        help='The MAC address to use for the configuration; this can specify an interface that is'
+                            ' currently not in the system')
     args = argp.parse_args()
 
     if args.field not in ['A', 'B', 'C']:
@@ -268,17 +270,17 @@ def handle_arguments():
             argument_error('If specified, the number of the WIFI interface cannot be 0!')
         elif args.number > intf_count:
             argument_error('{} was specified as the WIFI interface to use, but there {} only {} WIFI interface{}!'.
-                           format(args.number,
-                                  'is' if intf_count == 1 else 'are',
-                                  'one' if intf_count == 1 else intf_count,
-                                  's' if intf_count > 1 else ''))
+                            format(args.number,
+                                    'is' if intf_count == 1 else 'are',
+                                    'one' if intf_count == 1 else intf_count,
+                                    's' if intf_count > 1 else ''))
         args.interface = interfaces[args.number - 1]
 
     return {'INT': args.interface, 'FREQ': args.frequency, 'FIELD': args.field}
 
 
-def remove_all_msl_configs():
-    for file in glob.glob(networkmanager_configs + '/MSL_FIELD_*_*'):
+def remove_all_msl_configs(network):
+    for file in glob.glob(networkmanager_configs + '/' + network + '_*_*'):
         os.remove(file)
 
 def write_autoboot_trigger(config):
@@ -290,28 +292,33 @@ def sub_ip():
     # for example: 51 for robot1 and 33 for butter
     command = 'grep `hostname` /etc/hosts | tail -1 | awk \'{print $1}\' | sed \'s/.*\.//\''
     try:
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).strip()
         if int(output) == 1:
             output = 50 + robot_number()
-    except:
+    except Exception, e:
+        print str(e)
         raise RuntimeError('could not determine sub-ip!')
     return int(output)
     
 def main():
+    networks = ["MSL_FIELD", "Falcons"]
     config = handle_arguments()
-    config['UUID'] = str(uuid.uuid4())
     config['MACADDRESS'] = config['INT'][1]
     del config['INT']
     config['SUBIP'] = sub_ip()
     config['PASSWORD'] = pass_words[config['FIELD']]
     config['FREQ'] = 'b' if config['FREQ'] == '2.4' else 'a'
 
-    configname = 'MSL_FIELD_{}_{}'.format(config['FIELD'], config['FREQ'])
+    for network in networks:
+        config['UUID'] = str(uuid.uuid4())
+        config['NETWORK'] = network
+        config['GATEWAY'] = gateways[network]
+        configname = '{}_{}_{}'.format(config['NETWORK'], config['FIELD'], config['FREQ'])
 
-    remove_all_msl_configs()
-    print 'Removed all existing MSL WIFI configurations'
-    write_config(config)
-    print 'Wrote a new WIFI configuration for {}; it should come up automatically'.format(configname)
+        remove_all_msl_configs(network)
+        print 'Removed all existing ' + network + ' WIFI configurations'
+        write_config(config)
+        print 'Wrote a new WIFI configuration for {}; it should come up automatically'.format(configname)
     if config['SUBIP'] > 50:
         write_autoboot_trigger(config)
         print 'Wrote autoboot trigger'

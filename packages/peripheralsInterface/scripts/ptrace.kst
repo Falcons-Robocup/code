@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kst version="2.0.9">
+    <data>
+        <source reader="ASCII file" updateType="0" file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt">
+            <properties vector="INDEX" interpretation="1" delimiters="#" columntype="0" headerstart="0" fields="0" readfields="false" usedot="true" columnwidthisconst="false" readunits="false" units="0" limitFileBuffer="false" limitFileBufferSize="0" useThreads="0" asciiTimeFormat="hh:mm:ss.zzz" dataRate="1" offsetDateTime="false" offsetFileDate="false" offsetRelavive="true" dateTimeOffset="2018-02-08T20:47:19Z" relativeOffset="0" nanValue="0" updateType="0"/> initialXNum="1" initialTNum="1" initialDSNum="1"
+        </source>
+    </data>
+    <variables>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="INDEX" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" initialVNum="30" initialXNum="407"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="INDEX" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" initialVNum="31" initialXNum="421"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 3" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="leftMotor.setpoint" initialVNum="32" initialXNum="435"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 4" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="leftMotor.velocity" initialVNum="33" initialXNum="449"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 5" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="leftMotor.pidOutput" initialVNum="34" initialXNum="463"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 6" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="leftMotor.proportional" initialVNum="35" initialXNum="477"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 7" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="leftMotor.integral" initialVNum="36" initialXNum="491"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 8" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="leftMotor.pwm" initialVNum="37" initialXNum="505"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 9" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rightMotor.setpoint" initialVNum="38" initialXNum="519"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 10" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rightMotor.velocity" initialVNum="39" initialXNum="533"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 11" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rightMotor.pidOutput" initialVNum="40" initialXNum="547"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 12" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rightMotor.proportional" initialVNum="41" initialXNum="561"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 13" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rightMotor.integral" initialVNum="42" initialXNum="575"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 14" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rightMotor.pwm" initialVNum="43" initialXNum="589"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 15" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rearMotor.setpoint" initialVNum="44" initialXNum="603"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 16" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rearMotor.velocity" initialVNum="45" initialXNum="617"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 17" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rearMotor.pidOutput" initialVNum="46" initialXNum="631"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 18" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rearMotor.proportional" initialVNum="47" initialXNum="645"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 19" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rearMotor.integral" initialVNum="48" initialXNum="659"/>
+        <datavector file="/home/robocup/kstdata/ptrace_pi.txt" fileRelative="../../../../kstdata/ptrace_pi.txt" field="Column 20" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="rearMotor.pwm" initialVNum="49" initialXNum="673"/>
+    </variables>
+    <objects/>
+    <relations>
+        <curve xvector="INDEX (V30)" yvector="rearMotor.setpoint (V44)" color="#008000" alpha="255" headcolor="#000000" headalpha="255" barfillcolor="#ff00ff" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="-1" initialCNum="8"/>
+        <curve xvector="INDEX (V30)" yvector="rearMotor.velocity (V45)" color="#4682b4" alpha="255" headcolor="#501010" headalpha="255" barfillcolor="#105010" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="-1" initialCNum="9"/>
+        <curve xvector="INDEX (V30)" yvector="rearMotor.pidOutput (V46)" color="#aa0000" alpha="255" headcolor="#0000aa" headalpha="255" barfillcolor="#005500" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="-1" initialCNum="10"/>
+        <curve xvector="INDEX (V30)" yvector="rearMotor.integral (V48)" color="#000000" alpha="255" headcolor="#aa00aa" headalpha="255" barfillcolor="#2e5778" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="-1" initialCNum="11"/>
+        <curve xvector="INDEX (V30)" yvector="rearMotor.proportional (V47)" color="#55aa00" alpha="255" headcolor="#0a350a" headalpha="255" barfillcolor="#ff0000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="12"/>
+        <curve xvector="INDEX (V30)" yvector="rearMotor.pwm (V49)" color="#0000ff" alpha="255" headcolor="#008000" headalpha="255" barfillcolor="#000000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="13"/>
+        <curve xvector="INDEX (V30)" yvector="rightMotor.pwm (V43)" color="#0000ff" alpha="255" headcolor="#008000" headalpha="255" barfillcolor="#000000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="4" pointdensity="0" pointsize="3" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="14"/>
+        <curve xvector="INDEX (V30)" yvector="rightMotor.velocity (V39)" color="#105010" alpha="255" headcolor="#aa0000" headalpha="255" barfillcolor="#0000aa" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="2" pointdensity="0" pointsize="3" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="16"/>
+        <curve xvector="INDEX (V30)" yvector="rightMotor.setpoint (V38)" color="#55ff00" alpha="255" headcolor="#000000" headalpha="255" barfillcolor="#aa00aa" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="4" pointdensity="0" pointsize="3" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="17"/>
+        <curve xvector="INDEX (V30)" yvector="leftMotor.setpoint (V32)" color="#ffaa00" alpha="255" headcolor="#008000" headalpha="255" barfillcolor="#000000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="18"/>
+        <curve xvector="INDEX (V30)" yvector="leftMotor.velocity (V33)" color="#ff00ff" alpha="255" headcolor="#4682b4" headalpha="255" barfillcolor="#501010" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="19"/>
+        <curve xvector="INDEX (V30)" yvector="leftMotor.pwm (V37)" color="#105010" alpha="255" headcolor="#aa0000" headalpha="255" barfillcolor="#0000aa" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="20"/>
+        <curve xvector="INDEX (V30)" yvector="leftMotor.proportional (V35)" color="#ffaa00" alpha="255" headcolor="#000000" headalpha="255" barfillcolor="#aa00aa" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="21"/>
+        <curve xvector="INDEX (V30)" yvector="leftMotor.integral (V36)" color="#550000" alpha="255" headcolor="#350a0a" headalpha="255" barfillcolor="#0a350a" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="22"/>
+        <curve xvector="INDEX (V30)" yvector="rightMotor.integral (V42)" color="#00aaff" alpha="255" headcolor="#0000ff" headalpha="255" barfillcolor="#008000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="23"/>
+        <curve xvector="INDEX (V30)" yvector="rightMotor.proportional (V41)" color="#aaaa00" alpha="255" headcolor="#ff00ff" headalpha="255" barfillcolor="#4682b4" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="11" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="24"/>
+    </relations>
+    <graphics currentTab="2">
+        <view name="rearMotor" width="1850" height="952" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="1" name="Plot">
+                <position x="924.01590089141" y="489.43245320042" z="500"/>
+                <rect x="-920.96505" y="-486.5319" width="1839.9404376013" height="942.34693976915"/>
+                <relativesize width="0.994562398703404" height="0.989860230849948" centerx="0.498930307941653" centery="0.497976915005247" posx="0.00164910858995132" posy="0.0030467995802728" leftx="0.00164910858995132" lefty="0.99290703043022" rightx="0.996211507293355" righty="0.99290703043022" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" alpha="1" style="1"/>
+                </pen>
+                <brush color="#ffffff" alpha="1" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-769.597937494912" y="-407.155829123274" z="500"/>
+                    <rect x="0" y="0" width="919" height="65"/>
+                    <relativesize width="0.530819842624034" height="0.0780455530256457" centerx="0.302787298734233" centery="0.114518126107496" posx="0.037377377422216" posy="0.0754953495946729" leftx="0.037377377422216" lefty="0.153540902620319" rightx="0.56819722004625" righty="0.153540902620319" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" alpha="1" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" alpha="1" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="rearMotor.setpoint vs INDEX (C8)"/>
+                    <relation tag="rearMotor.velocity vs INDEX (C9)"/>
+                    <relation tag="rearMotor.pwm vs INDEX (C13)"/>
+                    <relation tag="rearMotor.proportional vs INDEX (C12)"/>
+                    <relation tag="rearMotor.pidOutput vs INDEX (C10)"/>
+                    <relation tag="rearMotor.integral vs INDEX (C11)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="-290393775"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="-1842206"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="INDEX" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="42533.2233366026" y="-224.166030795939" width="711.055972229617" height="508.522327789122"/>
+            </plot>
+        </view>
+        <view name="rightMotor" width="1850" height="952" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="2" name="Plot">
+                <position x="924.9431" y="476.02045" z="500"/>
+                <rect x="-921.9831" y="-473.11685" width="1842.97" height="945.2408"/>
+                <relativesize width="0.9962" height="0.9929" centerx="0.4997" centery="0.4995" posx="0.00160000000000005" posy="0.00305000000000001" leftx="0.00160000000000005" lefty="0.99595" rightx="0.9978" righty="0.99595" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" alpha="1" style="1"/>
+                </pen>
+                <brush color="#ffffff" alpha="1" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-781.197863999175" y="-392.248603747" z="500"/>
+                    <rect x="0" y="0" width="915" height="65"/>
+                    <relativesize width="0.524425361984248" height="0.0777753102397298" centerx="0.299227431745473" centery="0.115907044687779" posx="0.0370147507533493" posy="0.0770193895679139" leftx="0.0370147507533493" lefty="0.154794699807644" rightx="0.561440112737597" righty="0.154794699807644" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" alpha="1" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" alpha="1" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="rightMotor.pwm vs INDEX (C14)"/>
+                    <relation tag="rightMotor.velocity vs INDEX (C16)"/>
+                    <relation tag="rightMotor.setpoint vs INDEX (C17)"/>
+                    <relation tag="rightMotor.integral vs INDEX (C23)"/>
+                    <relation tag="rightMotor.proportional vs INDEX (C24)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="-290393775"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="0"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="INDEX" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="21532.4438681874" y="-26.0521237134201" width="156.144969397072" height="311.545643365109"/>
+            </plot>
+        </view>
+        <view name="leftMotor" width="1850" height="952" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="3" name="Plot">
+                <position x="924.9431" y="476.02035" z="500"/>
+                <rect x="-921.9831" y="-473.02155" width="1842.97" height="945.0504"/>
+                <relativesize width="0.9962" height="0.9927" centerx="0.4997" centery="0.4995" posx="0.00160000000000005" posy="0.00315000000000002" leftx="0.00160000000000005" lefty="0.99585" rightx="0.9978" righty="0.99585" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" alpha="1" style="1"/>
+                </pen>
+                <brush color="#ffffff" alpha="1" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-781.134745738135" y="-392.298445575314" z="500"/>
+                    <rect x="0" y="0" width="1399" height="35"/>
+                    <relativesize width="0.801826318487391" height="0.0418885563336455" centerx="0.437964085753213" centery="0.0978075103843961" posx="0.0370509265095173" posy="0.0768632322175734" leftx="0.0370509265095173" lefty="0.118751788551219" rightx="0.838877244996908" righty="0.118751788551219" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" alpha="1" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" alpha="1" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="leftMotor.setpoint vs INDEX (C18)"/>
+                    <relation tag="leftMotor.velocity vs INDEX (C19)"/>
+                    <relation tag="leftMotor.pwm vs INDEX (C20)"/>
+                    <relation tag="leftMotor.proportional vs INDEX (C21)"/>
+                    <relation tag="leftMotor.integral vs INDEX (C22)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="-290393775"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="0"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="INDEX" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="29273.7043446881" y="60.2920311792377" width="203.059456379764" height="748.137023213768"/>
+            </plot>
+        </view>
+    </graphics>
+</kst>

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,132 +20,52 @@
 #define CSHOOTPLANNER_HPP_
 
 #include "FalconsCommon.h"
+#include "shootTypeEnum.hpp"
 
-#include "int/cWorldModelAdapter.hpp"
-#include "int/cKickerAdapter.hpp"
-#include "int/cBallHandlerAdapter.hpp"
+#include "int/adapters/cRTDBOutputAdapter.hpp"
 #include "int/cReconfigureAdapter.hpp"
-
+#include "int/cInterpolator.hpp"
+#include "int/cShotSolver.hpp"
 
 typedef struct
 {
-  bool alwaysLobshot;
-  bool disableBHBeforeShot;
-  bool calibrationMode;
-  double setHeightDelay;
-  double disableBHDelay;
-  double lobshotScaling;
-  double min_lob_distance;
-  double max_lob_distance;
-  double max_shot_power;
-  double max_lever_angle;
+    bool alwaysLobshot;
+    bool alwaysStraightshot;
+    double shotStrengthScaling;
+    double shotAngleScaling;
+    double lobAngleScaling;
+    double passScaling;
+    double minLobDistance;
+    double maxLobDistance;
 } shootPlanningParams_t;
-
-typedef struct
-{
-  double x;
-  double y;
-  double strength;
-} passBall_t;
-
-typedef struct
-{
-  double strength;
-} selfPass_t;
-
-typedef struct
-{
-  double x;
-  double y;
-  double z;
-  double strength;
-} shootAtTarget_t;
-
-typedef struct
-{
-  double x;
-  double y;
-  double z;
-  double strength;
-} lobshotTarget_t;
-
-typedef struct
-{
-  double ls_c1;
-  double ls_c2;
-  double ls_c3;
-  double ls_c4;
-  double ls_c5;
-  double ls_c6;
-} lobshotFuncParams_t;
-
-typedef struct
-{
-  double p_c1;
-  double p_c2;
-  double p_c3;
-  double p_c4;
-  double p_c5;
-  double p_c6;
-} passFuncParams_t;
-
-typedef struct
-{
-  double ls_pwr10m;
-  double ls_pwr9m;
-  double ls_pwr8m;
-  double ls_pwr7m;
-  double ls_pwr6m;
-  double ls_pwr5m;
-  double ls_pwr4m;
-} lobshotPowers_t;
-
-typedef struct
-{
-  double p_pwr10m;
-  double p_pwr9m;
-  double p_pwr8m;
-  double p_pwr7m;
-  double p_pwr6m;
-  double p_pwr5m;
-  double p_pwr4m;
-  double p_pwr3m;
-  double p_pwr2m;
-  double p_pwr1m;
-} passPowers_t;
 
 class cShootPlanner
 {
     public:
-        cShootPlanner(const shootPlanningParams_t spParams, const lobshotPowers_t lsPowers, const lobshotFuncParams_t lsFuncParams,
-        		const passPowers_t pPowers, const passFuncParams_t pFuncParams);
+        cShootPlanner(const shootPlanningParams_t spParams);
 
         ~cShootPlanner();
 
-        void activateShootPlanning();
-        void deactivateShootPlanning();
-        bool isShootPlanningActive();
-
-        void passBall(const passBall_t passParams);
-        void selfPass(const selfPass_t selfPassParams);
-        void shootAtTarget(const shootAtTarget_t shootParams);
-        void lobShot(const lobshotTarget_t shootParams);
-        void lobCalculatorPoints ( double distance, double &kick_angle, double &kick_strength);
-        void lobCalculatorFunction ( double distance,  double &kick_angle,  double &kick_strength);
+        void prepareForShot(float distance, float z, shootTypeEnum shootType);
+        void executeShot();
+        void executePass(float distance);
 
     private:
-        void delay(double seconds);
-        bool _isShootPlanningActive;
+        
+        // models
+        bool canPrepare();
+        void calculatePassPower(float distance);
+        void calculateLob(float distance, float z);
+        void calculateStraightShot(float distance, float z);
 
-        cWorldModelAdapter _wmAdapter;
-        cKickerAdapter _kickAdapter;
-        cBallHandlerAdapter _bhAdapter;
-        cReconfigureAdapter _reconfigureAdapter;
+        cInterpolator *_passInterpolator;
+        cShotSolver *_shotSolver;
+
+        cRTDBOutputAdapter _rtdbOutputAdapter;
         shootPlanningParams_t _spParams;
-        lobshotPowers_t _lsPowers;
-        lobshotFuncParams_t _lsFuncParams;
-        passPowers_t _pPowers;
-        passFuncParams_t _pFuncParams;
+        float _kickerStrength;
+        float _kickerAngle;
+        double _lastSetHeightTimestamp;
 };
 
 #endif /* CSHOOTPLANNER_HPP_ */

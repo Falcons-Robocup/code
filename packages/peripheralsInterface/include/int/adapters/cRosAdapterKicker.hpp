@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,10 +22,6 @@
 #include <dynamic_reconfigure/server.h>
 #include <ros/ros.h>
 
-#include "peripheralsInterface/s_peripheralsInterface_setKickPosition.h"
-#include "peripheralsInterface/s_peripheralsInterface_setKickSpeed.h"
-#include "peripheralsInterface/s_homeKicker.h"
-
 #include "peripheralsInterface/kickerConfig.h"
 
 #include "int/Kicker.hpp"
@@ -39,19 +35,11 @@ public:
 	void initialize();
 
 private:
-	bool cbSetKickPosition(peripheralsInterface::s_peripheralsInterface_setKickPosition::Request& request, peripheralsInterface::s_peripheralsInterface_setKickPosition::Response& response);
-	bool cbSetKickSpeed(peripheralsInterface::s_peripheralsInterface_setKickSpeed::Request& request, peripheralsInterface::s_peripheralsInterface_setKickSpeed::Response& response);
-	bool cbHomeKicker(peripheralsInterface::s_homeKicker::Request& request, peripheralsInterface::s_homeKicker::Response& response);
-
 	void cbConfig(peripheralsInterface::kickerConfig &config, uint32_t level);
 
 	Kicker &kicker;
 
 	ros::NodeHandle nodeHandle;
-	ros::ServiceServer setKickPositionService;
-	ros::ServiceServer setKickSpeedService;
-	ros::ServiceServer homeKickerService;
-
 	dynamic_reconfigure::Server<peripheralsInterface::kickerConfig> configServer;
 };
 

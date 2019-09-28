@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,8 +29,8 @@
 /*
  * We cannot use vectors because of serialization
  */
-#define NR_BALL_MEASUREMENTS 2
-#define NR_OBSTACLE_MEASUREMENTS 10
+#define NR_BALL_MEASUREMENTS 4
+#define NR_OBSTACLE_MEASUREMENTS 8
 
 typedef struct
 {

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,8 +19,6 @@
 #ifndef BALLHANDLERS_HPP_
 #define BALLHANDLERS_HPP_
 
-#include <chrono>
-
 #include "int/PeripheralsInterfaceData.hpp"
 #include "int/DeviceManager.hpp"
 #include "int/motors/BallhandlerBoard.hpp"
@@ -28,7 +26,7 @@
 class BallhandlerMotor {
 public:
 	BallhandlerBoardDataOutput data;
-	double setpoint;
+	int setpoint;
 	bool online;
 };
 
@@ -38,41 +36,27 @@ public:
 	Ballhandlers(PeripheralsInterfaceData& piData, BallhandlerBoard& leftBallhandlerBoard, BallhandlerBoard& rightBallhandlerBoard);
 	~Ballhandlers();
 
-	void start();
 	void update();
 
 private:
-	void updateBoardStatus();
+	void updateBoardSettings();
+	void updateControlMode();
 	void updateBoardData();
 	void updateBoardSetpoints();
+	void updateBoardStatus();
 
-	void determineRobotHasBall();
-
-	void calculateFeedForwardVelocity(double xVelocityEnc, double yVelocityEnc,
-			double thetaVelocityEnc, double &leftBhVelocity,
-			double &rightBhVelocity);
-
-	void addAngleDiffToFeedForwardVelocity(double &leftBhVelocity,
-			double &rightBhVelocity);
-
-	void setVelocityInput();
-
-		void calculatePassBallVelocity(double &leftBhVelocity,
-				double &rightBhVelocity, passBall passBallParams);
-
-	bool calculateArmLifted(const BallhandlerBoardDataOutput &data,
-			const BallhandlerBoardSettings &settings);
+	void traceData();
 
 	PeripheralsInterfaceData &_piData;
-	thread _updateThread;
-
-	std::chrono::steady_clock::time_point bothBallhandlersDownTime;
 
 	BallhandlerBoard& _leftBallhandlerBoard;
 	BallhandlerBoard& _rightBallhandlerBoard;
 
 	BallhandlerMotor _leftBallhandler;
 	BallhandlerMotor _rightBallhandler;
+	
+	bool _leftEnabled;
+	bool _rightEnabled;
 };
 
 #endif /* PERIPHERALSINTERFACEBALLHANDLERS_HPP_ */

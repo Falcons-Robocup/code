@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,119 +17,139 @@
 #    robotCLI.py          # command-line interface
 #    robotLibrary.py      # discloses all basic commands and scenarios, also includes parser
 #    robotScenarios.py    # scenario interface
-#    robotRosInterface.py # basic commands and their ROS interfaces
+#    robotInterface.py    # basic commands and their ROS interfaces
 #    scenarios/*.py       # scenario implementations
-# 
+#
 # Jan Feitsma, 2016-12-17
 
 
 
 import sys, os, signal
 import traceback
-from robotActions import *
-from robotScenarios import *
+import logging
 import readline
+from time import sleep
+
+import robotInterface as robot
+from robotScenarios import *
 
 
 # globals
 _robotId = None
 _initialized = False
-_verbose = False
+logging.basicConfig(level=logging.INFO)
 
 
 def initialize():
     """
-    Setup the ROS interface.
+    Setup the robot interface.
     """
     global _initialized
     assert(_initialized == False)
-    #sys.stdout.write("initializing ...")
-    #sys.stdout.flush()
-    constructRosInterface(_robotId)
+    initializeLogger()
+    robot.connect(_robotId)
     _initialized = True
     # on robot: initialize BH
-    stop() # needed to disable teamplay by default, otherwise ballHandlers are actively disabled
-    if not isSimulated():
-        enableBallHandlers()
-    #print " done"
+    robot.enableBallHandlers()
+
+def initializeLogger():
+    """
+    Setup the logging environment
+    """
+    log = logging.getLogger()  # root logger
+    log.setLevel(logging.INFO)
+    format_str = '%(asctime)s.%(msecs)03d - %(levelname)-8s - %(message)s'
+    date_format = '%Y-%m-%dT%H:%M:%S'
+    formatter = logging.Formatter(format_str, date_format)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    log.handlers = [] # clear
+    log.addHandler(stream_handler)
+    return logging.getLogger(__name__)
 
 def shutdown():
     """
     Cleanup such that robot is in a good state to play (refbox).
     """
-    tpControl("reset")
-    restoreAllConfigs()
-    
+    # make all threads stop, see e.g. ballMonitor
+    robot.disconnect()
+
 def guessRobotId():
     """
     Guess the robot to target.
     If used on real robot, this will find the robot namespace.
-    If in simulator and only one robot is active, it will be selected.
-    However if multiple robots are simulated, then this will not work,
-    instead setRobotId must be called explicitly.
     """
     robotId = os.getenv("TURTLE5K_ROBOTNUMBER")
     if robotId != None:
         setRobotId(int(robotId))
-    # TODO
-    #else:
-    #    setRobotId(robotRosInterface.guessRobotId())
+    # TODO: simulation use case: in case we only have one simulated robot active, it would be nice if user does not have to specify the robot explicitly
 
 def setRobotId(robotId):
     """
     Bind this instance to a robot.
     """
-    assert(robotId in range(1, 7))
+    assert(robotId in range(1, 20))
     global _robotId
     _robotId = robotId
-    
+
 def prompt():
     """
     Provide a prompt to users, so they can enter commands.
     """
-    print "(enter h for help)"
+    logging.info("(enter h for help)")
     while True:
         try:
+            # TODO: prepend with timestamp, nicely align with logging?
             s = raw_input("enter command: ")
         except:
-            print "error while reading input"
+            logging.error("error while reading input")
             break
         if s in ["q", "quit", "shutdown"]:
             break
         try:
             parse(s)
         except:
-            print "WARNING: something went wrong while evaluating '%s'" % (s)
+            logging.warning("something went wrong while evaluating '%s'" % (s))
             traceback.print_exc(file=sys.stdout)
+    logging.info("shutting down ...")
+    shutdown()
 
 def printHelp():
-    print ""
-    print "most commands are blocking, which means you cannot type anything until it finished"
-    print "use ctrl-C to interrupt such blocking commands and return back to the prompt"
-    print ""
-    print "COMMANDS:"
-    print "  h / help / ?           : show this help"
-    print "  q / quit / shutdown    : exit program"
-    print "  ctrl-C                 : interrupt running command"
-    print "  sleep s                : sleep for s seconds [blocking]"
-    print "  stop                   : stop whatever robot is doing"
-    print "  bh on|off              : enable/disable ball handlers"
-    print "  speed vx vy vphi s     : give a relative speed setpoint (vx,vy,vphi) for s seconds"
-    print "  move x y phi           : move robot to (x,y,phi)"
-    print "  kick power height      : kick ball with given power and optional height"
-    print "  action name [args]     : perform an action [not blocking]"
-    print "  actionBlocking name [args] : perform an action [blocking]"
-    print "  behavior name          : perform a behavior"
-    print "  play                   : change behavior to neutral_playing"
-    print "  listScenarios          : shows a list of loaded scenarios"
-    print "  scenario name          : run a pre-defined scenario [blocking]"
-    print ""
-    
+    print helpText()
+
+def helpText():
+    return """
+most commands are blocking, which means you cannot type anything until it finished
+(TODO: implement ctrl-C to interrupt such blocking commands and return back to the prompt)
+COMMANDS:
+    h / help / ?           : show this help
+    q / quit / shutdown    : exit program
+    ctrl-C                 : interrupt running command (TODO)
+    stop                   : stop whatever robot is doing
+    sleep s                : sleep for s seconds [blocking]
+    bh on|off              : enable/disable ball handlers
+    velocity vx vy vphi s  : give a relative velocity setpoint (vx,vy,vphi) for s seconds
+    move x y phi           : move robot to (x,y,phi) using pathPlanning
+    getBall                : get the ball
+    kick power height      : kick ball with given power (30..180) and optional height (0..180)
+    pass x y               : pass to (x,y)
+    shoot x y [z]          : straight shot at (x,y,z)
+    lob x y [z]            : lob shot at (x,y,z)
+    keeper                 : start acting as keeper
+    behavior name          : perform a behavior
+    listScenarios          : shows a list of loaded scenarios
+    scenario name          : run a pre-defined scenario [blocking]
+"""
+# next ones still need to be fixed after migration to RTDB! #62
+# play                   : change behavior to neutral_playing"
+#print "  action name [args]     : perform an action [not blocking]"
+#print "  actionBlocking name [args] : perform an action [blocking]"
+
 def parse(commandString):
     """
     Parse given command string.
     """
-    log("parsing command: '%s'" % (commandString), 0)
+    logging.info("parsing command: '%s'" % (commandString))
     assert(_initialized == True)
     # split string
     words = commandString.split()
@@ -142,22 +162,21 @@ def parse(commandString):
         if mode in ['h', 'help', '?']:
             printHelp()
         elif mode in ['stop']:
-            stop()
+            robot.stop()
         elif mode in ['sleep']:
             sleep(float(args[0]))
         elif mode in ['bh']:
             if len(args) == 1:
                 if str(args[0]) == "on":
-                    enableBallHandlers()
+                    robot.enableBallHandlers()
                 if str(args[0]) == "off":
-                    disableBallHandlers()
-        elif mode in ['speed']:
+                    robot.disableBallHandlers()
+        elif mode in ['velocity']:
             vx = float(args[0])
             vy = float(args[1])
             vphi = float(args[2])
             t = float(args[3])
-            stop() # stop any previously started action/move
-            speed(vx, vy, vphi, t)
+            robot.setVelocity(vx, vy, vphi, t)
         elif mode in ['move', 'target']:
             x = float(args[0])
             y = float(args[1])
@@ -166,20 +185,43 @@ def parse(commandString):
                 phi = float(args[2])
             else:
                 phi = 0
-            move(x, y, phi)
+            robot.move(x, y, phi)
+        elif mode in ['getball']:
+            robot.getBall()
+        elif mode in ['pass']:
+            x = float(args[0])
+            y = float(args[1])
+            robot.passTo(x, y)
+        elif mode in ['shoot']:
+            x = float(args[0])
+            y = float(args[1])
+            # z not required, default to zero
+            if len(args) > 2:
+                z = float(args[2])
+            else:
+                z = 0
+            robot.shootAt(x, y, z)
+        elif mode in ['lob']:
+            x = float(args[0])
+            y = float(args[1])
+            # z not required, default to zero
+            if len(args) > 2:
+                z = float(args[2])
+            else:
+                z = 0
+            robot.lobShotAt(x, y, z)
         elif mode in ['kick']:
             power = float(args[0])
             height = 0
             if len(args) > 1:
                 height = float(args[1])
-            kick(power, height)
-        elif mode in ['action']:
-            # an action can have zero or more parameters - just pass it all
-            action(*args)
+            robot.kick(power, height)
+        elif mode in ['keeper']:
+            logging.warning("known issue: this will continue forever, until you ctrl-C / restart robotCLI!")
+            robot.behavior("B_GOALKEEPER")
         elif mode in ['behavior']:
-            behavior(args[0])
-        elif mode in ['play']:
-            behavior("neutralPlaying")
+            robot.behavior(args[0])
+        # TODO: stimulate teamplay on more levels, e.g. gameState neutralPlaying
         elif mode in ['listscenarios']:
             print "Loaded scenarios are:"
             print listScenarios()
@@ -200,27 +242,31 @@ def parse(commandString):
                 if isinstance( userinput, ( int, long ) ):
                     if int(userinput) > 0:
                         runScenario( scenarios[int(userinput) - 1] ) # TODO Add support for arguments when prompting selection menu
-                        restoreAllConfigs()
+                        robot.restoreAllConfigs()
             else:
                 # relay to scenario selector/executor
                 runScenario(*args)
                 # After running a scenario, restore all dynamic_reconfigure configs
                 # We do this to reset the state of the robot after every scenario
-                restoreAllConfigs()
+                robot.restoreAllConfigs()
+        else:
+            logging.error("invalid or not-yet-implemented mode '%s'" % (mode))
+        """
+        # TODO: redesign monitors
         elif mode in ['analyzeball']:
             monitorBall()
         elif mode in ['analyzeloc']:
             monitorLocalization()
-        else:
-            log("invalid mode '%s'" % (mode), 0)
-    except KeyboardInterruptException:
-        # probably a blocking call was interrupted, ok to continue (if prompted)
-        log("--interrupted--", 0)
-        return
+        """
+        """TODO
+        except KeyboardInterruptException:
+            # probably a blocking call was interrupted, ok to continue (if prompted)
+            logging.warning("--interrupted--")
+            return
+        """
     except:
-        log("WARNING: something went wrong while evaluating '%s'" % (commandString), 0)
+        logging.warning("something went wrong while evaluating '%s'" % (commandString))
         traceback.print_exc(file=sys.stdout)
-    log("end of parse")
-        
+
 
 

@@ -1,4 +1,4 @@
-// Copyright 2015 Andre Pool
+// Copyright 2015, 2016 Andre Pool
 // Licensed under the Apache License version 2.0
 // You may not use this file except in compliance with this License
 // You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -81,13 +81,14 @@ void taskCommunication() {
 		if( rxPacketChecksumFail() ) {
 			// ignore packet command, communication error flag has been set, next cycle this will be send to the far end
 		} else if ( rxPacket.command == CMD_SET_PRIMARY_SETPOINT ) {
-			if( rxPacket.payloadSize != PACKETSIZE_CMD_SET_PRIMARY_SETPOINT ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 			// update current primary setpoint, this command first in the list because command used very often (wheel encoder mode)
 			setPrimarySetPoint( rxPacket.pl.s16[0] );
+			if( rxPacket.payloadSize != 2 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_SET_ANGLE_SETPOINT ) {
 			if( rxPacket.payloadSize != PACKETSIZE_CMD_SET_ANGLE_SETPOINT ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 			// update current angle setpoint, this command first in the list because command used very often (angle mode)
 			setAngleSetPoint( rxPacket.pl.s16[0] );
+			if( rxPacket.payloadSize != 2 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_LOOPBACK ) {
 			// just return the payload
 			txPacket.responseType = RESP_LOOPBACK;
@@ -114,6 +115,7 @@ void taskCommunication() {
 		} else if ( rxPacket.command == CMD_SET_LED_GREEN ) {
 			// overwrite current led value from the far end
 			if( rxPacket.pl.u8[0] == 1 ) { setLedGreen( true ); } else { setLedGreen( false ); }
+			if( rxPacket.payloadSize != 1 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_GET_LED_YELLOW ) {
 			txPacket.responseType = RESP_LED_YELLOW;
 			txPacket.payloadSize = PACKETSIZE_RESP_LED_YELLOW;
@@ -121,6 +123,7 @@ void taskCommunication() {
 		} else if ( rxPacket.command == CMD_SET_LED_YELLOW ) {
 			// overwrite current led value from the far end
 			if( rxPacket.pl.u8[0] == 1 ) { setLedYellow( true ); } else { setLedYellow( false ); }
+			if( rxPacket.payloadSize != 1 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_GET_ANGLE_SETPOINT ) {
 			// return angle setPoint value (this value is set from the far end)
 			txPacket.responseType = RESP_ANGLE_SETPOINT;
@@ -134,37 +137,41 @@ void taskCommunication() {
 		} else if ( rxPacket.command == CMD_GET_PID_ANGLE_PROPERTIES ) {
 			// get angle pid "constants", these are original set from far end
 			txPacket.responseType = RESP_PID_ANGLE_PROPERTIES;
-			txPacket.payloadSize = PACKETSIZE_RESP_PID_ANGLE_PROPERTIES;
+			txPacket.payloadSize = 12;
 			txPacket.pl.u16[0] = getPidAngleProperties().p;
 			txPacket.pl.u16[1] = getPidAngleProperties().i;
 			txPacket.pl.u16[2] = getPidAngleProperties().d;
-			txPacket.pl.u16[3] = getPidAngleProperties().iTh;
+			txPacket.pl.u16[3] = (uint16_t) getPidAngleProperties().iTh;
+			txPacket.pl.u32[2] = (uint32_t) getPidAngleProperties().iMax;
 		} else if ( rxPacket.command == CMD_SET_PID_ANGLE_PROPERTIES ) {
 			// set angle pid "constants" (adjust for maximal response / minimal overshoot)
-			if( rxPacket.payloadSize != PACKETSIZE_CMD_SET_PID_ANGLE_PROPERTIES ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 			pidPropT tmp;
 			tmp.p = rxPacket.pl.u16[0];
 			tmp.i = rxPacket.pl.u16[1];
 			tmp.d = rxPacket.pl.u16[2];
 			tmp.iTh = rxPacket.pl.u16[3];
+			tmp.iMax = rxPacket.pl.u32[2];
 			setPidAngleProperties( tmp );
+			if( rxPacket.payloadSize != 12 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_GET_PID_PRIMARY_PROPERTIES ) {
 			// get primary pid "constants", these are original set from far end
 			txPacket.responseType = RESP_PID_PRIMARY_PROPERTIES;
-			txPacket.payloadSize = PACKETSIZE_RESP_PID_PRIMARY_PROPERTIES;
+			txPacket.payloadSize = 12;
 			txPacket.pl.u16[0] = getPidPrimaryProperties().p;
 			txPacket.pl.u16[1] = getPidPrimaryProperties().i;
 			txPacket.pl.u16[2] = getPidPrimaryProperties().d;
-			txPacket.pl.u16[3] = getPidPrimaryProperties().iTh;
+			txPacket.pl.u16[3] = (uint16_t)getPidPrimaryProperties().iTh;
+			txPacket.pl.u32[2] = (uint32_t)getPidPrimaryProperties().iMax;
 		} else if ( rxPacket.command == CMD_SET_PID_PRIMARY_PROPERTIES ) {
 			// set primary pid motor "constants" (adjust for maximal response / minimal overshoot)
-			if( rxPacket.payloadSize != PACKETSIZE_CMD_SET_PID_PRIMARY_PROPERTIES ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 			pidPropT tmp;
 			tmp.p = rxPacket.pl.u16[0];
 			tmp.i = rxPacket.pl.u16[1];
 			tmp.d = rxPacket.pl.u16[2];
 			tmp.iTh = rxPacket.pl.u16[3];
+			tmp.iMax = rxPacket.pl.u32[2];
 			setPidPrimaryProperties( tmp );
+			if( rxPacket.payloadSize != 12 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_GET_PWM_LIMIT ) {
 			// get maximal motor power, this is original set from far end
 			txPacket.responseType = RESP_PWM_LIMIT;
@@ -180,14 +187,16 @@ void taskCommunication() {
 		} else if ( rxPacket.command == CMD_SET_PWM_LIMIT ) {
 			// set maximal motor power
 			setPwmLimit(rxPacket.pl.u16[0]);
+			if( rxPacket.payloadSize != 2 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_SET_PWM_DELTA ) {
 			// set maximal pwm increase per 2.5ms
-			setPwmDelta(rxPacket.pl.u16[0]);
+			setPwmDelta(rxPacket.pl.u32[0]);
+			if( rxPacket.payloadSize != 4 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_GET_PWM_DELTA ) {
 			// get maximal pwm increase per 2.5ms
 			txPacket.responseType = RESP_PWM_DELTA;
-			txPacket.payloadSize = PACKETSIZE_RESP_PWM_DELTA;
-			txPacket.pl.u16[0] = getPwmDelta();
+			txPacket.payloadSize = 4;
+			txPacket.pl.u32[0] = getPwmDelta();
 		} else if ( rxPacket.command == CMD_GET_GAIN ) {
 			// TODO: remove, not used anymore
 			txPacket.responseType = RESP_GAIN;
@@ -203,8 +212,8 @@ void taskCommunication() {
 			txPacket.pl.u16[0] = getMotorTimeout();
 		} else if ( rxPacket.command == CMD_SET_MOTOR_TIMEOUT ) {
 			// set the amount of periods after the motor will stop when no valid packed received (safety function)
-			if( rxPacket.payloadSize != PACKETSIZE_CMD_SET_MOTOR_TIMEOUT ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 			setMotorTimeout( rxPacket.pl.u16[0] );
+			if( rxPacket.payloadSize != 2 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_GET_ANGLE_DIRECTION ) {
 			// get the angle direction, this value is original set from far end
 			txPacket.responseType = RESP_ANGLE_DIRECTION;
@@ -212,12 +221,12 @@ void taskCommunication() {
 			txPacket.pl.u8[0] = getAngleDirection();
 		} else if ( rxPacket.command == CMD_SET_ANGLE_DIRECTION ) {
 			// set the angle direction, or left or right ball handler shall have inverted angle behavior
-			if( rxPacket.payloadSize != PACKETSIZE_CMD_SET_ANGLE_DIRECTION ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 			setAngleDirection( (bool)rxPacket.pl.u8[0] );
+			if( rxPacket.payloadSize != 1 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_SET_DRV8301 ) {
 			// configure the drv8301 motor driver
-			if( rxPacket.payloadSize != PACKETSIZE_CMD_SET_DRV8301 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 			setDrv8301( rxPacket.pl.u16[0], rxPacket.pl.u16[1] );
+			if( rxPacket.payloadSize != 2 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_GET_DRV8301 ) {
 			// read back both status registers and both control registers of the drv8301 motor controller
 			txPacket.responseType = RESP_DRV8301;
@@ -231,8 +240,8 @@ void taskCommunication() {
 			txPacket.pl.u16[5] = drv8301.setControl2;
 		} else if ( rxPacket.command == CMD_SET_MODE ) {
 			// set the mode of the board e.g. pid on encoder, pid on tacho or directly setpoint to pwm
-			if( rxPacket.payloadSize != 1 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 			setMode( rxPacket.pl.u8[0] );
+			if( rxPacket.payloadSize != 1 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_GET_MODE ) {
 			// read back the current selected mode
 			txPacket.responseType = RESP_MODE;
@@ -246,7 +255,6 @@ void taskCommunication() {
 			txPacket.pl.u16[1] = angleTachoZero.tacho;
 		} else if ( rxPacket.command == CMD_CLEAR_ERRORS ) {
 			// clear the (reported) errors from far end
-			if( rxPacket.payloadSize != PACKETSIZE_CMD_CLEAR_ERRORS ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 			clearCommunicationError(rxPacket.pl.u16[0]);
 			clearEncoderError(rxPacket.pl.u16[1]);
 			clearPidError(rxPacket.pl.u16[2]);
@@ -254,6 +262,7 @@ void taskCommunication() {
 			clearSafetyError(rxPacket.pl.u16[4]);
 			clearSchedulerError(rxPacket.pl.u16[5]);
 			clearSpiMasterError(rxPacket.pl.u16[6]);
+			if( rxPacket.payloadSize != 14 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else {
 			// invalid command received, will be reported in next cycle to far end
 			error |= COMMUNICATION_ERROR_TO_BOARD_ILLEGAL_COMMAND;

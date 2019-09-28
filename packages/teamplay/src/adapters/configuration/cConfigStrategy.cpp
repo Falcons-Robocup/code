@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,12 +22,13 @@
 #include <pwd.h> // for getpwuid()
 
 #include "FalconsCommon.h"
+#include "tracing.hpp"
 
 #include "int/stores/configurationStore.hpp"
 
 cConfigStrategy::cConfigStrategy()
 {
-	loadConfigYaml();
+    loadConfigYaml();
 }
 
 cConfigStrategy::~cConfigStrategy()
@@ -37,34 +38,37 @@ cConfigStrategy::~cConfigStrategy()
 
 void cConfigStrategy::loadConfigYaml()
 {
-	teamplay::teamplayStrategyConfig config;
+    teamplay::teamplayStrategyConfig config;
 
-	/* Execute loading of ros params */
-	struct passwd *pw = getpwuid(getuid());
-	std::string configFileCmd("rosparam load ");
-	configFileCmd.append(pw->pw_dir);
-	configFileCmd.append("/falcons/code/config/teamplayStrategy.yaml");
-	int dummy_val = system(configFileCmd.c_str());
-	TRACE("ros parameters loaded, returncode=%d", dummy_val);
-	dummy_val = 0;
+    /* Execute loading of ros params */
+    struct passwd *pw = getpwuid(getuid());
+    std::string configFileCmd("rosparam load ");
+    configFileCmd.append(pw->pw_dir);
+    configFileCmd.append("/falcons/code/config/teamplayStrategy.yaml");
+    int dummy_val = system(configFileCmd.c_str());
+    TRACE("strategy parameters loaded, returncode=%d", dummy_val);
+    dummy_val = 0;
 
-	/* Bind the reconfiguration function */
-	_srv.reset(new dynamic_reconfigure::Server<teamplay::teamplayStrategyConfig>(ros::NodeHandle("~/strategy")));
-	_f = boost::bind(&cConfigStrategy::reconfig_cb, this, _1, _2);
-	_srv->setCallback(_f);
+    /* Bind the reconfiguration function */
+    _srv.reset(new dynamic_reconfigure::Server<teamplay::teamplayStrategyConfig>(ros::NodeHandle("~/strategy")));
+    _f = boost::bind(&cConfigStrategy::reconfig_cb, this, _1, _2);
+    _srv->setCallback(_f);
 
-	/* Get standard configuration and update values */
-	while(!ros::param::get("teamplay_main/strategy/defendingStrategy", config.defendingStrategy))
-	{
-		std::cout << "Teamplay rules parameters not loaded yet??" << std::endl;
-		sleep(5);
-	}
+    /* Get standard configuration and update values */
+    while(!ros::param::get("teamplay_main/strategy/defendingStrategy", config.defendingStrategy))
+    {
+        std::cout << "Teamplay rules parameters not loaded yet??" << std::endl;
+        sleep(5);
+    }
+    /* Get parameter values from ROS param-server */
+    ros::param::get("teamplay_main/strategy/dribbleStrategy", config.dribbleStrategy);
 
-	/* Call configuration file */
-	reconfig_cb(config, 0);
+    /* Call configuration file */
+    reconfig_cb(config, 0);
 }
 
 void cConfigStrategy::reconfig_cb(teamplay::teamplayStrategyConfig &config, uint32_t level)
 {
     teamplay::configurationStore::getConfiguration().setDefendingStrategy(config.defendingStrategy);
+    teamplay::configurationStore::getConfiguration().setDribbleStrategy(config.dribbleStrategy);
 }

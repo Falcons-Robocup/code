@@ -4,7 +4,6 @@
 # Context id prefix is optional.
 #
 # Example use:
-#   jobStart visionOnly &
 #   jobStart A2_wmWithSync &
 # 
 # JFEI 2015-11-13
@@ -20,8 +19,8 @@ if [ -z "$jobid" ]; then
 fi
 
 # context handling: pass the context key as well, to e.g. make sure the right robot instances are killed
-contextkey=`echo $jobid | grep -o "^[AB][0-6]"`
-jobid=`echo $jobid | sed 's/^[AB][0-6]_//'`
+contextkey=`echo $jobid | grep -o "^[AB][0-9]"`
+jobid=`echo $jobid | sed 's/^[AB][0-9]_//'`
 
 # use checking utility
 if [ ! -z "$contextkey" ]; then

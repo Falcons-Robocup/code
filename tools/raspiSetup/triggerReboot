@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Copyright 2018, 2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to call the script that triggers a reboot on the raspi
+
+killall triggerRebootSingle 2>/dev/null || true
+killall -9 triggerRebootSingle 2>/dev/null || true
+killall -15 triggerRebootSingle 2>/dev/null || true
+
+if [ $# = 1 ]; then
+   ./triggerRebootSingle $1
+else
+   echo "INFO      : trigger reboot on all raspi boards"
+   ./triggerRebootSingle cam0 &
+   ./triggerRebootSingle cam1 &
+   ./triggerRebootSingle cam2 &
+   ./triggerRebootSingle cam3 &
+fi
+
+   echo "INFO      : all done"
+
+exit 1

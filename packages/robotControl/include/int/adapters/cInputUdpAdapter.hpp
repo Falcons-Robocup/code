@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,12 +25,12 @@
 #include "int/cRobotControl.hpp"
 #include "cReceiverUDP.hpp"
 
-class cInputUdpAdapter: public Facilities::Network::cAbstractObserverByteArray
+class cInputUdpAdapter: public Facilities::cAbstractObserverByteArray
 {
     public:
         cInputUdpAdapter(std::string multicastAddress, int multicastPort, float burstWindow = 0.1);
         ~cInputUdpAdapter();
-        void notifyNewPacket(Facilities::Network::cByteArray &data);
+        void notifyNewPacket(Facilities::cByteArray &data);
         void reconnect();
         
     private:

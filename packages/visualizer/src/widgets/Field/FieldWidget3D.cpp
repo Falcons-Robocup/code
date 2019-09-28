@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -33,8 +33,9 @@
 #include <boost/format.hpp>
 
 // Falcons shared code:
-#include "tracer.hpp"
+#include "tracing.hpp"
 #include "vector3d.hpp"
+#include "cEnvironmentField.hpp" // field dimensions
 
 /* 
 * ========================================
@@ -46,6 +47,7 @@ FieldWidget3D::FieldWidget3D(QWidget *parent)
   : QVTKWidget(parent),
     Widget()
 {
+    TRACE(">");
     // Set up rendering
     _renderWindow = vtkRenderWindow::New();
     _mainRenderer = vtkRenderer::New();
@@ -102,6 +104,7 @@ FieldWidget3D::FieldWidget3D(QWidget *parent)
     _updateTimer = new QTimer();
     connect(_updateTimer, SIGNAL(timeout()), this, SLOT(render()));
     _updateTimer->start(100);
+    TRACE("<");
 }
 
 FieldWidget3D::~FieldWidget3D()
@@ -121,7 +124,7 @@ FieldWidget3D::~FieldWidget3D()
 
     for (size_t i = 0; i < _forbiddenAreaActors.size(); i++)
     {
-    	_mainRenderer->RemoveActor(_forbiddenAreaActors[i]);
+        _mainRenderer->RemoveActor(_forbiddenAreaActors[i]);
     }
     _forbiddenAreaActors.clear();
 
@@ -136,6 +139,12 @@ FieldWidget3D::~FieldWidget3D()
         _mainRenderer->RemoveActor(_projectSpeedActors[i]);
     }
     _projectSpeedActors.clear();
+
+    for (size_t i = 0; i < _gaussianObstacleActors.size(); i++)
+    {
+        _mainRenderer->RemoveActor(_gaussianObstacleActors[i]);
+    }
+    _gaussianObstacleActors.clear();
 
     _ballActors.clear();
 
@@ -200,12 +209,18 @@ void FieldWidget3D::restoreState()
 * ======================================== 
 */
 
+
+void FieldWidget3D::resizeEvent(QResizeEvent * event)
+{
+    resetZoomPanRotate();
+}
+
 void FieldWidget3D::reloadSettings()
 {
     QSettings settings;
 
     // Enable/disable path planning visualization
-    bool showPathPlanning = settings.value(Visualizer::Field::Settings::showPathPlanningSetting.c_str(), false).toBool();
+    bool showPathPlanning = settings.value(Visualizer::Settings::showPathPlanningSetting, false).toBool();
     for (size_t i = 0; i < _teamActors.size(); i++)
     {
         getTeamRobot((uint8_t)i + 1)->setPathPlanningEnabled(showPathPlanning);
@@ -225,7 +240,13 @@ void FieldWidget3D::resetZoomPanRotate()
     // Undo rotating, zooming and panning
     _mainRenderer->ResetCamera();
     vtkCamera* camera = _mainRenderer->GetActiveCamera();
-    camera->SetPosition(0.0, 0.0, 30.0);
+
+    // The camera position needs to be calculated based on the maximum bounding boxes for the widget.
+    int width = this->width();
+    int height = this->height();
+
+    camera->SetPosition(0.0, 0.0, height*45.0/width);
+
     camera->SetViewUp((_flipField ? 1 : -1), 0, 0);
 
     _mainRenderer->ResetCameraClippingRange(); // Don't forget this, otherwise you see nothing after resetting...
@@ -265,6 +286,8 @@ void FieldWidget3D::render()
     }
 
     cleanup();
+    
+    WRITE_TRACE;
 }
 
 void FieldWidget3D::cleanup()
@@ -398,29 +421,61 @@ void FieldWidget3D::clear()
     _projectSpeedMapping.clear();
     for (size_t i = 0; i < _projectSpeedActors.size(); i++)
     {
-    	_projectSpeedActors[i]->VisibilityOff();
+        _projectSpeedActors[i]->VisibilityOff();
+    }
+
+    for (size_t i = 0; i < _gaussianObstacleActors.size(); i++)
+    {
+        _gaussianObstacleActors[i]->VisibilityOff();
     }
 }
-\
+
 void FieldWidget3D::addFieldActors()
 {
     TRACE("addFieldActors");
     double greenR = 0.278, greenG = 0.64, greenB = 0.196;
+
+    // Get field dimensions 
+    float _FIELD_LENGTH = cEnvironmentField::getInstance().getLength();
+    float _FIELD_WIDTH = cEnvironmentField::getInstance().getWidth();
+    poiInfo poi;
+    cEnvironmentField::getInstance().getFieldPOI(P_OPP_GOALAREA_CORNER_RIGHT, poi);
+    float _GOAL_AREA_LENGTH = 0.5 * _FIELD_LENGTH - poi.y;
+    float _GOAL_AREA_WIDTH = poi.x * 2.0;
+    cEnvironmentField::getInstance().getFieldPOI(P_OPP_PENALTYAREA_CORNER_RIGHT, poi);
+    float _PENALTY_AREA_LENGTH = 0.5 * _FIELD_LENGTH - poi.y;
+    float _PENALTY_AREA_WIDTH = poi.x * 2.0;
+    cEnvironmentField::getInstance().getFieldPOI(P_CIRCLE_INTERSECT_LINE_RIGHT, poi);
+    float _CENTER_CIRCLE_RADIUS = poi.x;
+    cEnvironmentField::getInstance().getFieldPOI(P_OPP_PENALTY_SPOT, poi);
+    float _PENALTY_MARK_DISTANCE = 0.5 * _FIELD_LENGTH - poi.y;
+    TRACE("%30s = %7.3f", "_FIELD_LENGTH", _FIELD_LENGTH);
+    TRACE("%30s = %7.3f", "_FIELD_WIDTH", _FIELD_WIDTH);
+    TRACE("%30s = %7.3f", "_GOAL_AREA_LENGTH", _GOAL_AREA_LENGTH);
+    TRACE("%30s = %7.3f", "_GOAL_AREA_WIDTH", _GOAL_AREA_WIDTH);
+    TRACE("%30s = %7.3f", "_PENALTY_AREA_LENGTH", _PENALTY_AREA_LENGTH);
+    TRACE("%30s = %7.3f", "_PENALTY_AREA_WIDTH", _PENALTY_AREA_WIDTH);
+    TRACE("%30s = %7.3f", "_CENTER_CIRCLE_RADIUS", _CENTER_CIRCLE_RADIUS);
+    TRACE("%30s = %7.3f", "_PENALTY_MARK_DISTANCE", _PENALTY_MARK_DISTANCE);
 
     // Draw plane
     vtkSmartPointer<vtkPlaneSource> planeSrc = vtkSmartPointer<vtkPlaneSource>::New();
     planeSrc->SetOrigin(0, 0, 0);
     planeSrc->SetPoint1(_FIELD_WIDTH + 2.0, 0, 0);
     planeSrc->SetPoint2(0, _FIELD_LENGTH + 2.0, 0);
+    planeSrc->Update();
+
     vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    planeMapper->SetInput(planeSrc->GetOutput());
+    planeMapper->SetInputData(planeSrc->GetOutput());
     this->_field = vtkActor::New();
     this->_field->SetMapper(planeMapper);
     this->_field->GetProperty()->SetColor(greenR, greenG, greenB);
+    this->_field->GetProperty()->SetOpacity(1.0);
     this->_field->SetPosition(-_FIELD_WIDTH / 2 - 1.0, -_FIELD_LENGTH / 2 - 1.0, -0.02);
     this->_field->GetProperty()->SetAmbient(1);
     this->_field->GetProperty()->SetDiffuse(0);
     this->_field->GetProperty()->SetSpecular(0);
+    this->update();
 
     if (!cfEnabled)
     {
@@ -431,7 +486,7 @@ void FieldWidget3D::addFieldActors()
         // JFEI: experimenting with camera background (ticket #435), for now just a static jpg
 
         vtkSmartPointer<vtkJPEGReader> jpegReader = vtkSmartPointer<vtkJPEGReader>::New();
-        std::string filename = "/home/robocup/20160721_220800.jpg";
+        std::string filename = "/home/robocup/sample_image.jpeg";
         if (jpegReader->CanReadFile(filename.c_str()))
         {
             TRACE("read jpg");
@@ -442,7 +497,7 @@ void FieldWidget3D::addFieldActors()
             // Create an image actor to display the image
             TRACE("create image actor");
             cfImageActor = vtkSmartPointer<vtkImageActor>::New();
-            cfImageActor->SetInput(cfImageData); 
+            cfImageActor->SetInputData(cfImageData);
             
             TRACE("re-init cam");
             // set (guess) initial camera position
@@ -492,7 +547,7 @@ void FieldWidget3D::addFieldActors()
     polyData->SetPolys(polygons);
 
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInput(polyData);
+    mapper->SetInputData(polyData);
 
     vtkSmartPointer<vtkActor> arrowActor = vtkSmartPointer<vtkActor>::New();
     arrowActor->SetMapper(mapper);
@@ -580,7 +635,9 @@ void FieldWidget3D::addFieldActors()
 
 void FieldWidget3D::addGoalActors()
 {
-    double post = 0.125;
+    // Get field dimensions 
+    double _FIELD_LENGTH = cEnvironmentField::getInstance().getLength();
+    double post = cEnvironmentField::getInstance().getGoalPostWidth();
 
     vtkSmartPointer<vtkCubeSource> cubeSrc = vtkSmartPointer<vtkCubeSource>::New();
     cubeSrc->SetXLength(post);
@@ -593,10 +650,10 @@ void FieldWidget3D::addGoalActors()
     cubeSrc2->SetZLength(post);
 
     vtkSmartPointer<vtkPolyDataMapper> goalMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    goalMapper->SetInput(cubeSrc->GetOutput());
+    goalMapper->SetInputData(cubeSrc->GetOutput());
 
     vtkSmartPointer<vtkPolyDataMapper> goalMapper2 = vtkSmartPointer<vtkPolyDataMapper>::New();
-    goalMapper2->SetInput(cubeSrc2->GetOutput());
+    goalMapper2->SetInputData(cubeSrc2->GetOutput());
 
     vtkSmartPointer<vtkActor> goalBlue = vtkSmartPointer<vtkActor>::New();
     goalBlue->SetMapper(goalMapper);
@@ -655,7 +712,7 @@ void FieldWidget3D::addRobotActor(uint8_t robotId)
 
     vtkSmartPointer<RobotLabel> label = vtkSmartPointer<RobotLabel>::New();
     label->initialize(robotId, _annotationRenderer, _teamActors[robotId]);
-    _annotationRenderer->AddActor(label);	
+    _annotationRenderer->AddActor(label);    
 }
 
 void FieldWidget3D::addObstacleActor()
@@ -710,7 +767,7 @@ void FieldWidget3D::setObstaclePosition(PositionVelocity& posvel, ObjectId id)
 
 void FieldWidget3D::addForbiddenAreaActor()
 {
-	vtkSmartPointer<ForbiddenAreaVisualization> forbiddenArea = vtkSmartPointer<ForbiddenAreaVisualization>::New();
+    vtkSmartPointer<ForbiddenAreaVisualization> forbiddenArea = vtkSmartPointer<ForbiddenAreaVisualization>::New();
     _forbiddenAreaActors.push_back(forbiddenArea);
     _mainRenderer->AddActor(forbiddenArea);
 }
@@ -744,7 +801,7 @@ void FieldWidget3D::setForbiddenAreaPosition(polygon2D& area, ObjectId id)
     {
         // something went wrong! too few actors probably
         TRACE("failed to find an available actor for forbidden area (id=%d)",
-        		idAsInt);
+                idAsInt);
     }
     else
     {
@@ -781,7 +838,7 @@ void FieldWidget3D::addBallActor()
 
 void FieldWidget3D::addProjectSpeedActor()
 {
-	vtkSmartPointer<projectSpeedVisualization> speedVector = vtkSmartPointer<projectSpeedVisualization>::New();
+    vtkSmartPointer<projectSpeedVisualization> speedVector = vtkSmartPointer<projectSpeedVisualization>::New();
     _projectSpeedActors.push_back(speedVector);
     _mainRenderer->AddActor(speedVector);
 }
@@ -815,7 +872,7 @@ void FieldWidget3D::setProjectSpeedPosition(linepoint2D& speedVector, ObjectId i
     {
         // something went wrong! too few actors probably
         TRACE("failed to find an available actor for project speed vector (id=%d)",
-        		idAsInt);
+                idAsInt);
     }
     else
     {
@@ -827,8 +884,8 @@ void FieldWidget3D::setProjectSpeedPosition(linepoint2D& speedVector, ObjectId i
     }
 }
 
-void FieldWidget3D::setBallPosition(PositionVelocity& posvel, ObjectId id)
-{    
+void FieldWidget3D::setBallPosition(PositionVelocity& posvel, ObjectId id, float confidence, float age, CameraType camType)
+{
     boost::format format_worldmodel("Enter FieldWidget3D::setBallPosition(%1%, %2%, %3%)");
     float x = posvel.x, y = posvel.y;
     int idAsInt = (int)id;
@@ -867,6 +924,22 @@ void FieldWidget3D::setBallPosition(PositionVelocity& posvel, ObjectId id)
         // reposition actor
         _ballActors[actorIndex]->VisibilityOn();
         _ballActors[actorIndex]->setPosition(posvel);
+        TRACE("ball idx=%d cam=%d conf=%.2f age=%.2f", (int)actorIndex, (int)camType, confidence, age);
+        // visualizer confidence and age using respectively color and opacity
+        float redFactor = 0.0;
+        if (confidence > 0.0) // for some measurements not even used
+        {
+            redFactor = 1.0 - confidence;
+        }
+        if (camType == FRONTVISION)
+        {
+            _ballActors[actorIndex]->setColor(CYAN, redFactor);
+        }
+        else
+        {
+            _ballActors[actorIndex]->setColor(YELLOW, redFactor);
+        }
+        _ballActors[actorIndex]->setOpacity(1.0 - age);
     }
     
     // TODO: why had old ball updater this unlock mutex, but obstacle not? _renderMutex.unlock();
@@ -916,7 +989,7 @@ vtkSmartPointer<vtkActor> FieldWidget3D::createColoredDot(float x, float y, floa
     dot->SetHeight(0.001);
     dot->SetResolution(32);
     vtkSmartPointer<vtkPolyDataMapper> dotMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    dotMapper->SetInput(dot->GetOutput());
+    dotMapper->SetInputData(dot->GetOutput());
 
     vtkActor* coloredDot = vtkActor::New();
     coloredDot->SetMapper(dotMapper);
@@ -953,7 +1026,7 @@ vtkSmartPointer<vtkActor> FieldWidget3D::createLine(float x1, float y1, float z1
     line->SetPoint2(x2, y2, z2);
     lineMapper->SetInputConnection(line->GetOutputPort());
     lineActor->SetMapper(lineMapper);
-    lineActor->GetProperty()->SetLineWidth(_LINE_THICKNESS * 1000);
+    lineActor->GetProperty()->SetLineWidth(_LINE_THICKNESS);
     return lineActor;
 }
 
@@ -979,7 +1052,7 @@ void FieldWidget3D::renderDotAddActor(vtkRenderer* renderer, float x, float y, b
     dot->SetHeight(0.001);
     dot->SetResolution(32);
     vtkSmartPointer<vtkPolyDataMapper> dotMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    dotMapper->SetInput(dot->GetOutput());
+    dotMapper->SetInputData(dot->GetOutput());
 
     vtkSmartPointer<vtkActor> blackDot1 = vtkSmartPointer<vtkActor>::New();
     blackDot1->SetMapper(dotMapper);
@@ -1079,3 +1152,56 @@ void FieldWidget3D::cfRender()
     cfImageActor->RotateZ(cfParams.upCorrection);
 }    
 
+
+void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_local, bool show_measurements)
+{
+    std::vector<diagObstacle>& obstacles = worldmodel_local.gaussianObstacleDiscriminatorData.obstacles;
+    std::vector<diagMeasurement>& measurements = worldmodel_local.gaussianObstacleDiscriminatorData.measurements;
+
+    unsigned int obstacle_count = obstacles.size();
+    unsigned int measurement_count = measurements.size();
+    unsigned int actor_count = _gaussianObstacleActors.size();
+
+    int missing_actors = std::max(0u, (obstacle_count+measurement_count)-actor_count);
+
+    for(int i=0; i<missing_actors; i++)
+    {
+        vtkSmartPointer<GaussianVisualization> obst_actor = vtkSmartPointer<GaussianVisualization>::New();
+        _gaussianObstacleActors.push_back(obst_actor);
+        _mainRenderer->AddActor(obst_actor);
+    }
+
+    std::vector<vtkSmartPointer<GaussianVisualization>>::iterator it_act = _gaussianObstacleActors.begin();
+    std::vector<diagObstacle>::iterator it_obs = obstacles.begin();
+    std::vector<diagMeasurement>::iterator it_meas = measurements.begin();
+
+    while(it_obs != obstacles.end())
+    {        
+        (*it_act)->VisibilityOn();
+        (*it_act)->setValue(it_obs->gaussian2d);
+        (*it_act)->setColor(0.0, 0.0, 1.0);
+
+        it_act++;
+        it_obs++;
+    }
+
+    if(show_measurements)
+    {
+        while(it_meas != measurements.end())
+        {        
+            (*it_act)->VisibilityOn();
+            (*it_act)->setValue(it_meas->gaussian2d);
+            (*it_act)->setColor(1.0, 0.0, 0.0);
+
+            it_act++;
+            it_meas++;
+        }
+    }
+
+    while(it_act != _gaussianObstacleActors.end())
+    {
+        (*it_act)->VisibilityOff();
+        it_act++;
+    }
+    
+}

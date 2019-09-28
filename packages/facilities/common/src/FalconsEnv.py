@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -14,21 +14,18 @@
 
 import os, sys
 import socket
+from FalconsCommon import *
 
 def env_debug():
     """Debugging: dump environment to stdout."""
     d = os.environ
     for k in sorted(d.keys()):
         print "%s=%s" % (k, d[k])
-       
-def get_on_real_robot():
-    """Return true if called on real robot (by looking at hostname)."""
-    return "FALCON" in socket.gethostname()
     
 def get_robot_num():
     """Returns robot number, which is an int between and including 1 and 6."""
     result = int(os.environ.get('TURTLE5K_ROBOTNUMBER', 0))
-    if not result in [0, 1, 2, 3, 4, 5, 6]:
+    if not result in range(MAX_ROBOTS+1):
         env_debug()
         print "something is wrong with environment, check above"
         print "TURTLE5K_ROBOTNUMBER should be a number between 0 and 6"
@@ -49,7 +46,11 @@ def get_team_name():
 
 def get_simulated():
     """Returns if we are in simulation mode (see falconsconfig.sh)."""
-    return os.environ.get('SIMULATED') == "1"
+    if get_on_real_robot():
+        return False
+    if (os.environ.get('SIMULATED') == "1"):
+        return True
+    return False
 
 
 def get_ip_address():

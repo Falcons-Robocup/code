@@ -1,6 +1,6 @@
 # Falcons Code Repository
 
-This repository contains the code for the Falcons Robocup Platform.
+This repository contains the code for the Falcons MSL Robocup Platform.
 
 It contains:
 
@@ -15,37 +15,7 @@ Sorry we like to keep things open, but to keep the high performance some basic r
 Do not add generated files to the repository  
 Do not add large files to the repository (e.g. .png, .avi)  
 Pushing a repository with files larger than *256kByte* will be blocked!  
-(Current largest .cpp file is 62.5kByte and largest .yaml 12.2kByte)  
-
-## Directory Structure (alphabetical order)
-
-| directory | owner | description |
-| --- |:---:| --- |
-| config | all | configuration files e.g. field dimensions |
-| packages/command | jfei | control scripting and user interface |
-| packages/compass | | interface to compass and gyro |
-| packages/facilities/common | | |
-| packages/facilities/geometry | | |
-| packages/facilities/pyBindings | tkov | pygen and pybind |
-| packages/facilities/sharedTypes | jfei | as rosMsgs but non-ROS datatype counterparts |
-| packages/facilities/rosMsgs | jfei | ROS messages used on ROS interfaces |
-| packages/facilities/tracing | jfei | |
-| packages/facilities/udp | | |
-| packages/pathPlanning | ekpc | |
-| packages/peripheralsInterface | pmbc | x86-64 software for interfacing with the peripherals |
-| packages/power/m4api | | battery status |
-| packages/refbox | jfei | official refbox applet (downloaded) |
-| packages/shootPlanning | ekpc | |
-| packages/simulator | | |
-| packages/teamplay | ivma | |
-| packages/vision | apox | |
-| packages/visualizer | jfei | visualizer user interface |
-| packages/worldModel | tkov | |
-| packages/worldModelSync | tkov | |
-| peripherals | pmbc | **non** x86-64 software for interface boards |
-| peripherals/xmegaMotor | apox | software for interface boards e.g. the motor controllers |
-| scrips | all | startup and helper scripts that do not belong/fit in a package |
-| testing | | |
+Use other repositories (teamplayData, data, matchLogs, etc.) where applicable  
 
 ## Coding Styles
 For both filenames and directories use **lower camelCase** e.g. myFirstRobot

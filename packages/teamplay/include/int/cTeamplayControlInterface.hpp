@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,46 +22,25 @@
 
 #include <vector>
 #include <string>
-#include "int/types/cDecisionTreeTypes.hpp"
-#include "int/types/cActionTypes.hpp"
+#include "int/adapters/RtdbAdapterControlOverride.hpp" // TODO: better to instantiate and connect in main()?
 
-enum class overrideLevelEnum
-{
-    INVALID,
-    GAMESTATE,
-    ROLE,
-    BEHAVIOR,
-    ACTION,
-    DISABLED
-};
-
- 
-struct cOverrideState
-{
-    bool                     active;
-    overrideLevelEnum        level;
-    treeEnum            gameState;
-    treeEnum             behavior;
-    treeEnum                 role;
-    actionEnum               action;
-    std::map< std::string, std::string> params;
-};
+#include "tpOverrideState.hpp" // sharedTypes
 
 class cTeamplayControlInterface
 {
-    public:
-		static cTeamplayControlInterface& getInstance()
-		{
-			static cTeamplayControlInterface instance;
-			return instance;
-		}
-		void getOverrideState(cOverrideState &overrideState);
-		std::string parse(std::string command);
+public:
+    static cTeamplayControlInterface& getInstance()
+    {
+        static cTeamplayControlInterface instance;
+        return instance;
+    }
+    void getOverrideState(tpOverrideState &overrideState);
+    void setOverrideResult(tpOverrideResult const &overrideResult);
 
-	private:
-		cTeamplayControlInterface();
-		void reset();
-		cOverrideState _overrideState;
+private:
+    cTeamplayControlInterface();
+    void reset(tpOverrideState &overrideState);
+    RtdbAdapterControlOverride _rtdbAdapter;
 };
 
 #endif /* CTEAMPLAYCONTROLINTERFACE_HPP_ */

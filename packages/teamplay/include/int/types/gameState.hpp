@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -73,13 +73,13 @@ public:
     virtual bool isSetPiece() const;
     virtual bool isOwnSetPiece() const;
     virtual bool isPrepareSetPiece() const;
+    virtual bool isExecuteSetPiece() const;
     virtual bool isCornerSetPiece() const;
     virtual bool isDroppedBallSetPiece() const;
     virtual bool isFreekickSetPiece() const;
     virtual bool isGoalkickSetPiece() const;
     virtual bool isKickoffSetPiece() const;
     virtual bool isPenaltySetPiece() const;
-    virtual bool isSidelineSetPiece() const;
     virtual bool isThrowinSetPiece() const;
     virtual bool isInMatch() const;
     virtual bool isStopped() const;

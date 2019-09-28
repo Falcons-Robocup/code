@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -36,7 +36,7 @@ areaName getAreaName (const fieldArea& area)
     switch (area)
     {
     case fieldArea::OPP_GOALAREA:
-        area_name = A_OPP_GOALAREA;
+        area_name = A_OPP_GOALAREA_EXTENDED; // extend the area to avoid hitting the goal
         break;
     case fieldArea::OPP_PENALTYAREA:
         area_name = A_OPP_PENALTYAREA;
@@ -45,7 +45,7 @@ areaName getAreaName (const fieldArea& area)
         area_name = A_OPP_SIDE;
         break;
     case fieldArea::OWN_GOALAREA:
-        area_name = A_OWN_GOALAREA;
+        area_name = A_OWN_GOALAREA_EXTENDED; // extend the area to avoid hitting the goal
         break;
     case fieldArea::OWN_PENALTYAREA:
         area_name = A_OWN_PENALTYAREA;
@@ -124,6 +124,18 @@ Point2D fieldDimensions::getLocation(const fieldPOI poi) const
         break;
     case fieldPOI::OWN_PENALTYAREA_CORNER_LEFT:
         poi_name = P_OWN_PENALTYAREA_CORNER_LEFT;
+        break;
+    case fieldPOI::OPP_PENALTYAREA_CORNER_LEFT:
+        poi_name = P_OPP_PENALTYAREA_CORNER_LEFT;
+        break;
+    case fieldPOI::CENTER:
+        poi_name = P_CENTER;
+        break;
+    case fieldPOI::CENTER_LEFT:
+        poi_name = P_CENTER_LEFT;
+        break;
+    case fieldPOI::CENTER_RIGHT:
+        poi_name = P_CENTER_RIGHT;
         break;
     case fieldPOI::TIP_IN:
         poi_name = P_TIP_IN;

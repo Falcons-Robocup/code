@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -36,7 +36,7 @@ robotMeasurementClass_t::~robotMeasurementClass_t()
 
 }
 
-void robotMeasurementClass_t::setID(const uniqueWorldModelID identifier)
+void robotMeasurementClass_t::setID(const uniqueObjectID identifier)
 {
 	_identifier = identifier;
 }
@@ -64,7 +64,7 @@ void robotMeasurementClass_t::setPosition(const float x, const float y, const fl
 }
 
 
-uniqueWorldModelID robotMeasurementClass_t::getID() const
+uniqueObjectID robotMeasurementClass_t::getID() const
 {
 	return _identifier;
 }

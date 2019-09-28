@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+
+# Coen Tempelaars, April 2018
+
+# Description
+
+# Example:
+#    packLogFiles -c tp -l 2 /var/tmp/logfiles.tgz
+
+
+import argparse
+import os
+import tarfile
+import time
+
+
+log_root = "/var/tmp/"
+log_prefix = "falcons_control_"
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+           description="Creates a tgz archive containing a selection of logfiles")
+    parser.add_argument("archive",
+           help="filename of the to-be-created tgz archive")
+    parser.add_argument("-n", "--dryrun",   action="store_true",
+           help="print to-be-executed commands, but do not execute")
+    parser.add_argument("-c", "--contains", type=str, default="",
+           help="only archive filenames that contain this substring")
+    parser.add_argument("-s", "--since",    type=int, default=1,
+           help="only download files modified since this number of hours ago (default: 1)")
+    parser.add_argument("-z", "--compress", action="store_true",
+           help="compress before transmission (saves bandwidth but costs time)")
+    return parser.parse_args()
+
+
+def get_directories():
+    # Find all directories in log_root starting with log_prefix
+    dirlist = [os.path.join(log_root, d) for d in os.listdir(log_root) if d.startswith(log_prefix)]
+    dirlist.sort()
+    return dirlist
+
+
+def get_files(dirlist, substr, since):
+    # Find all files in dirlist that contain substr and that have been modified since
+    filelist = list()
+    for d in dirlist:
+        for f in os.listdir(d):
+            if substr in f:
+                path = os.path.join(d, f)
+                if is_modified_since(path, since):
+                    filelist.append(path)
+    return filelist
+
+
+def is_modified_since(path, since):
+    return (time.time() - os.stat(path).st_mtime) < (since * 3600)
+
+
+def create_archive(filelist, filename, compress):
+    # Create a tgz archive containing all files in filelist (but strip the log_root prefix)
+    tarmode = "w:gz" if compress else "w"
+    with tarfile.open(name=filename, mode=tarmode) as archive:
+        for f in filelist:
+            archive.add(f, arcname=f[len(log_root):])
+
+
+if __name__ == '__main__':
+    config = parse_arguments()
+
+    dirlist = get_directories()
+    filelist = get_files(dirlist, config.contains, config.since)
+
+    if config.dryrun:
+        print "Would have created archive", config.archive, "containing files:"
+        for f in filelist:
+            print "", f
+    else:
+        create_archive(filelist, config.archive, config.compress)

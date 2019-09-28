@@ -1,42 +1,47 @@
 #!/usr/bin/env python
 #
-# Merge lines from tracing, sort on timestamp.
-# Lines may be prepended with trace file, as grep would output.
-#
-# Example:
-#    egrep "possession|along|pwnd" trace* | tracemerge > aap
-#
-#
-# 2015-05-12 JFEI creation
-#                 
-
- 
 import sys, os
+import argparse
 
 
 
+def run():
+    # initialize
+    unsortedlines = []
+    sortedlines = {} # timestamps are string-comparable by design
+    exampleTimestamp = "2019-02-24,12:04:04.711540"
+    tstamplength = len(exampleTimestamp)
+    # parse and store
+    for line in sys.stdin.readlines():
+        line = line.strip()
+        # timestamp always begins with yyyy-mm
+        # so for the coming years we should be fine
+        pos = line.find('201')
+        try:
+            if (pos > -1) and (line[pos+4] == '-'):
+                tstamp = line[pos:(pos+tstamplength)]
+                sortedlines[tstamp] = line
+            
+            else:
+                unsortedlines.append(line)
+        except:
+            unsortedlines.append(line)
+    # print result
+    for line in unsortedlines:
+        print line
+    for tstamp in sorted(sortedlines.keys()):
+        print sortedlines[tstamp]
 
-unsortedlines = []
-sortedlines = {} # timestamps are string-comparable by design
-tstamplength = 26
 
 
-# parse and store
-for line in sys.stdin.readlines():
-   line = line.strip()
-   # timestamp always begins with yyyy-mm
-   # so for the coming years we should be fine
-   pos = line.find('201')
-   if (pos > -1) and (line[pos+4] == '-'):
-      tstamp = line[pos:(pos+tstamplength)]
-      sortedlines[tstamp] = line
-   else:
-      unsortedlines.append(line)
-
-
-# print result
-for line in unsortedlines:
-   print line
-for tstamp in sorted(sortedlines.keys()):
-   print sortedlines[tstamp]
+if __name__ == '__main__':
+    # Argument parsing.
+    descriptionTxt = 'Merge tracing lines, sort on timestamp.\nLines must be provided on stdin \nLines may be prepended with trace file, as grep would output.\nLines without timestamp will be shown before all sorted lines.'
+    exampleTxt = 'Example: select ball-possession related lines using egrep, then filter on timestamp and merge\n   egrep "possession|ballHandlerSetpoint" stdout* | tracemerge > myDebugTxt\n'
+    parser     = argparse.ArgumentParser(description=descriptionTxt, epilog=exampleTxt, formatter_class=argparse.RawDescriptionHelpFormatter)
+    # no options/arguments
+    args       = parser.parse_args()
+    # run
+    run()
+    # TODO: provide an option to take files as arguments? 
 

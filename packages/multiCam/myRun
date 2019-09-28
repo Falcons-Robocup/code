@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# one liner to build the multiCam standalone
+
+set -e
+# rosrun multiCam multiCamStandalone
+rosrun multiCam multiCamNode | grep -v bPoss

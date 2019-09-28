@@ -1,0 +1,98 @@
+#!/bin/bash 
+
+# Copyright 2018-2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to start the system process on the raspi board
+
+# the time/date on raspi might be incorrect
+# to be sure we always trigger a rebuild when this script is started
+# be sure the date time order is correct
+echo "SYSTEM    : recompile raspiSystem"
+cd ~/raspiSystem
+make clean
+make -j$(nproc) raspiSystem
+cd ~
+
+while true; do
+   # check if sources have been updated
+   # Note: a copy from the x86_64 will update the time stamp, so even if the content
+   # is the same, the compilation will be performed (which is only around two seconds)
+   # rebuild=false
+   # if [ ~/raspiSystem/raspiSystem.c -nt ~/raspiSystem/raspiSystem ]
+   # then
+   #    rebuild=true
+   # fi
+
+   # if [ ~/raspiSystem/raspiDefaults.hpp -nt ~/raspiSystem/raspiSystem ]
+   # then
+   #    rebuild=true
+   # fi
+   
+   # default raspiSystem file size around 54000 bytes
+   # fileSize=`stat --format "%s" ~/raspiSystem/raspiSystem`
+   # if [ $fileSize -lt 40000 ]
+   # then
+   #    rebuild=true
+   # fi 
+
+   # if $rebuild; then
+   #    echo "SYSTEM    : raspiSystem sources have been updated or raspiSystem does not exist"
+   #    echo "SYSTEM    : recompile raspiSystem"
+   #    cd ~/raspiSystem
+   #    make clean
+   #    make -j$(nproc) raspiSystem
+   #    cd ~
+   # fi
+
+   # wait until the interface (this might take a while) is up and running
+   ipFound=false
+   while ( ! $ipFound ) ; do
+      dateString=`date +%Y-%m-%d_%H:%M:%S`
+      ipAddress=`hostname -I`
+      echo "SYSTEM    : $dateString IP address $ipAddress"
+
+      if [[ $ipAddress == "10.0.0."* ]]; then
+          echo "SYSTEM    : IP address found, now continue"
+         ipFound=true
+      else
+         sleep 5
+      fi
+   done
+
+   # use the IP address to tell the system process which camera id it shall use to identify itself to the x86-64
+   camIndex=""
+   if [ $ipAddress == "10.0.0.70" ]; then
+      camIndex=0
+   elif [ $ipAddress == "10.0.0.71" ]; then
+      camIndex=1
+   elif [ $ipAddress == "10.0.0.72" ]; then
+      camIndex=2
+   elif [ $ipAddress == "10.0.0.73" ]; then
+      camIndex=3
+   else
+      echo "#####################################################################"
+      echo "ANALYZER  : ERROR cannot determine camIndex from ip address $ipAddress"
+      echo "ANALYZER  : wait 10 seconds before rebooting"
+      ./sleepKillReboot 10 &
+
+      # prevent restarting this script (it will be killed by the sleepKillReboot)
+      sleep 3600
+   fi
+
+   # wait until the grabber process is running (which is providing /dev/shm/raspiGrab)
+   until pids=$(pidof raspiGrab)
+   do
+      dateString=`date +%Y-%m-%d_%H:%M:%S`
+      echo "SYSTEM    : $dateString wait for grabber"
+      sleep 1
+   done
+   
+   echo "SYSTEM    : arguments -l $camIndex" 
+
+   # if the application is aborted or killed, sleep 1 second (rapid growth logfile)
+   nice -n 19 ~/raspiSystem/raspiSystem -l $camIndex || sleep 1
+
+done
+
+exit 1

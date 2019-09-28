@@ -1,0 +1,79 @@
+#! /usr/bin/env python
+
+import argparse
+import logging
+import os
+import roslib
+import subprocess
+import time
+
+roslib.load_manifest('rtdb3')
+
+from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
+
+
+VERSION = 2.3
+
+
+def startRobot(team, robot):
+    contextkey = '{}{}'.format(team, robot)
+    logging.info('Starting processes for robot {}, team {}'.format(robot, team))
+    subprocess.Popen(['jobStart', '{}_robotSim'.format(contextkey)])
+    time.sleep(1.5) # TODO: make this more robust
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Starts Falcons simulator version {}'.format(VERSION))
+    parser.add_argument('-a', '--autoref', action="store_true",
+           help='start an automatic referee instead of a refbox')
+    parser.add_argument('-A', '--sizeTeamA', type=int, default=5,
+           help='the size of team A')
+    parser.add_argument('-B', '--sizeTeamB', type=int, default=5,
+           help='the size of team B')
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO)
+    logging.info('Falcons simulator version {}'.format(VERSION))
+
+    os.putenv('SIMULATED', '1')
+
+    logging.info('Starting communication layer')
+    subprocess.Popen(['rtdbClear'])
+    subprocess.Popen(['createLogdir'])
+    subprocess.Popen(['processStart', 'roscore'])
+    time.sleep(3)
+
+    logging.info('Starting supporting processes')
+    subprocess.Popen(['processStart', 'logger'])
+    subprocess.Popen(['processStart', 'rtdbSync'])
+    subprocess.Popen(['processStart', 'visualizer'])
+    time.sleep(3)
+
+    for i in range(args.sizeTeamA):
+        startRobot('A', i+1)
+
+    for i in range(args.sizeTeamB):
+        startRobot('B', i+1)
+
+    if args.autoref:
+        logging.info('Starting autoref')
+        arbiter = "simworld"
+    else:
+        logging.info('Starting refbox')
+        subprocess.Popen(['processStart', 'refboxGui'])
+        subprocess.Popen(['processStart', 'refboxRelay'])
+        arbiter = "user"
+
+    config = {
+               "arbiter": arbiter,
+               "sizeTeamA": args.sizeTeamA,
+               "sizeTeamB": args.sizeTeamB,
+             }
+
+    rtdb = RtDB2Store(RTDB2_DEFAULT_PATH, False)
+    rtdb.put(0, "CONFIG_SIMULATION", config)
+
+    logging.info('Starting simworld')
+    subprocess.Popen(['processStart', 'simworld'])
+
+    logging.info('Falcons simulator started')

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,8 +26,7 @@
 // SUT dependencies
 #include "int/adapters/cHALInterface.hpp"
 #include "int/adapters/cPathPlanningInterface.hpp"
-#include "int/cWorldModelInterface.hpp"
-#include "mocks/worldModelUpdated.hpp"
+#include "int/stores/robotStore.hpp"
 
 // SUT
 #include "int/actions/cActionStop.hpp"
@@ -84,9 +83,9 @@ public:
 TEST_F(ActionStop, Stop)
 {
     Position2D own_position;
-    cWorldModelInterface::getInstance().getOwnLocation( own_position );
+    teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::DEFENDER_MAIN, Position2D(1.0, 2.0, 0.0), Velocity2D()));
 
-    geometry::Pose2D expected_pose (own_position.x, own_position.y, own_position.phi);
+    geometry::Pose2D expected_pose (1.0, 2.0, 0.0);
     std::string expected_motionProfile = "normal";
 
     EXPECT_CALL(halInterfaceMock, disableBallhandlers());
@@ -99,7 +98,7 @@ TEST_F(ActionStop, Stop)
 int main(int argc, char **argv)
 {
     //Enable tracing
-    teamplay::traceRedirect::getInstance().setAllTracesToStdout();
+    //teamplay::traceRedirect::getInstance().setAllTracesToStdout();
 
     ros::init(argc, argv, "actionStopTest");
     InitGoogleTest(&argc, argv);

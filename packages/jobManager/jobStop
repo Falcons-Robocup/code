@@ -15,8 +15,8 @@ if [ -z "$jobid" ]; then
 fi
 
 # context handling: pass the context key as well, to e.g. make sure the right robot instances are killed
-contextkey=`echo $jobid | grep -o "^[AB][0-6]"`
-jobid=`echo $jobid | sed 's/^[AB][0-6]_//'`
+contextkey=`echo $jobid | grep -o "^[AB][0-9]"`
+jobid=`echo $jobid | sed 's/^[AB][0-9]_//'`
 
 # translate given argument into sequence of processes
 processes=`jobToProcess $jobid`

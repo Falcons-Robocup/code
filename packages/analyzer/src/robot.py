@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -35,7 +35,7 @@ class AnalyzeRobot():
     def __init__(self, team, robotnum, publish=True):
         self.publish = publish
         self.team = team
-        self.state = 0
+        self.state = t_robot_state.OFFLINE
         self.robotnum = robotnum
         self.lastAlive = 0
         self.lastWm = 0
@@ -47,6 +47,8 @@ class AnalyzeRobot():
         self.role = None
         self.balls = []
         self.obstacles = []
+        self.wmTop = None
+        self.posvel = None
         # output topics
         self.pub_comm_kpi = rospy.Publisher(TEAM_PREFIX + 'robot%d/g_ana_comm' % (robotnum), t_ana_comm, queue_size = 3)
         # input topics
@@ -61,14 +63,30 @@ class AnalyzeRobot():
         self.subscribers.append(rospy.Subscriber(TEAM_PREFIX + 'robot%d/g_diag_wm_loc' % (robotnum), t_diag_wm_loc, self.cbWmLoc))
         self.subscribers.append(rospy.Subscriber(TEAM_PREFIX + 'robot%d/g_diag_wm_ball' % (robotnum), t_diag_wm_ball, self.cbWmBall))
         self.subscribers.append(rospy.Subscriber(TEAM_PREFIX + 'robot%d/g_diag_wm_obstacles' % (robotnum), t_diag_wm_obstacles, self.cbWmObstacles))
+        self.subscribers.append(rospy.Subscriber(TEAM_PREFIX + 'robot%d/g_diag_state' % (robotnum), t_diag_state, self.cbRobotState))
             
     def cbHealthFast(self, msg):
         # ignore message, just store timestamp
         self.lastAlive = time.time()
-        # go from offline to online?
-        if self.state == t_ana_online.OFFLINE:
-            self.state = t_ana_online.ONLINE
 
+    def cbRobotState(self, msg):
+        # the following states are determined on robot (robotControl daemon):
+        #   ONLINE / STARTING / ACTIVE / INPLAY
+        # only analyzer can detect if robot is OFFLINE, see checkOffline below
+        # to see if robot is INGAME (i.e. listening to refbox commands), is something we choose to do at analyzer level
+        # it is basically a special case of INPLAY; right now robotControl is not aware of refbox
+        if (self.state == t_robot_state.INGAME):
+            # can only fall back to ACTIVE when button is flipped to OUTOFPLAY
+            if (msg.state == t_robot_state.ACTIVE):
+                self.state = msg.state
+        else:
+            self.state = msg.state
+
+    def checkOffline(self):
+        age = time.time() - self.lastAlive
+        if age > ONLINE_TIMEOUT:
+            self.state = t_robot_state.OFFLINE
+        
     def calculateCommKPI(self):
         # clear out old packets
         tThreshold = getTimeNow() - COMM_BUFFER_SIZE
@@ -134,7 +152,7 @@ class AnalyzeRobot():
         self.lastRefboxCmd = msg.refboxCmd
         self.lastRefboxTime = time.time()
         # update robot state
-        self.state = t_ana_online.INGAME
+        self.state = t_robot_state.INGAME
         
     def cbTeamplay(self, msg):
         # store the role for team analysis
@@ -144,24 +162,9 @@ class AnalyzeRobot():
     def cbWmTop(self, msg):
         self.wmTop = msg
         self.lastWm = time.time()
-        # TODO we might need a state machine...
-        if self.state in [t_ana_online.INPLAY, t_ana_online.ACTIVE]:
-            if msg.inplay:
-                self.state = t_ana_online.INPLAY
-            if msg.inplay == False:
-                self.state = t_ana_online.ACTIVE
-        if self.state == t_ana_online.INGAME and not msg.inplay:
-            self.state = t_ana_online.ACTIVE
         
     def cbWmLoc(self, msg):
         self.posvel = msg.ownpos
-        # state updates
-        if (self.state == t_ana_online.ONLINE) and (self.posvel.x == 0.0) and (self.posvel.y == 0.0):
-            self.state = t_ana_online.STARTING
-        if (self.state == t_ana_online.STARTING) and ((self.posvel.x != 0.0) or (self.posvel.y != 0.0)):
-            self.state = t_ana_online.ACTIVE
-        if (self.state < t_ana_online.ACTIVE) and ((self.posvel.x != 0.0) or (self.posvel.y != 0.0)):
-            self.state = t_ana_online.ACTIVE
         
     def cbWmBall(self, msg):
         self.balls = msg.balls
@@ -183,4 +186,5 @@ class AnalyzeRobot():
     
     def update(self):
         self.calculateCommKPI()
+        self.checkOffline()
 

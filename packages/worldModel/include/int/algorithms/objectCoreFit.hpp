@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -49,7 +49,8 @@ void objectCoreFitTrajectoryIterative(
     // outputs
     objectResultType &objectResult,
     float &residual,
-    int &numRemoved
+    int &numRemoved,
+    std::vector<bool> &removedMask
     );
 
 #endif /* OBJECTCOREFIT_HPP_ */

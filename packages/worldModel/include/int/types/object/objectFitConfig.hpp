@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,6 +29,7 @@ struct objectFitConfig
     float outlierNSigma;
     int outlierMaxIter;
     float outlierIterFraction;
+    int minVmeas;
 };
 
 #endif /* OBJECTFITCONFIG_HPP_ */

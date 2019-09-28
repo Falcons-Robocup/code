@@ -1,0 +1,53 @@
+#!/bin/bash
+
+switch_repository() {
+	cd ~/falcons/$1
+
+	echo "Setting default git server for repository $1."
+
+	if [[ -n $(git status -s) ]]
+	then
+		echo "Not commited changes/untracked files in directory. Please commit/stash changes before running this script."
+		exit
+	fi
+
+	original_branch=$(git rev-parse --abbrev-ref HEAD)
+
+	git fetch origin > /dev/null
+
+	branches=$(git branch | cut -c 3-)
+	for branch in $branches
+	do
+		git checkout $branch &> /dev/null
+
+		if git rev-parse --verify remotes/origin/$branch &> /dev/null
+		then
+			echo "Setting branch $branch to track upstream origin."
+			git branch --set-upstream-to=origin/$branch > /dev/null
+		else
+			echo "Branch $branch does not exist on origin; do you want me to manually push it to origin/$branch? (y/N)"
+			read answer
+			if [ "$answer" != "${answer#[Yy]}" ]
+			then
+				echo "Pushing branch $branch to remote origin."
+				git push -u origin/$branch
+			fi
+		fi
+	done
+
+	remotes=$(git remote)
+	for remote in $remotes
+	do
+		if [[ $remote != "origin" ]]
+	then
+		echo "Removing remote $remote."
+		git remote remove $remote > /dev/null
+		fi
+	done
+
+	git checkout $original_branch &> /dev/null
+}
+
+switch_repository teamplayData
+echo ""
+switch_repository code

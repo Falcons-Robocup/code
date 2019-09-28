@@ -1,0 +1,18 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\b velocityControl 
+
+<!-- 
+VelocityControl controls and computes the velocity-based motion commands of the robot.
+A target (vel, acc) is received from PathPlanning, which is translated into a velocity per motor.
+Each motor's velocity is communicated through PeripheralsInterface.
+
+This component functions event-based on events from PathPlanning (HeartBeat) and PeripheralsInterface (new motor data).
+-->
+
+-->
+
+
+*/

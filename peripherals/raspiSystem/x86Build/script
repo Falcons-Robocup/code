@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+make kill
+
+ps -C raspiSystem h && echo "## processes still running, abort ##" && false
+
+make

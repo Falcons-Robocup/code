@@ -1,0 +1,104 @@
+#!/bin/bash
+
+# Copyright 2018-2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Determine md5sum of relevant files used on raspi
+
+set -e
+
+rm -f md5sumListFiles.log md5sumAllFiles.log
+
+ARCH=$(arch)
+
+if [ $ARCH = "x86_64" ]; then
+   echo "architecture x86_64"
+   
+   md5sum \
+   ../../config/authorized_keys \
+   ../../peripherals/raspiAnalyze/armBuild/Makefile \
+   ../../peripherals/raspiAnalyze/src/raspiAnalyze.c \
+   ../../peripherals/raspiGrab/armBuild/Makefile \
+   ../../peripherals/raspiGrab/src/RaspiVidYUVFalcons.c \
+   ../../peripherals/raspiSystem/armBuild/Makefile \
+   ../../peripherals/raspiSystem/src/raspiRgbToBmp.c \
+   ../../peripherals/raspiSystem/src/raspiSystem.c \
+   ../../packages/raspiControl/include/raspiDefaults.hpp \
+   ../../tools/raspiSetup/config.txt \
+   ../../tools/raspiSetup/deployRaspi \
+   ../../tools/raspiSetup/killMostRaspi \
+   ../../tools/raspiSetup/killRaspi \
+   ../../tools/raspiSetup/md5sumAllFiles \
+   ../../tools/raspiSetup/rc.local \
+   ../../tools/raspiSetup/runAnalyze \
+   ../../tools/raspiSetup/runGrab \
+   ../../tools/raspiSetup/runRaspi \
+   ../../tools/raspiSetup/runSystem \
+   ../../tools/raspiSetup/sleepKillReboot \
+   | awk '{print $1}' > md5sumListFiles.log
+
+   
+elif [ $ARCH = "armv7l" ]; then
+   echo "architecture armv7l"
+
+   md5sum \
+   .ssh/authorized_keys \
+   raspiAnalyze/Makefile \
+   raspiAnalyze/raspiAnalyze.c \
+   raspiGrab/Makefile \
+   raspiGrab/RaspiVidYUVFalcons.c \
+   raspiSystem/Makefile \
+   raspiSystem/raspiRgbToBmp.c \
+   raspiSystem/raspiSystem.c \
+   raspiAnalyze/raspiDefaults.hpp \
+   /boot/config.txt \
+   deployRaspi \
+   killMostRaspi \
+   killRaspi \
+   md5sumAllFiles \
+   /etc/rc.local \
+   runAnalyze \
+   runGrab \
+   runRaspi \
+   runSystem \
+   sleepKillReboot \
+   | awk '{print $1}' > md5sumListFiles.log
+
+elif [ $ARCH = "aarch64" ]; then
+   echo "architecture aarch64"
+
+   md5sum \
+   .ssh/authorized_keys \
+   raspiAnalyze/Makefile \
+   raspiAnalyze/raspiAnalyze.c \
+   raspiGrab/Makefile \
+   raspiGrab/RaspiVidYUVFalcons.c \
+   raspiSystem/Makefile \
+   raspiSystem/raspiRgbToBmp.c \
+   raspiSystem/raspiSystem.c \
+   raspiAnalyze/raspiDefaults.hpp \
+   tmp/config.txt \
+   deployRaspi \
+   killMostRaspi \
+   killRaspi \
+   md5sumAllFiles \
+   tmp/rc.local \
+   runAnalyze \
+   runGrab \
+   runRaspi \
+   runSystem \
+   sleepKillReboot \
+   | awk '{print $1}' > md5sumListFiles.log
+
+else
+   echo "unknown architecture $ARCH"
+   exit 1 # failure
+fi
+
+cat md5sumListFiles.log
+
+md5sum md5sumListFiles.log | awk '{print $1}' > md5sumAllFiles.log
+
+cat md5sumAllFiles.log
+
+exit 0 # success

@@ -11,9 +11,12 @@
 robots=`parse_robots $*`
 
 # run per-robot commands
-team_apply_q.sh $robots match_finish_robot
+logdir=`newest_logdir.py`
+team_apply_q.sh $robots match_finish_robot `hostname`:$logdir
 
-# TODO download .bag file
-echo "TODO download .bag file to hippie"
-
+# pack .bag and tracing
+cd $logdir
+tar czf matchlog.tgz *.bag *_[dp]trace*.txt stdout_A0_analyzer*.txt
+echo "log file written:"
+ls -altr1 $logdir/*.tgz
 

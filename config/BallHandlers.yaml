@@ -1,23 +1,16 @@
 peripheralsInterface/ballhandlers: {
-  Kp : 900,
-  Ki : 0,
-  Kd : 0,
-  iTh : 0,
-  Ang_Kp : 8000,
-  Ang_Ki : 0,
-  Ang_Kd : 0,
-  Angle : 80,
-  BallPossession : 20,
-  PwmMax : 648,
-  PwmMaxDeltaSize : 655360,
-  Feedforward_vel_factor : 0.15
+    Kp : 1200,
+    Ki : 0,
+    Kd : 0,
+    iTh : 0,
+    Ang_Kp : 8500,
+    Ang_Ki : 0,
+    Ang_Kd : 0,
+    PwmMax : 630,
+    PwmMaxDeltaSize : 655360,
 } 
-rosdistro: 'groovy
-
-  '
+rosdistro: 'groovy'
 roslaunch:
-  uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}
-rosversion: '1.9.55
-
-  '
+    uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}
+rosversion: '1.9.55'
 run_id: d837e3c8-6813-11e4-acf7-00197e8a14ee

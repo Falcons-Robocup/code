@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,6 +19,7 @@
 #include "ext/cShootPlanningNames.h"
 #include "int/cReconfigureAdapter.hpp"
 #include "int/cShootPlanner.hpp"
+#include "tracing.hpp"
 
 
 /* Globals */
@@ -83,44 +84,14 @@ void cReconfigureAdapter::reconfig_cb(shootPlanning::ShootPlanningNodeConfig &co
 			}
 			shootPlanningParams_t spParams;
 			spParams.alwaysLobshot = config.alwaysLobshot;
-			spParams.disableBHBeforeShot = config.disableBHBeforeShot;
-			spParams.calibrationMode = config.calibrationMode;
-			spParams.setHeightDelay = config.setHeightDelay;
-			spParams.disableBHDelay = config.disableBHDelay;
-			spParams.lobshotScaling = config.lobshotScaling;
-			spParams.min_lob_distance = config.min_lob_distance;
-			spParams.max_lob_distance = config.max_lob_distance;
-			spParams.max_shot_power = config.max_shot_power;
-			spParams.max_lever_angle = config.max_lever_angle;
-
-			lobshotPowers_t lsPowers;
-			lsPowers.ls_pwr10m = config.ls_pwr10m;
-			lsPowers.ls_pwr9m = config.ls_pwr9m;
-			lsPowers.ls_pwr8m = config.ls_pwr8m;
-			lsPowers.ls_pwr7m = config.ls_pwr7m;
-			lsPowers.ls_pwr6m = config.ls_pwr6m;
-			lsPowers.ls_pwr5m = config.ls_pwr5m;
-			lsPowers.ls_pwr4m = config.ls_pwr4m;
-
-			lobshotFuncParams_t lsFuncParams;
-			lsFuncParams.ls_c1 = config.ls_c1;
-			lsFuncParams.ls_c2 = config.ls_c2;
-			lsFuncParams.ls_c3 = config.ls_c3;
-			lsFuncParams.ls_c4 = config.ls_c4;
-			lsFuncParams.ls_c5 = config.ls_c5;
-			lsFuncParams.ls_c6 = config.ls_c6;
-
-			passPowers_t pPowers;
-			//TODO
-			passFuncParams_t pFuncParams;
-			//TODO
-
-	        shootPlanner = new cShootPlanner(
-	        		spParams,
-	        		lsPowers,
-	        		lsFuncParams,
-	        		pPowers,
-	        		pFuncParams);
+			spParams.alwaysStraightshot = config.alwaysStraightshot;
+			spParams.shotStrengthScaling = config.shotStrengthScaling;
+			spParams.shotAngleScaling = config.shotAngleScaling;
+			spParams.lobAngleScaling = config.lobAngleScaling;
+			spParams.passScaling = config.passScaling;
+			spParams.minLobDistance = config.minLobDistance;
+			spParams.maxLobDistance = config.maxLobDistance;
+	        shootPlanner = new cShootPlanner(spParams);
 	        mtx.unlock();
 
 		} catch (exception &e)

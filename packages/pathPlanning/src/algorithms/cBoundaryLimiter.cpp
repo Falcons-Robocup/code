@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,17 +18,23 @@
 
 #include "int/algorithms/cBoundaryLimiter.hpp"
 
+#include "cEnvironmentField.hpp"
+
 void cBoundaryLimiter::execute()
 {
+    TRACE_FUNCTION(_ppData.pos.tostr());
     TRACE("> x:%6.2f, y:%6.2f", _ppData.pos.x, _ppData.pos.y);
 
+    double fieldLength = cEnvironmentField::getInstance().getLength();
+    double fieldWidth = cEnvironmentField::getInstance().getWidth();
+
     // Bound the X-coordinates
-    _ppData.pos.x = fmin(_ppData.pos.x, _top);
-    _ppData.pos.x = fmax(_ppData.pos.x, _bottom);
+    _ppData.pos.x = fmin(_ppData.pos.x, (fieldWidth/2.0) + _margin);
+    _ppData.pos.x = fmax(_ppData.pos.x, -(fieldWidth/2.0) - _margin);
 
     // Bound the Y-coordinates
-    _ppData.pos.y = fmin(_ppData.pos.y, _right);
-    _ppData.pos.y = fmax(_ppData.pos.y, _left);
+    _ppData.pos.y = fmin(_ppData.pos.y, (fieldLength/2.0) + _margin);
+    _ppData.pos.y = fmax(_ppData.pos.y, -(fieldLength/2.0) - _margin);
 
     TRACE("< x:%6.2f, y:%6.2f", _ppData.pos.x, _ppData.pos.y);
 }

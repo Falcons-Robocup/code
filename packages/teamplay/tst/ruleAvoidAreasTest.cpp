@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -10,7 +10,7 @@
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  ***/ 
  /*
- * ownPenaltyArea.cpp
+ * ruleAvoidAreasTest.cpp
  *
  *  Created on: Apr 24, 2017
  *      Author: Coen Tempelaars
@@ -23,8 +23,7 @@
 #include "int/rules/ruleAvoidAreas.hpp"
 
 /* SUT dependencies */
-#include "int/stores/ownRobotStore.hpp"
-#include "int/stores/teamMatesStore.hpp"
+#include "int/stores/robotStore.hpp"
 
 class TimerMock : public teamplay::timer
 {
@@ -33,6 +32,11 @@ public:
     MOCK_CONST_METHOD1(hasElapsed, bool(const double));
 };
 
+static void setOwnRobotPosition (const Position2D pos)
+{
+    robotStore::getInstance().addOwnRobot(robot(0, treeEnum::R_ROBOT_STOP, pos, Velocity2D()));
+}
+
 class ownPenaltyArea : public TeamplayTest
 {
 public:
@@ -40,8 +44,8 @@ public:
     : timer_p(new NiceMock<TimerMock>)
     , rule(ruleAvoidAreas(timer_p))
     {
-        ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, -8.0, 0.0));
-        teamMatesStore::getTeamMatesIncludingGoalie().clear();
+        robotStore::getInstance().clear();
+        setOwnRobotPosition(Position2D(0.0, -8.0, 0.0));
     }
 
     boost::shared_ptr<NiceMock<TimerMock>> timer_p;
@@ -53,8 +57,8 @@ class NonGoalieInOwnPenaltyArea : public ownPenaltyArea
 public:
     NonGoalieInOwnPenaltyArea()
     {
-        ownRobotStore::getOwnRobot().setRole(treeEnum::DEFENDER_MAIN);
-        teamMatesStore::getTeamMatesIncludingGoalie().add(
+        robotStore::getInstance().setOwnRobotRole(treeEnum::DEFENDER_MAIN);
+        robotStore::getInstance().addTeammate(
                         robot(1, treeEnum::R_GOALKEEPER, Position2D(0.0, -8.8, 0.0), Velocity2D(0.0, 0.0, 0.0)));
     }
 };
@@ -64,8 +68,8 @@ class GoalieInOwnPenaltyArea : public ownPenaltyArea
 public:
     GoalieInOwnPenaltyArea()
     {
-        ownRobotStore::getOwnRobot().setRole(treeEnum::R_GOALKEEPER);
-        teamMatesStore::getTeamMatesIncludingGoalie().add(
+        robotStore::getInstance().setOwnRobotRole(treeEnum::R_GOALKEEPER);
+        robotStore::getInstance().addTeammate(
                         robot(2, treeEnum::DEFENDER_MAIN, Position2D(0.0, 0.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
     }
 };
@@ -77,8 +81,8 @@ public:
     : timer_p(new NiceMock<TimerMock>)
     , rule(ruleAvoidAreas(timer_p))
     {
-        ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, 8.0, 0.0));
-        teamMatesStore::getTeamMatesIncludingGoalie().clear();
+        robotStore::getInstance().clear();
+        setOwnRobotPosition(Position2D(0, 8, 0));
     }
 
     boost::shared_ptr<NiceMock<TimerMock>> timer_p;
@@ -92,8 +96,8 @@ public:
     : timer_p(new NiceMock<TimerMock>)
     , rule(ruleAvoidAreas(timer_p))
     {
-        ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, -8.9, 0.0));
-        teamMatesStore::getTeamMatesIncludingGoalie().clear();
+        robotStore::getInstance().clear();
+        setOwnRobotPosition(Position2D(0, -8.9, 0));
     }
 
     boost::shared_ptr<NiceMock<TimerMock>> timer_p;
@@ -107,8 +111,53 @@ public:
     : timer_p(new NiceMock<TimerMock>)
     , rule(ruleAvoidAreas(timer_p))
     {
-        ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, 8.9, 0.0));
-        teamMatesStore::getTeamMatesIncludingGoalie().clear();
+        robotStore::getInstance().clear();
+        setOwnRobotPosition(Position2D(0, 8.9, 0));
+    }
+
+    boost::shared_ptr<NiceMock<TimerMock>> timer_p;
+    ruleAvoidAreas rule;
+};
+
+class nearOwnPenaltyArea : public TeamplayTest
+{
+public:
+    nearOwnPenaltyArea()
+    : timer_p(new NiceMock<TimerMock>)
+    , rule(ruleAvoidAreas(timer_p))
+    {
+        robotStore::getInstance().clear();
+        setOwnRobotPosition(Position2D(0, -7, 0));
+    }
+
+    boost::shared_ptr<NiceMock<TimerMock>> timer_p;
+    ruleAvoidAreas rule;
+};
+
+class nearOppPenaltyArea : public TeamplayTest
+{
+public:
+    nearOppPenaltyArea()
+    : timer_p(new NiceMock<TimerMock>)
+    , rule(ruleAvoidAreas(timer_p))
+    {
+        robotStore::getInstance().clear();
+        setOwnRobotPosition(Position2D(0, 7, 0));
+    }
+
+    boost::shared_ptr<NiceMock<TimerMock>> timer_p;
+    ruleAvoidAreas rule;
+};
+
+class inCenterArea : public TeamplayTest
+{
+public:
+    inCenterArea()
+    : timer_p(new NiceMock<TimerMock>)
+    , rule(ruleAvoidAreas(timer_p))
+    {
+        robotStore::getInstance().clear();
+        setOwnRobotPosition(Position2D(0, 0, 0));
     }
 
     boost::shared_ptr<NiceMock<TimerMock>> timer_p;
@@ -130,37 +179,35 @@ TEST_F(NonGoalieInOwnPenaltyArea, CurrentPositionIsInvalidAfterTimerElapsed)
 
 TEST_F(NonGoalieInOwnPenaltyArea, CurrentPositionIsValidIfAreaIsEmpty)
 {
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -5.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
+    robotStore::getInstance().addTeammate(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -5.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
 
     EXPECT_TRUE(rule.isCurrentPositionValid());
 }
 
 TEST_F(NonGoalieInOwnPenaltyArea, CurrentPositionIsInvalidIfAreaIsOccupied)
 {
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
+    robotStore::getInstance().addTeammate(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
 
     EXPECT_FALSE(rule.isCurrentPositionValid());
 }
 
-TEST_F(NonGoalieInOwnPenaltyArea, TargetPositionIsValidIfAreaOnlyOccupiedByGoalie)
+TEST_F(nearOwnPenaltyArea, TargetPositionIsValidIfAreaOnlyOccupiedByGoalie)
 {
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, -7.0, 0.0));
-    EXPECT_TRUE(rule.getForbiddenAreas().empty());
+    EXPECT_FALSE(rule.getForbiddenAreas().empty());
+    // since May 2019, Teamplay now always sets forbidden areas on (extended) goal area, which was previously done by pathPlanning
 }
 
-TEST_F(NonGoalieInOwnPenaltyArea, TargetPositionIsInvalidIfAreaIsOccupied)
+TEST_F(nearOwnPenaltyArea, TargetPositionIsInvalidIfAreaIsOccupied)
 {
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
-
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, -7.0, 0.0));
+    robotStore::getInstance().addTeammate(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
     EXPECT_FALSE(rule.getForbiddenAreas().empty());
 }
 
-TEST_F(NonGoalieInOwnPenaltyArea, TargetPositionIsValidIfCurrentPositionIsFarAway)
+TEST_F(inCenterArea, TargetPositionIsValidIfCurrentPositionIsFarAway)
 {
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, -5.0, 0.0));
-    EXPECT_TRUE(rule.getForbiddenAreas().empty());
+    robotStore::getInstance().addTeammate(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
+    EXPECT_FALSE(rule.getForbiddenAreas().empty());
+    // since May 2019, Teamplay now always sets forbidden areas on (extended) goal area, which was previously done by pathPlanning
 }
 
 
@@ -178,14 +225,14 @@ TEST_F(GoalieInOwnPenaltyArea, CurrentPositionIsValidAfterTimerElapsed)
 
 TEST_F(GoalieInOwnPenaltyArea, CurrentPositionIsValidIfAreaIsEmpty)
 {
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -5.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
+    robotStore::getInstance().addTeammate(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -5.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
 
     EXPECT_TRUE(rule.isCurrentPositionValid());
 }
 
 TEST_F(GoalieInOwnPenaltyArea, CurrentPositionIsValidIfAreaIsOccupied)
 {
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
+    robotStore::getInstance().addTeammate(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, -8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
 
     EXPECT_TRUE(rule.isCurrentPositionValid());
 }
@@ -200,103 +247,78 @@ TEST_F(inOppPenaltyArea, CurrentPositionIsInvalidAfterTimerElapsed)
 
 TEST_F(inOppPenaltyArea, CurrentPositionIsValidIfAreaIsEmpty)
 {
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, 5.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
+    robotStore::getInstance().addTeammate(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, 5.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
 
     EXPECT_TRUE(rule.isCurrentPositionValid());
 }
 
 TEST_F(inOppPenaltyArea, CurrentPositionIsInvalidIfAreaIsOccupied)
 {
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, 8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
+    robotStore::getInstance().addTeammate(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, 8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
 
     EXPECT_FALSE(rule.isCurrentPositionValid());
 }
 
-TEST_F(inOppPenaltyArea, TargetPositionIsValidIfAreaEmpty)
+TEST_F(nearOppPenaltyArea, TargetPositionIsValidIfAreaEmpty)
 {
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, 7.0, 0.0));
-    EXPECT_TRUE(rule.getForbiddenAreas().empty());
-}
-
-TEST_F(inOppPenaltyArea, TargetPositionIsInvalidIfAreaIsOccupied)
-{
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, 8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
-
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, 7.0, 0.0));
     EXPECT_FALSE(rule.getForbiddenAreas().empty());
+    // since May 2019, Teamplay now always sets forbidden areas on (extended) goal area, which was previously done by pathPlanning
 }
 
-TEST_F(inOppPenaltyArea, TargetPositionIsValidIfCurrentPositionIsFarAway)
+TEST_F(nearOppPenaltyArea, TargetPositionIsInvalidIfAreaIsOccupied)
 {
-    teamMatesStore::getTeamMatesIncludingGoalie().add(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, 8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, 5.0, 0.0));
-    EXPECT_TRUE(rule.getForbiddenAreas().empty());
+    robotStore::getInstance().addTeammate(robot(2, treeEnum::DEFENDER_ASSIST, Position2D(0.0, 8.0, 0.0), Velocity2D(0.0, 0.0, 0.0)));
+    EXPECT_FALSE(rule.getForbiddenAreas().empty());
 }
 
 TEST_F(inOwnGoalArea, CurrentPositionIsValidForGoalie)
 {
-    ownRobotStore::getOwnRobot().setRole(treeEnum::R_GOALKEEPER);
+    robotStore::getInstance().setOwnRobotRole(treeEnum::R_GOALKEEPER);
     EXPECT_TRUE(rule.isCurrentPositionValid());
 }
 
 TEST_F(inOwnGoalArea, CurrentPositionIsInvalidForNonGoalie)
 {
-    ownRobotStore::getOwnRobot().setRole(treeEnum::DEFENDER_MAIN);
+    robotStore::getInstance().setOwnRobotRole(treeEnum::DEFENDER_MAIN);
     EXPECT_FALSE(rule.isCurrentPositionValid());
 }
 
 TEST_F(inOppGoalArea, CurrentPositionIsInvalidForGoalie)
 {
-    ownRobotStore::getOwnRobot().setRole(treeEnum::R_GOALKEEPER);
+    robotStore::getInstance().setOwnRobotRole(treeEnum::R_GOALKEEPER);
     EXPECT_FALSE(rule.isCurrentPositionValid());
 }
 
 TEST_F(inOppGoalArea, CurrentPositionIsInvalidForNonGoalie)
 {
-    ownRobotStore::getOwnRobot().setRole(treeEnum::DEFENDER_MAIN);
+    robotStore::getInstance().setOwnRobotRole(treeEnum::DEFENDER_MAIN);
     EXPECT_FALSE(rule.isCurrentPositionValid());
 }
 
 TEST_F(inOwnGoalArea, TargetPositionIsValidForGoalie)
 {
-    ownRobotStore::getOwnRobot().setRole(treeEnum::R_GOALKEEPER);
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, -8.8, 0.0));
-    EXPECT_TRUE(rule.getForbiddenAreas().empty());
+    robotStore::getInstance().setOwnRobotRole(treeEnum::R_GOALKEEPER);
+    EXPECT_FALSE(rule.getForbiddenAreas().empty());
+    // since May 2019, Teamplay now always sets forbidden areas on (extended) goal area, which was previously done by pathPlanning
+    // in this case, it will not get a forbidden area on own goal area, but always on opponent area, although this is hardly relevant for goalie
 }
 
 TEST_F(inOwnGoalArea, TargetPositionIsInvalidForNonGoalie)
 {
-    ownRobotStore::getOwnRobot().setRole(treeEnum::DEFENDER_MAIN);
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, -8.8, 0.0));
+    robotStore::getInstance().setOwnRobotRole(treeEnum::DEFENDER_MAIN);
     EXPECT_FALSE(rule.getForbiddenAreas().empty());
-}
-
-TEST_F(inOwnGoalArea, TargetPositionIsValidIfCurrentPositionIsFarAway)
-{
-    ownRobotStore::getOwnRobot().setRole(treeEnum::DEFENDER_MAIN);
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, -6.0, 0.0));
-    EXPECT_TRUE(rule.getForbiddenAreas().empty());
 }
 
 TEST_F(inOppGoalArea, TargetPositionIsInvalidForGoalie)
 {
-    ownRobotStore::getOwnRobot().setRole(treeEnum::R_GOALKEEPER);
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, 8.8, 0.0));
+    robotStore::getInstance().setOwnRobotRole(treeEnum::R_GOALKEEPER);
     EXPECT_FALSE(rule.getForbiddenAreas().empty());
 }
 
 TEST_F(inOppGoalArea, TargetPositionIsInvalidForNonGoalie)
 {
-    ownRobotStore::getOwnRobot().setRole(treeEnum::DEFENDER_MAIN);
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, 8.8, 0.0));
+    robotStore::getInstance().setOwnRobotRole(treeEnum::DEFENDER_MAIN);
     EXPECT_FALSE(rule.getForbiddenAreas().empty());
-}
-
-TEST_F(inOppGoalArea, TargetPositionIsValidIfCurrentPositionIsFarAway)
-{
-    ownRobotStore::getOwnRobot().setRole(treeEnum::DEFENDER_MAIN);
-    ownRobotStore::getOwnRobot().setPosition(Position2D(0.0, 6.0, 0.0));
-    EXPECT_TRUE(rule.getForbiddenAreas().empty());
 }
 
 

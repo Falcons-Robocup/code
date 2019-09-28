@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,6 +22,7 @@
 #include "int/cPathPlanningTypes.hpp"
 #include "linepoint2D.hpp"
 #include "polygon2D.hpp"
+#include "configPathPlanning.hpp" // sharedTypes
 
 class cPathPlanningData
 {
@@ -36,6 +37,9 @@ class cPathPlanningData
         void getMotionProfileType(pp_motionProfile_type& motionProfile);
         void setMotionProfileType(const pp_motionProfile_type& motionProfile);
 
+        void getRobotStop(bool& stop);
+        void setRobotStop(const bool& stop);
+
 
         // WorldModel data
         void getPosition(Position2D& pos);
@@ -43,6 +47,9 @@ class cPathPlanningData
 
         void getVelocity(Velocity2D& vel);
         void setVelocity(const Velocity2D& vel);
+
+        void getAcceleration(Velocity2D& acc);
+        void setAcceleration(const Velocity2D& acc);
 
         void getOnlyObstacles(std::vector<pp_obstacle_struct_t>& obstacles);
         void getAllObstacles(std::vector<pp_obstacle_struct_t>& obstacles);
@@ -76,6 +83,8 @@ class cPathPlanningData
 
 
         // Reconfigure data
+        void setConfig(configPathPlanning const &config);
+
         void getLimits(pp_limiters_struct_t& limits);
         void setLimits(const pp_motionProfile_type& motionProfile, const pp_limiters_struct_t& limits);
 
@@ -100,9 +109,6 @@ class cPathPlanningData
         // Teamplay data
         void getTarget(Position2D& target);
         void setTarget(const Position2D& target);
-
-        void getPathPlanningActivated(bool& activated);
-        void setPathPlanningActivated(const bool& activated);
 
         void getTurnType(pp_algorithm_turn_type& turnType);
         void setTurnType(const pp_algorithm_turn_type& turnType);
@@ -135,10 +141,12 @@ class cPathPlanningData
         // Main data
         pp_algorithm_type _algType;
         pp_motionProfile_type _motionProfile;
+        bool _robotStop;
 
         // WorldModel data
         Position2D _pos;
         Velocity2D _vel;
+        Velocity2D _acc;
         std::vector<pp_obstacle_struct_t> _obstacles;
         std::vector<polygon2D> _staticForbiddenAreas;
         std::vector<polygon2D> _dynamicForbiddenAreas;
@@ -161,7 +169,6 @@ class cPathPlanningData
 
         // Teamplay data
         Position2D _targetPosition;
-        bool _pathplanning_activated;
         pp_algorithm_turn_type _turnType;
         pp_algorithm_coord_type _coordType;
         bool _logged_out_of_bounds;

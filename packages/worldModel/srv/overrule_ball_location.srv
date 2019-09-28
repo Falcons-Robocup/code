@@ -1,9 +1,0 @@
-uint8 robotID
-float32 positionX
-float32 positionY
-float32 positionZ
-float32 velocityX
-float32 velocityY
-float32 velocityZ
-float32 overruleTimeInSeconds
----

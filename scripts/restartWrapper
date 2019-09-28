@@ -8,5 +8,7 @@ while ( true ) ; do
     exitCode=$?
     # send error event towards visualizer
     sendError "[exit=$exitCode] process exited: $@"
+    # sleep and restart
+    sleep 3
 done
 

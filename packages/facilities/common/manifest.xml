@@ -10,6 +10,8 @@
   <url>http://ros.org/wiki/TODO</url>
   <depend package="rospy"/>
   <depend package="roscpp"/>
+  <depend package="rtdb3"/>
+  <depend package="tracing"/>
 
   <export>
   	<cpp cflags="-I${prefix}/include/ext"

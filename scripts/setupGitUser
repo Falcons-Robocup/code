@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# Used for setting the git environment for commits
+# 
+# LCBD 2018-07-31 creation
+# 
+
+LOCK_FILE='/home/robocup/.gitUserLock' 
+
+# if file exists, erase user config data from git
+if [ -f $LOCK_FILE ]
+then
+  # The commented out commands do not work on while running from rc.local,
+  # so the config file is deleted instead. Reason is unknown
+  #git config --global --unset user.name
+  #git config --global --unset user.email
+  rm /home/robocup/.gitconfig
+fi
+
+

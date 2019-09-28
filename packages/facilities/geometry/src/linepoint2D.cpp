@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -43,7 +43,7 @@ linepoint2D::~linepoint2D()
 
 Point2D linepoint2D::getSourcePoint2D()
 {
-	return Point2D(_source);
+	return _source;
 }
 
 Vector2D linepoint2D::getSourceVector2D()
@@ -53,7 +53,7 @@ Vector2D linepoint2D::getSourceVector2D()
 
 Point2D linepoint2D::getDestinationPoint2D()
 {
-	return Point2D(_destination);
+	return _destination;
 }
 
 Vector2D linepoint2D::getDestinationVector2D()

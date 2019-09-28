@@ -4,6 +4,7 @@ build/
 .pydevproject
 bin/
 src/peripheralsInterface/
+msg_gen/
 srv_gen/
 lib/
 cfg/*.cfgc

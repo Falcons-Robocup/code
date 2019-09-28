@@ -6,5 +6,5 @@
 # 
 
 
-df | grep '/dev/sda' | head -1 | nawk '{print $5}' | sed 's/%//'
+df | grep '/dev/sda' | grep /var | tail -1 | nawk '{print $5}' | sed 's/%//'
 

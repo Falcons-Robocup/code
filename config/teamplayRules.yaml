@@ -4,7 +4,7 @@ teamplay_main/rules: {
   minKickDistanceKicked       : 1.5,
   minPenaltyDistanceKicked    : 2.0,
   minOwnKickoffDistanceKicked : 1.5,
-  stimulatePassingEnabled     : true}
+  stimulatePassingEnabled     : True}
 rosdistro: 'groovy'
 roslaunch:
   uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}

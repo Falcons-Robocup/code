@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,8 +24,8 @@
 
 #include "rosMsgs/t_diag_vision_v2.h"
 
-#include "cDiagnosticsEvents.hpp"
-#include "tracer.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 #include "FalconsCommon.h" // getRobotNumber
 #include "linalgcv.hpp" // from package geometry, for FCS calculation
 #include <ros/ros.h>
@@ -74,7 +74,7 @@ Vector3D wmInfoUDPPacketROScoach::convertObstacleMeasurementToFcs(obstacleMeasur
     return object2fcs(m.cameraX, m.cameraY, m.cameraZ, m.cameraPhi, m.azimuth, m.elevation, m.radius);
 }
 
-void wmInfoUDPPacketROScoach::notifyNewUDPPacket(Facilities::Network::cByteArray array)
+void wmInfoUDPPacketROScoach::notifyNewUDPPacket(Facilities::cByteArray array)
 {
     // coach listener: to visualize, diagnose
     // transform raw measurements into FCS positions which visualizer can draw easily
@@ -112,8 +112,8 @@ void wmInfoUDPPacketROScoach::notifyNewUDPPacket(Facilities::Network::cByteArray
                 ball.cameraType = cameraType;
                 msg.balls.push_back(ball);
                 // tracing only during development, may be too much for production (CPU load @coach)
-                TRACE("ball id=%d  pos=(%6.2f,%6.2f,%6.2f) age=%6.2fs", 
-                      ball.objectID, ball.x, ball.y, ball.z, getTimeNow()-ball.timestamp); 
+                //TRACE("ball id=%d cam=%d pos=(%6.2f,%6.2f,%6.2f) age=%6.2fs", 
+                //    ball.objectID, (int)ball.cameraType.camera_type, ball.x, ball.y, ball.z, getTimeNow()-ball.timestamp); 
             }
 
             // obstacles
@@ -132,8 +132,8 @@ void wmInfoUDPPacketROScoach::notifyNewUDPPacket(Facilities::Network::cByteArray
                 obstacle.cameraType = cameraType;
                 msg.obstacles.push_back(obstacle);
                 // tracing only during development, may be too much for production (CPU load @coach)
-                TRACE("obstacle id=%d  pos=(%6.2f,%6.2f,%6.2f) age=%6.2fs", 
-                      obstacle.objectID, obstacle.x, obstacle.y, obstacle.z, getTimeNow()-obstacle.timestamp); 
+                //TRACE("obstacle id=%d  pos=(%6.2f,%6.2f,%6.2f) age=%6.2fs", 
+                //    obstacle.objectID, obstacle.x, obstacle.y, obstacle.z, getTimeNow()-obstacle.timestamp); 
             }
 
             // publish

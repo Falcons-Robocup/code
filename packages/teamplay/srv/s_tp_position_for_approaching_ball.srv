@@ -1,3 +1,0 @@
----
-rosMsgs/t_action action #action corresponding to task evaluation
-int32 factor #weighing factor between 0-100(%)

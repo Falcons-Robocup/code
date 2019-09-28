@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,9 +21,10 @@
 #include <algorithm>
 
 #include "int/configurators/administrationConfigurator.hpp"
+#include "int/configurators/ballTrackerConfigurator.hpp"
 
-#include "cDiagnosticsEvents.hpp"
-#include "timeConvert.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 ballAdministrator::ballAdministrator()
 /*!
@@ -35,11 +36,9 @@ ballAdministrator::ballAdministrator()
  *
  */
 {
-	_ownRobotID = getRobotNumber();
-	_ballMeasurements.clear();
-	_overruledBalls.clear();
-	
-	_globalBallDiscriminator.enableDiagnostics();
+    _ownRobotID = getRobotNumber();
+    _ballMeasurements.clear();
+    _overruledBalls.clear();
 }
 
 ballAdministrator::~ballAdministrator()
@@ -51,204 +50,176 @@ ballAdministrator::~ballAdministrator()
 
 }
 
-void ballAdministrator::appendBallMeasurements(const std::vector<ballMeasurementType> measurements)
+void ballAdministrator::appendBallMeasurements(const std::vector<ballMeasurement> measurements)
 {
     //TRACE("> #meas=%d", (int)measurements.size());
-	try
-	{
-		for(auto itMeasurement = measurements.begin(); itMeasurement != measurements.end(); itMeasurement++)
-		{
-			auto it = _ballMeasurements.find(itMeasurement->getID());
+    try
+    {
+        for(auto itMeasurement = measurements.begin(); itMeasurement != measurements.end(); itMeasurement++)
+        {
+            auto it = _ballMeasurements.find(itMeasurement->identifier);
 
-			/*
-			 * If not found, add it and feed to object discriminator
-			 */
-			if(it == _ballMeasurements.end())
-			{
-				/* Only add own measurements to local discriminator */
-				if(itMeasurement->getID().robotID == _ownRobotID)
-				{
-					_localBallDiscriminator.addMeasurement(*itMeasurement);
-				}
-
-				_ballMeasurements[itMeasurement->getID()] = (*itMeasurement);
-				_globalBallDiscriminator.addMeasurement(*itMeasurement);
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+            // If not found, add it and feed to object discriminator
+            if(it == _ballMeasurements.end())
+            {
+            	_ballMeasurements[itMeasurement->identifier] = (*itMeasurement);
+            	_ballDiscriminator.addMeasurement(*itMeasurement);
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("<");
 }
 
 void ballAdministrator::overruleBall(const ballClass_t ball)
 {
-	try
-	{
-		_overruledBalls[ball.getId()] = ball;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        _overruledBalls[ball.getId()] = ball;
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
-void ballAdministrator::getLocalBallMeasurements(std::vector<ballMeasurementType> &measurements)
+void ballAdministrator::getLocalBallMeasurements(std::vector<ballMeasurement> &measurements)
 {
+    // this function is called by wmSyncAdapter, to get the data to be sent to friendly robots
     //TRACE(">");
-	try
-	{
-		measurements.clear();
+    try
+    {
+        measurements.clear();
+        
+        // note: wmSync buffer is rather small
+        // so select only measurements which are not attributed to blacklisted trackers; also sort on decreasing tracker confidence
+        _ballDiscriminator.getMeasurementsToSync(measurements);
 
-		for(auto it = _ballMeasurements.begin(); it != _ballMeasurements.end(); it++)
-		{
-			if(it->first.robotID == _ownRobotID)
-			{
-				measurements.push_back(it->second);
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("< #meas=%d", (int)measurements.size());
 }
 
-void ballAdministrator::performCalculation(const double timeNow)
+void ballAdministrator::performCalculation(rtime const timeNow, Vector2D const &pos)
 {
-    //TRACE("> t=%16.6f", timeNow);
-	try
-	{
+    std::ostringstream ss;
+    ss << "pos: (" << pos.x << ", " << pos.y << ")";
+    TRACE_FUNCTION(ss.str().c_str());
+    try
+    {
         // in case of simulation, _overruledBalls is used instead of _ballDiscriminator
-	    if (_overruledBalls.size() == 0)
-	    {
-		    cleanUpTimedOutBallMeasurements(timeNow);
-		    _globalBallDiscriminator.performCalculation(timeNow);
-		    _localBallDiscriminator.performCalculation(timeNow);
-	    }
-	    else
-	    {
-	        // send the simulated ball(s) to visualizer
-	        std::vector<ballClass_t> balls;
-			for(auto it = _overruledBalls.begin(); it != _overruledBalls.end(); it++)
-			{
-				balls.push_back(it->second);
-			}
-	        _globalBallDiscriminator.sendSimDiagnostics(balls);
-	    }
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+        if (_overruledBalls.size() == 0)
+        {
+            cleanUpTimedOutBallMeasurements(timeNow);
+            _ballDiscriminator.performCalculation(timeNow, pos);
+        }
+        else
+        {
+            // send the simulated ball(s) to visualizer
+            std::vector<ballClass_t> balls;
+            for(auto it = _overruledBalls.begin(); it != _overruledBalls.end(); it++)
+            {
+            	balls.push_back(it->second);
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("<");
 }
 
-void ballAdministrator::getOwnBalls(std::vector<ballClass_t> &balls)
+void ballAdministrator::getBalls(std::vector<ballClass_t> &balls)
 {
     //TRACE(">");
-	try
-	{
-		if(_overruledBalls.empty())
-		{
-			balls = _localBallDiscriminator.getBalls();
-		}
-		else
-		{
-			for(auto it = _overruledBalls.begin(); it != _overruledBalls.end(); it++)
-			{
-				balls.push_back(it->second);
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("< numballs=%d", (int)balls.size());
+    try
+    {
+        if(_overruledBalls.empty())
+        {
+            balls = _ballDiscriminator.getBalls();
+        }
+        else
+        {
+            for(auto it = _overruledBalls.begin(); it != _overruledBalls.end(); it++)
+            {
+            	balls.push_back(it->second);
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+    TRACE("< numballs=%d", (int)balls.size());
 }
 
-void ballAdministrator::getGlobalBalls(std::vector<ballClass_t> &balls)
+void ballAdministrator::cleanUpTimedOutBallMeasurements(rtime const timeNow)
 {
-    //TRACE(">");
-	try
-	{
-		if(_overruledBalls.empty())
-		{
-			balls = _globalBallDiscriminator.getBalls();
-		}
-		else
-		{
-			for(auto it = _overruledBalls.begin(); it != _overruledBalls.end(); it++)
-			{
-				balls.push_back(it->second);
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("< numballs=%d", (int)balls.size());
-}
+    TRACE_FUNCTION("");
+    size_t origSize = _ballMeasurements.size();
+    try
+    {
+        double maxTimeToLive = administrationConfigurator::getInstance().getBallTimeToLive();
 
-void ballAdministrator::cleanUpTimedOutBallMeasurements(const double timeNow)
-{
-    //TRACE("> size=%d", (int)_ballMeasurements.size());
-	try
-	{
-		double maxTimeToLive = administrationConfigurator::getInstance().getBallTimeToLive();
-
-		for(auto i = _ballMeasurements.begin(); i != _ballMeasurements.end(); )
-		{
-			double time_diff = timeNow - i->second.getTimestamp();
-			if(time_diff > maxTimeToLive)
+        for(auto i = _ballMeasurements.begin(); i != _ballMeasurements.end(); )
+        {
+            double time_diff = timeNow - i->second.timestamp;
+            if(time_diff > maxTimeToLive)
             {
                 // Delete ball measurement
-				i = _ballMeasurements.erase(i);
+            	i = _ballMeasurements.erase(i);
             }
-			else
-			{
-				i++;
-			}
-		}
+            else
+            {
+            	i++;
+            }
+        }
 
-		for(auto i = _overruledBalls.begin(); i != _overruledBalls.end(); )
-		{
-			double time_diff = timeNow - i->second.getTimestamp();
-			if(time_diff > maxTimeToLive)
+        for(auto i = _overruledBalls.begin(); i != _overruledBalls.end(); )
+        {
+            double time_diff = timeNow - i->second.getTimestamp();
+            if(time_diff > maxTimeToLive)
             {
                 // Delete robot with iterator
-				i = _overruledBalls.erase(i);
+            	i = _overruledBalls.erase(i);
             }
-			else
-			{
-				i++;
-			}
-		}
+            else
+            {
+            	i++;
+            }
+        }
 
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //int removed = (int)_ballMeasurements.size() - origSize;
-    //TRACE("< removed=%d", removed);
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+    std::ostringstream ss;
+    ss << "origSize: " << origSize << "; newSize: " << _ballMeasurements.size();
+    TRACE(ss.str().c_str());
 }
+
+void ballAdministrator::fillDiagnostics(diagWorldModel &diagnostics)
+{
+    _ballDiscriminator.fillDiagnostics(diagnostics);
+}
+

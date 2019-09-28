@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,10 +24,16 @@
 struct ballConfig
 {
     // data usage
-    bool useFrontVision;
-    bool useFriendlyMeas;
+    bool useOwnHighVision;
+    bool useFriendlyHighVision;
     float friendlyMeasurementsDistance;
     
+    // blacklisting
+    bool blackListDefault;
+    float blackListThresholdZ;
+    float blackListFloatingDuration;
+    float blackListGroundDuration;
+ 
     // triangulation and trajectory fit
     objectFitConfig fitConfig;
 
@@ -37,7 +43,8 @@ struct ballConfig
     int measLim;
     float freshLim;
     float ageLim;
-    float timeout;
+    float timeout; // overall tracker timeout
+    float buffer; // internal measurement timeout
     float fitLim1;
     float fitLim2;
     float zLim1;

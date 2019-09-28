@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,10 +21,10 @@
 #include "int/configurators/localizationConfigurator.hpp"
 
 #include <ros/ros.h>
-#include <tracer.hpp>
+#include "tracing.hpp"
 #include <FalconsCommon.h> // for loadConfig
 
-#include "cDiagnosticsEvents.hpp"
+#include "cDiagnostics.hpp"
 
 localizationConfigROS::localizationConfigROS()
 {

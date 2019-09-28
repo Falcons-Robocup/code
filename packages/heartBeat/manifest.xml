@@ -9,7 +9,6 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/heartBeat</url>
   <depend package="roscpp"/>
-  <depend package="rosMsgs"/>
   <depend package="dynamic_reconfigure"/>
   <depend package="common"/>
   <depend package="diagnostics"/>

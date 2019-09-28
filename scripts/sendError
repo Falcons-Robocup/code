@@ -3,18 +3,5 @@
 
 
 errMsg="$@"
-# calculate Falcons timestamp
-# TODO sub-second resolution? 
-epoch=1388534400 # see also timeConvert.cpp
-t=`date +%s`
-let "t = t - epoch"
-# publish event on topic g_event 
-# robot processes will use /teamA/robotN/g_event
-# but coach processes messages will not be caught
-r=0
-if [ ! -z "$TURTLE5K_ROBOTNUMBER" ]; then
-    r=$TURTLE5K_ROBOTNUMBER
-fi
-rostopic pub -1 g_event rosMsgs/t_event "{eventId: 0, robotId: $r, fileName: '$0', funcName: '', lineNumber: 0, timeStamp: $t,
-  eventType: 2, eventString: '$errMsg'}" 
+rosrun diagnostics sendEvent ERROR "$errMsg"
 

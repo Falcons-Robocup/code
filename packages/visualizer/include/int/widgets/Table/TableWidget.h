@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,6 +22,9 @@
 #include <QtGui>
 #include <QStandardItemModel>
 #include <QStandardItem>
+#include <qtablewidget.h>
+#include <qtreeview.h>
+#include <qwidget.h>
 
 // Internal:
 #include "int/widgets/Widget.h"
@@ -43,7 +46,7 @@ public:
     virtual void restoreState() override;
 
 private:
-    TableViewModel* _model;
+    TableViewModel* _model = NULL;
 };
 
 /*
@@ -69,6 +72,7 @@ public Q_SLOTS:
     virtual void onValue(uint8_t senderRobotId, std::string category, std::string key, float value) override;
     virtual void onValue(uint8_t senderRobotId, std::string category, std::string key, bool value) override;
     virtual void onValue(uint8_t senderRobotId, std::string category, std::string key, std::string value) override;
+    virtual void clearColumn(uint8_t robotId);
 };
 
 #endif // TABLEWIDGET_H

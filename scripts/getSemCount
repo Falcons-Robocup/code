@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# Count semaphores. (If these are growing, there might be a bug in rtdb wait_for_put.)
+# Used in diagnostics via robotHealth
+# 
+
+
+
+# example output of ipcs -s:
+# robocup@bakpao [integration] scripts $ ipcs -s
+# 
+# ------ Semaphore Arrays --------
+# key        semid      owner      perms      nsems     
+# 0x00000000 0          robocup    660        1         
+# 0x00000000 32769      robocup    660        1         
+# 0x00000000 65538      robocup    660        1         
+# 0x00000000 98307      robocup    660        1         
+# 0x00000000 131076     robocup    660        1         
+# 
+
+# we must remove header (first 3 lines) and last empty spacer line
+# then we can count the lines
+ipcs -s | sed '1,3d' | sed '$d' | wc -l
+
+

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,9 +26,6 @@ robotDisplacementClass_t::robotDisplacementClass_t()
 	_dx = 0.0;
 	_dy = 0.0;
 	_dtheta = 0.0;
-	_vx = 0.0;
-	_vy = 0.0;
-	_vtheta = 0.0;
 }
 
 robotDisplacementClass_t::~robotDisplacementClass_t()
@@ -39,7 +36,7 @@ robotDisplacementClass_t::~robotDisplacementClass_t()
 
 }
 
-void robotDisplacementClass_t::setID(const uniqueWorldModelID identifier)
+void robotDisplacementClass_t::setID(const uniqueObjectID identifier)
 {
 	_identifier = identifier;
 }
@@ -66,20 +63,13 @@ void robotDisplacementClass_t::setDeltaPosition(const float dx, const float dy, 
 	_dtheta = dtheta;
 }
 
-void robotDisplacementClass_t::setDeltaVelocity(const float vx, const float vy, const float vtheta)
-{
-	_vx = vx;
-	_vy = vy;
-	_vtheta = vtheta;
-}
 
-
-uniqueWorldModelID robotDisplacementClass_t::getID() const
+uniqueObjectID robotDisplacementClass_t::getID() const
 {
 	return _identifier;
 }
 
-coordinateType robotDisplacementClass_t::getCoordindateType() const
+coordinateType robotDisplacementClass_t::getCoordinateType() const
 {
 	return _coordinate;
 }
@@ -107,20 +97,5 @@ float robotDisplacementClass_t::getdY() const
 float robotDisplacementClass_t::getdTheta() const
 {
 	return _dtheta;
-}
-
-float robotDisplacementClass_t::getvX() const
-{
-	return _vx;
-}
-
-float robotDisplacementClass_t::getvY() const
-{
-	return _vy;
-}
-
-float robotDisplacementClass_t::getvTheta() const
-{
-	return _vtheta;
 }
 

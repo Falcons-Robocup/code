@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,10 +22,9 @@
 #include <thread>
 
 #include <cDiagnostics.hpp>
-#include <rosMsgs/t_diag_halmw.h>
+#include "FalconsRtDB2.hpp"
 
-#include "ext/peripheralInterfaceNames.hpp"
-
+#include "../ext/peripheralsInterfaceNames.hpp"
 #include "int/PeripheralsInterfaceData.hpp"
 #include "int/VoltageMonitor.hpp"
 
@@ -39,10 +38,10 @@ public:
 private:
 	PeripheralsInterfaceData& piData;
 	VoltageMonitor voltageMonitor;
-	diagnostics::cDiagnosticsSender<rosMsgs::t_diag_halmw> diagSender; // only diagnostics thread
 
 	std::thread diagnosticsThread;
 	bool started;
+    RtDB2 *_rtdb = NULL;
 
 	size_t previousNumberOfDevices;
 	size_t desiredNumberOfDevices;

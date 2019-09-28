@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -32,11 +32,14 @@ ball::~ball() { }
 
 void ball::reset()
 {
+    /* We do not reset the current position and current velocity here.
+     * The idea is that we always maintain the last known position and velocity
+     * as the "current" position and velocity. Besides that, we maintain
+     * whether we actually know the current position and velocity. */
+
     _isCurrentPositionKnown = false;
     _isCurrentVelocityKnown = false;
     _isClaimedPositionKnown = false;
-    //_currentPosition = Point3D();
-    //_currentVelocity = Vector3D();
     _claimedPosition = Point3D();
     _mustBeAvoided = false;
 }
@@ -104,6 +107,11 @@ bool ball::mustBeAvoided() const
     return _mustBeAvoided;
 }
 
+Point2D ball::getLocation() const
+{
+    return Point2D(_currentPosition.x, _currentPosition.y);
+}
+
 Point3D ball::getPosition() const
 {
     return _currentPosition;
@@ -112,6 +120,11 @@ Point3D ball::getPosition() const
 Vector3D ball::getVelocity() const
 {
     return _currentVelocity;
+}
+
+Point2D ball::getClaimedLocation() const
+{
+    return Point2D(_claimedPosition.x, _claimedPosition.y);
 }
 
 Point3D ball::getClaimedPosition() const
@@ -131,12 +144,9 @@ void ball::setVelocity(const Vector3D& v)
     _currentVelocity = v;
 }
 
-void ball::setPositionUnknown(const Point3D& lastKnownPosition)
+void ball::setPositionUnknown()
 {
     _isCurrentPositionKnown = false;
-    //_currentPosition = lastKnownPosition; // EKPC/IVMA: disabled -- lastKnownPosition is currently an uninitialized struct!
-    // EKPC/IVMA: result: _currentPosition is always available, either for a known ball, or for the last known position
-    // EKPC/IVMA: use isLocationKnown() to identify if a ball location is known or not
 }
 
 void ball::setVelocityUnknown()

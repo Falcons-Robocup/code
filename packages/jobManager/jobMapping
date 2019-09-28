@@ -1,27 +1,23 @@
 #!/bin/bash
 #
-# Job definitions.
-# According to Erik, this is similar to SystemManager in Twinscan software: jobs are sets of processes.
-# Here, a job is actually a set of jobs and processes.
+# A job is a set of jobs and processes.
 # So each job evaluates to a list of processes (see jobToProcess)
 #
-# JFEI 2015-11-11
-# MKOE 2016-12-27 added tpCoach
-# 
 
 
 
-# note: the following processes are managed outside of job context (via simControl, coachControl and robotControl)
-# roscore, robotControl, robotHealth, globalConfig, simteam
+# note: some processes are managed outside of job context (via simControl, coachControl and robotControl)
 
 (
 cat << EOF
-coachPart1       refboxRelay globalConfig             # part 1: bare essentials (e.g. to bootstrap teamB simulation)
-coachPart2       commandGui visualizer logBag diagRecvNew heartbeat analyzer tpCoach wmSyncCoach # part 2: extra human interfacing (typically teamA)
-vision           visionNode # frontVisionNode
-robotReal        robotCommon vision halMotors
-robotSim         robotCommon halMwSim simRobot
-robotCommon      wm pp tp sp heartbeat wmSync
+coachPart1       refboxRelay               # part 1: bare essentials (e.g. to bootstrap teamB simulation)
+coachPart2Real   coachPart2Common commW wm heartbeat
+coachPart2Sim    coachPart2Common simworld
+coachPart2Common visualizer logger rtdbSync # part 2: extra human interfacing (typically teamA)
+vision           multiCam raspiSync
+robotReal        robotCommon vision halMotors vc bh commW logger health wm
+robotSim         robotCommon
+robotCommon      pp mp tp sp matchMode
 EOF
 ) | sed 's/#.*//' # filter comments, like these ;)
 

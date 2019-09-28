@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -12,7 +12,7 @@
  # Author: Erik Kouters
 # Date: 2015-12-22
 #
-# This script publishes to g_robotspeed.
+# This script publishes to g_motorspeed.
 #
 # Keys:
 # up,down,left,right -- drive
@@ -26,15 +26,15 @@ import threading
 
 import roslib; roslib.load_manifest('peripheralsInterface') 
 import rospy
-from rosMsgs.msg import t_robotspeed
+from rosMsgs.msg import t_motorspeed
 
 setpointPublishing = True
 
 rospy.init_node("someNode", anonymous=True)
-pub = rospy.Publisher('g_robotspeed', t_robotspeed, queue_size=10)
+pub = rospy.Publisher('g_motorspeed', t_motorspeed, queue_size=10)
 VelStepSize = [1.0]
 
-msg=t_robotspeed()
+msg=t_motorspeed()
 
 vel = [0.0, 0.0, 0.0]
 vel[0] = 0.0 #x
@@ -42,14 +42,14 @@ vel[1] = 0.0 #y
 vel[2] = 0.0 #phi
 
 def printVel():
-   msg.vx = vel[0]
-   msg.vy = vel[1]
-   msg.vphi = vel[2]
+   msg.m1_vel = vel[0]
+   msg.m2_vel = vel[1]
+   msg.m3_vel = vel[2]
    pub.publish(msg)
    print vel
 
 def leftKeyPress(event):
-   vel[2] = VelStepSize[0] * 3.0
+   vel[2] = VelStepSize[0]
    printVel()
       
 def leftKeyRelease(event):
@@ -57,7 +57,7 @@ def leftKeyRelease(event):
    printVel()
     
 def rightKeyPress(event):
-    vel[2] = -VelStepSize[0] * 3.0
+    vel[2] = -VelStepSize[0]
     printVel()
     
 def rightKeyRelease(event):

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,10 +20,10 @@
 #define EVENTLOGGER_H
 
 #include <QtGui>
+#include <qplaintextedit.h>
 
 #include <boost/format.hpp>
-
-#include "timeConvert.hpp"
+#include "FalconsRtDB2.hpp" // for rtime
 
 // Internal:
 #include "int/widgets/Widget.h"
@@ -71,7 +71,7 @@ private:
             std::string timeString;
             if (event.timeStamp > 0)
             {
-                timeString = timeToString(event.timeStamp);
+                timeString = rtime().fromDouble(event.timeStamp).toStr();
                 timeString = timeString.substr(11, 12) + " - ";
             }
             else

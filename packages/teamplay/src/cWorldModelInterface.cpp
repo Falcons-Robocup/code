@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,13 +17,12 @@
  */
 #include <stdexcept>
 
-#include "FalconsCommon.h"
+#include "FalconsCommon.h"  // For getRobotNumber
 
 #include "int/rules/ruleStimulatePassing.hpp"
 #include "int/stores/ballStore.hpp"
-#include "int/stores/fieldDimensionsStore.hpp"
-#include "int/stores/ownRobotStore.hpp"
-#include "int/stores/teamMatesStore.hpp"
+#include "int/stores/obstacleStore.hpp"
+#include "int/stores/robotStore.hpp"
 #include "int/utilities/trace.hpp"
 #include "int/cWorldModelInterface.hpp"
 
@@ -31,8 +30,7 @@ using namespace teamplay;
 
 cWorldModelInterface::cWorldModelInterface()
 {
-	_ownRobotPositionValid=false;
-	_ownRobotVelocityValid = false;
+
 }
 
 cWorldModelInterface::~cWorldModelInterface()
@@ -40,127 +38,9 @@ cWorldModelInterface::~cWorldModelInterface()
 
 }
 
-// getters are used all over TeamPlay
-// setters are called by cRosAdapterWorldModel
-
-void cWorldModelInterface::setOwnRobot(const Position2D& pos, const Velocity2D& vel)
-{
-    try
-    {
-        teamplay::ownRobotStore::getOwnRobot().setNumber(getRobotNumber());
-        teamplay::ownRobotStore::getOwnRobot().setPosition(pos);
-        teamplay::ownRobotStore::getOwnRobot().setVelocity(vel);
-    }
-    catch (std::exception& e)
-    {
-        TRACE_ERROR("Caught exception while adding own robot to the team: ") << e.what();
-        throw std::runtime_error(std::string("Caught exception while adding own robot to the team: ") + e.what());
-    }
-}
-
-bool cWorldModelInterface::getOwnLocation(Position2D &robotPosition)
-{
-	robotPosition = _ownRobotPosition;
-	return _ownRobotPositionValid;
-}
-
-void cWorldModelInterface::setOwnLocation(Position2D const &robotPosition)
-{
-	_ownRobotPosition = robotPosition;
-	if( isnan(_ownRobotPosition.x) || isnan(_ownRobotPosition.y) )
-	{
-		_ownRobotPositionValid=false;
-	}
-	else if ( fieldDimensionsStore::getFieldDimensions().isPositionInSafetyBoundaries(_ownRobotPosition.x, _ownRobotPosition.y) )
-	{
-		_ownRobotPositionValid=true;
-	}
-	else
-	{
-		_ownRobotPositionValid=false;
-	}
-
-}
-
-bool cWorldModelInterface::getOwnVelocity(Velocity2D &robotVelocity)
-{
-    robotVelocity = _ownRobotVelocity;
-    return _ownRobotVelocityValid;
-}
-
-void cWorldModelInterface::setOwnVelocity(Velocity2D const &robotVelocity)
-{
-    _ownRobotVelocity = robotVelocity;
-    if( isnan(_ownRobotVelocity.x) || isnan(_ownRobotVelocity.y) )
-    {
-        _ownRobotVelocityValid=false;
-    }
-    else
-    {
-        _ownRobotVelocityValid=true;
-    }
-
-}
-
-void cWorldModelInterface::getTeammembers(robotLocations &teammembers)
-{
-	teammembers = _robotTeammembers;
-}
-
-void cWorldModelInterface::setTeammembers(robotLocations const &teammembers, std::vector<robotNumber> const &activeRobots)
-{
-    /* New style: fill the store */
-    try
-    {
-        for (auto member = teammembers.begin(); member != teammembers.end(); member++)
-        {
-            const int robot_id(member->first);
-            for (auto active_robot_id = activeRobots.begin(); active_robot_id != activeRobots.end(); active_robot_id++)
-            {
-                if (robot_id == *active_robot_id)
-                {
-                    const Position2D pos(member->second.position.x, member->second.position.y, member->second.position.getPhi());
-                    const Velocity2D vel(member->second.velocity.x, member->second.velocity.y, member->second.velocity.getPhi());
-                    const robot robot(robot_id, treeEnum::R_ROBOT_STOP, pos, vel);
-                    teamplay::teamMatesStore::getTeamMatesIncludingGoalie().add(robot);
-                }
-            }
-        }
-    }
-    catch (std::exception& e)
-    {
-        TRACE_ERROR("Caught exception while teammembers to the team: ") << e.what();
-        throw std::runtime_error(std::string("Caught exception while adding teammembers to the team: ") + e.what());
-    }
-
-    /* Old style: update member variables */
-    _robotTeammembers = teammembers;
-    _activeRobots = activeRobots;
-}
-
-void cWorldModelInterface::getOpponents(robotLocations &opponents)
-{
-	opponents = _robotObstacles;
-}
-
-void cWorldModelInterface::setOpponents(robotLocations const &opponents)
-{
-	_robotObstacles = opponents;
-}
-
-void cWorldModelInterface::setBallLocation(ballLocations const &balls, ballLocation const &lastKnownBallLocation)
-{
-    if (balls.empty())
-    {
-        ballStore::getBall().setPositionUnknown(lastKnownBallLocation.position);
-        ballStore::getBall().setVelocityUnknown();
-    }
-    else
-    {
-        ballStore::getBall().setPosition(balls.at(0).position);
-        ballStore::getBall().setVelocity(balls.at(0).velocity);
-    }
-}
+// getters are used all over teamplay (and should be phased out)
+// setters are used by teamplay tests (and should be phased out)
+// store is called by cRosAdapterWorldModel
 
 void cWorldModelInterface::getBallPossession(ballPossession_struct_t &ballPossession)
 {
@@ -177,12 +57,79 @@ void cWorldModelInterface::setBallPossession(ballPossession_struct_t const &ball
     }
 }
 
-void cWorldModelInterface::setBallClaimedLocation(Point3D const &claimLocation)
+void cWorldModelInterface::store (const teamplay::worldModelInfo& wmInfo)
 {
-    ballStore::getBall().setPositionClaimed(claimLocation);
+    try
+    {
+        /* Clear the stores */
+        teamplay::ballStore::getBall().reset();
+        teamplay::obstacleStore::getInstance().clear();
+        teamplay::robotStore::getInstance().clear();
+
+        /* Store the own robot */
+        auto own_robot = robot(getRobotNumber(), treeEnum::R_ROBOT_STOP, wmInfo.ownRobot.position, wmInfo.ownRobot.velocity);
+
+        if ((wmInfo.ballPossession.possessionType == ballPossessionEnum::TEAMMEMBER) &&
+                (wmInfo.ballPossession.robotID == getRobotNumber()))
+        {
+            own_robot.claimsBallPossession();
+        }
+
+        teamplay::robotStore::getInstance().addOwnRobot(own_robot);
+
+        /* Store the active teammembers */
+        for (auto member = wmInfo.activeTeammembers.begin(); member != wmInfo.activeTeammembers.end(); member++)
+        {
+            const Position2D pos(member->second.position.x, member->second.position.y, member->second.position.getPhi());
+            const Velocity2D vel(member->second.velocity.x, member->second.velocity.y, member->second.velocity.getPhi());
+            robot teammate(member->first, treeEnum::R_ROBOT_STOP, pos, vel);
+
+            if (wmInfo.ballPossession.robotID == member->first)
+            {
+                teammate.claimsBallPossession();
+            }
+
+            teamplay::robotStore::getInstance().addTeammate(teammate);
+        }
+
+        /* Store the obstacles */
+        for (auto obstacle = wmInfo.obstacles.begin(); obstacle != wmInfo.obstacles.end(); obstacle++)
+        {
+            const Position2D pos(obstacle->second.position.x, obstacle->second.position.y, obstacle->second.position.getPhi());
+            const Velocity2D vel(obstacle->second.velocity.x, obstacle->second.velocity.y, obstacle->second.velocity.getPhi());
+
+            teamplay::obstacleStore::getInstance().addObstacle(teamplay::obstacle(pos, vel));
+        }
+
+        /* Store the ball */
+        if (wmInfo.ball)
+        {
+            teamplay::ballStore::getBall().setPosition(wmInfo.ball->position);
+            teamplay::ballStore::getBall().setVelocity(wmInfo.ball->velocity);
+        }
+        else
+        {
+            teamplay::ballStore::getBall().setPositionUnknown();
+            teamplay::ballStore::getBall().setVelocityUnknown();
+        }
+
+        /* Store the ball possession information */
+        _ballPossession = wmInfo.ballPossession;
+
+        if (wmInfo.ballPossession.possessionType == ballPossessionEnum::TEAMMEMBER)
+        {
+            teamplay::ballStore::getBall().setPositionClaimed(Point3D(wmInfo.ballPossession.ballClaimedLocation.x, wmInfo.ballPossession.ballClaimedLocation.y, 0.0));
+            ruleStimulatePassing::getInstance().robotClaimsBall(wmInfo.ballPossession.robotID);
+        }
+        else
+        {
+            teamplay::ballStore::getBall().setPositionClaimedUnknown();
+        }
+    }
+    catch (std::exception& e)
+    {
+        TRACE_ERROR("Caught exception while storing worldmodel data: %s", e.what());
+        throw std::runtime_error(std::string("Caught exception while storing worldmodel data: ") + e.what());
+    }
 }
 
-void cWorldModelInterface::getActiveRobots(std::vector<robotNumber> &activeRobots)
-{
-	activeRobots = _activeRobots;
-}

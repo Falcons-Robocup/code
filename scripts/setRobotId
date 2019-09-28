@@ -43,7 +43,29 @@ function subConfigureIp
 {
     # the following was written ages ago by Mathijs, but not tested yet
     # register by default on MSL_FIELD_A_a
-    sudo setup-wifi A
+    sudo -E /home/robocup/falcons/code/scripts/setup-wifi A
+}
+
+function subAutoboot
+{
+    mkdir -p ~/.config/autostart
+    cat >~/.config/autostart/autoboot.desktop <<EOL
+[Desktop Entry]
+Type=Application
+Exec=/home/robocup/falcons/code/packages/robotControl/autoboot
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=falconsControl autoboot
+Name=falconsControl autoboot
+Comment[en_US]=falconsControl autoboot
+Comment=falconsControl autoboot
+EOL
+}
+
+function subMotorConfig
+{
+    sudo cp /home/robocup/falcons/code/packages/peripheralsInterface/scripts/ttyUSB.rules /etc/udev/rules.d/
 }
 
 # parse input
@@ -52,12 +74,15 @@ subCheckRobotNum $robotNum
 subCheckSudo
 
 # TODO some sanity check or prompt, to prevent user accidentally running this on own laptop?
+echo "Safety Warning: Exiting before making changes -- disable me from the code to run this script!"
 exit 0
 
 # do the work
 subSetHostName $robotNum
 export TURTLE5K_ROBOTNUMBER=$robotNum # temporary for following scripts; normally done when starting shell 
 subConfigureIp $robotNum
+subAutoboot
+subMotorConfig
 
 # TODO sshkeys + gitconfig - Tim can you help with these two?
 

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+
+make multiCam || true
+
+while ( true ) ; do
+   echo "INFO    : restart multiCam from script"
+   ./multiCam -n
+   sleep 0.5
+done

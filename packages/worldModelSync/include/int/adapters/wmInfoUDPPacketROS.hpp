@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -33,7 +33,7 @@ class wmInfoUDPPacketROS
 		~wmInfoUDPPacketROS();
 
 		void initializeROS();
-		void notifyNewUDPPacket(Facilities::Network::cByteArray array);
+		void notifyNewUDPPacket(Facilities::cByteArray array);
 	private:
 		boost::shared_ptr<ros::NodeHandle> _hROS;
 		ros::ServiceClient _srvSetRemoteBallLocations;

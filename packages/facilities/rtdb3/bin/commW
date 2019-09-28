@@ -1,0 +1,10 @@
+#!/bin/bash
+# Falcons wrapper around comm
+
+
+# comm expects an agent environment variable, so we map our own
+export AGENT=${TURTLE5K_ROBOTNUMBER}
+
+# no further arguments -- these are handled via configuration XML
+rosrun rtdb3 comm2
+

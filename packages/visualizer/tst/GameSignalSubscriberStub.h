@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -51,7 +51,7 @@ private:
     
 
 public Q_SLOTS:
-    virtual void onBallPositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel, float confidence) override; // Ball position according to one robot
+    virtual void onBallPositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel, float confidence, float age, CameraType camType) override; // Ball position according to one robot
     virtual void onBallPossessionChanged(uint8_t senderRobotId, SignalMode mode, BallPossessionType type, uint8_t robotId) override; // Ball possession according to one robot
     virtual void onOwnTeamPositionChanged(uint8_t senderRobotId, SignalMode mode, uint8_t robotId, PositionVelocity& posvel) override; // Team member position according to one robot
     virtual void onObstaclePositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel) override; // Obstacle position according to one robot

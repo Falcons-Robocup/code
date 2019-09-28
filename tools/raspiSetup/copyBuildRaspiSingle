@@ -1,0 +1,124 @@
+#!/bin/bash
+
+# Copyright 2018 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to copy, build and run the raspi grabber on the raspi board
+
+set -e
+
+setupPath=../../tools/raspiSetup
+controlPath=../../packages/raspiControl
+grabPath=../../peripherals/raspiGrab
+analyzePath=../../peripherals/raspiAnalyze
+systemPath=../../peripherals/raspiSystem
+
+sshOptions="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no"
+scpCommand="sshpass -p raspberry scp $sshOptions"
+sshCommand="sshpass -p raspberry ssh $sshOptions"
+
+host="10.0.0.70"
+
+if [ "$1" = "cam0" ]; then
+   host="10.0.0.70"
+   name="cam0"
+elif [ "$1" = "cam1" ]; then
+   host="10.0.0.71"
+   name="cam0"
+elif [ "$1" = "cam2" ]; then
+   host="10.0.0.72"
+   name="cam0"
+elif [ "$1" = "cam3" ]; then
+   host="10.0.0.73"
+   name="cam1"
+else
+   echo "ERROR   : unknown host $1"
+   exit 1 # failure
+fi
+
+deployDir=cam0Dir
+deployFile=cam0Dir.tgz
+if [ "$host" = "10.0.0.70" ]; then
+   deployDir=cam0Dir
+   deployFile=cam0Dir.tgz
+elif [ "$host" = "10.0.0.71" ]; then
+   deployDir=cam1Dir
+   deployFile=cam1Dir.tgz
+elif [ "$host" = "10.0.0.72" ]; then
+   deployDir=cam2Dir
+   deployFile=cam2Dir.tgz
+elif [ "$host" = "10.0.0.73" ]; then
+   deployDir=cam3Dir
+   deployFile=cam3Dir.tgz
+else
+   echo "ERROR   : unknown ip address $1"
+   exit 1 # failure
+fi
+
+pending=true
+while $pending; do
+   ping -W 1 -c 1 $host >/dev/null 2>/dev/null
+   if [ "$?" != "0" ]; then
+      echo "ERROR     : $host (raspi) not available, keep trying"
+      sleep 5
+   else
+      pending=false
+   fi
+done
+
+echo "INFO      : $host available, deploy to and compile files on raspi"
+
+# create local directory to store all files required for the raspi
+rm -rf $deployDir
+mkdir -p $deployDir $deployDir/raspiGrab $deployDir/raspiAnalyze $deployDir/raspiSystem $deployDir/tmp $deployDir/.ssh
+
+# raspi grab files
+cp $grabPath/armBuild/Makefile $deployDir/raspiGrab
+cp $grabPath/src/RaspiVidYUVFalcons.c $deployDir/raspiGrab
+cp $controlPath/include/raspiDefaults.hpp $deployDir/raspiGrab
+
+# raspi analyzer files
+cp $analyzePath/armBuild/Makefile $deployDir/raspiAnalyze
+cp $analyzePath/src/raspiAnalyze.c $deployDir/raspiAnalyze
+cp $controlPath/include/raspiDefaults.hpp $deployDir/raspiAnalyze
+
+# raspi system files
+cp $systemPath/armBuild/Makefile $deployDir/raspiSystem
+cp $systemPath/src/raspiSystem.c $deployDir/raspiSystem
+cp $systemPath/src/raspiRgbToBmp.c $deployDir/raspiSystem
+cp $controlPath/include/raspiDefaults.hpp $deployDir/raspiSystem
+
+# generic os related files
+# WARNING: to make use of the updated config.txt reboot raspi
+cp $setupPath/config.txt $deployDir/tmp
+
+# WARNING: to make use of the updated rc.local reboot raspi
+cp $setupPath/rc.local $deployDir/tmp
+
+cp ../../config/authorized_keys $deployDir/.ssh
+
+# raspi scripts
+cp $setupPath/killRaspi $deployDir
+cp $setupPath/killMostRaspi $deployDir
+cp $setupPath/runRaspi $deployDir
+cp $setupPath/runGrab $deployDir
+cp $setupPath/runAnalyze $deployDir
+cp $setupPath/runSystem $deployDir
+cp $setupPath/sleepKillReboot $deployDir
+cp $setupPath/md5sumAllFiles $deployDir
+
+cd $deployDir
+tar czf ../$deployFile .
+cd ..
+
+# copy the tgz and deploy script to the raspi
+$scpCommand $deployFile deployRaspi pi@$host:
+
+# remove the created files
+rm -rf $deployFile $deployDir
+
+$sshCommand pi@$host -T "./deployRaspi || true"
+
+# echo "INFO      : $host deploy update done"
+
+exit 0 # success

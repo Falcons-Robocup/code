@@ -24,7 +24,7 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #uncomment if you have defined messages
 #rosbuild_genmsg()
 #uncomment if you have defined services
-rosbuild_gensrv()
+#rosbuild_gensrv()
 
 #add dynamic reconfigure api
 rosbuild_find_ros_package(dynamic_reconfigure)
@@ -44,13 +44,12 @@ gencfg()
 #rosbuild_add_executable(set_obstacles src/set_obstacles.cpp)
 ####################
 
-rosbuild_add_library(PathPlanningRosStub src/cPathPlanningRosStub.cpp)
+#rosbuild_add_library(PathPlanningRosStub src/cPathPlanningRosStub.cpp)
 
 rosbuild_add_library(pathPlanningFacilities src/facilities/cObstacleFacilities.cpp)
-rosbuild_add_library(rosConnect src/adapters/cWorldModelAdapter.cpp
-                                src/adapters/cTeamplayAdapter.cpp
-                                src/adapters/cSetSpeedAdapter.cpp
-                                src/adapters/cReconfigureAdapter.cpp
+rosbuild_add_library(rtdbAdapters src/adapters/cRTDBInputAdapter.cpp
+                                src/adapters/cRTDBOutputAdapter.cpp
+                                src/adapters/ConfigAdapter.cpp
                                 src/adapters/cDiagnosticsAdapter.cpp)
 rosbuild_add_library(pathPlanningAlgorithms src/cAbstractPathPlanning.cpp
                                             src/algorithms/cXYLinear.cpp
@@ -72,12 +71,14 @@ rosbuild_add_library(pathPlanningAlgorithms src/cAbstractPathPlanning.cpp
                                             src/algorithms/cTokyoDriftVelocity.cpp
                                             src/algorithms/cFCStoRCS.cpp
                                             src/algorithms/cBoundaryLimiter.cpp
-                                            src/algorithms/cLimitVelocities.cpp)
-target_link_libraries(pathPlanningAlgorithms rosConnect pathPlanningFacilities)
+                                            src/algorithms/cLimitVelocities.cpp
+                                            src/algorithms/cDeadZone.cpp)
+target_link_libraries(rtdbAdapters yaml-cpp)
+target_link_libraries(pathPlanningAlgorithms rtdbAdapters pathPlanningFacilities)
 rosbuild_add_executable(pathplanningNode src/main_ros.cpp
                                          src/cPathPlanningMain.cpp
                                          src/cPathPlanningData.cpp)
-target_link_libraries(pathplanningNode rosConnect yaml-cpp)
+target_link_libraries(pathplanningNode rtdbAdapters wmClient)
 target_link_libraries(pathplanningNode pathPlanningAlgorithms)
-
+rosbuild_link_boost(pathplanningNode system thread)
 

@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# one liner to build the vision standalone
-
-set -e
-rosrun vision visionStandalone

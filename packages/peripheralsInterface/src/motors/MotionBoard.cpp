@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -81,10 +81,10 @@ void MotionBoard::handleDefaultResponse(ReceivePackage &package) {
 	motionData.measuredValue = package.getData<int16_t>(2); // TODO:check if it is correct value
 	motionData.motorTemperature = ntcResistanceToMotorTemperature(adcVoltageToNtcResistance(adcToAdcVoltage(package.getData<uint16_t>(19))));
 
-	motionData.pidOutputMs = package.getData<int32_t>(3) / 65536.0 * oneWheelTick/oneTimeTick; // pidOutput in m/s
-	motionData.integralMs = package.getData<int32_t>(2) * motorControllerData.pid.i / 65536.0 * oneWheelTick/oneTimeTick; // integral * Ki / 65536 (see xmegamotor/src/pid.c) in m/s
-	motionData.errorMs = package.getData<int16_t>(3) * ((int32_t)motorControllerData.pid.p << 4) / 65536.0 * oneWheelTick/oneTimeTick; // error * Kp / 65536 (see xmegamotor/src/pid.c) in m/s
-	motionData.derivativeMs = 0; //Implementation still needed
+	motionData.pidOutput = package.getData<int32_t>(3) / 65536.0; // pidOutput
+	motionData.integral = package.getData<int32_t>(2) * motorControllerData.pid.i / 65536.0; // integral * Ki (see xmegamotor/src/pid.c)
+	motionData.error = package.getData<int16_t>(3) * ((int32_t)motorControllerData.pid.p << 4) / 65536.0; // error * Kp (see xmegamotor/src/pid.c)
+	motionData.derivative = 0; //Implementation still needed
 }
 
 MotionBoardDataOutput MotionBoard::getBoardData() {

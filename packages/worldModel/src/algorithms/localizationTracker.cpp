@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,6 +20,7 @@
 #include "int/configurators/localizationConfigurator.hpp"
 
 #include "FalconsCommon.h"
+#include "tracing.hpp"
 
 #include <algorithm>
 
@@ -27,6 +28,11 @@
 localizationTracker::localizationTracker()
 {
     _id = 0;
+    _lastPokeTimestamp = 0.0;
+    _lastVisionTimestamp = 0.0;
+    _visionConfidence = 0.0;
+    _creationTimestamp = 0.0;
+    _trackerTimeout = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::trackerTimeout);
 }
 
 localizationTracker::~localizationTracker()
@@ -39,9 +45,10 @@ void localizationTracker::updateExpectedPosition(Position2D const &deltaDisplace
     _position += deltaDisplacementPos;
 }
 
-void localizationTracker::feedMeasurement(robotMeasurementClass_t const &measurement)
+void localizationTracker::feedMeasurement(robotMeasurementClass_t const &measurement, double timestampNow)
 {
     // store best of both mirror positions
+    _lastPokeTimestamp = timestampNow;
     Position2D pos1 = measurement.getPosition();
     Position2D pos2 = mirror(measurement.getPosition());
     if (getPositionScore(pos1, _position) < getPositionScore(pos2, _position))
@@ -54,17 +61,26 @@ void localizationTracker::feedMeasurement(robotMeasurementClass_t const &measure
     }
     _visionConfidence = measurement.getConfidence();
     // store timestamp
-    _lastUpdateTimestamp = measurement.getTimestamp();
+    _lastVisionTimestamp = double(measurement.getTimestamp());
     if (_recentTimestamps.size() == 0)
     {
-        _creationTimestamp = _lastUpdateTimestamp;
+        _creationTimestamp = _lastVisionTimestamp;
     }
-    _recentTimestamps.push_front(_lastUpdateTimestamp);
+    _recentTimestamps.push_front(_lastVisionTimestamp);
 }
 
 void localizationTracker::setId(int id)
 {
     _id = id;
+}
+
+float localizationTracker::getLocAge(double timestampNow)
+{
+    if (_recentTimestamps.size())
+    {
+        return (timestampNow - double(_recentTimestamps.at(0)));
+    }
+    return 100; // something large
 }
 
 Position2D localizationTracker::mirror(Position2D const &position) const
@@ -106,9 +122,14 @@ float localizationTracker::getCameraMeasurementScore(robotMeasurementClass_t con
     return result;
 }
 
-double localizationTracker::getLastUpdateTimestamp() const
+double localizationTracker::getLastVisionTimestamp() const
 {
-    return _lastUpdateTimestamp;
+    return _lastVisionTimestamp;
+}
+
+double localizationTracker::getLastPokeTimestamp() const
+{
+    return _lastPokeTimestamp;
 }
 
 float localizationTracker::getTrackerScore(double timestampNow)
@@ -118,13 +139,13 @@ float localizationTracker::getTrackerScore(double timestampNow)
     float scoreActivityScale = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::scoreActivityScale);
     float scoreFreshScale = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::scoreFreshScale);
     // calculate partial scores, each in [0, 1], higher is better
-    float ageScore = std::min(1.0, (_lastUpdateTimestamp - _creationTimestamp) / scoreAgeScale);
-    float freshScore = 1.0 - std::min(1.0, (timestampNow - _lastUpdateTimestamp) / scoreFreshScale);
+    float ageScore = std::min(1.0, (_lastVisionTimestamp - _creationTimestamp) / scoreAgeScale);
+    float freshScore = 1.0 - std::min(1.0, (timestampNow - _lastVisionTimestamp) / scoreFreshScale);
     cleanup(timestampNow);
     float activityScore = std::min(1.0f, _recentTimestamps.size() / scoreActivityScale);
     // total score then simply is the product of all partial scores
     float score = ageScore * freshScore * activityScore;
-    TRACE("tracker id=%d has score age=%5.2f fresh=%5.2f activity=%5.2f total=%5.2f", _id, ageScore, freshScore, activityScore, score);
+    //tprintf("tracker id=%d has score age=%5.2f fresh=%5.2f activity=%5.2f total=%5.2f", _id, ageScore, freshScore, activityScore, score);
     return score;
 }
 
@@ -140,7 +161,7 @@ float localizationTracker::getVisionConfidence() const
 
 bool localizationTracker::isTimedOut(double timestampNow) const
 {
-    return (timestampNow - _lastUpdateTimestamp) >= localizationConfigurator::getInstance().get(localizationConfiguratorFloats::trackerTimeout);
+    return (timestampNow - _lastVisionTimestamp) >= _trackerTimeout;
 }
 
 int localizationTracker::getId()
@@ -156,10 +177,8 @@ int localizationTracker::requestId()
 
 void localizationTracker::cleanup(double timestampNow)
 {
-    float timeout = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::trackerTimeout);
-    _recentTimestamps.erase(std::remove_if(_recentTimestamps.begin(),
-                                           _recentTimestamps.end(),
-                            [=](double t) { return (timestampNow - t) > timeout; }),
-                            _recentTimestamps.end());    
+    _recentTimestamps.erase(std::remove_if(_recentTimestamps.begin(), _recentTimestamps.end(),
+        [=](double t) { return (timestampNow - t) > _trackerTimeout; }),
+        _recentTimestamps.end());    
 }
 

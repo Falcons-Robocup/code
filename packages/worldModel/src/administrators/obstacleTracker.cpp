@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,7 +20,8 @@
 
 #include "int/configurators/obstacleTrackerConfigurator.hpp"
 
-#include "cDiagnosticsEvents.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 size_t obstacleTracker::_staticTrackerID = 0;
 
@@ -32,14 +33,14 @@ obstacleTracker::obstacleTracker(const objectMeasurementCache &measurement)
  *
  */
 {
-	_obstacleMeasurements.clear();
-	_obstacleMeasurements.push_back(measurement);
-	_staticTrackerID++;
-	_trackerID = _staticTrackerID;
-	_lastObstacleResult.setId(_trackerID);
+    _obstacleMeasurements.clear();
+    _obstacleMeasurements.push_back(measurement);
+    _staticTrackerID++;
+    _trackerID = _staticTrackerID;
+    _lastObstacleResult.setId(_trackerID);
 
     // initialize obstacleResult so new measurements can be added w.r.t. its position
-	Vector3D pos = _obstacleMeasurements.back().getPositionFcs();
+    Vector3D pos = _obstacleMeasurements.back().getPositionFcs();
     _lastObstacleResult.setCoordinates(pos.x, pos.y, 0.0);
     
     // configurables
@@ -73,58 +74,58 @@ obstacleTracker::~obstacleTracker()
  * Chuck Norris CAN find the end of a circle
  */
 {
-	_obstacleMeasurements.clear();
+    _obstacleMeasurements.clear();
 }
 
 bool sortOnIncreasingTime(const objectMeasurementCache& objA, const objectMeasurementCache& objB)
 {
-    return objA.getObjectMeasurement().getTimestamp() < objB.getObjectMeasurement().getTimestamp();
+    return objA.getObjectMeasurement().timestamp < objB.getObjectMeasurement().timestamp;
 }
 
 void obstacleTracker::addObstacleMeasurement(const objectMeasurementCache &measurement, bool &measurementIsAdded)
 {
-	try
-	{
-		/*
-		 * Here we either accept or reject measurement for this tracker object
-		 * Current method:
-		 *  - take position from latest solution
-		 *    (if not available yet, which happens a brief moment after creation, then take latest measurement)
-		 *  - check distance against threshold
-		 */
+    try
+    {
+    	/*
+    	 * Here we either accept or reject measurement for this tracker object
+    	 * Current method:
+    	 *  - take position from latest solution
+    	 *    (if not available yet, which happens a brief moment after creation, then take latest measurement)
+    	 *  - check distance against threshold
+    	 */
         Vector3D currentPos(_lastObstacleResult.getX(), _lastObstacleResult.getY(), 0.0);
         Vector3D newPos = measurement.getPositionFcs();
         float threshold = _config.xyTolerance;
         if (vectorsize(currentPos - newPos) < threshold)
-		{
-		    // invariant: measurements shall be sorted by time
-		    // optimization: only sort if needed, i.e. timestamp is not newer than the last one
-		    if (measurement.getObjectMeasurement().getTimestamp() < _obstacleMeasurements.back().getObjectMeasurement().getTimestamp())
-		    {
-    		    _obstacleMeasurements.push_back(measurement);
-    		    std::sort(_obstacleMeasurements.begin(), _obstacleMeasurements.end(), sortOnIncreasingTime);
-		    }
-		    else
-		    {
-    		    _obstacleMeasurements.push_back(measurement);
-    		    // no sort required
-		    }
-		    measurementIsAdded = true;
+    	{
+    	    // invariant: measurements shall be sorted by time
+    	    // optimization: only sort if needed, i.e. timestamp is not newer than the last one
+    	    if (measurement.getObjectMeasurement().timestamp < _obstacleMeasurements.back().getObjectMeasurement().timestamp)
+    	    {
+        	    _obstacleMeasurements.push_back(measurement);
+        	    std::sort(_obstacleMeasurements.begin(), _obstacleMeasurements.end(), sortOnIncreasingTime);
+    	    }
+    	    else
+    	    {
+        	    _obstacleMeasurements.push_back(measurement);
+        	    // no sort required
+    	    }
+    	    measurementIsAdded = true;
         }
         else
         {
-		    measurementIsAdded = false;
+    	    measurementIsAdded = false;
         }
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    }
+    catch(std::exception &e)
+    {
+    	TRACE_ERROR("Caught exception: %s", e.what());
+    	std::cout << "Caught exception: " << e.what() << std::endl;
+    	throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
-void obstacleTracker::setConfidence(const double timeNow)
+void obstacleTracker::setConfidence(rtime const timeNow)
 {
     _lastObstacleResult.setConfidence(1.0); 
     // for now, confidence is not applicable for obstacles
@@ -135,14 +136,15 @@ void obstacleTracker::setConfidence(const double timeNow)
     // anticipating the direction of the shot
 }
 
-void obstacleTracker::performCalculation(const double timeNow)
+void obstacleTracker::performCalculation(rtime const timeNow)
 {
-	try
-	{
+    TRACE_FUNCTION("");
+    try
+    {
         // extrapolation or not? if latest measurement is too old for extrapolation,
         // then do not update, but reuse latest result
-        double latestMeasurementTimestamp = _obstacleMeasurements.back().getObjectMeasurement().getTimestamp();
-        if (timeNow <= latestMeasurementTimestamp + _config.extrapolationTimeout) 
+        double latestMeasurementTimestamp = _obstacleMeasurements.back().getObjectMeasurement().timestamp;
+        if (double(timeNow) <= latestMeasurementTimestamp + _config.extrapolationTimeout)
         {
 
             // entry point of the algorithm
@@ -184,11 +186,13 @@ void obstacleTracker::performCalculation(const double timeNow)
                     _lastObstacleResult.setCoordinates(_lastObstacleResult.getX(), _lastObstacleResult.getY(), 0.0);
                     _lastObstacleResult.setVelocities(0.0, 0.0, 0.0);
                     TRACE("fallback solution for trackerID=%d pos=(%6.2f, %6.2f), vel=0", _trackerID, _lastObstacleResult.getX(), _lastObstacleResult.getY());
-                     // restore config
+                    // restore config
                     _tracker.setConfig(_config.fitConfig);
                 }
             }
             
+            /*
+            // MVEH: disabled, excessive spam in visualizer for high speed warnings
             // extra checks on velocity
             // if too slow, then yield 0 speed
             // (probably not needed, as long as PathPlanning is robust for small speed vectors / does not "get scared" too much)
@@ -205,6 +209,7 @@ void obstacleTracker::performCalculation(const double timeNow)
                 int timeout = 3;
                 TRACE_WARNING_TIMEOUT(timeout, "obstacle with high speed (%6.2fm/s)", speed);
             }
+            */
             
             // store id
             _lastObstacleResult.setId(_trackerID);
@@ -214,91 +219,150 @@ void obstacleTracker::performCalculation(const double timeNow)
         }
 
         cleanUpTimedOutObstacleMeasurements(timeNow);
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    }
+    catch(std::exception &e)
+    {
+    	TRACE_ERROR("Caught exception: %s", e.what());
+    	std::cout << "Caught exception: " << e.what() << std::endl;
+    	throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
-bool obstacleTracker::isTimedOut(const double timeNow)
+bool obstacleTracker::isTimedOut(rtime const timeNow)
 {
-	try
-	{
-		bool retVal = false;
+    try
+    {
+    	bool retVal = false;
 
-		/*
-		 * State when tracker is not longer valid
-		 * Current behavior: when list of measurements are empty
-		 */
-		cleanUpTimedOutObstacleMeasurements(timeNow);
-		retVal = _obstacleMeasurements.empty();
+    	// State when tracker is not longer valid
+    	// Current behavior: when list of measurements are empty
+    	cleanUpTimedOutObstacleMeasurements(timeNow);
+    	retVal = _obstacleMeasurements.empty();
 
-		return retVal;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    	return retVal;
+    }
+    catch(std::exception &e)
+    {
+    	TRACE_ERROR("Caught exception: %s", e.what());
+    	std::cout << "Caught exception: " << e.what() << std::endl;
+    	throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+}
+
+void obstacleTracker::checkFake(std::vector<robotClass_t> const &teamMembers)
+{
+    TRACE_FUNCTION("");
+    // note: list of teammembers includes own location (see obstacleAdministrator.cpp)
+
+    // use list of current teammember locations to check if obstacle is fake
+    // store it as a property, so getters / diagnostics can make use of it
+    try
+    {
+        // initialize
+        _fake = false; // until proven otherwise
+        float thresholdMember = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorFloats::filterXYmemberTolerance);
+        Vector2D obstPos(_lastObstacleResult.getX(), _lastObstacleResult.getY());
+
+        // find robot closest to obstacle
+        float minDist = 1e9;
+        int closestRobotId = 0;
+        for (auto itRobot = teamMembers.begin(); itRobot != teamMembers.end(); ++itRobot)
+        {
+            Vector2D robotPos(itRobot->getX(), itRobot->getY());
+            float dist = (obstPos - robotPos).size();
+            //TRACE("obstacle id=%d at (%6.2f,%6.2f) has distance %6.2f to robot %d", _trackerID, obstPos.x, obstPos.y, dist, itRobot->getRobotID());
+            if (dist < minDist)
+            {
+                minDist = dist;
+                closestRobotId = itRobot->getRobotID();
+            }
+        }
+
+        // check if obstacle is seen by closest robot
+        if (minDist < thresholdMember)
+        {
+            // fake unless at least one contributing measurement by the robot
+            bool tmpFake = true;
+            for (auto itMeas = _obstacleMeasurements.begin(); itMeas != _obstacleMeasurements.end(); ++itMeas)
+            {
+                if (itMeas->getObjectMeasurement().identifier.robotID == closestRobotId)
+                {
+                    tmpFake = false;
+                }
+            }
+            if (tmpFake == true)
+            {
+                TRACE("filtering fake obstacle id=%d which has distance %6.2f to robot %d", _trackerID, minDist, closestRobotId);
+                _fake = true;
+            }
+        }
+
+        // TODO use thresholdOwn to ignore own-robot stuff (cables, wifi antennae, lens cape, etc.), closeby?
+        // no, this should be handled either by hardware or by vision export filtering
+        // here we do not have enough information to robustly apply such filtering - it could be the case that we are pushed by other robot
+        
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 obstacleClass_t obstacleTracker::getObstacle() const
 {
-	try
-	{
-		return _lastObstacleResult;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+    	return _lastObstacleResult;
+    }
+    catch(std::exception &e)
+    {
+    	TRACE_ERROR("Caught exception: %s", e.what());
+    	std::cout << "Caught exception: " << e.what() << std::endl;
+    	throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
-void obstacleTracker::cleanUpTimedOutObstacleMeasurements(const double timeNow)
+void obstacleTracker::cleanUpTimedOutObstacleMeasurements(rtime const timeNow)
 {
-	try
-	{
-		auto trackerTimeout = _config.trackerTimeout;
+    try
+    {
+    	auto trackerTimeout = _config.trackerTimeout;
 
-		for(auto i = _obstacleMeasurements.begin(); i != _obstacleMeasurements.end(); )
-		{
-			double time_diff = timeNow - i->getObjectMeasurement().getTimestamp();
-			if(time_diff > trackerTimeout)
+    	for(auto i = _obstacleMeasurements.begin(); i != _obstacleMeasurements.end(); )
+    	{
+    		double time_diff = double(timeNow - i->getObjectMeasurement().timestamp);
+    		if(time_diff > trackerTimeout)
             {
                 // Delete obstacle measurement
-				i = _obstacleMeasurements.erase(i);
+    			i = _obstacleMeasurements.erase(i);
             }
             else
             {
                 ++i;
             }
-		}
- 	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    	}
+    }
+    catch(std::exception &e)
+    {
+    	TRACE_ERROR("Caught exception: %s", e.what());
+    	std::cout << "Caught exception: " << e.what() << std::endl;
+    	throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
-std::string obstacleTracker::toStr(double tcurr)
+std::string obstacleTracker::toStr(rtime const tcurr)
 {
     char buf[256];
     int N = (int)_obstacleMeasurements.size();
     assert(N > 0);
-    double age = tcurr - _obstacleMeasurements.begin()->getObjectMeasurement().getTimestamp();
-    double freshness = tcurr - _obstacleMeasurements.back().getObjectMeasurement().getTimestamp();
+    double age = tcurr - _obstacleMeasurements.begin()->getObjectMeasurement().timestamp;
+    double freshness = tcurr - _obstacleMeasurements.back().getObjectMeasurement().timestamp;
     int numRemoved = _tracker.getNumRemoved(); 
     float residual = _tracker.getFitResidual(); 
-    sprintf(buf, "%4d %7.3f %7.3f %7.3f %7.3f %3d %3d %6.3f %6.3f %6.3f", 
-            (int)_trackerID,
+    sprintf(buf, "%4d %d %7.3f %7.3f %7.3f %7.3f %3d %3d %6.3f %6.3f %6.3f", 
+            (int)_trackerID, _fake,
             _lastObstacleResult.getX(), _lastObstacleResult.getY(),
             _lastObstacleResult.getVX(), _lastObstacleResult.getVY(),
             N, numRemoved, residual, age, freshness);

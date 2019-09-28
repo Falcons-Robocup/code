@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -13,10 +13,14 @@
 #ifndef ROS_GAMESIGNALADAPTER_H
 #define ROS_GAMESIGNALADAPTER_H
 
+
+
 #include <vector>
 
 // ROS:
+#ifndef Q_MOC_RUN
 #include <ros/ros.h>
+#endif
 
 // Internal:
 #include "int/GameSignalAdapter.h"
@@ -43,8 +47,6 @@
 #include "rosMsgs/t_diag_info.h" // legacy
 #include "rosMsgs/t_event.h"
 #include "rosMsgs/t_diag_halmw.h"
-#include "rosMsgs/t_diag_compass.h"
-#include "rosMsgs/t_diag_active.h"
 #include "rosMsgs/t_diag_frontvision.h"
 #include "rosMsgs/t_diag_refbox.h"
 #include "rosMsgs/t_diag_vision_v2.h"
@@ -63,6 +65,7 @@ public:
 private:
     ros::NodeHandle* _rosNode;
     QTimer* _rosSpinTimer;
+    double _currentTimestamp;
     std::vector<ros::Subscriber> _rosSubscribers;
 
     // Subscribe and store subscriber
@@ -91,6 +94,8 @@ private:
     
     // convert ROS event message into visualizer internal LogEvent struct
     LogEvent convertRosEvent(const rosMsgs::t_event::ConstPtr& rosEvent);
+    double getCurrentTimestamp();
+    void setCurrentTimestamp(double t);
 
     /* == Topic subscription methods == */
 
@@ -99,6 +104,7 @@ private:
     void teamAnalyticsEventCallback(const rosMsgs::t_event::ConstPtr& msg);
     void teamAnalyticsOnlineCallback(const rosMsgs::t_ana_online::ConstPtr& msg);
     void teamWorldModelCallback(const rosMsgs::t_worldmodel_team::ConstPtr& msg);
+    void teamWorldModelOldCallback(const rosMsgs::t_worldmodel::ConstPtr& msg); // legacy wmV1
 
     // /teamA/robotN/g_diag_*:
     void robotWorldModelCallback(uint8_t robotId, const rosMsgs::t_diag_worldmodel::ConstPtr& msg);
@@ -117,8 +123,6 @@ private:
     void robotErrorCallback(uint8_t robotId, const rosMsgs::t_diag_error::ConstPtr& msg); // legacy
     void robotInfoCallback(uint8_t robotId, const rosMsgs::t_diag_info::ConstPtr& msg); // legacy
     void robotHalMWCallback(uint8_t robotId, const rosMsgs::t_diag_halmw::ConstPtr& msg);
-    void robotCompassCallback(uint8_t robotId, const rosMsgs::t_diag_compass::ConstPtr& msg);
-    void robotActiveCallback(uint8_t robotId, const rosMsgs::t_diag_active::ConstPtr& msg);
     void robotFrontVisionCallback(uint8_t robotId, const rosMsgs::t_diag_frontvision::ConstPtr& msg);
     void robotRefboxCallback(uint8_t robotId, const rosMsgs::t_diag_refbox::ConstPtr& msg);
 

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,8 +19,7 @@
 #include "int/rules/ruleAvoidAreas.hpp"
 
 #include "int/stores/fieldDimensionsStore.hpp"
-#include "int/stores/ownRobotStore.hpp"
-#include "int/stores/teamMatesStore.hpp"
+#include "int/stores/robotStore.hpp"
 #include "int/utilities/trace.hpp"
 
 using namespace teamplay;
@@ -41,7 +40,7 @@ ruleAvoidAreas::~ruleAvoidAreas()
 
 bool ruleAvoidAreas::isCurrentPositionValid() const
 {
-    auto current_position = ownRobotStore::getOwnRobot().getPosition();
+    auto current_position = robotStore::getInstance().getOwnRobot().getPosition();
     if (fieldDimensionsStore::getFieldDimensions().isPositionInArea(current_position, fieldArea::OWN_GOALAREA))
     {
         return isCurrentPositionInOwnGoalAreaValid();
@@ -73,9 +72,9 @@ bool ruleAvoidAreas::isCurrentPositionInOwnPenaltyAreaValid() const
      * 2. One field player is allowed to be in the own penalty area
      *    as long as the timer has not elapsed */
 
-    if (ownRobotStore::getOwnRobot().getRole() != treeEnum::R_GOALKEEPER)
+    if (robotStore::getInstance().getOwnRobot().getRole() != treeEnum::R_GOALKEEPER)
     {
-        if (teamMatesStore::getTeamMatesIncludingGoalie().getNumberOfRobotsExclGoalieInArea(fieldArea::OWN_PENALTYAREA) > 0)
+        if (robotStore::getInstance().getAllRobotsExclGoalieInArea(fieldArea::OWN_PENALTYAREA).size() > 1)
         {
             TRACE("Current position is invalid, because too many teammates in own penalty area");
             return false;
@@ -97,7 +96,7 @@ bool ruleAvoidAreas::isCurrentPositionInOppPenaltyAreaValid() const
     /* One field player is allowed to be in the opponent penalty area
      * as long as the timer has not elapsed */
 
-    if (teamMatesStore::getTeamMatesIncludingGoalie().getNumberOfRobotsExclGoalieInArea(fieldArea::OPP_PENALTYAREA) > 0)
+    if (robotStore::getInstance().getAllRobotsInArea(fieldArea::OPP_PENALTYAREA).size() > 1)
     {
         TRACE("Current position is invalid, because too many teammates in opponent penalty area");
         return false;
@@ -117,7 +116,7 @@ bool ruleAvoidAreas::isCurrentPositionInOwnGoalAreaValid() const
 {
     /* Only the goalie is allowed in the own goal area */
 
-    if (ownRobotStore::getOwnRobot().getRole() != treeEnum::R_GOALKEEPER)
+    if (robotStore::getInstance().getOwnRobot().getRole() != treeEnum::R_GOALKEEPER)
     {
         TRACE("Current position is invalid, because this robot is not goalkeeper");
         return false;
@@ -138,28 +137,25 @@ bool ruleAvoidAreas::isCurrentPositionInOppGoalAreaValid() const
 std::vector<polygon2D> ruleAvoidAreas::getForbiddenAreas() const
 {
     std::vector<polygon2D> forbidden_areas;
-    auto currentPosition = ownRobotStore::getOwnRobot().getPosition();
+    auto currentPosition = robotStore::getInstance().getOwnRobot().getPosition();
 
-    if (fieldDimensionsStore::getFieldDimensions().isPositionNearArea(currentPosition, fieldArea::OWN_GOALAREA))
+    if (!isCurrentPositionInOwnGoalAreaValid())
     {
-        if (!isCurrentPositionInOwnGoalAreaValid())
-        {
-            forbidden_areas.push_back(fieldDimensionsStore::getFieldDimensions().getArea(fieldArea::OWN_GOALAREA));
-        }
+        TRACE("FBA: OWN_GOALAREA");
+        forbidden_areas.push_back(fieldDimensionsStore::getFieldDimensions().getArea(fieldArea::OWN_GOALAREA));
     }
 
-    if (fieldDimensionsStore::getFieldDimensions().isPositionNearArea(currentPosition, fieldArea::OPP_GOALAREA))
+    if (!isCurrentPositionInOppGoalAreaValid())
     {
-        if (!isCurrentPositionInOppGoalAreaValid())
-        {
-            forbidden_areas.push_back(fieldDimensionsStore::getFieldDimensions().getArea(fieldArea::OPP_GOALAREA));
-        }
+        TRACE("FBA: OPP_GOALAREA");
+        forbidden_areas.push_back(fieldDimensionsStore::getFieldDimensions().getArea(fieldArea::OPP_GOALAREA));
     }
 
     if (fieldDimensionsStore::getFieldDimensions().isPositionNearArea(currentPosition, fieldArea::OWN_PENALTYAREA))
     {
         if (!isCurrentPositionInOwnPenaltyAreaValid())
         {
+            TRACE("FBA: OWN_PENALTYAREA");
             forbidden_areas.push_back(fieldDimensionsStore::getFieldDimensions().getArea(fieldArea::OWN_PENALTYAREA));
         }
     }
@@ -168,6 +164,7 @@ std::vector<polygon2D> ruleAvoidAreas::getForbiddenAreas() const
     {
         if (!isCurrentPositionInOppPenaltyAreaValid())
         {
+            TRACE("FBA: OPP_PENALTYAREA");
             forbidden_areas.push_back(fieldDimensionsStore::getFieldDimensions().getArea(fieldArea::OPP_PENALTYAREA));
         }
     }

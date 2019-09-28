@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,17 +16,18 @@
  *      Author: Erik Kouters
  */
 
+#include <boost/thread/thread.hpp>
 #include "int/cPathPlanningData.hpp"
 #include "int/adapters/cDiagnosticsAdapter.hpp"
 #include "cEnvironmentField.hpp"
-#include "cDiagnosticsEvents.hpp"
+#include "cDiagnostics.hpp"
 #include "int/facilities/cObstacleFacilities.hpp"
 
 boost::mutex _mtx;
 
 cPathPlanningData::cPathPlanningData()
 {
-	_logged_out_of_bounds = false;
+    _logged_out_of_bounds = false;
 }
 
 // Main data
@@ -59,6 +60,20 @@ void cPathPlanningData::setMotionProfileType(const pp_motionProfile_type& motion
     _mtx.unlock();
 
 }
+
+void cPathPlanningData::getRobotStop(bool& stop)
+{
+    _mtx.lock();
+    stop = _robotStop;
+    _mtx.unlock();
+}
+void cPathPlanningData::setRobotStop(const bool& stop)
+{
+    _mtx.lock();
+    _robotStop = stop;
+    _mtx.unlock();
+}
+
 
 
 
@@ -93,6 +108,21 @@ void cPathPlanningData::setVelocity(const Velocity2D& vel)
     _mtx.unlock();
 }
 
+void cPathPlanningData::getAcceleration(Velocity2D& acc)
+{
+
+    _mtx.lock();
+    acc = _acc;
+    _mtx.unlock();
+}
+void cPathPlanningData::setAcceleration(const Velocity2D& acc)
+{
+
+    _mtx.lock();
+    _acc = acc;
+    _mtx.unlock();
+}
+
 void cPathPlanningData::getOnlyObstacles(std::vector<pp_obstacle_struct_t>& obstacles)
 {
 
@@ -110,16 +140,16 @@ void cPathPlanningData::getAllObstacles(std::vector<pp_obstacle_struct_t>& obsta
     /* Adding forbidden areas as obstacles as well */
     for(size_t i = 0; i < _staticForbiddenAreas.size(); i++)
     {
-    	std::vector<pp_obstacle_struct_t> forbiddenObstacles;
-    	cObstacleFacilities::projectObstaclesOnForbiddenArea(_staticForbiddenAreas.at(i), obstacles);
-    	obstacles.insert(obstacles.end(), forbiddenObstacles.begin(), forbiddenObstacles.end());
+        std::vector<pp_obstacle_struct_t> forbiddenObstacles;
+        cObstacleFacilities::projectObstaclesOnForbiddenArea(_staticForbiddenAreas.at(i), obstacles);
+        obstacles.insert(obstacles.end(), forbiddenObstacles.begin(), forbiddenObstacles.end());
     }
 
     for(size_t i = 0; i < _dynamicForbiddenAreas.size(); i++)
     {
-    	std::vector<pp_obstacle_struct_t> forbiddenObstacles;
-    	cObstacleFacilities::projectObstaclesOnForbiddenArea(_dynamicForbiddenAreas.at(i), obstacles);
-    	obstacles.insert(obstacles.end(), forbiddenObstacles.begin(), forbiddenObstacles.end());
+        std::vector<pp_obstacle_struct_t> forbiddenObstacles;
+        cObstacleFacilities::projectObstaclesOnForbiddenArea(_dynamicForbiddenAreas.at(i), obstacles);
+        obstacles.insert(obstacles.end(), forbiddenObstacles.begin(), forbiddenObstacles.end());
     }
 
     _mtx.unlock();
@@ -142,16 +172,16 @@ void cPathPlanningData::getForbiddenAreas(std::vector<pp_obstacle_struct_t>& for
 
     for(size_t i = 0; i < _staticForbiddenAreas.size(); i++)
     {
-    	std::vector<pp_obstacle_struct_t> obstacles;
-    	cObstacleFacilities::projectObstaclesOnForbiddenArea(_staticForbiddenAreas.at(i), obstacles);
-    	forbiddenAreas.insert(forbiddenAreas.end(), obstacles.begin(), obstacles.end());
+        std::vector<pp_obstacle_struct_t> obstacles;
+        cObstacleFacilities::projectObstaclesOnForbiddenArea(_staticForbiddenAreas.at(i), obstacles);
+        forbiddenAreas.insert(forbiddenAreas.end(), obstacles.begin(), obstacles.end());
     }
 
     for(size_t i = 0; i < _dynamicForbiddenAreas.size(); i++)
     {
-    	std::vector<pp_obstacle_struct_t> obstacles;
-    	cObstacleFacilities::projectObstaclesOnForbiddenArea(_dynamicForbiddenAreas.at(i), obstacles);
-    	forbiddenAreas.insert(forbiddenAreas.end(), obstacles.begin(), obstacles.end());
+        std::vector<pp_obstacle_struct_t> obstacles;
+        cObstacleFacilities::projectObstaclesOnForbiddenArea(_dynamicForbiddenAreas.at(i), obstacles);
+        forbiddenAreas.insert(forbiddenAreas.end(), obstacles.begin(), obstacles.end());
     }
 
     _mtx.unlock();
@@ -268,20 +298,111 @@ void cPathPlanningData::setDeltaPosition(const Position2D& pos)
 
 void cPathPlanningData::getIsLowestActiveRobot(bool &isLowest)
 {
-	_mtx.lock();
+    _mtx.lock();
     isLowest = _robotIsLowestActive;
     _mtx.unlock();
 }
 
 void cPathPlanningData::setIsLowestActiveRobot(const bool &isLowest)
 {
-	_mtx.lock();
+    _mtx.lock();
     _robotIsLowestActive = isLowest;
     _mtx.unlock();
 }
 
 
 // Reconfigure data
+
+void cPathPlanningData::setConfig(configPathPlanning const &config)
+{
+    // call relevant smaller setters below, rewriting data type
+    setObstacleAvoidanceIsEnabled(config.obstacleAvoidanceEnabled);
+
+    pp_limiters_struct_t limits;
+    limits.maxVelXY                            = config.normal.limiters.maxVelXY;
+    limits.maxVelXY_withBall                   = config.normal.limiters.maxVelXY_withBall;
+    limits.maxVelPhi                           = config.normal.limiters.maxVelPhi;
+    limits.maxVelPhi_withBall                  = config.normal.limiters.maxVelPhi_withBall;
+    limits.maxAccXY                            = config.normal.limiters.maxAccXY;
+    limits.maxAccPhi                           = config.normal.limiters.maxAccPhi;
+    limits.tolerationXY                        = config.normal.limiters.tolerationXY;
+    limits.tolerationPhi                       = config.normal.limiters.tolerationPhi;
+    limits.relativeSpeedFactorX                = config.normal.limiters.relativeSpeedFactorX;
+    limits.relativeSpeedFactorY                = config.normal.limiters.relativeSpeedFactorY;
+    limits.relativeSpeedFactorPhi              = config.normal.limiters.relativeSpeedFactorPhi;
+    limits.obstacleAvoidanceScalingFactor      = config.normal.limiters.obstacleAvoidanceScalingFactor;
+    limits.obstacleAvoidanceDistanceFactor     = config.normal.limiters.obstacleAvoidanceDistanceFactor;
+    setLimits(pp_motionProfile_type::NORMAL, limits);
+
+    limits.maxVelXY                            = config.setpiece.limiters.maxVelXY;
+    limits.maxVelXY_withBall                   = config.setpiece.limiters.maxVelXY_withBall;
+    limits.maxVelPhi                           = config.setpiece.limiters.maxVelPhi;
+    limits.maxVelPhi_withBall                  = config.setpiece.limiters.maxVelPhi_withBall;
+    limits.maxAccXY                            = config.setpiece.limiters.maxAccXY;
+    limits.maxAccPhi                           = config.setpiece.limiters.maxAccPhi;
+    limits.tolerationXY                        = config.setpiece.limiters.tolerationXY;
+    limits.tolerationPhi                       = config.setpiece.limiters.tolerationPhi;
+    limits.relativeSpeedFactorX                = config.setpiece.limiters.relativeSpeedFactorX;
+    limits.relativeSpeedFactorY                = config.setpiece.limiters.relativeSpeedFactorY;
+    limits.relativeSpeedFactorPhi              = config.setpiece.limiters.relativeSpeedFactorPhi;
+    limits.obstacleAvoidanceScalingFactor      = config.setpiece.limiters.obstacleAvoidanceScalingFactor;
+    limits.obstacleAvoidanceDistanceFactor     = config.setpiece.limiters.obstacleAvoidanceDistanceFactor;
+    setLimits(pp_motionProfile_type::SETPIECE, limits);
+
+    pp_pid_params_struct_t pid;
+    pid.X_P       = config.normal.pid.X_P;
+    pid.X_I       = config.normal.pid.X_I;
+    pid.X_D       = config.normal.pid.X_D;
+    pid.Y_P       = config.normal.pid.Y_P;
+    pid.Y_I       = config.normal.pid.Y_I;
+    pid.Y_D       = config.normal.pid.Y_D;
+    pid.XY_P      = config.normal.pid.XY_P;
+    pid.XY_I      = config.normal.pid.XY_I;
+    pid.XY_D      = config.normal.pid.XY_D;
+    pid.PHI_P     = config.normal.pid.PHI_P;
+    pid.PHI_I     = config.normal.pid.PHI_I;
+    pid.PHI_D     = config.normal.pid.PHI_D;
+    pid.maxI_XY   = config.normal.pid.maxI_XY;
+    pid.maxI_Phi  = config.normal.pid.maxI_Phi;
+    setPIDParams(pp_motionProfile_type::NORMAL, pid);
+
+    pid.X_P       = config.setpiece.pid.X_P;
+    pid.X_I       = config.setpiece.pid.X_I;
+    pid.X_D       = config.setpiece.pid.X_D;
+    pid.Y_P       = config.setpiece.pid.Y_P;
+    pid.Y_I       = config.setpiece.pid.Y_I;
+    pid.Y_D       = config.setpiece.pid.Y_D;
+    pid.XY_P      = config.setpiece.pid.XY_P;
+    pid.XY_I      = config.setpiece.pid.XY_I;
+    pid.XY_D      = config.setpiece.pid.XY_D;
+    pid.PHI_P     = config.setpiece.pid.PHI_P;
+    pid.PHI_I     = config.setpiece.pid.PHI_I;
+    pid.PHI_D     = config.setpiece.pid.PHI_D;
+    pid.maxI_XY   = config.setpiece.pid.maxI_XY;
+    pid.maxI_Phi  = config.setpiece.pid.maxI_Phi;
+    setPIDParams(pp_motionProfile_type::SETPIECE, pid);
+
+    pp_brake_params_struct_t brake_params;
+    brake_params.deceleration    = config.normal.brake_deceleration;
+    brake_params.gamma           = config.normal.brake_gamma;
+    setBrakeParams(pp_motionProfile_type::NORMAL, brake_params);
+
+    brake_params.deceleration    = config.setpiece.brake_deceleration;
+    brake_params.gamma           = config.setpiece.brake_gamma;
+    setBrakeParams(pp_motionProfile_type::SETPIECE, brake_params);
+
+    pp_tokyo_drift_params_struct_t tokyoDriftParams;
+    tokyoDriftParams.radius                = config.normal.tokyoDrift_radius;
+    tokyoDriftParams.step_angle            = config.normal.tokyoDrift_step_angle;
+    tokyoDriftParams.facing_target_tol     = config.normal.tokyoDrift_facing_target_tol;
+    setTokyoDriftParams(pp_motionProfile_type::NORMAL, tokyoDriftParams);
+
+    tokyoDriftParams.radius                = config.setpiece.tokyoDrift_radius;
+    tokyoDriftParams.step_angle            = config.setpiece.tokyoDrift_step_angle;
+    tokyoDriftParams.facing_target_tol     = config.setpiece.tokyoDrift_facing_target_tol;
+    setTokyoDriftParams(pp_motionProfile_type::SETPIECE, tokyoDriftParams);
+}
+
 void cPathPlanningData::getLimits(pp_limiters_struct_t& limits)
 {
 
@@ -384,16 +505,16 @@ void cPathPlanningData::setTokyoDriftParams(const pp_motionProfile_type& motionP
 
 void cPathPlanningData::getObstacleAvoidanceIsEnabled(bool &isEnabled)
 {
-	_mtx.lock();
-	isEnabled = _obstacleAvoidanceIsEnabled;
-	_mtx.unlock();
+    _mtx.lock();
+    isEnabled = _obstacleAvoidanceIsEnabled;
+    _mtx.unlock();
 }
 
 void cPathPlanningData::setObstacleAvoidanceIsEnabled(const bool isEnabled)
 {
-	_mtx.lock();
-	_obstacleAvoidanceIsEnabled = isEnabled;
-	_mtx.unlock();
+    _mtx.lock();
+    _obstacleAvoidanceIsEnabled = isEnabled;
+    _mtx.unlock();
 }
 
 
@@ -407,41 +528,25 @@ void cPathPlanningData::getTarget(Position2D& target)
 }
 void cPathPlanningData::setTarget(const Position2D& target)
 {
-	// Only adjust target when the target in inside the safe boundaries of the playing fields
-	if(cEnvironmentField::getInstance().isPositionInArea(
-			target.x, target.y, areaName::A_FIELD_SAFETY_BOUNDARIES, 0.0))
-	{
-		_mtx.lock();
-		_targetPosition = target;
-		cDiagnosticsAdapter::getInstance().setTarget(target.x, target.y, target.phi);
-		_mtx.unlock();
-		_logged_out_of_bounds = false;
-	}
-	else
-	{
-		// out of bounds; to avoid spam, only log once
-		if(!_logged_out_of_bounds)
-		{
-			TRACE_INFO("Ignored out-of-bounds target x:%6.2f, y:%6.2f", target.x, target.y);
-			_logged_out_of_bounds = true;
-		}
-	}
-}
-
-void cPathPlanningData::getPathPlanningActivated(bool& activated)
-{
-
-    _mtx.lock();
-    activated = _pathplanning_activated;
-    _mtx.unlock();
-}
-void cPathPlanningData::setPathPlanningActivated(const bool& activated)
-{
-    _mtx.lock();
-    _pathplanning_activated = activated;
-    cDiagnosticsAdapter::getInstance().setActive(activated);
-    _mtx.unlock();
-
+    // Only adjust target when the target in inside the safe boundaries of the playing fields
+    if(cEnvironmentField::getInstance().isPositionInArea(
+            target.x, target.y, areaName::A_FIELD_SAFETY_BOUNDARIES, 0.0))
+    {
+        _mtx.lock();
+        _targetPosition = target;
+        cDiagnosticsAdapter::getInstance().setTarget(target.x, target.y, target.phi);
+        _mtx.unlock();
+        _logged_out_of_bounds = false;
+    }
+    else
+    {
+        // out of bounds; to avoid spam, only log once
+        if(!_logged_out_of_bounds)
+        {
+            TRACE_INFO("Ignored out-of-bounds target x:%6.2f, y:%6.2f", target.x, target.y);
+            _logged_out_of_bounds = true;
+        }
+    }
 }
 
 void cPathPlanningData::getTurnType(pp_algorithm_turn_type& turnType)
@@ -497,14 +602,14 @@ void cPathPlanningData::setPlotData(const pp_plot_data_struct_t& plotData)
 
 void cPathPlanningData::getProjectedSpeedVectors(std::vector<linepoint2D>& projectedVectors)
 {
-	_mtx.lock();
+    _mtx.lock();
     projectedVectors = _projectedSpeedVectors;
     _mtx.unlock();
 }
 
 void cPathPlanningData::setProjectedSpeedVectors(const std::vector<linepoint2D>& projectedVectors)
 {
-	_mtx.lock();
+    _mtx.lock();
     _projectedSpeedVectors = projectedVectors;
     _mtx.unlock();
 }

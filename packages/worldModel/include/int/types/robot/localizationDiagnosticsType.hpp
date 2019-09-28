@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,36 +19,33 @@
 #ifndef LOCALIZATIONDIAGNOSTICSTYPE_HPP_
 #define LOCALIZATIONDIAGNOSTICSTYPE_HPP_
 
-// this struct (and substructs) is mapped to rosMsgs/t_diag_wm_loc
+// this struct (and substructs) is mapped to sharedTypes/diagWorldModel
 
-struct posconf
-{
-    float x;
-    float y;
-    float phi;
-    float confidence;
-};
-
-struct posvel
-{
-    float x;
-    float y;
-    float phi;
-    float vx;
-    float vy;
-    float vphi;
-};
+#include "pose.hpp"
 
 struct localizationDiagnostics_t
 {
     bool isValid;
-    posconf bestVisionCandidate;
-    posvel ownpos;
+    pose bestVisionCandidate;
+    float visionLocAge;
     float confidence;
     float visionNoiseXY;
     float visionNoisePhi;
     int numVisionCandidates;
     int numMotorDisplacementSamples;
+    
+    localizationDiagnostics_t()
+    {
+        isValid = false;
+        bestVisionCandidate.x = 0;
+        bestVisionCandidate.y = 0;
+        bestVisionCandidate.Rz = 0;
+        confidence = 0;
+        visionNoiseXY = 0;
+        visionNoisePhi = 0;
+        numVisionCandidates = 0;
+        numMotorDisplacementSamples = 0;
+    }
 };
 
 #endif /* LOCALIZATIONDIAGNOSTICSTYPE_HPP_ */

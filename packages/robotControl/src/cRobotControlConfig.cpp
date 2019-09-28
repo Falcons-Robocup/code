@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,7 +23,8 @@
 #include "int/adapters/cConfigAdapter.hpp"
 
 #include "FalconsCommon.h"
-#include <cDiagnosticsEvents.hpp>
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 using namespace std;
 

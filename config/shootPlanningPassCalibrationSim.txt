@@ -1,0 +1,10 @@
+# simulator-specific configuration
+# each line contains a measurement sample (distance, power)
+ 1.0   20
+ 3.0   30
+ 5.0   40
+ 7.0   50
+ 9.0   70
+15.0   90
+20.0  105
+

@@ -1,4 +1,4 @@
-// Copyright 2015 Erik Kouters & Andre Pool
+// Copyright 2015, 2016 Erik Kouters & Wouter Geelen & Andre Pool
 // Licensed under the Apache License version 2.0
 // You may not use this file except in compliance with this License
 // You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -30,23 +30,13 @@ void initPid(pidStateT *PID) {
 	PID->pidProperties.i = 0;
 	PID->pidProperties.d = 0;
 	PID->pidProperties.iTh = 0;
+	PID->pidProperties.iMax = 100000; //
 	PID->previousError = 0;
 	PID->result16 = 0;
 	PID->result32 = 0;
 	PID->setPoint = 0; // used as setPoint for the wheel motor or tacho, or as offset in angle mode
 }
 
-
-inline int16_t signedDivideBy65536( int32_t input ) {
-	// divide by 65536 including rounding, by using and offset and a shift
-	// return input/65536; // is very inefficient
-	// a divide of 256 or 65536 takes about 640 cpu cycles cycles = 20us
-	if( input < 0 ) {
-		return ( input + 32767 ) >> 16; // the 32767 = -0.5 for correct rounding
-	} else {
-		return ( input + 32768 ) >> 16; // the 32768 = +0.5 for correct rounding
-	}
-}
 
 inline void calcPid( pidStateT *var, int16_t feedback, int16_t offset ) {
 	// The velocity is measured for a fixed period of 2ms.
@@ -67,6 +57,20 @@ inline void calcPid( pidStateT *var, int16_t feedback, int16_t offset ) {
 	//  wait(deltaTime)
 	//  goto start
 
+	// When the setpoint changes to a new value, the output will mainly be driven from the
+	// proportional component.
+	// But with the proportional component alone the output will never reach the setpoint.
+	// Depending on the Kp it might only reach up-to 90%.
+	// But when the output has not reached the setpoint, the integral value will keep on increasing
+	// and over time the integral component will be larger then the proportional component.
+	// When the setpoint does not change over time anymore the output will be 0% of the proportional
+	// and 100% of the integral component.
+	// TODO: add explanation differential component in above (how does the high frequency component relate to the above explanation)
+
+	// A minimal integral threshold has been added as a kind of noise suppressor (e.g. to much corrections
+	// for small changes)
+	// A maximal integral maximal has been added to prevent over currents
+
 	// By applying the scale factors in the Ki and Kd settings we move the scaling from
 	// the Xmega to linux, which reduces Xmega cpu cycles and reduces rounding errors
 
@@ -78,24 +82,41 @@ inline void calcPid( pidStateT *var, int16_t feedback, int16_t offset ) {
 	// so worst case error range is -7500 to 7500 which does not generate an overflow in int16_t
 	int16_t currentError = var->setPoint - feedback + offset;
 
-	// Set PID error to zero it is under the threshold of iTh
-	if(abs(currentError) < var->pidProperties.iTh)
-	{
-		currentError = 0;
+	int16_t bandgapError = currentError;
+
+	// In order to minimize actuator exertion for small errors, create a deadband for
+	// the error using the iTh value.
+	//      { ( e  > iTh): e - iTh
+	// e' = { (|e| < iTh): 0;
+	//      { ( e  < iTh): e + iTh
+	if (bandgapError < -var->pidProperties.iTh) {
+		bandgapError += var->pidProperties.iTh;
+	} else if (bandgapError > var->pidProperties.iTh) {
+		bandgapError -= var->pidProperties.iTh;
+	} else {
+		bandgapError = 0;
 	}
 
-	// integral = integral + error * deltaTime
+	// When both the error and the setpoint are zero, set the integral to zero to be able to come to a complete stop.
+	// integral = { ((e' == 0) && (setpoint == 0): 0
+	//            { (otherwise): integral + error * deltaTime
 	// integral range can be large, but will probably average out
-	var->integral += currentError; // currentError in range -7500 to 7500 which fits a large amount of times in int32_t
-
-	if( var->pidProperties.i == 0 || getMode() == MODE_PWM_ONLY ) {
-		// when integral is not used in the feedback it can keep on growing
+	if ((bandgapError == 0) && (var->setPoint == 0)) {
 		var->integral = 0;
+	} else {
+		var->integral += bandgapError; // bandgapError in range -7500 to 7500 which fits a large amount of times in int32_t
+	}
+
+	// integral limiter
+	if( var->integral > var->pidProperties.iMax ) {
+		var->integral = var->pidProperties.iMax;
+	} else if ( var->integral < -var->pidProperties.iMax ) {
+		var->integral = -var->pidProperties.iMax;
 	}
 
 	// int16_t derivative = (error - prevError) / deltaTime
 	// maximal derivative (2 x maximal error) = -15000 to 15000 which does not generate an overflow in int16_t
-	var->derivative = currentError - var->previousError;
+	var->derivative = bandgapError - var->previousError;
 
 	// Compute result (example values shown below for wheel motor)
 	// result = (pidProperties.p * error) + (pidProperties.i * integral) + (pidProperties.d * derivative);
@@ -121,9 +142,9 @@ inline void calcPid( pidStateT *var, int16_t feedback, int16_t offset ) {
 	int32_t kp = ((int32_t)var->pidProperties.p) << 4; // scale proportional to be able to achieve the full 100% pwm power
 	int32_t ki = ((int32_t)var->pidProperties.i);
 	int32_t kd = ((int32_t)var->pidProperties.d) << 4;
-	var->result32 = kp * currentError + ki * var->integral + kd * var->derivative;
-
-	var->result16 = signedDivideBy65536( var->result32 );
+	
+	var->result32 = kp * bandgapError + ki * var->integral + kd * var->derivative;
+	var->result16 = var->result32>>16;
 
 	// store error for next cycle
 	var->previousError = currentError;
@@ -163,45 +184,22 @@ void taskPid() {
 	// ball handler angle pid range checking (the ranges are described in the picCalc function)
 	if( mode == MODE_PID_ANGLE ) {
 		if( anglePID.previousError < -4000 || anglePID.previousError > 4000 ) { error |= PID_ERROR_ANGLE_CURRENT_ERROR_OUT_OF_RANGE; }
-		// TODO: update with the expected integral range
-	  	if( anglePID.integral < -100000 ) {
-	  		anglePID.integral = -100000;
-	  		error |= PID_ERROR_ANGLE_INTEGRAL_OUT_OF_RANGE;
-	  	} else if( anglePID.integral > 100000 ) {
-	  		anglePID.integral = 100000;
-	  		error |= PID_ERROR_ANGLE_INTEGRAL_OUT_OF_RANGE;
-	  	}
 		if( anglePID.derivative < -8000 || anglePID.derivative > 8000 ) { error |= PID_ERROR_ANGLE_DERIVATIVE_OUT_OF_RANGE; }
 		// tacho delta less then 2000 (tachoZero - 2000 ~= 2330 - 2000 = 300 to tachoZero + 2000 ~= 2330 + 2000 = 4330)
 		if( anglePID.result16 < -2000 || anglePID.result16 > 2000 ) { error |= PID_ERROR_ANGLE_RESULT_OUT_OF_RANGE; }
 	}
 
-	// encoder or tacho pid range checking (the ranges are described in the picCalc function)
+	// encoder or tacho pid range checking (the ranges are described in the calcPid function)
 	if( mode == MODE_PID_ENCODER ) {
 		if( primaryPID.previousError < -2000 || primaryPID.previousError > 2000 ) { error |= PID_ERROR_PRIMARY_CURRENT_ERROR_OUT_OF_RANGE; }
-		// TODO: update with the expected integral range
-	   	if( primaryPID.integral < -100000 ) {
-	   		primaryPID.integral = -100000;
-	   		error |= PID_ERROR_PRIMARY_INTEGRAL_OUT_OF_RANGE;
-	   	} else if( primaryPID.integral > 100000 ) {
-	   		primaryPID.integral = 100000;
-	   		error |= PID_ERROR_PRIMARY_INTEGRAL_OUT_OF_RANGE;
-	   	}
 		if( primaryPID.derivative < -4000 || primaryPID.derivative > 4000 ) { error |= PID_ERROR_PRIMARY_DERIVATIVE_OUT_OF_RANGE; }
 	} else if( mode == MODE_PID_TACHO || mode == MODE_PID_ANGLE ) {
 		if( primaryPID.previousError < -7500 || primaryPID.previousError > 7500 ) { error |= PID_ERROR_PRIMARY_CURRENT_ERROR_OUT_OF_RANGE; }
-		// TODO: update with the expected integral range
-	   	if( primaryPID.integral < -100000 ) {
-	   		primaryPID.integral = -100000;
-	   		error |= PID_ERROR_PRIMARY_INTEGRAL_OUT_OF_RANGE;
-	   	} else if( primaryPID.integral > 100000 ) {
-	   		primaryPID.integral = 100000;
-	   		error |= PID_ERROR_PRIMARY_INTEGRAL_OUT_OF_RANGE;
-	   	}
 		if( primaryPID.derivative < -15000 || primaryPID.derivative > 15000 ) { error |= PID_ERROR_PRIMARY_DERIVATIVE_OUT_OF_RANGE; }
 	}
 	// pwm range -648 to 648
-	if( primaryPID.result16 < -1300 || primaryPID.result16 > 1300 ) { error |= PID_ERROR_PRIMARY_RESULT_OUT_OF_RANGE; }
+	// when the pwmDelta is low, the integral value can become very high resulting in a very high PID result, so this check does not make sense anymore
+	// if( primaryPID.result16 < -1300 || primaryPID.result16 > 1300 ) { error |= PID_ERROR_PRIMARY_RESULT_OUT_OF_RANGE; }
 
 }
 

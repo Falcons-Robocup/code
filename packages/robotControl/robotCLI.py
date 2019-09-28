@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,7 +23,7 @@
 #    robotCLI.py          # command-line interface
 #    robotLibrary.py      # discloses all basic commands and scenarios, also includes parser
 #    robotScenarios.py    # scenario interface
-#    robotRosInterface.py # basic commands and their ROS interfaces
+#    robotInterface.py    # basic commands and their ROS interfaces
 #    scenarios/*.py       # scenario implementations
 #
 # Jan Feitsma, 2016-12-17
@@ -34,18 +34,17 @@ import sys
 import argparse
 import robotLibrary
 
-import logging
-logging.basicConfig()
 
 if __name__ == '__main__':
 
     # argument parsing
-    parser     = argparse.ArgumentParser(description='robot command interface')
+    parser     = argparse.ArgumentParser(description='robot command interface', epilog=robotLibrary.helpText(), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--robotId', '-r', help='robot number', default=None, type=int)
     parser.add_argument('--verbose', '-v', help='verbose', action='store_true')
     parser.add_argument('--extraverbose', '-vv', help='extra verbose', action='store_true')
+    parser.add_argument('command', nargs='?', help='command string to execute', default=None)
     args, leftovers = parser.parse_known_args()
-    
+
     # which robot to influence?
     if args.robotId == None:
         robotLibrary.guessRobotId()
@@ -59,17 +58,20 @@ if __name__ == '__main__':
     if args.extraverbose:
         robotLibrary.setVerbose(2)
     
+    # joystick relay
+    robotLibrary.robot.joystickRelay()
+    
     # has a command been given? if not, provide a prompt
-    if len(leftovers):
-        commandStr = ' '.join(leftovers)
+    if args.command != None:
+        commandStr = args.command + " " + ' '.join(leftovers)
         robotLibrary.parse(commandStr)
     else:
         robotLibrary.prompt()
-        
+    
     # done
-    try: # TODO: when giving a ctrl-C, it seems the service to teamplay is not valid anymore ... ?!
+    try:
         robotLibrary.shutdown()
     except:
         pass
     sys.exit(0)
-        
+

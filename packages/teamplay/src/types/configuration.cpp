@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,10 +17,12 @@
  */
 
 #include "int/types/configuration.hpp"
+#include "int/utilities/trace.hpp"
 
 using namespace teamplay;
 
 configuration::configuration()
+: _heightMapsGeneratePictures(false)
 {
 }
 
@@ -58,47 +60,32 @@ bool configuration::isRuleStimulatePassingEnabled() const
     return _ruleStimulatePassingEnabled;
 }
 
-float configuration::getShootAtGoalPower() const
-{
-    return _shootAtGoalPower;
-}
-
-passPowers configuration::getPassPowers() const
-{
-    return _passPowers;
-}
-
-passRanges configuration::getPassRanges() const
-{
-    return _passRanges;
-}
-
-float configuration::getShootTimer() const
-{
-    return _shootTimer;
-}
-
-float configuration::getShootTimerAngleThreshold() const
-{
-    return _shootTimerAngleThreshold;
-}
-
 float configuration::getShootPathWidth() const
 {
     return _shootPathWidth;
 }
 
-float configuration::getSettleTimeAfterShooting() const
+float configuration::getStraightShotThreshold() const
 {
-    return _settleTimeAfterShooting;
+    return _straightShotThreshold;
 }
 
-float configuration::getInterceptBallCaptureRadius() const
+float configuration::getAimForCornerThreshold() const
+{
+    return _aimForCornerThreshold;
+}
+
+float configuration::getShotThreshold() const
+{
+    return _shotThreshold;
+}
+
+float configuration::getInterceptBallCaptureRadius() const // TODO cleanup? (moved to motionPlanning?)
 {
     return _interceptBallCaptureRadius;
 }
 
-float configuration::getInterceptBallMinimumSpeed()
+float configuration::getInterceptBallMinimumSpeed() // TODO cleanup? (moved to motionPlanning?)
 {
     return _interceptBallMinimumSpeed;
 }
@@ -106,6 +93,32 @@ float configuration::getInterceptBallMinimumSpeed()
 bool configuration::getDefendingStrategy()
 {
     return _defendingStrategy;
+}
+
+bool configuration::getDribbleStrategy()
+{
+    return _dribbleStrategy;
+}
+
+bool configuration::getHeightMapsGeneratePictures()
+{
+    return _heightMapsGeneratePictures;
+}
+
+float configuration::getHeightMapFactorForAction (const tpActionEnum& action, const heightmapEnum& heightmap) const
+{
+    auto factors = _heightMapContributionFactors.find(action);
+    if (factors != _heightMapContributionFactors.end())
+    {
+        auto factor = factors->second.find(heightmap);
+        if (factor != factors->second.end())
+        {
+            return factor->second;
+        }
+    }
+
+    TRACE("Factor not found. Returning zero.");
+    return 0.0;
 }
 
 void configuration::setSetPieceExecuteTimeout(const int t)
@@ -138,39 +151,24 @@ void configuration::setRuleStimulatePassing(const bool enabled)
     _ruleStimulatePassingEnabled = enabled;
 }
 
-void configuration::setShootAtGoalPower(const float power)
-{
-    _shootAtGoalPower = power;
-}
-
-void configuration::setPassPowers(const passPowers& powers)
-{
-    _passPowers = powers;
-}
-
-void configuration::setPassRanges(const passRanges& ranges)
-{
-    _passRanges = ranges;
-}
-
-void configuration::setShootTimer (const float timeoutInSeconds)
-{
-    _shootTimer = timeoutInSeconds;
-}
-
-void configuration::setShootTimerAngleThreshold (const float thresholdInRadians)
-{
-    _shootTimerAngleThreshold = thresholdInRadians;
-}
-
 void configuration::setShootPathWidth (const float widthInMeters)
 {
     _shootPathWidth = widthInMeters;
 }
 
-void configuration::setSettleTimeAfterShooting (const float timeoutInSeconds)
+void configuration::setStraightShotThreshold (const float distanceInMeters)
 {
-    _settleTimeAfterShooting = timeoutInSeconds;
+    _straightShotThreshold = distanceInMeters;
+}
+
+void configuration::setAimForCornerThreshold (const float distanceInMeters)
+{
+    _aimForCornerThreshold = distanceInMeters;
+}
+
+void configuration::setShotThreshold (const float distanceInMeters)
+{
+    _shotThreshold = distanceInMeters;
 }
 
 void configuration::setInterceptBallCaptureRadius (const float captureRadiusInMeters)
@@ -186,4 +184,19 @@ void configuration::setInterceptBallMinimumSpeed (const float minimumSpeedInMete
 void configuration::setDefendingStrategy(const bool defendingStrategy)
 {
     _defendingStrategy = defendingStrategy;
+}
+
+void configuration::setDribbleStrategy(const bool dribbleStrategy)
+{
+    _dribbleStrategy = dribbleStrategy;
+}
+
+void configuration::setHeightMapsGeneratePictures(const bool heightMapsGeneratePictures)
+{
+    _heightMapsGeneratePictures = heightMapsGeneratePictures;
+}
+
+void configuration::setHeightMapFactorForAction (const tpActionEnum& action, const heightmapEnum& heightmap, const float factor)
+{
+    _heightMapContributionFactors[action][heightmap] = factor;
 }

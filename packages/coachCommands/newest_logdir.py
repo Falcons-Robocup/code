@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,12 +18,14 @@
 
 import os
 
+BASE = '/var/tmp'
+
 def newest_logdir():
    output = None
    prevt = None
-   for dirname, dirnames, filenames in os.walk('/var/tmp'):
+   for dirname, dirnames, filenames in os.walk(BASE):
       for subdirname in dirnames:
-         if "falcons_control" in subdirname:
+         if "falcons_control" in subdirname and dirname == '/var/tmp':
             d = '/var/tmp/' + subdirname
             t = os.path.getmtime(d)
             if prevt != None:

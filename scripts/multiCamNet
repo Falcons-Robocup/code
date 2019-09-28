@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Used in Andre's multiCam Makefiles
+#
+# JFEI 2018-07-10 creation
+# 
+
+
+ls /sys/class/net | grep e | head -1
+

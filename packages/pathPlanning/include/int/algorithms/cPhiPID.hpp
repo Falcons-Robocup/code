@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,7 +24,7 @@
 class cPhiPID : public cAbstractPathPlanning
 {
     public:
-        cPhiPID(cPathPlanningMain* main) : cAbstractPathPlanning(main) { };
+        cPhiPID(cPathPlanningMain* main) : cAbstractPathPlanning(main) { _integral = 0.0; };
         ~cPhiPID() { };
 
         void execute();

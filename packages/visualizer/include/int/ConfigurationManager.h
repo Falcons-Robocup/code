@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,24 +19,17 @@
 #ifndef CONFIGURATION_MANAGER_H
 #define CONFIGURATION_MANAGER_H
 
+#include "FalconsCommon.h"
+
 // Constants for now, to be moved to an interface with customizable implementation later.
 
-const int _NR_OF_ROBOTS_PER_TEAM = 6;
+const int _NR_OF_ROBOTS_PER_TEAM = MAX_ROBOTS;
 
-const double _FIELD_LENGTH = 18.0;
-const double _FIELD_WIDTH = 12.0;
-const double _LINE_THICKNESS = 0.13;
-const double _GOAL_AREA_LENGTH = 0.75;
-const double _GOAL_AREA_WIDTH = 3.5;
-const double _PENALTY_AREA_LENGTH = 2.25;
-const double _PENALTY_AREA_WIDTH = 6.5;
-const double _CENTER_CIRCLE_RADIUS = 2.0;
+const double _LINE_THICKNESS = 7.5;
 const double _BALL_DIAMETER = 0.3;
 const double _CORNER_CIRCLE_RADIUS = 0.75;
-const double _PENALTY_MARK_DISTANCE = 3.0;
 const double _BLACK_POINT_WIDTH = 0.0;
 const double _BLACK_POINT_LENGTH = 0.0;
-const double _ROBOT_RADIUS = 0.5;
 
 const double _OBSTACLE_DIAMETER = 0.3; // Fixed diameter assumed for now
 

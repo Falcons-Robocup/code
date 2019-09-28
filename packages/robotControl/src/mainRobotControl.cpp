@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,10 +28,10 @@
 
 // internal includes
 #include "int/adapters/cInputUdpAdapter.hpp"
-#include "int/adapters/cDiagnosticsAdapter.hpp"
 
 // other packages
 #include "FalconsCommon.h"
+#include "tracing.hpp"
 #include "ports.hpp"     // from facilities/networkUDP
 #include "addresses.hpp" // from facilities/networkUDP
 
@@ -42,17 +42,19 @@ using namespace std;
 
 void reconnectThread(cInputUdpAdapter * objectAdapter)
 {
-	connectionType connection = GetPrimaryConnectionType();
+    connectionType connection = GetPrimaryConnectionType();
 
-	while(1)
-	{
-		if(connection != GetPrimaryConnectionType())
-		{
-			connection = GetPrimaryConnectionType();
-			objectAdapter->reconnect();
-		}
-		boost::this_thread::sleep_for(boost::chrono::seconds{5});
-	}
+    while(1)
+    {
+        connectionType tmpConnection = GetPrimaryConnectionType(); 
+        if(connection != tmpConnection)
+        {
+            connection = tmpConnection;
+            TRACE("reconnecting");
+            objectAdapter->reconnect();
+        }
+        boost::this_thread::sleep_for(boost::chrono::seconds{5});
+    }
 }
 
 int main(int argc, char **argv)
@@ -99,12 +101,8 @@ int main(int argc, char **argv)
     	TRACE("waiting until network is online ...");
     	sleep(3);
     }
+    TRACE("network is online");
 
-    /*
-     * Create diagnostics adapters explicitly already, to make it send its 'alive' signal at constant frequency
-     */
-    cDiagnosticsAdapterEventRelay::getInstance();
-    
     /*
      * Create listener object, which will control the cRobotControl instance (event based)
      */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,132 +17,145 @@
  */
 
 #include "int/adapters/cDiagnosticsAdapter.hpp"
+#include <tracing.hpp>
 #include <cmath>
-#include "rosMsgs/t_obstacle.h"
-#include "rosMsgs/t_polygon2D.h"
 
 cDiagnosticsAdapter::cDiagnosticsAdapter()
- : diagnostics::cDiagnosticsSender<rosMsgs::t_diag_pathpl>(diagnostics::DIAG_PATHPLANNING, 10.0, false)
 {
     TRACE(">");
-    TRACE("initialize msg");
-    rosMsgs::t_diag_pathpl msg = get();
-    msg.target.x = NAN;
-    msg.target.y = NAN;
-    msg.target.phi = NAN;
-    msg.subtarget.x = NAN;
-    msg.subtarget.y = NAN;
-    msg.active = false;
-    set(msg);
-    TRACE("cDiagnosticsAdapter constructed OK");
+    reset();
+    _myRobotId = getRobotNumber();
+    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, getTeamChar());
     TRACE("<");
-}    
+}
+
+void cDiagnosticsAdapter::reset()
+{
+    _target.reset();
+    _subTarget.reset();
+    _forbiddenAreas.clear();
+}
+
+void cDiagnosticsAdapter::send()
+{
+    if (_rtdb != NULL)
+    {
+        T_DIAG_PATHPLANNING msg;
+        if (_subTarget)
+        {
+            wayPoint w;
+            w.pos = _subTarget.get();
+            w.vel = pose(); // velocity not used yet; future work
+            msg.path.push_back(w);
+        }
+        if (_target)
+        {
+            wayPoint w;
+            w.pos = _target.get();
+            w.vel = pose(); // velocity not used yet; future work
+            msg.path.push_back(w);
+        }
+        msg.forbiddenAreas = _forbiddenAreas;
+        _rtdb->put(DIAG_PATHPLANNING, &msg);
+        // reset for next iteration, to not repeat old targets etc.
+        reset();
+    }
+}
 
 void cDiagnosticsAdapter::setTarget(double x, double y, double phi)
 {
     TRACE(">");
-    rosMsgs::t_diag_pathpl msg = get();
-    msg.target.x = x;
-    msg.target.y = y;
-    msg.target.phi = phi;
-    set(msg);
+    pose p;
+    p.x = x;
+    p.y = y;
+    p.Rz = phi;
+    _target = p;
     TRACE("<");
 }
 
 void cDiagnosticsAdapter::setSubTarget(double x, double y)
 {
     TRACE(">");
-    rosMsgs::t_diag_pathpl msg = get();
-    msg.subtarget.x = x;
-    msg.subtarget.y = y;
-    set(msg);
+    pose p;
+    p.x = x;
+    p.y = y;
+    p.Rz = 0;
+    _subTarget = p;
     TRACE("<");
 }
 
-void cDiagnosticsAdapter::setObstacles(const std::vector<pp_obstacle_struct_t> obstacles, const std::vector<polygon2D>& areas, std::vector<linepoint2D>& projectedSpeedVectors)
+void cDiagnosticsAdapter::setObstacles(const std::vector<polygon2D>& areas, std::vector<linepoint2D>& projectedSpeedVectors)
 {
     TRACE(">");
-    rosMsgs::t_diag_pathpl msg = get();
-    msg.obstacles.clear();
-    msg.forbiddenAreas.clear();
-    msg.speedArrowEndPoints.clear();
-
-    int robotNum = getRobotNumber();
-    int i = 100 * robotNum; // start with an idx of 100 * robotNum (r3 = 300) such that there is no collision with worldmodel's obstacles.
-    std::vector<pp_obstacle_struct_t>::const_iterator it;
-    for (it = obstacles.begin(); it != obstacles.end(); ++it)
-    {
-    	/*
-    	 * Filter the non-worldmodel objects for visualization
-    	 */
-    	if(it->type == pp_obstacle_type::WORLDMODEL)
-    	{
-			rosMsgs::t_obstacle obst;
-			obst.id = i;
-			obst.x = it->location.x;
-			obst.y = it->location.y;
-			msg.obstacles.push_back(obst);
-    	}
-        i++;
-    }
+    int i = 100 * _myRobotId; // start with an idx of 100 * robotNum (r3 = 300) such that there is no collision with worldmodel's obstacles.
 
     for(auto itA = areas.begin(); itA != areas.end(); itA++)
     {
-    	rosMsgs::t_polygon2D poly;
-    	poly.id = i;
-    	std::vector<Point2D> points = itA->getPoints();
+        polygon poly;
+        poly.id = i;
+        std::vector<Point2D> points = itA->getPoints();
 
-    	for(auto itB = points.begin(); itB != points.end(); itB++)
-    	{
-    		rosMsgs::t_point2D point;
+        for(auto itB = points.begin(); itB != points.end(); itB++)
+        {
+            vec2d point;
 
-    		point.x = itB->x;
-    		point.y = itB->y;
+            point.x = itB->x;
+            point.y = itB->y;
 
-    		poly.points.push_back(point);
-    	}
-    	msg.forbiddenAreas.push_back(poly);
-    	i++;
+            poly.points.push_back(point);
+        }
+        _forbiddenAreas.push_back(poly);
+        i++;
     }
 
     for(auto it = projectedSpeedVectors.begin(); it != projectedSpeedVectors.end(); it++)
     {
-    	rosMsgs::t_linepoint2D linepoint;
-    	linepoint.id = i;
-
-    	linepoint.src.x = it->getSourcePoint2D().x;
-    	linepoint.src.y = it->getSourcePoint2D().y;
-    	linepoint.dst.x = it->getDestinationPoint2D().x;
-    	linepoint.dst.y = it->getDestinationPoint2D().y;
-
-    	msg.speedArrowEndPoints.push_back(linepoint);
+        Vector2D src(it->getSourcePoint2D().x, it->getSourcePoint2D().y);
+        Vector2D dst(it->getDestinationPoint2D().x, it->getDestinationPoint2D().y);
+        Vector2D delta = dst - src;
+        float h = delta.size();
+        float w = 0.3;
+        // only if distance between points is large enough, i.e. obstacle is moving fast enough
+        if (h > 0.1)
+        {
+            // calculate polygon
+            Vector2D perpendicular = delta;
+            perpendicular.rotate(M_PI * 0.5);
+            perpendicular.normalize(w);
+            polygon poly;
+            poly.id = i;
+            Vector2D point = src + perpendicular * 0.5;
+            poly.points.push_back(vec2d(point.x, point.y));
+            point = src - perpendicular * 0.5;
+            poly.points.push_back(vec2d(point.x, point.y));
+            point = dst - perpendicular * 0.5;
+            poly.points.push_back(vec2d(point.x, point.y));
+            point = dst + perpendicular * 0.5;
+            poly.points.push_back(vec2d(point.x, point.y));
+            // store polygon
+            _forbiddenAreas.push_back(poly);
+            i++;
+        }
     }
-
-    set(msg);
     TRACE("<");
 }
-
-void cDiagnosticsAdapter::setActive(bool active)
-{
-    TRACE(">");
-    rosMsgs::t_diag_pathpl msg = get();
-    msg.active = active;
-    set(msg);
-    TRACE("<");
-}
-
 
 void cDiagnosticsAdapter::initializePlotData()
 {
     TRACE(">");
+// TODO
+/*
     _hROS.reset(new ros::NodeHandle());
     _pPlotData = _hROS->advertise<rosMsgs::t_pp_plotdata>("g_pp_plotdata", 5, false);
+*/
     TRACE("<");
 }
 
 void cDiagnosticsAdapter::setPlotData(pp_plot_data_struct_t plotData)
 {
     TRACE(">");
+// TODO
+/*
     rosMsgs::t_pp_plotdata msg;
     msg.target.x = plotData.pos_t.x;
     msg.target.y = plotData.pos_t.y;
@@ -169,7 +182,19 @@ void cDiagnosticsAdapter::setPlotData(pp_plot_data_struct_t plotData)
     msg.phi_pid_i = plotData.phi_pid_i;
     msg.phi_pid_d = plotData.phi_pid_d;
     msg.tokyo_drift = plotData.tokyo_drift;
+    msg.error_x = plotData.error_x;
+    msg.error_y = plotData.error_y;
+    msg.jerk_x = plotData.jerk_x;
+    msg.jerk_y = plotData.jerk_y;
+    msg.acc_x = plotData.acc_x;
+    msg.acc_y = plotData.acc_y;
+    msg.vel_x = plotData.vel_x;
+    msg.vel_y = plotData.vel_y;
+    msg.pos_x = plotData.pos_x;
+    msg.pos_y = plotData.pos_y;
 
     _pPlotData.publish(msg);
+*/
     TRACE("<");
 }
+

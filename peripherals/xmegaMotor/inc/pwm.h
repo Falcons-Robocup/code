@@ -18,8 +18,8 @@ int16_t getPwmValue();
 void setPwmLimit(uint16_t value);
 uint16_t getPwmLimit();
 
-void setPwmDelta(uint16_t value);
-uint16_t getPwmDelta();
+void setPwmDelta(uint32_t value);
+uint32_t getPwmDelta();
 
 uint16_t getPwmError();
 void clearPwmError(uint16_t value);

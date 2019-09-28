@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,6 +26,12 @@
 // Internal:
 #include "Visualization.h"
 
+enum BallColor
+{
+    YELLOW,
+    CYAN
+};
+
 /*
 * Class that groups the actors belonging to a ball 
 */
@@ -42,7 +48,8 @@ public:
 
     double getDiameter();
     void setPosition(PositionVelocity& posvel);
-    
+    void setColor(BallColor color, float redFactor); // redFactor in [0,1] adds a bit of red for confidence visualization
+    void setOpacity(float opacity);
 };
 
 #endif // BALLVISUALIZATION_H

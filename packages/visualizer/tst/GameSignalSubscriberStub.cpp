@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,6 +22,8 @@
 #include <ctime>
 #include "GameSignalSubscriberStub.h"
 
+#include "FalconsCommon.h"
+
 GameSignalSubscriberStub::GameSignalSubscriberStub(GameSignalAdapter* adapter)
       : signalAdapter(adapter)
 {
@@ -30,8 +32,8 @@ GameSignalSubscriberStub::GameSignalSubscriberStub(GameSignalAdapter* adapter)
 void GameSignalSubscriberStub::subscribeBallPositionChanged()
 {
     QObject::connect(
-        signalAdapter, SIGNAL(signalBallPositionChanged(ObjectId, SignalMode, PositionVelocity&, float)), 
-        this, SLOT(onBallPositionChanged(ObjectId, SignalMode, PositionVelocity&, float)));
+        signalAdapter, SIGNAL(signalBallPositionChanged(ObjectId, SignalMode, PositionVelocity&, float, float, CameraType)), 
+        this, SLOT(onBallPositionChanged(ObjectId, SignalMode, PositionVelocity&, float, float, CameraType)));
 }
 
 void GameSignalSubscriberStub::subscribeBallPossessionChanged()
@@ -95,7 +97,7 @@ GameSignalSubscriberStub::~GameSignalSubscriberStub()
 * ======================================== 
 */
 
-void GameSignalSubscriberStub::onBallPositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel, float confidence)
+void GameSignalSubscriberStub::onBallPositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel, float confidence, float age, CameraType camera)
 {
     std::stringstream stream;
     stream << "onBallPositionChanged { " << 

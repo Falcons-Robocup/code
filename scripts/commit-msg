@@ -1,0 +1,77 @@
+#!/bin/sh
+#
+# To check the commit log message.
+# Called by "git commit" with one argument, the name of the file
+# that has the commit message.  The hook should exit with non-zero
+# status after issuing an appropriate message if it wants to stop the
+# commit. The hook is allowed to edit the commit message file.
+
+# We require the first word to be one of the component names.
+# See also:
+# http://git.falcons-robocup.nl/falcons/code/wikis/CodingGuidelines
+
+
+f=$1
+# file must exist
+if [ ! -f $f ]
+then 
+    printf "\033[0;31mCommit failed: file not found: '$f'\n"
+    printf "\033[0m"
+    exit 1
+fi
+
+# check for Merge commits
+if grep -q '^Merge ' $f
+then
+    exit 0
+fi
+
+# check for Revert commits
+if grep -q '^Revert ' $f
+then
+    exit 0
+fi
+
+# check for separator
+if ! grep -q ':' $f
+then
+    printf "\033[0;31mCommit failed: no colon ':' found in commit message\n"
+    printf "\033[0m"
+    exit 1
+fi
+
+# construct list of packages
+allowed=""
+for d in ~/falcons/code/* ~/falcons/code/packages/facilities ; do
+    if [ -d $d ]; then
+        for w in `cd $d; ls` ; do
+            if [ -d $d/$w ]; then
+                allowed="$allowed $w"
+            fi
+        done
+    fi
+done
+
+# construct list of other allowed words
+allowed="$allowed general scripts common config peripherals other MCB ioBoard firmware motion testing"
+
+# check if any of the words is present in the start of the commit message
+ok=0
+for w in $allowed
+do
+    if grep -q "^$w" $f
+    then
+        ok=1
+    fi
+done
+
+# finish
+if [ $ok = 0 ]
+then
+    printf "\033[0;31mCommit failed: expected package name at start of commit message\n"
+    printf "\033[0m"
+    exit 1
+fi
+
+exit 0
+

@@ -9,12 +9,10 @@
   <review status="unreviewed" notes=""/>
   <url>http://falcons-robocup.nl</url>
   <depend package="rospy"/>
-  <depend package="simulator"/>
-  <depend package="worldModel" />
-  <depend package="rosMsgs" />
-  <depend package="yoctoLib" />
+  <depend package="roscpp"/> 
+  <depend package="dynamic_reconfigure"/>
+  <depend package="common"/>
   <depend package="diagnostics" />
-  <depend package="gmock" />
 
   <export>
     <cpp cflags="-I${prefix}/include/ext" />

@@ -1,0 +1,18 @@
+<package>
+  <description brief="raspiSync">
+
+     raspiSync
+
+  </description>
+  <author>Andre Pool</author>
+  <license>Apache-2.0</license>
+  <review status="unreviewed" notes=""/>
+  <url>n/a</url>
+
+  <depend package="roscpp"/>
+  <depend package="raspiControl"/>
+  <depend package="multiCam"/>
+
+</package>
+
+

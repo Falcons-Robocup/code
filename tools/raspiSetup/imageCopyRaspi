@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Copyright 2018 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to copy rgb image to boards
+
+image=Image.rgb
+
+if [ $# = 1 ]; then
+   # one argument provided
+   host=$1
+   scp $sshOptions $host$image $host:image.rgb
+
+else
+   echo "INFO   : copy RGB image to all raspi boards"
+
+   sshOptions="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no"
+   
+   for host in cam0 cam1 cam2 cam3
+   do
+      ping -W 1 -c 1 $host >/dev/null 2>/dev/null
+      if [ "$?" == "0" ]; then
+         host=$1
+         scp $sshOptions $host$image $host:
+      fi
+   done
+fi
+
+exit 0

@@ -8,11 +8,12 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE RelWithDebInfo)
+set(ROS_BUILD_TYPE Release)
 
 rosbuild_init()
 
 # using shared_ptr
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror")
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -35,14 +36,8 @@ include_directories("include/ext")
 rosbuild_add_library(FalconsCommon src/cFalconsCommon.cpp 
                                    src/fsm.cpp 
                                    src/cLinearRegression.cpp
-                                   src/timeConvert.cpp
-                                   src/tracer.cpp 
-                                   src/eventType.cpp
                                    )
-
-# timeConvert utility
-rosbuild_add_executable(timeConvert src/timeConvertMain.cpp)
-target_link_libraries(timeConvert FalconsCommon)
+rosbuild_link_boost(FalconsCommon filesystem)
 
 #Testers
 rosbuild_add_gtest(testPose2D tst/testPose2D.cpp TIMEOUT 1)

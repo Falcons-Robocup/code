@@ -1,0 +1,177 @@
+#!/bin/bash 
+
+# Copyright 2018-2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to start the grabber process on the raspi board
+
+# set the arguments
+ARGS=""
+
+# exposure mode uses i2c and conflicts with the remote configuration, so "-ex off" is mandotary
+ARGS+=" -ex off"
+ARGS+=" -fli 50hz"
+
+ARGS+=" -awb off" # set red and blue throug -awgb flag
+# ARGS+=" -awb fluorescent"
+# ARGS+=" -awb fixed"
+# ARGS+=" -awb tungsten"
+# set red and blue, these are ovewritten from values defined in raspiDefaults.hpp
+ARGS+=" -awbg 1.4,1.6"
+
+ARGS+=" -rgb"
+ARGS+=" -w 800"
+# ARGS+=" -w 820"
+ARGS+=" -h 608"
+# ARGS+=" -h 616"
+ARGS+=" -fps 40"
+# ARGS+=" -fps 25" # Likely then the frame grabbing and processing runs synchronous (reduce latency)
+ARGS+=" -hf"  # Set horizontal flip, with this argument the flip on the camera is disabled
+ARGS+=" -vf"  # Set vertical flip, with this argument the flip in the camera is disabled
+# ARGS+=" -pts timestamps.txt" # shows actualy the camera is running on 40 FPS when -fps is 40, while multicam shows about 25 FPS
+# ARGS+=" -read" # use image.rgb instead of camera input
+
+# the time/date on raspi might be incorrect
+# to be sure we always trigger a rebuild when this script is started
+# be sure the date time order is correct
+echo "GRABBER   : recompile raspiGrabber"
+cd ~/raspiGrab
+make clean
+make -j$(nproc) raspiGrab USERLAND_DIR=~/userland
+cd ~
+
+# sometimes the camera is too dark
+# this is not related to the i2c camera configuration of raspiSystem
+# (a restart of raspiSystem does not solve the isue, but a restart of raspiGrab does)
+# it looks this only occurs after powerup
+# contain this issue by running the grabber for a short while, so the second
+# start the camera is bright enough
+
+dateString=`date +%Y-%m-%d_%H:%M:%S`
+echo "GRABBER   : $dateString dummy start of grabber (to solve the dark camera issue)"
+
+# wait 3000 ms
+sudo rm -f /dev/shm/raspiGrab
+sudo ~/raspiGrab/raspiGrab $ARGS -t 3000 -o /dev/null -v
+
+dateString=`date +%Y-%m-%d_%H:%M:%S`
+echo "GRABBER   : $dateString dummy run finished, now continue with the normal grabber startup"
+
+# run the real grabber infinite
+ARGS+=" -t 0"
+
+while true; do
+   # check if sources have been updated
+   # Note: a copy from the x86_64 will update the time stamp, so even if the content
+   # is the same, the compilation will be performed (which is only around four seconds)
+   # rebuild=false
+   # if [ ~/raspiGrab/RaspiVidYUVFalcons.c -nt ~/raspiGrab/raspiGrab ]
+   # then
+   #    rebuild=true
+   # fi
+
+   # if [ ~/raspiGrab/raspiDefaults.hpp -nt ~/raspiGrab/raspiGrab ]
+   # then
+   #   rebuild=true
+   # fi
+
+   # default raspiGrab file size around 64000 bytes
+   # fileSize=`stat --format "%s" ~/raspiGrab/raspiGrab`
+   # if [ $fileSize -lt 50000 ]
+   # then
+   #    rebuild=true
+   # fi 
+
+   # always rebuild because the time/date cannot be trusted on raspi
+
+   # if $rebuild; then
+   #   echo "GRABBER   : raspiGrabber sources have been updated or raspiGrabber does not exist"
+   #   echo "GRABBER   : recompile raspiGrabber"
+   #   cd ~/raspiGrab
+   #   make clean
+   #   make -j$(nproc) raspiGrab USERLAND_DIR=~/userland
+   #   cd ~
+   # fi
+
+   # wait until the interface (this might take a while) is up and running
+   ipFound=false
+   while ( ! $ipFound ) ; do
+      dateString=`date +%Y-%m-%d_%H:%M:%S`
+      ipAddress=`hostname -I`
+      echo "GRABBER   : $dateString IP address $ipAddress"
+
+      if [[ $ipAddress == "10.0.0."* ]]; then
+         echo "GRABBER   : IP address found, now continue"
+         ipFound=true
+      else
+         # gather information why no network / ip address
+         # echo "GRABBER   : ifconfig eth0"
+         # ifconfig eth0
+         # echo "GRABBER   : route -n"
+         # route -n
+         # echo "GRABBER   : service dhcpcd status"
+         # service dhcpcd status
+         grep dhcpcd /var/log/daemon.log | grep eth0 | tail -n 5
+         sleep 5
+      fi
+   done
+
+   # use the IP address to tell the grabber process which camera id it shall use to identify itself to the x86-64
+   camIndex=""
+   if [ $ipAddress == "10.0.0.70" ]; then
+      camIndex=0
+   elif [ $ipAddress == "10.0.0.71" ]; then
+      camIndex=1
+   elif [ $ipAddress == "10.0.0.72" ]; then
+      camIndex=2
+   elif [ $ipAddress == "10.0.0.73" ]; then
+      camIndex=3
+   else
+      echo "#####################################################################"
+      echo "GRABBER   : ERROR cannot determine camIndex from ip address $ipAddress"
+      echo "GRABBER   : wait 10 seconds before rebooting"
+      ./sleepKillReboot 10 &
+
+      # prevent restarting this script (it will be killed by the sleepKillReboot)
+      sleep 3600
+   fi
+
+
+   echo "GRABBER   : kill system process because dependency grabber i2c (in case still running)"
+   killall raspiSystem 2>/dev/null || true
+   killall -9 raspiSystem 2>/dev/null || true
+   killall -15 raspiSystem 2>/dev/null || true
+
+   # remove the shared buffer in case of an unclean shutdown
+   # TODO: somehow the mode stays 0644 for /dev/shm/raspiGrab, for now remove as sudo
+   sudo rm -f /dev/shm/raspiGrab
+
+   echo "GRABBER   : kill analyze process because dependency grabber /dev/shm (in case still running)"
+   sudo killall raspiAnalyze 2>/dev/null || true
+   sudo killall -9 raspiAnalyze 2>/dev/null || true
+   sudo killall -15 raspiAnalyze 2>/dev/null || true
+
+   # start the raspi grabber  
+   echo "GRABBER   : arguments $ARGS --camIndex $camIndex"
+
+   # if the application is aborted or killed, sleep 1 second (rapid growth logfile)
+   # run as root to be able to access gpio through /dev/mem
+   sudo ~/raspiGrab/raspiGrab $ARGS --camIndex $camIndex -o /dev/null -v || sleep 1
+   
+   echo "GRABBER   : grabber process aborted"
+   echo "GRABBER   : kill system process because dependency grabber i2c"
+   killall raspiSystem 2>/dev/null || true
+   killall -9 raspiSystem 2>/dev/null || true
+   killall -15 raspiSystem 2>/dev/null || true
+
+   # remove the shared buffer, so the analyzer cannot re-attach
+   sudo rm -f /dev/shm/raspiGrab
+   
+   echo "GRABBER   : kill analyze process because dependency grabber /dev/shm"
+   sudo killall raspiAnalyze 2>/dev/null || true
+   sudo killall -9 raspiAnalyze 2>/dev/null || true
+   sudo killall -15 raspiAnalyze 2>/dev/null || true
+   
+done
+
+exit 0 # success

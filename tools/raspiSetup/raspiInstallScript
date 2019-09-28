@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Copyright 2018 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to add the raspi grabber software to a stock rasbian strech sd-card
+
+set -e
+
+if [ $# = 1 ]; then
+   # one argument provided
+   host=$1
+else
+   # no argument provided, use "pi" as hostname
+   host=pi
+fi
+echo "update host $host"
+
+setupPath=/home/robocup/falcons/code/tools/raspiSetup
+configPath=/home/robocup/falcons/code/config
+
+sshOptions="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no"
+
+sshpass -p raspberry ssh $sshOptions $host "uptime"
+
+sshpass -p raspberry ssh $sshOptions $host "mkdir -p .ssh tmp"
+sshpass -p raspberry scp $sshOptions $configPath/authorized_keys $host:.ssh
+
+# scp $sshOptions $setupPath/buildRaspi $host:
+
+scp $sshOptions $setupPath/runRaspi $host:
+
+scp $sshOptions $setupPath/killRaspi $host:
+
+# scp $sshOptions $setupPath/tempRaspi $host:
+
+scp $sshOptions $setupPath/.xscreensaver $host:
+
+# Note: rc.local is also copied by copyBuildRaspiSingle
+scp $sshOptions $setupPath/rc.local $host:tmp
+ssh $sshOptions $host "sudo cp -f tmp/rc.local /etc/"
+
+# Note: config.txt is also copied by copyBuildRaspiSingle
+scp $sshOptions $setupPath/config.txt $host:tmp
+ssh $sshOptions $host "sudo cp -f tmp/config.txt /boot"
+
+scp $sshOptions $setupPath/profileSshpwd.sh $host:tmp
+ssh $sshOptions $host "sudo cp -f tmp/profileSshpwd.sh /etc/profile.d/sshpwd.sh"
+
+scp $sshOptions $setupPath/xdgSshpwd.sh $host:tmp
+ssh $sshOptions $host "sudo cp -f tmp/xdgSshpwd.sh /etc/xdg/lxsession/LXDE-pi/sshpwd.sh"
+
+# static ip
+# TODO: modify ip address of dhcpd.conf before running this script
+scp $sshOptions $setupPath/dhcpcd.conf $host:tmp
+ssh $sshOptions $host "sudo cp -f tmp/dhcpcd.conf /etc"
+
+ssh $sshOptions $host "sudo apt-get -y update && sudo apt-get -y upgrade"
+
+ssh $sshOptions $host "sudo apt-get -y install cmake"
+ssh $sshOptions $host "sudo apt-get -y install xscreensaver"
+
+ssh $sshOptions $host "git clone  https://github.com/raspberrypi/userland.git"
+
+ssh $sshOptions $host "cd userland; ./buildme"
+
+./copyBuildRaspi $host
+
+ssh $sshOptions $host "sudo reboot"
+
+echo "all done"
+
+exit 0

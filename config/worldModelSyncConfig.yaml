@@ -1,0 +1,4 @@
+teamId:           A       # robots with the same ID will play together (teamplay/worldModelClient)
+useVisionFrom:    A       # use vision from which teams (can be multiple, as string, e.g. "ABC")
+shareVision:      true
+

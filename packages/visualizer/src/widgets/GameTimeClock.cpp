@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -39,6 +39,8 @@ void GameTimeClock::clear()
 void GameTimeClock::setTime(QTime elapsedTime, QTime actualTime)
 {
     QString text = actualTime.toString("hh:mm:ss.zzz");
+    // milliseconds are a bit overkill
+    text.remove(text.size()-1, 1);
     
     // TODO also show elapsed time and playtime since match start, 
     // but that would not fit in a single QLCDnumber widget

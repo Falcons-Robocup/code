@@ -1,6 +1,6 @@
 worldModelNode/localization: {
   errorRatioRadianToMeter       :  0.5,
-  visionOwnWeightFactor         :  0.10,
+  visionOwnWeightFactor         :  0.05, # sensitive to vision data rate
   trackerScoreAcceptanceThreshold : 0.5,
   trackerTimeout                : 10.0,
   scoreActivityScale            :  5.0,
@@ -10,8 +10,8 @@ worldModelNode/localization: {
   minimumConfidence             :  0.8,
   speedLimitXY                  :  5.0,
   speedLimitPhi                 :  6.0,
-  positionLimitX                :  7.5,
-  positionLimitY                : 10.5,
+  positionLimitX                :  7.5, # not used anymore, overridden by cEnvironmentField, TODO cleanup
+  positionLimitY                : 10.5, # not used anymore, overridden by cEnvironmentField, TODO cleanup
   visionStabilityLength         : 30}
 rosdistro: 'groovy'
 

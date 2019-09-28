@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,10 +20,10 @@
 
 #include <string>
 
+#include "FalconsCommon.h"
 #include "int/stores/ballStore.hpp"
 #include "int/stores/configurationStore.hpp"
-#include "int/cTeamplayCommon.hpp"
-#include "int/cWorldModelInterface.hpp"
+#include "int/stores/robotStore.hpp"
 #include "int/utilities/trace.hpp"
 
 
@@ -33,13 +33,11 @@ cActionMove::cActionMove()
 {
     boost::assign::insert( _actionParameters )
         ("target", std::make_pair(defaultPOI, false) )
-        ("facing", std::make_pair(defaultPOI, true) )
         ("distanceThreshold", std::make_pair(std::vector<std::string>{"float"}, true) )
-        ("angleThreshold", std::make_pair(std::vector<std::string>{"float"}, true))
         ("motionProfile", std::make_pair(std::vector<std::string>{defaultMotionProfiles}, true))
         ;
 
-    intention.actionType = actionEnum::MOVE;
+    _intention.action = actionTypeEnum::MOVE;
 }
 
 cActionMove::~cActionMove()
@@ -47,13 +45,10 @@ cActionMove::~cActionMove()
 
 }
 
-
 /* \brief Move to 'target' (x,y)
  *
  * \param target              The target (x,y)
- * \param facing              [Optional] The target (x,y) to face. If no 'facing' was given, face the ball (if found).
  * \param distanceThreshold   [Optional] The allowed delta between the target position and current position
- * \param angleThreshold      [Optional] The allowed delta between the target angle and current angle
  *
  * \retval  RUNNING     if the robot is not at the target position
  *          PASSED      if the robot has reached the target position
@@ -63,16 +58,11 @@ behTreeReturnEnum cActionMove::execute(const std::map<std::string, std::string> 
 {
     try
     {
-        Position2D myPos;
-        cWorldModelInterface::getInstance().getOwnLocation(myPos);
+        Position2D myPos = robotStore::getInstance().getOwnRobot().getPosition();
 
         // parameter "target" is the place to go.
         std::string targetStr("target");
         boost::optional<Position2D> target = getPos2DFromStr(parameters, targetStr);
-
-        // parameter "facing" is the place to look at.
-        std::string facingStr("facing");
-        boost::optional<Position2D> facing = getPos2DFromStr(parameters, facingStr);
 
         // parameter "distanceThreshold" is the allowed delta between the target and the real position
         std::string distanceThresholdStr("distanceThreshold");
@@ -87,20 +77,7 @@ behTreeReturnEnum cActionMove::execute(const std::map<std::string, std::string> 
             }
         }
 
-        // parameter "angleThreshold" is the allowed delta between the target and the real angle
-        std::string angleThresholdStr("angleThreshold");
-        double angleThreshold = PHIpositionTolerance;
-        paramValPair = parameters.find(angleThresholdStr);
-        if (paramValPair != parameters.end())
-        {
-            std::string angleThresholdVal = paramValPair->second;
-            if (angleThresholdVal.compare(emptyValue) != 0)
-            {
-                angleThreshold = std::stod(angleThresholdVal);
-            }
-        }
-
-        // parameter "motionProfile" defines with which profile to move with (e.g., normal play or more careful during a setpiece)
+        // [Optional] parameter "motionProfile" defines with which profile to move with (e.g., normal play or more careful during a setpiece)
         std::string motionProfileStr("motionProfile");
         std::string motionProfileValue = "normal";
         paramValPair = parameters.find(motionProfileStr);
@@ -113,15 +90,15 @@ behTreeReturnEnum cActionMove::execute(const std::map<std::string, std::string> 
         {
             Position2D targetPos = *target;
 
-            intention.x = targetPos.x;
-            intention.y = targetPos.y;
+            _intention.position.x = targetPos.x;
+            _intention.position.y = targetPos.y;
             sendIntention();
 
             // ensure that we move according to the rules
             if (!isCurrentPosValid())
             {
                 // Move towards the center, while maintaining angle and motion profile
-                moveTo(0.0, 0.0, targetPos.phi, motionProfileValue);
+                moveTo(0.0, 0.0, motionProfileValue);
                 return behTreeReturnEnum::RUNNING;
             }
 
@@ -130,90 +107,28 @@ behTreeReturnEnum cActionMove::execute(const std::map<std::string, std::string> 
                 return behTreeReturnEnum::FAILED;
             }
 
-            if (facing)
-            {
-                // Move to 'target', while facing 'facing'.
-                Position2D facingPos = *facing;
-
-                // Compute angle from target to facing
-                double angle = angle_between_two_points_0_2pi(targetPos.x, targetPos.y, facingPos.x, facingPos.y);
-                targetPos.phi = angle;
-            }
-            else
-            {
-                // No 'facing' parameter given. Default to looking at the ball.
-
-                ball ball = ballStore::getBall();
-                if (ball.isLocationKnown())
-                {
-                    Point3D ballPos = ball.getPosition();
-
-                    // Compute angle from target to ball
-                    double angle = angle_between_two_points_0_2pi(targetPos.x, targetPos.y, ballPos.x, ballPos.y);
-                    targetPos.phi = angle;
-                }
-                else
-                {
-                    // No balls found. Do not turn.
-                    targetPos.phi = myPos.phi;
-                }
-            }
-
-            double wideAngleThreshold = angleThreshold + teamplay::configurationStore::getConfiguration().getShootTimerAngleThreshold();
-            if (!positionReached(targetPos.x, targetPos.y, targetPos.phi, distanceThreshold, wideAngleThreshold))
-            {
-                _timer.reset();
-            }
-
-            // Previously determined targetPos, including the 'facing' (phi).
+            // Previously determined targetPos.
             // Now move there, if not already reached.
-            if (positionReached(targetPos.x, targetPos.y, targetPos.phi, distanceThreshold, angleThreshold))
+            if (positionReached(targetPos.x, targetPos.y, distanceThreshold))
             {
                 // Target reached. Do nothing and return PASSED
                 TRACE("cActionMove PASSED (reason: target reached)");
-                moveTo(myPos.x, myPos.y, myPos.phi);
+                moveTo(myPos.x, myPos.y);
                 return behTreeReturnEnum::PASSED;
             }
             else
             {
-                if(_timer.hasElapsed(teamplay::configurationStore::getConfiguration().getShootTimer()))
-                {
-                    // Target not reached, but timer elapsed. Do nothing and return PASSED
-                    TRACE("cActionMove PASSED (reason: timer elapsed)");
-                    moveTo(myPos.x, myPos.y, myPos.phi);
-                    return behTreeReturnEnum::PASSED;
-                }
-                else
-                {
-                    /*
-                     * Target not reached and timer not elapsed
-                     *
-                     * Before moving, calculate new angle incorporating the threshold as well
-                     * Reason is to 'pull' robot over the threshold; avoiding long waits
-                     * before the robot actually reaches the threshold.
-                     *
-                     */
-                    //if((project_angle_mpi_pi(targetPos.phi) - project_angle_mpi_pi(myPos.phi)) > 0.0)
-                    //{
-                    //    targetPos.phi = project_angle_0_2pi(targetPos.phi + PHIpositionTolerance);
-                    //}
-                    //else
-                    //{
-                    //    targetPos.phi = project_angle_0_2pi(targetPos.phi - PHIpositionTolerance);
-                    //}
-
-                    //moveTo and return RUNNING
-                    moveTo(targetPos.x, targetPos.y, targetPos.phi, motionProfileValue);
-                    return behTreeReturnEnum::RUNNING;
-                }
+                //moveTo and return RUNNING
+                moveTo(targetPos.x, targetPos.y, motionProfileValue);
+                return behTreeReturnEnum::RUNNING;
             }
         }
 
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+        throw std::runtime_error(std::string("cActionMove::execute Linked to: ") + e.what());
     }
 
     return behTreeReturnEnum::FAILED;

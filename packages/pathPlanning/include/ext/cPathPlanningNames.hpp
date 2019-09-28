@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,13 +28,12 @@ const static std::string pathplanning_nodename = "PathPlanningNode";
 
 namespace PathPlanningInterface
 {
-const static std::string s_pathplanning_get_active         = "s_pathplanning_get_active";
 const static std::string s_pathplanning_move_at_speed      = "s_pathplanning_move_at_speed";
 const static std::string s_pathplanning_move_then_turn     = "s_pathplanning_move_then_turn";
 const static std::string s_pathplanning_move_while_turning = "s_pathplanning_move_while_turning";
-const static std::string s_pathplanning_set_active         = "s_pathplanning_set_active";
 const static std::string s_pathplanning_turn               = "s_pathplanning_turn";
 const static std::string s_pathplanning_turn_then_move     = "s_pathplanning_turn_then_move";
+const static std::string s_pathplanning_stop               = "s_pathplanning_stop";
 }
 
 #endif /* PATHPLANNINGNODENAMES_HPP_ */

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -e
+
+pushd .
+cd ../../../tools/jpgToRgb
+make jpgToRgb
+jpgToRgb=../../../tools/jpgToRgb/jpgToRgb
+
+popd
+
+# make kill
+# make
+
+directory=~/falcons/data/internal/vision/multiCam/r1
+# directory=/dev/shm
+
+# for ii in `ls $directory/cam0_20190606_212130.jpg`
+# for ii in `ls $directory/cam0_20190606_212209.jpg`
+# for ii in `ls $directory/cam0_20190606_212*.jpg`
+# for ii in `ls $directory/cam0_20190704_0130*.jpg`
+# for ii in `ls $directory/cam0_20190704_01163*.jpg`
+# for ii in `ls $directory/cam0_20190704_03381*.jpg`
+# for ii in `ls $directory/cam0_20190704_0505*.jpg`
+# for ii in `ls $directory/cam0_20190704_070*.jpg`
+# for ii in `ls $directory/cam0_20190706_06182*.jpg`
+# for ii in `ls $directory/cam0_20190706_06104*.jpg`
+for ii in `ls $directory/cam0_20190706_09375*.jpg`
+
+do 
+
+   # robot=`echo $ii | perl -pl -e 's/.*\/multiCam\/r(\d)\/cam(\d)_(\d+)_(\d+)\.jpg/$1/'`
+   camera=`echo $ii | perl -pl -e 's/.*\/cam(\d)_(\d+)_(\d+)\.jpg/$1/'`
+   # camera=`echo $ii | perl -pl -e 's/.*\/multiCam\/r(\d)\/cam(\d)_(\d+)_(\d+)\.jpg/$2/'`
+   # timeStamp=`echo $ii | perl -pl -e 's/.*\/multiCam\/r(\d)\/cam(\d)_(\d+)_(\d+)\.jpg/$3_$4/'`
+   timeStamp=`echo $ii | perl -pl -e 's/.*\/cam(\d)_(\d+)_(\d+)\.jpg/$2_$3/'`
+
+   # echo "## using robot $robot camera $camera time stamp $timeStamp ##"
+   echo "## camera $camera time stamp $timeStamp ##"
+   if [[ $camera = 0 ]]; then
+      # echo "## using robot $robot camera $camera time stamp $timeStamp ##"
+      # echo $directory/cam0_$timeStamp.jpg
+      md5sum $directory/cam0_$timeStamp.jpg
+      # ls -ltr $directory/cam0_$timeStamp.jpg
+      $jpgToRgb -i $directory/cam0_$timeStamp.jpg -o cam0Image.rgb
+      $jpgToRgb -i $directory/cam1_$timeStamp.jpg -o cam1Image.rgb || true
+      $jpgToRgb -i $directory/cam2_$timeStamp.jpg -o cam2Image.rgb || true
+      $jpgToRgb -i $directory/cam3_$timeStamp.jpg -o cam3Image.rgb || true
+      sleep 5
+   fi
+done
+
+exit 0 # success
+ls tl

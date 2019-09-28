@@ -7,6 +7,9 @@
 172.16.74.54	r4
 172.16.74.55	r5
 172.16.74.56	r6
+172.16.74.57	r7
+172.16.74.58	r8
+172.16.74.59	r9
 
 # via ethernet (used during tournaments when wifi is saturated)
 10.0.0.51	e1
@@ -40,7 +43,7 @@
 172.16.74.21    witte
 172.16.74.22    hippie
 172.16.74.23    porky
-172.16.74.24	lt-jmbm
+172.16.74.24    pizza
 172.16.74.25    wowman
 172.16.74.26    labrat
 172.16.74.27    coach
@@ -58,8 +61,10 @@
 172.16.74.39    wallnut
 172.16.74.40    appletree
 172.16.74.41    chair
-172.16.74.42	jarvis
-172.16.74.43	hobbes
+172.16.74.42    jarvis
+172.16.74.43    hobbes
+172.16.74.44    bakpao
+172.16.74.45    dalek
 
 # deprecated names of the robots
 172.16.74.51	TURTLE-5K-1
@@ -68,11 +73,6 @@
 172.16.74.54	TURTLE-5K-4
 172.16.74.55	TURTLE-5K-5
 172.16.74.56	TURTLE-5K-6
-
-# real numbers
-128.127.40.3    timmel.no-ip.biz
-128.127.40.3    svn
-62.234.4.160    tweety
 
 # The following lines are desirable for IPv6 capable hosts
 ::1     ip6-localhost ip6-loopback

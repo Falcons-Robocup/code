@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -34,16 +34,18 @@
 #include "int/widgets/Field/CamFeedParams.h"
 #include "int/widgets/Field/Visualization/BallVisualization.h"
 #include "int/widgets/Field/Visualization/ObstacleVisualization.h"
+#include "int/widgets/Field/Visualization/GaussianVisualization.h"
 #include "int/widgets/Field/Visualization/ForbiddenAreaVisualization.h"
 #include "int/widgets/Field/Visualization/RobotVisualization.h"
 #include "int/widgets/Field/Visualization/ShootTargetVisualization.h"
 #include "int/widgets/Field/Visualization/projectSpeedVisualization.h"
-#include "int/widgets/Field/SettingsDialog.h"
 #include "int/widgets/Widget.h"
+#include "int/widgets/SettingsDialog.h"
 
 // External:
 #include "polygon2D.hpp"
 #include "linepoint2D.hpp"
+#include "rtdbStructs.hpp"
 
 #define OBSTACLE_HEIGHT 0.2
 
@@ -69,15 +71,19 @@ protected:
 
 public Q_SLOTS:
 
+    virtual void onClearRequest();
     virtual void onElapsedTimeChanged(double t); // Time elapsed in log session
+    virtual void onRobotClear(uint8_t robotID);
 
-    virtual void onBallPositionChanged(ObjectId id, SignalMode signalMode, PositionVelocity& posvel, float confidence) override; // Ball position according to one robot
+    virtual void onBallPositionChanged(ObjectId id, SignalMode signalMode, PositionVelocity& posvel, float confidence, float age, CameraType camType) override; // Ball position according to one robot
     virtual void onBallPossessionChanged(uint8_t senderRobotId, SignalMode signalMode, BallPossessionType type, uint8_t robotId) override; // Ball possession according to one robot
     virtual void onOwnTeamPositionChanged(uint8_t senderRobotId, SignalMode signalMode, uint8_t robotId, PositionVelocity& posvel) override; // Team member position according to one robot
+    virtual void onRobotStatusChanged(uint8_t senderRobotId, SignalMode signalMode, uint8_t robotId, int status) override;
     virtual void onObstaclePositionChanged(ObjectId id, SignalMode signalMode, PositionVelocity& posvel) override; // Obstacle position according to one robot
     virtual void onForbiddenAreaChanged(ObjectId id, SignalMode signalMode, polygon2D& area) override; // Obstacle position according to one robot
     virtual void onShootTargetChanged(uint8_t senderRobotId, SignalMode mode, PositionVelocity& posvel, bool aiming) override; // Shoot target according to one robot
     virtual void onProjectSpeedChanged(ObjectId id, SignalMode signalMode, linepoint2D& line) override; // projected speed vector according to one robot
+    virtual void onGaussianObstacleUpdate(uint8_t senderRobotId, SignalMode signalMode, T_DIAG_WORLDMODEL_LOCAL& worldmodel_local) override;
 
     virtual void onPathPlanningInProgress(uint8_t senderRobotId, std::vector<PositionVelocity>& path) override;
 };
@@ -87,7 +93,7 @@ class FieldEventHandler;
 /*
 * Field rendering class
 */
-class FieldWidget3D : public QVTKWidget, public Widget<FieldWidgetGameSignalSubscriber, FieldWidget3D, Visualizer::Field::Settings::SettingsDialog>
+class FieldWidget3D : public QVTKWidget, public Widget<FieldWidgetGameSignalSubscriber, FieldWidget3D>
 {
         Q_OBJECT
 friend FieldWidgetGameSignalSubscriber;
@@ -106,16 +112,14 @@ public:
     virtual void saveState() override;
     virtual void restoreState() override;
 
+    virtual void reloadSettings() override;
+
 public Q_SLOTS:
     void resetZoomPanRotate();
     void flip(bool flip); // Rotate field 180 degrees (resets camera position as well)
-    virtual void showSettingsDialog() override
-    {
-        Widget::showSettingsDialog();
-    }
 
 protected:
-    virtual void reloadSettings() override;
+    virtual void resizeEvent(QResizeEvent * event);
 
 private Q_SLOTS:  /* == Rendering == */
     void render();
@@ -174,18 +178,20 @@ private:
     void addForbiddenAreaActor();
     void setForbiddenAreaPosition(polygon2D& area, ObjectId id);
 
+    // TODO: some things in this widget are not anymore MSL common, instead Falcons specific... we should aim for a nice split between these categories
+
     /* == Ball rendering == */
     std::vector<vtkSmartPointer<BallVisualization>> _ballActors; 
     std::map<int, std::pair<int, double>> _ballMapping; // key: ball id, value: (actor index, last update)
     void addBallActor();
-    void setBallPosition(PositionVelocity& posvel, ObjectId id);
+    void setBallPosition(PositionVelocity& posvel, ObjectId id, float confidence, float age, CameraType camType);
 
     /* == Shoot target rendering == */
     std::map<uint8_t, vtkSmartPointer<ShootTargetVisualization>> _shootTargetActors;
     void addShootTargetActor(uint8_t robotId);
     void setShootTargetPosition(uint8_t robotId, PositionVelocity& posvel);
     void hideShootTarget(uint8_t robotId);
-
+    
     /* == project speed vector rendering == */
     std::vector<vtkSmartPointer<projectSpeedVisualization>> _projectSpeedActors;
     std::map<int, std::pair<int, double>> _projectSpeedMapping; // key: obstacle id, value: (actor index, last update)
@@ -194,6 +200,11 @@ private:
 
     /* == Annotation rendering == */
     void addCollision(uint8_t robotId); // Adds a collision marker at the point of the specified robot.
+
+    /* == Gaussian world model rendering == */
+    std::vector<vtkSmartPointer<GaussianVisualization>> _gaussianObstacleActors;
+    void updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_local, bool show_measurements);
+
 
     /* == Generic rendering methods == */
     vtkSmartPointer<vtkActor> createLine(float x1, float y1, float z1, float x2, float y2, float z2);

@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -245,6 +245,9 @@ class AnalyzeWorldModel():
                     glitchSize = max(abs(deltaPos.x), abs(deltaPos.y))
                     if glitchSize > LOC_GLITCH_TOL_XY:
                         self.reportLocalizationGlitch(glitchSize, irobot)
+                        # check if the glitch is due to a robot flip, see TRAC ticket 304
+                        if ((self.getPosition(irobot).x - (-1*self.getPosition(irobot, prev=True).x) < LOC_GLITCH_TOL_XY) and (self.getPosition(irobot).y - (-1*self.getPosition(irobot, prev=True).y) < LOC_GLITCH_TOL_XY)): # position is inverted
+                            self.handleEvent("localization glitch likely due to robot flip")                        
                     # ignore phi for now, not really a problem - glitches tend to correlate
                 else:
                     trace("unexpected large gap in data stream")

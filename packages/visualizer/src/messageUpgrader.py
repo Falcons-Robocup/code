@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -57,6 +57,9 @@ class MessageUpgrader():
                     ballMsg = msgDict['ballpos']
                     del ballMsg['phi']
                     msgDict['ballpos'] = [ballMsg]
+        # pathPlanning has no obstacles anymore
+        if "diag_pathpl" in msgTypeStr:
+            del msgDict['obstacles']
         # new-teamplay has no actionHandler and reasoning anymore
         if "diag_active" in msgTypeStr:
             if "reasoning" in msgDict.keys():
@@ -67,7 +70,29 @@ class MessageUpgrader():
             # clear 
             msgDict = {}
             msgDict['state'] = [0, 1, 1, 1, 1, 1, 1]
+
+        # robotVel moved from peripheralsInterface to velocityControl: (2018-02-17)
+        # -float32 feedback_vx # measured speed
+        # -float32 feedback_vy # measured speed
+        # -float32 feedback_vphi # measured speed
+        # -float32 speed_vx # intended speed
+        # -float32 speed_vy # intended speed
+        # -float32 speed_vphi # intended speed
+        # +float32 feedback_m1_vel # measured speed
+        # +float32 feedback_m2_vel # measured speed
+        # +float32 feedback_m3_vel # measured speed
+        # +float32 speed_m1_vel # intended speed
+        # +float32 speed_m2_vel # intended speed
+        # +float32 speed_m3_vel # intended speed
         # call converter again to capture an appropriate error
+        if "diag_halmw" in msgTypeStr:
+            del msgDict['feedback_vx']
+            del msgDict['feedback_vy']
+            del msgDict['feedback_vphi']
+            del msgDict['speed_vx']
+            del msgDict['speed_vy']
+            del msgDict['speed_vphi']
+
         msgTo = convert_dictionary_to_ros_message(msgTypeStr, msgDict)
         return msgTo
 

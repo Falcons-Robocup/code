@@ -1,0 +1,15 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\b motionPlanning 
+
+<!-- 
+MotionPlanning translates commands from either teamplay or robotCLI into lower motion commands.
+It is responsible for shooting accuracy. 
+-->
+
+-->
+
+
+*/

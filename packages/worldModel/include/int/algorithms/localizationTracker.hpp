@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,21 +28,22 @@
 
 class localizationTracker
 {
-     
-  public:
+public:
     localizationTracker();
     ~localizationTracker();
     
     // setters
     void updateExpectedPosition(Position2D const &deltaDisplacementPos);
-    void feedMeasurement(robotMeasurementClass_t const &measurement);
+    void feedMeasurement(robotMeasurementClass_t const &measurement, double timestampNow);
     void setId(int id);
     void matchPosition(Position2D const &referencePosition);
     
     // getters
     float getCameraMeasurementScore(robotMeasurementClass_t const &measurement) const;
     float getTrackerScore(double timestampNow); // tracker with highest score wins
-    double getLastUpdateTimestamp() const;
+    float getLocAge(double timestampNow);
+    double getLastVisionTimestamp() const;
+    double getLastPokeTimestamp() const;
     Position2D getPosition() const;
     float getVisionConfidence() const;
     bool isTimedOut(double timestampNow) const;
@@ -51,19 +52,21 @@ class localizationTracker
     int getId();
     static int requestId();
 
-  private:
+private:
     // helpers
     void cleanup(double timestampNow);
     float getPositionScore(Position2D const &positionA, Position2D const &positionB) const;
     Position2D mirror(Position2D const &position) const;
     
-  private:
+private:
     // data members
     int _id;
     Position2D _position;
+    float _trackerTimeout;
     float _visionConfidence;
     double _creationTimestamp;
-    double _lastUpdateTimestamp;
+    double _lastVisionTimestamp;
+    double _lastPokeTimestamp;
     std::deque<double> _recentTimestamps;
     
 };

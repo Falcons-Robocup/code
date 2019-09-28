@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,27 +22,17 @@
 #include "ext/cPathPlanningNames.hpp"
 #include "ext/cPathPlanningRosStub.hpp"
 
-#include "pathPlanning/s_pathplanning_get_active.h"
 #include "pathPlanning/s_pathplanning_move_at_speed.h"
 #include "pathPlanning/s_pathplanning_move_then_turn.h"
 #include "pathPlanning/s_pathplanning_move_while_turning.h"
-#include "pathPlanning/s_pathplanning_set_active.h"
 #include "pathPlanning/s_pathplanning_turn.h"
 #include "pathPlanning/s_pathplanning_turn_then_move.h"
 #include "rosMsgs/t_target.h"
 
-#include "tracer.hpp"
+#include "tracing.hpp"
 
 bool _isactive = false;
 geometry::Pose2D _pose = geometry::Pose2D();
-
-bool getActiveCallback(pathPlanning::s_pathplanning_get_active::Request &req,
-        pathPlanning::s_pathplanning_get_active::Response &resp)
-{
-    TRACE("ros stub getActiveCallback");
-    resp.active = _isactive;
-    return true;
-}
 
 bool moveAtSpeedCallback(pathPlanning::s_pathplanning_move_at_speed::Request &req,
         pathPlanning::s_pathplanning_move_at_speed::Response &resp)
@@ -65,14 +55,6 @@ bool moveWhileTurningCallback(pathPlanning::s_pathplanning_move_while_turning::R
 {
     TRACE("ros stub moveWhileTurningCallback(pos: (%3.3f, %3.3f, %3.3f))", req.pos.x, req.pos.y, req.pos.theta);
     _pose = geometry::Pose2D(req.pos.x, req.pos.y, req.pos.theta);
-    return true;
-}
-
-bool setActiveCallback(pathPlanning::s_pathplanning_set_active::Request &req,
-        pathPlanning::s_pathplanning_set_active::Response &resp)
-{
-    TRACE("ros stub setActiveCallback(active: %d)", req.active);
-    _isactive = (req.active != 0);
     return true;
 }
 
@@ -103,11 +85,9 @@ void targetCallback(const rosMsgs::t_target::ConstPtr& target)
 void cPathPlanningRosStub::setupServices()
 {
     TRACE("setting up services...");
-    _services.push_back(_nh.advertiseService(PathPlanningInterface::s_pathplanning_get_active, getActiveCallback));
     _services.push_back(_nh.advertiseService(PathPlanningInterface::s_pathplanning_move_at_speed, moveAtSpeedCallback));
     _services.push_back(_nh.advertiseService(PathPlanningInterface::s_pathplanning_move_then_turn, moveThenTurnCallback));
     _services.push_back(_nh.advertiseService(PathPlanningInterface::s_pathplanning_move_while_turning, moveWhileTurningCallback));
-    _services.push_back(_nh.advertiseService(PathPlanningInterface::s_pathplanning_set_active, setActiveCallback));
     _services.push_back(_nh.advertiseService(PathPlanningInterface::s_pathplanning_turn, turnCallback));
     _services.push_back(_nh.advertiseService(PathPlanningInterface::s_pathplanning_turn_then_move, turnThenMoveCallback));
     TRACE("done with setting up services");

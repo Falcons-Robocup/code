@@ -7,6 +7,23 @@
 # 
 
 
-set_robot_config mode develop
-falcons_kill.sh
+
+# where to copy to
+targetdir=$1
+
+# robot might have rebooted, take all files newer than start of coachControl session
+# assume given directory is something like coach:/var/tmp/falcons_control_20171217_161743
+# then timestamp (as required by 'touch') is 201712171617.43
+t=`echo $targetdir | sed 's/.*control//' | tr -d '_'`
+t=${t:0:12}.${t:12}
+tmpfile=/var/tmp/sessionstart
+touch -t $t $tmpfile
+filestocopy=`find /var/tmp/* -newer $tmpfile -name '[dp]trace*.txt' 2>/dev/null`
+rm $tmpfile
+# TODO first zip, then copy? to minimize wifi load at end of match?
+for f in $filestocopy ; do
+    # mangle filename to prevent overwriting 
+    m=`echo $f | sed 's,/var/tmp/,,' | tr '/' '_'`
+    scp $f $targetdir/$m
+done
 

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,27 +21,23 @@
 #include <string>
 #include <vector>
 
+#include "FalconsCommon.h"
 #include "int/stores/ballStore.hpp"
-#include "int/cTeamplayCommon.hpp"
-#include "int/cWorldModelInterface.hpp"
-#include "int/algorithms/cPFM.hpp"
+#include "int/stores/heightMapStore.hpp"
+#include "int/stores/robotStore.hpp"
 #include "int/utilities/trace.hpp"
-#include "int/stores/fieldDimensionsStore.hpp"
-#include "int/cWorldStateFunctions.hpp"
+
 
 using namespace teamplay;
-using std::vector;
 
 cActionMoveToFreeSpot::cActionMoveToFreeSpot()
 {
     boost::assign::insert( _actionParameters )
-        ("facing", std::make_pair(defaultPOI, true) )
-        ("distanceThreshold", std::make_pair(std::vector<std::string>{"float"}, true) )
-        ("angleThreshold", std::make_pair(std::vector<std::string>{"float"}, true))
-        ("areaOfInterest", std::make_pair(defaultArea, true))
-        ;
+    ("distanceThreshold", std::make_pair(std::vector<std::string>{"float"}, true) )
+    ("areaOfInterest", std::make_pair(defaultArea, true))
+    ;
 
-    intention.actionType = actionEnum::MOVE_TO_FREE_SPOT;
+    _intention.action = actionTypeEnum::MOVE;
 }
 
 cActionMoveToFreeSpot::~cActionMoveToFreeSpot()
@@ -52,9 +48,7 @@ cActionMoveToFreeSpot::~cActionMoveToFreeSpot()
 /* \brief Move to a free spot in a certain area of interest
  *
  * \param areaOfInterest      The applicable area
- * \param facing              [Optional] The target (x,y) to face. If no 'facing' was given, face the ball (if found).
  * \param distanceThreshold   [Optional] The allowed delta between the target position and current position
- * \param angleThreshold      [Optional] The allowed delta between the target angle and current angle
  *
  * \retval  RUNNING     if the robot is not at the target position
  *          PASSED      if the robot has reached the target position
@@ -64,98 +58,40 @@ behTreeReturnEnum cActionMoveToFreeSpot::execute(const std::map<std::string, std
 {
     try
     {
-    	double Line_y = 4.0; // Horizontal line on which robot is searching for a free spot
-    	// TODO: add as parameter to trees (low number > more long (lob)shots; high number > longer passes, more accurate shooting)
+        Position2D myPos = robotStore::getInstance().getOwnRobot().getPosition();
+        ball ball = ballStore::getBall(); // retrieve ball position information
+        Vector2D ballPos(ball.getPosition().x, ball.getPosition().y);
 
-    	double dist_to_move_away = 2.0; // move away x [m] when there are obstacles in shoot path
-    	float shoot_path_width = 0.5; // 0.5 [m] shoot path width to check if obstacles are blocking shoot path
+        // Get optimal location from heightmap
+        Point2D optimum = heightMapStore::getInstance().getOptimum(tpActionEnum::MOVE_TO_FREE_SPOT, parameters);
 
-    	// determine intersect result on Line_y on which robot (attacker) moves to free spot
-    	ball ball = ballStore::getBall(); // retrieve ball position information
-    	Vector2D ballPos(ball.getPosition().x, ball.getPosition().y);
+        // Compute target positions
+        Position2D targetPos;
+        targetPos.x = optimum.x;
+        targetPos.y = optimum.y;
 
-    	Point2D oppGoalCenter = fieldDimensionsStore::getFieldDimensions().getLocation(fieldPOI::OPP_GOALLINE_CENTER); // retrieve opp_goalline_center point
-    	Vector2D goalPos(oppGoalCenter.x, oppGoalCenter.y);
+        // parameter "distanceThreshold" is the allowed delta between the target and the real position
+        std::string distanceThresholdStr("distanceThreshold");
+        double distanceThreshold = XYpositionTolerance;
+        auto paramValPair = parameters.find(distanceThresholdStr);
+        if (paramValPair != parameters.end())
+        {
+            std::string distanceThresholdVal = paramValPair->second;
+            if (distanceThresholdVal.compare(emptyValue) != 0)
+            {
+                distanceThreshold = std::stod(distanceThresholdVal);
+            }
+        }
 
-    	Vector2D leftPosLine_y((fieldDimensionsStore::getFieldDimensions().getWidth() / -2.0), Line_y);
-        Vector2D rightPosLine_y(fieldDimensionsStore::getFieldDimensions().getWidth() / 2.0, Line_y);
-
-        Vector2D intersectResult;
-        intersect(ballPos, goalPos, leftPosLine_y, rightPosLine_y, intersectResult);
-
-        // create Point2D's for using wsf:getObstructingObstaclesInPath
-        Point2D ballPos2D;
-        ballPos2D.x = ball.getPosition().x;
-        ballPos2D.y = ball.getPosition().y;
-        Point2D intersectResult2D;
-        intersectResult2D.x = intersectResult.x;
-        intersectResult2D.y = intersectResult.y;
-
-        // check if obstacles blocking shoot path to intended intersect position
-        std::vector<robotLocation> obstacles;
-        cWorldStateFunctions::getInstance().getObstructingObstaclesInPath(ballPos2D, intersectResult2D, shoot_path_width, obstacles);
-
-    	if (obstacles.size() > 0)
-    	{
-    		if (ball.isAtLeftSide())
-			{
-    			intersectResult.x = intersectResult.x + dist_to_move_away;
-			}
-    		else
-    		{
-    			intersectResult.x = intersectResult.x - dist_to_move_away;
-    		}
-    	}
-
-    	// Compute target positions
-    	Position2D targetPos;
-    	targetPos.x = intersectResult.x;
-    	targetPos.y = intersectResult.y;
-
-    	// Compute angle from robot to ball to ensure robot is always looking at the ball to receive a pass
-        Position2D myPos;
-        cWorldModelInterface::getInstance().getOwnLocation(myPos);
-        targetPos.phi = angle_between_two_points_0_2pi(myPos.x, myPos.y, ballPos.x, ballPos.y);
-
-    	// parameter "facing" is the place to look at.
-		std::string facingStr("facing");
-		boost::optional<Position2D> facing = getPos2DFromStr(parameters, facingStr);
-
-		// parameter "distanceThreshold" is the allowed delta between the target and the real position
-		std::string distanceThresholdStr("distanceThreshold");
-		double distanceThreshold = XYpositionTolerance;
-		auto paramValPair = parameters.find(distanceThresholdStr);
-		if (paramValPair != parameters.end())
-		{
-			std::string distanceThresholdVal = paramValPair->second;
-			if (distanceThresholdVal.compare(emptyValue) != 0)
-			{
-				distanceThreshold = std::stod(distanceThresholdVal);
-			}
-		}
-
-		// parameter "angleThreshold" is the allowed delta between the target and the real angle
-		std::string angleThresholdStr("angleThreshold");
-		double angleThreshold = PHIpositionTolerance;
-		paramValPair = parameters.find(angleThresholdStr);
-		if (paramValPair != parameters.end())
-		{
-			std::string angleThresholdVal = paramValPair->second;
-			if (angleThresholdVal.compare(emptyValue) != 0)
-			{
-				angleThreshold = std::stod(angleThresholdVal);
-			}
-		}
-
-		intention.x = targetPos.x;
-		intention.y = targetPos.y;
-		sendIntention();
+        _intention.position.x = targetPos.x;
+        _intention.position.y = targetPos.y;
+        sendIntention();
 
         // ensure that we move according to the rules
         if (!isCurrentPosValid())
         {
             // Move towards the center, while maintaining angle
-            moveTo(0.0, 0.0, targetPos.phi);
+            moveTo(0.0, 0.0);
             return behTreeReturnEnum::RUNNING;
         }
 
@@ -164,25 +100,25 @@ behTreeReturnEnum cActionMoveToFreeSpot::execute(const std::map<std::string, std
             return behTreeReturnEnum::FAILED;
         }
 
-        if (positionReached(targetPos.x, targetPos.y, targetPos.phi, distanceThreshold, angleThreshold))
+        if (positionReached(targetPos.x, targetPos.y, distanceThreshold))
         {
             // Target reached. Do nothing and return PASSED
             TRACE("cActionMoveToFreeSpot PASSED");
-            moveTo(myPos.x, myPos.y, myPos.phi);
+            moveTo(myPos.x, myPos.y);
             return behTreeReturnEnum::PASSED;
         }
         else
         {
             // Target not reached. moveTo and return RUNNING
-            moveTo(targetPos.x, targetPos.y, targetPos.phi);
+            moveTo(targetPos.x, targetPos.y);
             return behTreeReturnEnum::RUNNING;
         }
 
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+        throw std::runtime_error(std::string("cActionMoveToFreeSpot::execute Linked to: ") + e.what());
     }
 
     return behTreeReturnEnum::FAILED;

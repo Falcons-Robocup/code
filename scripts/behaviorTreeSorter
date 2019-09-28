@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+"""
+This script sorts all json files in the teamplayData directory,
+without modifying any actual content.
+
+Coen Tempelaars, June 2018
+
+Usage: behaviorTreeSorter
+"""
+
+import json
+import os
+
+json_directory = "/home/robocup/falcons/teamplayData/"
+
+if __name__ == "__main__":
+    for filename in os.listdir(json_directory):
+        if filename.endswith(".json"):
+            fullpath = os.path.join(json_directory, filename)
+            with open(fullpath, "r") as json_file:
+                # Read the file and decode its contents
+                root = json.load(json_file)
+
+                # Sort all trees
+                root["trees"].sort(key = lambda tree: tree["title"])
+
+                # Sort all nodes (worldstatefunctions, actions, etc.)
+                root["custom_nodes"].sort(key = lambda node: node["name"])
+
+            with open(fullpath, "w") as json_file:
+                # Encode the json and write to file
+                # sort_keys=True ensures that all properties (source, destination, etc.) are sorted
+                json_file.write(json.dumps(root, sort_keys=True, indent=2, separators=(',', ': ')))

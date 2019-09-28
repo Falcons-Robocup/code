@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Copyright 2018 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to gracefully shut down the raspi boards
+
+
+if [ $# = 1 ]; then
+   # one argument provided
+   host=$1
+
+   echo "shutdown host $host"
+   ssh pi@$host "./killRaspi; sudo poweroff"
+
+else
+   echo "INFO   : shutdown all raspi boards"
+
+   cam0="10.0.0.70"
+   cam1="10.0.0.71"
+   cam2="10.0.0.72"
+   cam3="10.0.0.73"
+   
+   sshOptions="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no"
+   
+   for host in $cam0 $cam1 $cam2 $cam3
+   do
+      ping -W 1 -c 1 $host >/dev/null 2>/dev/null
+      if [ "$?" == "0" ]; then
+         echo "shutdown host $host"
+         ssh $sshOptions pi@$host "./killRaspi; sudo poweroff"
+      fi
+   done
+fi
+
+echo "all done"
+
+exit 0

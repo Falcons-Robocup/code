@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,6 +21,7 @@
 /* Overwrite functionality of cAbstractPathPlanning update function */
 void cXYPID::execute()
 {
+    TRACE_FUNCTION("");
     //TRACE(">");
 
     // Get current position from cPathPlanningData
@@ -80,28 +81,28 @@ void cXYPID::execute()
     double yderivative = (yerror - _prev_vel.y) / _dt;
 
 
-    newVel.x = pidParams.XY_P * xerror
-             + pidParams.XY_I * _integral.x
-             + pidParams.XY_D * xderivative;
-    newVel.y = pidParams.XY_P * yerror
-             + pidParams.XY_I * _integral.y
-             + pidParams.XY_D * yderivative;
+    newVel.x =    pidParams.XY_P * xerror
+                + pidParams.XY_I * _integral.x
+                + pidParams.XY_D * xderivative;
+    newVel.y =    pidParams.XY_P * yerror
+                + pidParams.XY_I * _integral.y
+                + pidParams.XY_D * yderivative;
 
     /* Save errors for D-action later */
     _prev_vel.x = xerror;
     _prev_vel.y = yerror;
 
-    std::stringstream ss;
-    ss << "PIDPLOT " <<
-            pidParams.XY_P << " " << pidParams.XY_I << " " << pidParams.XY_D << " " <<                                             /* P I D                  */
-            pidParams.XY_P * xerror << " " << pidParams.XY_P * yerror << " " <<          /* Px Py             */
-            pidParams.XY_I * _integral.x << " " << pidParams.XY_I * _integral.y << " " <<  /* Ix Iy             */
-            pidParams.XY_D * xderivative << " " << pidParams.XY_D * yderivative << " " <<        /* Dx Dy             */
-            newVel.x << " " << newVel.y << " " <<                                                             /* vx vy               */
-            currPos.x << " " << currPos.y << " " <<                                                          /* cposx cposy     */
-            targetPosition.x << " " << targetPosition.y << " " <<                                     /* tposx tposy   */
-            currVel.x << " " << currVel.y << std::endl;
-    TRACE(ss.str().c_str());
+//    std::stringstream ss;
+//    ss << "PIDPLOT " <<
+//            pidParams.XY_P << " " << pidParams.XY_I << " " << pidParams.XY_D << " " <<                                             /* P I D                  */
+//            pidParams.XY_P * xerror << " " << pidParams.XY_P * yerror << " " <<          /* Px Py             */
+//            pidParams.XY_I * _integral.x << " " << pidParams.XY_I * _integral.y << " " <<  /* Ix Iy             */
+//            pidParams.XY_D * xderivative << " " << pidParams.XY_D * yderivative << " " <<        /* Dx Dy             */
+//            newVel.x << " " << newVel.y << " " <<                                                             /* vx vy               */
+//            currPos.x << " " << currPos.y << " " <<                                                          /* cposx cposy     */
+//            targetPosition.x << " " << targetPosition.y << " " <<                                     /* tposx tposy   */
+//            currVel.x << " " << currVel.y << std::endl;
+//    TRACE(ss.str().c_str());
 
     _ppData.vel.x = newVel.x;
     _ppData.vel.y = newVel.y;
@@ -120,6 +121,9 @@ void cXYPID::execute()
     plotdata.y_pid_d = pidParams.XY_D * yderivative;
 
     _main->_ppData->setPlotData(plotdata);
+
+    //PTRACE("KST %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f", currPos.x, currVel.x, 0.0, newVel.x, 1.5, _dt);
+
 
     //TRACE("<");
 }

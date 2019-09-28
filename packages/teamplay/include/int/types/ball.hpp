@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -42,13 +42,15 @@ public:
     virtual bool isClaimedOnOpponentHalf() const;
     virtual bool mustBeAvoided() const;
 
+    virtual Point2D getLocation() const;
     virtual Point3D getPosition() const;
     virtual Vector3D getVelocity() const;
+    virtual Point2D getClaimedLocation() const;
     virtual Point3D getClaimedPosition() const;
 
     virtual void setPosition(const Point3D &);
     virtual void setVelocity(const Vector3D &);
-    virtual void setPositionUnknown(const Point3D &);
+    virtual void setPositionUnknown();
     virtual void setVelocityUnknown();
     virtual void setPositionClaimed(const Point3D &);
     virtual void setPositionClaimedUnknown();

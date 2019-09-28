@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,7 +22,8 @@
 
 #include <algorithm>
 
-#include "cDiagnosticsEvents.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 ballDiscriminator::ballDiscriminator()
 /*!
@@ -33,48 +34,81 @@ ballDiscriminator::ballDiscriminator()
  *
  */
 {
-	_ballTrackers.clear();
-	_diagSender = NULL;
+    _ballTrackers.clear();
 }
 
 ballDiscriminator::~ballDiscriminator()
 /*
- *	Chuck Norris doesn't cheat death. He wins fair and square.
+ *    Chuck Norris doesn't cheat death. He wins fair and square.
  */
 {
 
 }
 
-void traceMeasurement(const ballMeasurementType &measurement, int assignedTrackerId)
+void traceMeasurement(const objectMeasurementCache &measurementCache, int assignedTrackerId)
 {
+    ballMeasurement const &measurement = measurementCache.getObjectMeasurement();
     // trace raw measurements, for playback/analysis afterwards
-    TRACE("%2d  %d  %5d  %16.6f  %9.5f  %9.5f  %9.5f  %9.5f  %9.5f  %9.5f  %9.5f  %9.5f", 
-        measurement.getID().robotID, assignedTrackerId, (int)measurement.getCameraType(), measurement.getTimestamp(),
-        measurement.getCameraX(), measurement.getCameraY(), measurement.getCameraZ(), measurement.getCameraPhi(),
-        measurement.getAzimuth(), measurement.getElevation(), measurement.getRadius(), measurement.getConfidence());
-}		
+    //TRACE("%2d  %d  %5d  %16.6f  %9.5f  %9.5f  %9.5f  %9.5f  %9.5f  %9.5f  %9.5f  %9.5f", 
+    //    measurement.getID().robotID, assignedTrackerId, (int)measurement.getCameraType(), measurement.getTimestamp(),
+    //    measurement.getCameraX(), measurement.getCameraY(), measurement.getCameraZ(), measurement.getCameraPhi(),
+    //    measurement.getAzimuth(), measurement.getElevation(), measurement.getRadius(), measurement.getConfidence());
+    // similar: performance tracing - we include xyz coordinates for easy plotting without having to perform calculations
+    // Vector3D pos = measurementCache.getPositionFcs();
+    //PTRACE("BM %2d %1d %16.6f  %9.6f %9.6f %9.6f  %9.6f %9.6f %9.6f %9.6f %9.6f %9.6f %9.6f  %.3f %d", 
+    //       measurement.identifier.robotID, measurement.source, measurement.timestamp,
+    //       pos.x, pos.y, pos.z, // perceived ball position
+    //       // raw measurement details
+    //       measurement.cameraX, measurement.cameraY, measurement.cameraZ, measurement.cameraPhi,
+    //       measurement.azimuth, measurement.elevation, measurement.radius, measurement.confidence,
+    //       assignedTrackerId); 
+}        
 
-void checkLatency(const ballMeasurementType &measurement)
+void checkLatency(const ballMeasurement &measurement)
 {
     // configurables
     float FUTURE_TOLERANCE = -0.05;
     float FUTURE_WARNING_TIMEOUT = 30.0;
-    float LATENCY_TOLERANCE = 0.4;
+    float LATENCY_TOLERANCE = 1e9; // 0.4;
     float LATENCY_WARNING_TIMEOUT = 15.0;
     // evaluate
-    double t = getTimeNow();
-    double delta = t - measurement.getTimestamp();
+    rtime t = rtime::now(); // TODO: move out of here ... bad for s(t)imulation and testing ...
+    double delta = t - measurement.timestamp;
     if (delta < FUTURE_TOLERANCE)
     {
-        TRACE_WARNING_TIMEOUT(FUTURE_WARNING_TIMEOUT, "future ball data received from r%d (dt=%.3fs)", measurement.getID().robotID, -delta);
+        TRACE_WARNING_TIMEOUT(FUTURE_WARNING_TIMEOUT, "future ball data received from r%d (dt=%.3fs)", measurement.identifier.robotID, -delta);
     }
     if (delta > LATENCY_TOLERANCE)
     {
-        TRACE_WARNING_TIMEOUT(LATENCY_WARNING_TIMEOUT, "high-latency data received from r%d (dt=%.3fs)", measurement.getID().robotID, delta);
+        TRACE_WARNING_TIMEOUT(LATENCY_WARNING_TIMEOUT, "high-latency data received from r%d (dt=%.3fs)", measurement.identifier.robotID, delta);
     }
 }
 
-void ballDiscriminator::addMeasurement(const ballMeasurementType &measurement)
+bool ignoreHighVision(const ballMeasurement &measurement)
+{
+    // rather duplicate with code in ballTracker.cpp ...
+    // frontVision is going to be removed anyway in 2018
+    bool isFrontCam = (measurement.source == cameraEnum::FRONTCAMERA);
+    bool isMultiCam = (measurement.source == cameraEnum::MULTICAMERA);
+    bool isHighVision = isFrontCam || isMultiCam;
+    if (!isHighVision)
+    {
+        // no need to ignore
+        return false;
+    }
+    // HACK 20180308: ignore frontCam balls within omniVision range, to prevent swaffelen
+    if ((measurement.radius < 3.0) && isFrontCam)
+    {
+        return true;
+    }
+    if (measurement.identifier.robotID == getRobotNumber())
+    {
+        return !ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorBool::useOwnHighVision);
+    }
+    return !ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorBool::useFriendlyHighVision);
+}
+
+void ballDiscriminator::addMeasurement(const ballMeasurement &measurement)
 {
     try
     {
@@ -89,18 +123,16 @@ void ballDiscriminator::addMeasurement(const ballMeasurementType &measurement)
             return;
         }
 
-        bool useFrontVision = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorBool::useFrontVision);
-        bool isFrontVision = (measurement.getCameraType() == cameraType::FRONTCAMERA);
-        if (isFrontVision && !useFrontVision)
+        if (ignoreHighVision(measurement))
         {
             // reject because we do not want to use this frontVision measurement
-            traceMeasurement(measurement, 0);
+            traceMeasurement(bm, 0);
             return;
         }
-	    
+        
         // latency check (e.g. wifi and wmSync might cause delay)
         checkLatency(measurement);
-	    
+        
         bool measurementInserted = false;
         size_t assignedTrackerId = 0;
 
@@ -110,7 +142,7 @@ void ballDiscriminator::addMeasurement(const ballMeasurementType &measurement)
             if (measurementInserted)
             {
                 ballClass_t ball = it->getBall();
-                TRACE("added to existing tracker %d at (%6.2f, %6.2f)", ball.getId(), ball.getX(), ball.getY());
+                TRACE("added to existing tracker %d at (%6.2f, %6.2f, %6.2f)", ball.getId(), ball.getX(), ball.getY(), ball.getZ());
                 assignedTrackerId = ball.getId();
             }
         }
@@ -124,12 +156,12 @@ void ballDiscriminator::addMeasurement(const ballMeasurementType &measurement)
             ballTracker newTracker(measurement);
             _ballTrackers.push_back(newTracker);
             ballClass_t ball = newTracker.getBall();
-            TRACE("creating new tracker %d at (%6.2f, %6.2f)", ball.getId(), ball.getX(), ball.getY());
+            TRACE("creating new tracker %d at (%6.2f, %6.2f, %6.2f)", ball.getId(), ball.getX(), ball.getY(), ball.getZ());
             assignedTrackerId = ball.getId();
         }
 
         // trace raw measurements, for playback/analysis afterwards
-        traceMeasurement(measurement, (int)assignedTrackerId);
+        traceMeasurement(bm, (int)assignedTrackerId);
     }
     catch(std::exception &e)
     {
@@ -139,25 +171,94 @@ void ballDiscriminator::addMeasurement(const ballMeasurementType &measurement)
     }
 }
 
-void ballDiscriminator::traceTrackers(const double tcurr, bool all)
+void ballDiscriminator::getMeasurementsToSync(std::vector<ballMeasurement> &measurements)
 {
-    // count the number of good balls
-    int num_good = 0;
-	for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
-	{
-	    num_good += it->good();
-    }
-    
-    // for each good ball, show a line with details
-	for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
-	{
-	    if (it->good() || all)
-	    {
-	        // get tracker details
-	        std::string trackerInfo = it->toStr(tcurr, true);
-	        TRACE("%16.6f %3d %2d %s", tcurr, _ballTrackers.size(), num_good, trackerInfo.c_str());
+    if (_balls.size())
+    {
+        // only sync from best ball - this works magnetically: best tracker on other robots gets stronger, all others starve
+        for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
+        {
+            if (it->getBall().getId() == _balls[0].getId())
+            {
+                // select 3 newest, to achieve a bit of data redundancy
+                std::vector<objectMeasurementCache> ms = it->getBallMeasurements();
+                for (auto it2 = ms.rbegin(); (it2 != ms.rend()) && (measurements.size() < 3); ++it2)
+                {
+                    auto m = it2->getObjectMeasurement();
+                    m.confidence = it->getBall().getConfidence();
+                    measurements.push_back(m);
+                }
+            }
         }
     }
+    else
+    {
+        // take single best one from all non-blacklisted trackers, to enable robots to combine data and make the best ball emerge
+        for (auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
+        {
+            if (!it->isBlackListed())
+            {
+                std::vector<objectMeasurementCache> ms = it->getBallMeasurements();
+                if (ms.size())
+                {
+                    auto m = ms.back().getObjectMeasurement();
+                    m.confidence = it->getBall().getConfidence();
+                    measurements.push_back(m);
+                }
+            }
+        }
+    }
+    // do not share high measurements (frontVision, multiCam) if so configured
+    if (!ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorBool::shareHighVision))
+    {
+        for (auto it = measurements.begin(); it != measurements.end(); )
+        {
+            if ((it->source == cameraEnum::FRONTCAMERA) || (it->source == cameraEnum::MULTICAMERA))
+            {
+                it = measurements.erase(it);
+            }
+            else
+            {
+                it++;
+            }
+        }
+    }
+}
+
+void ballDiscriminator::traceTrackers(rtime const tcurr, bool all)
+{
+    // for each good ball, show a line with details
+    bool tracedBr = false;
+    for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
+    {
+        // get tracker details
+        std::string trackerInfo = it->toStr(tcurr, true);
+        // TODO what was the zero intended for?
+        std::string tag = "BT"; // ball tracker details (compare confidence heuristics)
+        if (_balls.size() && (it->getBall().getId() == _balls[0].getId()))
+        {
+            tag = "BR"; // ball result
+            tracedBr = true;
+        }
+        //tprintf("%2s %16.6f %3d %2d %s", tag.c_str(), double(tcurr), _ballTrackers.size(), 0, trackerInfo.c_str());
+    }
+    if (!tracedBr)
+    {
+        //tprintf("BR %16.6f noBall", double(tcurr));
+    }
+    // additionally, show tracker internal details, but only for the best ball, because this is quite data-heavy
+    if (_balls.size())
+    {
+        for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
+        {
+            if (it->getBall().getId() == _balls[0].getId())
+            {
+                //std::string details = it->xyzDetailsStr();
+                //tprintf("BD %16.6f %s", tcurr, details.c_str());
+            }
+        }
+    }
+
 }
 
 // template found on http://stackoverflow.com/a/12399290
@@ -170,201 +271,232 @@ std::vector<size_t> sort_indexes(const std::vector<T> &v)
 
     // sort indexes based on comparing values in v
     std::sort(idx.begin(), idx.end(),
-       [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
+        [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
 
     return idx;
 }
 
-void ballDiscriminator::calculateConfidence(const double timeNow)
+void ballDiscriminator::selectGoodBalls(rtime const timeNow)
 {
-    // calculate per-tracker confidence 
-    std::vector<float> confList;
-    auto thresholdGood = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorFloats::confidenceGoodLimit);
-    int numGood = 0;
-	for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
-	{
-    	ballClass_t ball = it->getBall();
-	    confList.push_back(ball.getConfidence());
-	    numGood += it->good();
+    // reset
+    _balls.clear();
+
+    // only get 'good' balls, i.e. confidence must be high enough, not blacklisted
+    float thresholdGood = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorFloats::confidenceGoodLimit);
+    for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
+    {
+        ballClass_t ball = it->getBall();
+        bool good = (ball.getConfidence() > thresholdGood) && !it->isBlackListed();
+        if (good)
+        {
+            ball.setIsValid(true);
+            _balls.push_back(ball);
+        }
     }
-    TRACE("#confList=%d #good=%d", (int)confList.size(), numGood);
-    if (confList.size() == 0)
-    {   
-        // done
-        return;
+
+    // sort on confidence
+    std::sort(_balls.begin(), _balls.end());
+    int numGood = _balls.size();
+
+    // count, warn?
+    auto threshold = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorIntegers::numberOfBallsWarningThreshold);
+    if ((int)_balls.size() > threshold)
+    {
+        TRACE_INFO_TIMEOUT(3, "number of balls detected: %d", _balls.size());
     }
-    // note: calculateConfidence will flag good balls, but if there are none, 
-    // then we can flag a few maybe balls as (barely) good enough
-    float maxConfidence = *std::max_element(confList.begin(), confList.end());
-    auto thresholdMaybe = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorFloats::confidenceMaybeLimit);
-    if ((maxConfidence < thresholdGood) && (numGood == 0))
+        
+    // if there are no good balls, then we can flag a few maybe balls as (barely) good enough
+    if (numGood == 0)
     {
         TRACE("no good balls detected, going into confidence fallback");
-        int maxMaybeBalls = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorIntegers::maxMaybeBalls);
-        // select N best balls
-        int count = 0;
-        for (auto i: sort_indexes(confList)) 
+        // select candidates
+        auto thresholdMaybe = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorFloats::confidenceMaybeLimit);
+        for (auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
         {
-            if ((confList[i] > thresholdMaybe) && (count < maxMaybeBalls))
+            ballClass_t ball = it->getBall();
+            bool good = (ball.getConfidence() > thresholdMaybe) && !it->isBlackListed();
+            if (good)
             {
-                _ballTrackers[i].setGood();
-                count++;
+                ball.setIsValid(true);
+                _balls.push_back(ball);
             }
         }
-        TRACE("promoted %d maybe-balls to good", count);
-    }
-}
-
-void ballDiscriminator::performCalculation(const double timeNow)
-{
-	try
-	{
-	    TRACE("#trackers=%d", (int)_ballTrackers.size());
-	    TRACE("cleaning up (t=%16.6f)", timeNow);
-		removeTimedOutTrackers(timeNow);
-	    TRACE("remaining #trackers=%d", (int)_ballTrackers.size());
-		for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
-		{
-			it->calculateBall(timeNow);
-		}
-		calculateConfidence(timeNow);
-		
-		traceTrackers(timeNow, true); // for now trace ALL
-		
-		sendDiagnostics();
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-}
-
-void ballDiscriminator::enableDiagnostics()
-{
-    _diagSender = new diagnostics::cDiagnosticsSender<rosMsgs::t_diag_wm_ball>(diagnostics::DIAG_WM_BALL, 10, false);
-}
-
-void ballDiscriminator::sendSimDiagnostics(std::vector<ballClass_t> const &balls)
-{
-    if (_diagSender)
-    {
-		rosMsgs::t_diag_wm_ball diagMsg;
-		for(auto it = balls.begin(); it != balls.end(); it++)
-		{
-            rosMsgs::t_ball ballMsg;
-            ballClass_t ball = *it;
-            ballMsg.id = ball.getId();
-            ballMsg.x = ball.getX();
-            ballMsg.y = ball.getY();
-            ballMsg.z = ball.getZ();
-            ballMsg.vx = ball.getVX();
-            ballMsg.vy = ball.getVY();
-            ballMsg.vz = ball.getVZ();
-            ballMsg.confidence = 1.0; // simulated balls have perfect confidence score
-            diagMsg.balls.push_back(ballMsg);
+        // sort on decreasing confidence
+        std::sort(_balls.begin(), _balls.end());
+        int maxMaybeBalls = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorIntegers::maxMaybeBalls);
+        // select best N balls
+        if ((int)_balls.size() > maxMaybeBalls)
+        {
+            _balls.resize(maxMaybeBalls);
         }
-        _diagSender->set(diagMsg);
+        TRACE("promoted %d maybe-balls to good", (int)_balls.size());
     }
 }
 
-void ballDiscriminator::sendDiagnostics()
+void ballDiscriminator::performCalculation(rtime const timeNow, Vector2D const &pos)
 {
-    if (_diagSender)
+    TRACE_FUNCTION("");
+    try
     {
-		rosMsgs::t_diag_wm_ball diagMsg;
-		diagMsg.numTrackers = (int)_ballTrackers.size();
-		for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
-		{
-            if (it->good())
+        //TRACE("#trackers=%d", (int)_ballTrackers.size());
+        //TRACE("cleaning up (t=%16.6f)", timeNow);
+        removeTimedOutTrackers(timeNow);
+        //TRACE("remaining #trackers=%d", (int)_ballTrackers.size());
+
+        // clear result
+        _balls.clear();
+        
+        // ownBallsFirst
+        // in case ball is close by, then we choose to fully rely on own measurements, 
+        // because friendly measurements tend to cause distortions
+        ownBallsFirst(timeNow, pos);
+        //TRACE("#balls=%d", (int)_balls.size());
+        
+        // no ball closeby? then use all data
+        if (_balls.size() == 0)
+        {
+            for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
             {
-                rosMsgs::t_ball ballMsg;
-                ballClass_t ball = it->getBall();
-                ballMsg.id = ball.getId();
-                ballMsg.x = ball.getX();
-                ballMsg.y = ball.getY();
-                ballMsg.z = ball.getZ();
-                ballMsg.vx = ball.getVX();
-                ballMsg.vy = ball.getVY();
-                ballMsg.vz = ball.getVZ();
-                ballMsg.confidence = ball.getConfidence();
-                diagMsg.balls.push_back(ballMsg);
-                // confidence details, useful for debugging and tuning in visualizer
-                confidenceDetails confDetails = it->getDetails();
-                rosMsgs::t_ball_details ballDetailMsg;
-                ballDetailMsg.camScore = confDetails.camScore;
-                ballDetailMsg.measScore = confDetails.measScore;
-                ballDetailMsg.ageScore = confDetails.ageScore;
-                ballDetailMsg.freshScore = confDetails.freshScore;
-                ballDetailMsg.vScore = confDetails.vScore;
-                ballDetailMsg.zScore = confDetails.zScore;
-                ballDetailMsg.fitScore = confDetails.fitScore;
-                ballDetailMsg.fitQuality = confDetails.fitQuality;
-                diagMsg.details.push_back(ballDetailMsg);
+                it->calculateBall(timeNow);
+            }
+            selectGoodBalls(timeNow);
+        }
+        //TRACE("#balls=%d", (int)_balls.size());
+
+        traceTrackers(timeNow, true); // for now trace ALL
+        //TRACE("#balls=%d", (int)_balls.size());
+        
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+}
+
+void ballDiscriminator::ownBallsFirst(rtime const timeNow, Vector2D const &pos)
+{
+    try
+    {
+        // select closest ball (tracker)
+        float ownBallsFirstDistance = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorFloats::friendlyMeasurementsDistance);
+        float bestConfidence = 0.0;
+
+        ballTracker *bestTracker = NULL;
+        for (auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
+        {
+            // check if closeby
+            ballClass_t ball = it->getBall();
+            Vector2D ballPos(ball.getX(), ball.getY());
+            float distance = (ballPos - pos).size();
+            if (!it->isBlackListed() && (distance < ownBallsFirstDistance))
+            {
+                // recalculate with own measurements only
+                it->calculateBall(timeNow, true);
+                ball = it->getBall();
+                ballPos = Vector2D(ball.getX(), ball.getY());
+                float confidence = ball.getConfidence();
+                if (confidence > bestConfidence)
+                {
+                    bestTracker = &(*it);
+                    bestConfidence = confidence;
+                }
             }
         }
-        _diagSender->set(diagMsg);
+
+        if (bestTracker != NULL)
+        {
+            TRACE("ownBallsFirst for tracker %d", bestTracker->getBall().getId());
+            // overrule resulting _balls vector
+            _balls.clear();
+            _balls.push_back(bestTracker->getBall());
+            _balls.back().setIsValid(true);
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
 }
+
 
 std::vector<ballClass_t> ballDiscriminator::getBalls() const
 {
-	try
-	{
-		std::vector<ballClass_t> balls;
-
-        // only get 'good' balls, i.e. confidence must be high enough
-		for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); it++)
-		{
-            if (it->good())
-            {
-    			balls.push_back(it->getBall());
-			}
-		}
-		
-		// Sort on confidence
-		std::sort(balls.begin(), balls.end());
-
-		// TODO update/check blacklist
-
-        auto threshold = ballTrackerConfigurator::getInstance().get(ballTrackerConfiguratorIntegers::numberOfBallsWarningThreshold);
-		if((int)balls.size() > threshold)
-		{
-			TRACE_INFO("Number of balls detected: %d", balls.size());
-		}
-		
-		return balls;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        //TRACE("#balls=%d", (int)_balls.size());
+        return _balls;
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
-void ballDiscriminator::removeTimedOutTrackers(const double timeNow)
+void ballDiscriminator::removeTimedOutTrackers(rtime const timeNow)
 {
-	try
-	{
-		for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); )
-		{
-			if(it->isTimedOut(timeNow))
-			{
-			    TRACE("deleting ballTracker(id=%d)", it->getBall().getId());
-				it = _ballTrackers.erase(it);
-			}
-			else
-			{
-			    it++;
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        for(auto it = _ballTrackers.begin(); it != _ballTrackers.end(); )
+        {
+            if(it->isTimedOut(timeNow))
+            {
+                //TRACE("deleting ballTracker(id=%d)", it->getBall().getId());
+                it = _ballTrackers.erase(it);
+            }
+            else
+            {
+                it++;
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
+
+void ballDiscriminator::fillDiagnostics(diagWorldModel &diagnostics)
+{
+    // note: 
+    // * resulting balls and their confidence should be logged (shared) via worldState
+    // * ball tracker details (confidence breakdown, measurement outlier removal, etc. etc.) should be logged (local) via ballTracking
+    diagnostics.shared.numBallTrackers = _ballTrackers.size();
+    diagnostics.shared.bestTrackerId = -1;
+    diagnostics.shared.ownBallsFirst = false;
+    
+    // diagBallTracker  ball;
+    
+    if (_balls.size())
+    {
+        diagnostics.shared.bestTrackerId = _balls[0].getId();
+        for (auto it = _ballTrackers.begin(); it != _ballTrackers.end(); ++it)
+        {
+            if ((int)it->getBall().getId() == diagnostics.shared.bestTrackerId)
+            {
+                diagnostics.shared.ownBallsFirst = it->getOwnBallsFirst();
+                /*
+                ball.id = diagnostics.shared.bestTrackerId;
+                
+                
+                for (auto it2 = it->getBallMeasurements().begin(); it2 != it->getBallMeasurements().end(); ++it2)
+                {
+                    ball.positionFcs.push_back(it2->getPositionFcs());
+                    ball.timestamps.push_back(it2->getObjectMeasurement().timestamp);
+                    // TODO: fill results?
+                } 
+                
+                // TODO: fill other balls?
+                diagnostics.local.balls.push_back(ball); */
+            }
+        }
+    }
+}
+

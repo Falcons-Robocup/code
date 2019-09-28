@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,31 +25,33 @@
 #include <boost/ptr_container/ptr_map.hpp>
 #include <boost/assign/ptr_map_inserter.hpp>
 #include "int/actions/cAbstractAction.hpp"
-#include "int/types/cActionEnumTypes.hpp"
+#include "tpActionEnum.hpp" // sharedTypes
 
-extern boost::ptr_map<actionEnum, boost::shared_ptr<cAbstractAction> > enumToActionMapping;
+extern boost::ptr_map<tpActionEnum, boost::shared_ptr<cAbstractAction> > enumToActionMapping;
 
-static std::map<std::string, actionEnum> actionMapping = boost::assign::map_list_of
-        ("invalid", actionEnum::INVALID)
-        ("success", actionEnum::SUCCESS)
-        ("moveWhileTurning", actionEnum::MOVE_WHILE_TURNING)
-        ("move", actionEnum::MOVE)
-        ("stop", actionEnum::STOP)
-        ("shoot", actionEnum::SHOOT)
-        ("turn", actionEnum::TURN)
-        ("positionBeforePOI", actionEnum::POSITION_BEFORE_POI)
-        ("positionBehindPOI", actionEnum::POSITION_BEHIND_POI)
-        ("faceNearestTeammember", actionEnum::FACE_NEAREST_TEAMMEMBER)
-		("getBall", actionEnum::GET_BALL)
-        ("goalKeeper", actionEnum::GOALKEEPER)
-		("moveToFreeSpot", actionEnum::MOVE_TO_FREE_SPOT)
-        ("moveToPenaltyAngle", actionEnum::MOVE_TO_PENALTY_ANGLE)
-        ("interceptBall", actionEnum::INTERCEPT_BALL)
-		("avoidPOI", actionEnum::AVOID_POI)
-		("getBallOnVector", actionEnum::GET_BALL_ON_VECTOR)
-		("longTurnToGoal", actionEnum::LONG_TURN_TO_GOAL)
-		("aimForShotOnGoal", actionEnum::AIM_FOR_SHOT_ON_GOAL)
-		("defendAssist", actionEnum::DEFEND_ASSIST)
+static std::map<std::string, tpActionEnum> actionMapping = boost::assign::map_list_of
+        ("invalid", tpActionEnum::INVALID)
+        ("success", tpActionEnum::SUCCESS)
+        ("move", tpActionEnum::MOVE)
+        ("stop", tpActionEnum::STOP)
+        ("shoot", tpActionEnum::SHOOT)
+        ("shootTarget", tpActionEnum::SHOOT_TARGET)
+        ("pass", tpActionEnum::PASS)
+        ("positionBeforePOI", tpActionEnum::POSITION_BEFORE_POI)
+        ("positionBehindPOI", tpActionEnum::POSITION_BEHIND_POI)
+        ("positionForOppSetpiece", tpActionEnum::POSITION_FOR_OPP_SETPIECE)
+        ("positionForOwnSetpiece", tpActionEnum::POSITION_FOR_OWN_SETPIECE)
+        ("getBall", tpActionEnum::GET_BALL)
+        ("goalKeeper", tpActionEnum::GOALKEEPER)
+        ("moveToFreeSpot", tpActionEnum::MOVE_TO_FREE_SPOT)
+        ("interceptBall", tpActionEnum::INTERCEPT_BALL)
+        ("avoidPOI", tpActionEnum::AVOID_POI)
+        ("aimForShotOnGoal", tpActionEnum::AIM_FOR_SHOT_ON_GOAL)
+        ("defendPenaltyArea", tpActionEnum::DEFEND_PENALTY_AREA)
+        ("turnAwayFromOpponent", tpActionEnum::TURN_AWAY_FROM_OPPONENT)
+        ("defendAttackingOpponent", tpActionEnum::DEFEND_ATTACKING_OPPONENT)
+        ("dribbleForPass", tpActionEnum::DRIBBLE_FOR_PASS)
+        ("dribbleForShot", tpActionEnum::DRIBBLE_FOR_SHOT)
 
         ;
 
@@ -58,13 +60,13 @@ enum class shootEnum
     INVALID = 0,
 
     PASS_TOWARDS_NEAREST_TEAMMEMBER,
-	PASS_TOWARDS_NEAREST_ATTACKER,
-	PASS_TOWARDS_FURTHEST_ATTACKER,
-	PASS_TOWARDS_NEAREST_ATTACKER_ON_OPP_HALF,
-	PASS_TOWARDS_TIP_IN_POSITION,
+    PASS_TOWARDS_NEAREST_ATTACKER,
+    PASS_TOWARDS_FURTHEST_ATTACKER,
+    PASS_TOWARDS_NEAREST_ATTACKER_ON_OPP_HALF,
+    PASS_TOWARDS_FURTHEST_DEFENDER,
+    PASS_TOWARDS_TIP_IN_POSITION,
     SHOOT_TOWARDS_GOAL,
-	PASS_TOWARDS_GOALIE,
-	LOB_TOWARDS_GOAL,
+    LOB_TOWARDS_GOAL,
 
     SIZE_OF_ENUM
 };
@@ -72,13 +74,13 @@ enum class shootEnum
 static std::map<std::string, shootEnum> shootMapping = boost::assign::map_list_of
         ("invalid", shootEnum::INVALID)
         ("passTowardsNearestTeammember", shootEnum::PASS_TOWARDS_NEAREST_TEAMMEMBER)
-		("passTowardsNearestAttacker", shootEnum::PASS_TOWARDS_NEAREST_ATTACKER)
-		("passTowardsFurthestAttacker", shootEnum::PASS_TOWARDS_FURTHEST_ATTACKER)
-		("passTowardsNearestAttackerOnOppHalf", shootEnum::PASS_TOWARDS_NEAREST_ATTACKER_ON_OPP_HALF)
-		("passTowardsTipInPosition", shootEnum::PASS_TOWARDS_TIP_IN_POSITION)
-		("shootTowardsGoal", shootEnum::SHOOT_TOWARDS_GOAL)
-		("passToGoalie", shootEnum::PASS_TOWARDS_GOALIE)
-		("lobTowardsGoal", shootEnum::LOB_TOWARDS_GOAL)
+        ("passTowardsNearestAttacker", shootEnum::PASS_TOWARDS_NEAREST_ATTACKER)
+        ("passTowardsFurthestAttacker", shootEnum::PASS_TOWARDS_FURTHEST_ATTACKER)
+        ("passTowardsNearestAttackerOnOppHalf", shootEnum::PASS_TOWARDS_NEAREST_ATTACKER_ON_OPP_HALF)
+        ("passTowardsFurthestDefender", shootEnum::PASS_TOWARDS_FURTHEST_DEFENDER)
+        ("passTowardsTipInPosition", shootEnum::PASS_TOWARDS_TIP_IN_POSITION)
+        ("shootTowardsGoal", shootEnum::SHOOT_TOWARDS_GOAL)
+        ("lobTowardsGoal", shootEnum::LOB_TOWARDS_GOAL)
         ;
 
 #endif /* CACTIONTYPES_HPP_ */

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Copyright 2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script that:
+#  - waits 1 seconds so the system process can exit gracefully
+#  - kill all vision related tasks
+#  - waits arg seconds
+#  - reboots raspi
+
+sleep 1
+echo "KILLREBOOT: kill all raspi tasks"
+./killRaspi
+
+if [ $# = 1 ]; then
+   # subtract the previous sleep
+   delay=$(($1 - 1))
+   if (( delay < 0 )); then
+      delay=0
+   fi
+   sleep $delay
+fi
+
+echo "KILLREBOOT: reboot raspi"
+sudo reboot
+
+exit 0

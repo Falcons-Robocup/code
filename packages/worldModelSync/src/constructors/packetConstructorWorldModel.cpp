@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -71,6 +71,11 @@ void packetConstructorWorldModel::setBallMeasurements(std::vector<ballMeasuremen
 {
 	/*
 	 * Ensure newest measurements are added first
+	 *
+	 * TODO: ticket #612: this is going to be a problem for multiCam
+	 * at any time instant, vision will produce say 10 candidates, most of which are false positives (lights, T-shirts, etc)
+	 * with a fixed buffer size of 2, odds are large that the actual ball is not synced to other team members
+	 * NOTE: selection & sorting in worldModel: see worldModel/src/administrators/ballAdministrator.cpp::getLocalBallMeasurements
 	 */
 	std::sort(measurements.begin(), measurements.end(), sortBallMeasurementsOnCameraTypeAndTimeStamp);
 
@@ -116,7 +121,7 @@ void packetConstructorWorldModel::setRobotLocation(const robotLocationStructure 
 	_wmPacket.robotPosition = location;
 }
 
-void packetConstructorWorldModel::setByteArray(Facilities::Network::cByteArray byteArray)
+void packetConstructorWorldModel::setByteArray(Facilities::cByteArray byteArray)
 {
 	std::vector<uint8_t> array;
 	byteArray.getData(array);
@@ -124,10 +129,10 @@ void packetConstructorWorldModel::setByteArray(Facilities::Network::cByteArray b
 	_wmPacket = (*pd);
 }
 
-Facilities::Network::cByteArray packetConstructorWorldModel::getByteArray()
+Facilities::cByteArray packetConstructorWorldModel::getByteArray()
 {
 	std::vector<uint8_t> array;
-	Facilities::Network::cByteArray retArray;
+	Facilities::cByteArray retArray;
 
 	uint8_t *pd = reinterpret_cast<uint8_t *>(&_wmPacket);
     array.insert(array.end(), pd, pd + sizeof(_wmPacket));

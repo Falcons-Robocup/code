@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,6 +23,7 @@ namespace falconsRosTopicsInterface
 {
     // World model:
     const static std::string team_worldmodel = "/teamA/g_worldmodel_team"; 
+    const static std::string team_worldmodel_old = "/teamA/g_worldmodel"; // legacy wmV1
 
     // Diagnostics:
     // Note: Uses boost format-string

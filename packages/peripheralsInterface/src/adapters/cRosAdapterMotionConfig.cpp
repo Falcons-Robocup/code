@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -82,19 +82,4 @@ void cRosAdapterMotionConfig::cRosAdapterMotionConfig_cb(
 	_piData.getLeftMotionBoard().setSettings(boardSettings);
 	_piData.getRightMotionBoard().setSettings(boardSettings);
 	_piData.getRearMotionBoard().setSettings(boardSettings);
-
-	// Set the motion generic settings
-	MotionSettings settings;
-	settings.matrix = boost::numeric::ublas::matrix<double>(3,3);
-	settings.matrix(0,0) = config.X1;
-	settings.matrix(1,0) = config.X2;
-	settings.matrix(2,0) = config.X3;
-	settings.matrix(0,1) = config.Y1;
-	settings.matrix(1,1) = config.Y2;
-	settings.matrix(2,1) = config.Y3;
-	settings.matrix(0,2) = config.Theta1;
-	settings.matrix(1,2) = config.Theta2;
-	settings.matrix(2,2) = config.Theta3;
-	settings.inverseMatrix = InvertMatrix(settings.matrix);
-	_piData.setMotionSettings(settings);
 }

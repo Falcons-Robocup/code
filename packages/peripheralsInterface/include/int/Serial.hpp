@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,11 +20,12 @@
 #define SERIAL_HPP_
 
 #include <string>
+#include <vector>
 
 #include <termios.h>
 #include <unistd.h>
 
-using namespace std;
+using namespace std; // TODO: this is not a nice thing to do in header files .... it affects other headers
 
 class Serial {
 

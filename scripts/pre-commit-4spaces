@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Falcons-lint helper
+# Check that files use consistent indentation
+
+f=$1
+
+# file must exist
+if [ ! -f $f ]
+then 
+    exit 1
+fi
+
+# whitelist certain file types (e.g. CMakeLists.txt)
+for ext in txt xml yaml
+do
+    if [[ $f =~ \.$ext$ ]]
+    then
+        exit 0
+    fi
+done
+
+# count spaces per line
+# allow C-style comment blocks in file headers
+numSpacesPerLine=`git cat-file -p :./$f | sed 's/^ \*/    */' | awk -F"[^ ]" '{print length($1)}'`
+lineNr=0
+for count in $numSpacesPerLine
+do
+    ((lineNr=lineNr+1))
+    if [ $(( $count % 4 )) -ne 0 ]
+    then
+        echo $lineNr
+        exit 1
+    fi
+done
+
+exit 0
+

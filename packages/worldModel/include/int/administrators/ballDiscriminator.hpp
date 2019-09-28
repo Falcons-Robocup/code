@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,38 +22,34 @@
 
 #include <vector>
 
+#include "diagWorldModel.hpp"
+
 #include "int/administrators/ballTracker.hpp"
 #include "int/types/ball/ballType.hpp"
 
-#include "cDiagnostics.hpp"
-#include "rosMsgs/t_diag_wm_ball.h"
-
 class ballDiscriminator
 {
-	public:
-		ballDiscriminator();
-		~ballDiscriminator();
+    public:
+    	ballDiscriminator();
+    	~ballDiscriminator();
 
-		void addMeasurement(const ballMeasurementType &measurement);
-		void performCalculation(const double timeNow);
+    	void addMeasurement(const ballMeasurement &measurement);
+    	void performCalculation(rtime const timeNow, Vector2D const &pos);
 
-        void enableDiagnostics();
+    	std::vector<ballClass_t> getBalls() const;
+        void getMeasurementsToSync(std::vector<ballMeasurement> &measurements);
+        void fillDiagnostics(diagWorldModel &diagnostics);
 
-		std::vector<ballClass_t> getBalls() const;
-
-        // visualize simulated balls
-        void sendSimDiagnostics(std::vector<ballClass_t> const &balls);
-
-	private:
+    private:
         const float MAX_BALL_HEIGHT = 5.0;
 
-		std::vector<ballTracker> _ballTrackers;
-        diagnostics::cDiagnosticsSender<rosMsgs::t_diag_wm_ball> *_diagSender;
+    	std::vector<ballTracker> _ballTrackers;
+        std::vector<ballClass_t> _balls;
         
-		void removeTimedOutTrackers(const double timeNow);
-		void calculateConfidence(const double timeNow);
-		void traceTrackers(const double timeNow, bool all = false);
-        void sendDiagnostics();
+    	void removeTimedOutTrackers(rtime const timeNow);
+        void ownBallsFirst(rtime const timeNow, Vector2D const &pos);
+    	void selectGoodBalls(rtime const timeNow);
+    	void traceTrackers(rtime const timeNow, bool all = false);
 
 };
 

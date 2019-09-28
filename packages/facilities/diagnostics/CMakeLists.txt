@@ -12,7 +12,7 @@ rosbuild_init()
 find_package(PythonLibs REQUIRED)
 
 # TKOV: enable enumerate value to be scoped
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror")
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -30,17 +30,14 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #gencfg()
 
 # Create library libDiagnostics
-rosbuild_add_library(diagnostics src/cDiagnosticsReceiver.cpp
-                                 src/cDiagnosticsEvents.cpp
-                                 src/cDiagnosticsDutyCycle.cpp
-                                 )
+rosbuild_add_library(diagnostics src/cDiagnostics.cpp)
+rosbuild_link_boost(diagnostics system thread)
 
-# Create executable for coach listener
-rosbuild_add_executable(diagCoachListener src/diagCoachListener.cpp)
-target_link_libraries(diagCoachListener diagnostics)
+# Executables
+rosbuild_add_executable(robotHealth src/mainRobotHealth.cpp src/cRobotHealth.cpp)
+target_link_libraries(robotHealth diagnostics)
+rosbuild_link_boost(robotHealth system thread)
 
-# Add stress tester
-#rosbuild_add_rostest(tst/stress_test.xml) # not used anymore
-rosbuild_add_executable(testInfoError tst/testInfoError.cpp)
-target_link_libraries(testInfoError diagnostics)
+rosbuild_add_executable(sendEvent src/sendEvent.cpp)
+target_link_libraries(sendEvent diagnostics)
 

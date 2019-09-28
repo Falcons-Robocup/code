@@ -13,7 +13,6 @@
   <depend package="rospy"/>
   <depend package="worldModel"/>
   <depend package="common"/>
-  <depend package="rosMsgs"/>
   <depend package="diagnostics"/>
   <depend package="dynamic_reconfigure"/>
   <depend package="networkUDP"/>

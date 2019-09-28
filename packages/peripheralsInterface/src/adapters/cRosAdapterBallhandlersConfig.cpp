@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,6 +19,7 @@
 #include <exception>
 
 #include "FalconsCommon.h"
+#include "tracing.hpp"
 
 #include "int/adapters/cRosAdapterBallhandlersConfig.hpp"
 
@@ -69,18 +70,11 @@ void cRosAdapterBallhandlersConfig::cRosAdapterBallhandlersConfig_cb(peripherals
 	settings.anglePid.i = config.Ang_Ki;
 	settings.anglePid.d = config.Ang_Kd;
 	settings.anglePid.iTh = 0;
-	settings.ballPossessionTreshold = config.BallPossession;
 	settings.maxPwmValue = config.PwmMax;
 	settings.maxPwmStepValue = config.PwmMaxDeltaSize;
-	settings.feedForwardFactor = config.Feedforward_vel_factor;
 
-	settings.maxAngle = config.MaxAngleLeftArm;
 	_piData.getLeftBallhandlerBoard().setSettings(settings);
-
-	settings.maxAngle = config.MaxAngleRightArm;
 	_piData.getRightBallhandlerBoard().setSettings(settings);
-
-	_piData.setBallhandlerAngle(config.Angle);
 
 	TRACE("<");
 }

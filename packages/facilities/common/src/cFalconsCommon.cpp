@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -30,8 +30,9 @@
 #include <boost/filesystem.hpp>
 #include <unistd.h>
 
-// tracer singleton instance
-Tracer *Tracer::s_instance = 0;
+// TODO most of this stuff should be distributed to dedicated packages,
+// for instance angle utilities, Position2D, Velocity2D etc. to geometry
+
 
 // Source: http://math.stackexchange.com/questions/1201337/finding-the-angle-between-two-points
 double angle_between_two_points_0_2pi(double x1, double y1, double x2, double y2)
@@ -43,93 +44,113 @@ double angle_between_two_points_0_2pi(double x1, double y1, double x2, double y2
 
 double project_angle_0_2pi(double angle)
 {
-	while (angle < 0) angle += 2*M_PI;
-	while (angle > 2*M_PI) angle -= 2*M_PI;
-	return angle;
+    // sanity checks
+    if ((angle > 100) || (angle < -100))
+    {
+        throw std::runtime_error("angle out of bounds");
+    }
+    while (angle < 0) angle += 2*M_PI;
+    while (angle > 2*M_PI) angle -= 2*M_PI;
+    return angle;
 }
 
 float project_angle_0_2pi(float angle)
 {
-	while (angle < 0) angle += 2*M_PI;
-	while (angle > 2*M_PI) angle -= 2*M_PI;
-	return angle;
+    // sanity checks
+    if ((angle > 100) || (angle < -100))
+    {
+        throw std::runtime_error("angle out of bounds");
+    }
+    while (angle < 0) angle += 2*M_PI;
+    while (angle > 2*M_PI) angle -= 2*M_PI;
+    return angle;
 }
 
 double project_angle_mpi_pi(double angle)
 {
-	while (angle < -M_PI) angle += 2*M_PI;
-	while (angle > M_PI) angle -= 2*M_PI;
-	return angle;
+    // sanity checks
+    if ((angle > 100) || (angle < -100))
+    {
+        throw std::runtime_error("angle out of bounds");
+    }
+    while (angle < -M_PI) angle += 2*M_PI;
+    while (angle > M_PI) angle -= 2*M_PI;
+    return angle;
 }
 
 float project_angle_mpi_pi(float angle)
 {
-	while (angle < -M_PI) angle += 2*M_PI;
-	while (angle > M_PI) angle -= 2*M_PI;
-	return angle;
+    // sanity checks
+    if ((angle > 100) || (angle < -100))
+    {
+        throw std::runtime_error("angle out of bounds");
+    }
+    while (angle < -M_PI) angle += 2*M_PI;
+    while (angle > M_PI) angle -= 2*M_PI;
+    return angle;
 }
 
 
 // position type transformations
 Position2D getPosition2D( const geometry::Pose2D& pose)
 {
-	Position2D myPosition;
-	myPosition.x= pose.x;
-	myPosition.y= pose.y;
-	return ( myPosition );
+    Position2D myPosition;
+    myPosition.x= pose.x;
+    myPosition.y= pose.y;
+    return ( myPosition );
 }
 
 Position2D getPosition2D( const Point3D& point3d)
 {
-	Position2D myPosition;
-	myPosition.x= (double) point3d.x;
-	myPosition.y= (double) point3d.y;
-	return ( myPosition );
+    Position2D myPosition;
+    myPosition.x= (double) point3d.x;
+    myPosition.y= (double) point3d.y;
+    return ( myPosition );
 }
 
 // coordinate transformations
 Velocity2D& Velocity2D::transform_fcs2rcs(const Position2D& robotpos)
 {
-	double angle = (M_PI_2 - robotpos.phi);
-	Vector2D xynew = Vector2D(x, y).rotate(angle);
-	x = xynew.x;
-	y = xynew.y;
-	// do not update vphi
-	return (*this);
+    double angle = (M_PI_2 - robotpos.phi);
+    Vector2D xynew = Vector2D(x, y).rotate(angle);
+    x = xynew.x;
+    y = xynew.y;
+    // do not update vphi
+    return (*this);
 }
 
 Velocity2D& Velocity2D::transform_rcs2fcs(const Position2D& robotpos)
 {
-	double angle = -(M_PI_2 - robotpos.phi);
-	Vector2D xynew = Vector2D(x, y).rotate(angle);
-	x = xynew.x;
-	y = xynew.y;
-	// do not update vphi
-	return (*this);
+    double angle = -(M_PI_2 - robotpos.phi);
+    Vector2D xynew = Vector2D(x, y).rotate(angle);
+    x = xynew.x;
+    y = xynew.y;
+    // do not update vphi
+    return (*this);
 }
 
 Position2D& Position2D::transform_fcs2rcs(const Position2D& robotpos)
 {  
     // first ttranslate, then rotate
-	double angle = (M_PI_2 - robotpos.phi);
-	Vector2D xynew = (Vector2D(x, y) - robotpos.xy()).rotate(angle);
-	x = xynew.x;
-	y = xynew.y;
-	phi = phi + angle;
-	phi = project_angle_0_2pi(phi);
-	return (*this);
+    double angle = (M_PI_2 - robotpos.phi);
+    Vector2D xynew = (Vector2D(x, y) - robotpos.xy()).rotate(angle);
+    x = xynew.x;
+    y = xynew.y;
+    phi = phi + angle;
+    phi = project_angle_0_2pi(phi);
+    return (*this);
 }
 
 Position2D& Position2D::transform_rcs2fcs(const Position2D& robotpos)
 {
     // first rotate, then translate
-	double angle = - (M_PI_2 - robotpos.phi);
-	Vector2D xyrot = (Vector2D(x, y)).rotate(angle);
-	x = xyrot.x + robotpos.x;
-	y = xyrot.y + robotpos.y;
-	phi = phi + angle;
-	phi = project_angle_0_2pi(phi);
-	return (*this);
+    double angle = - (M_PI_2 - robotpos.phi);
+    Vector2D xyrot = (Vector2D(x, y)).rotate(angle);
+    x = xyrot.x + robotpos.x;
+    y = xyrot.y + robotpos.y;
+    phi = phi + angle;
+    phi = project_angle_0_2pi(phi);
+    return (*this);
 }
 
 Position2D& Position2D::transform_fcs2acs(bool playing_left_to_right)
@@ -140,9 +161,9 @@ Position2D& Position2D::transform_fcs2acs(bool playing_left_to_right)
         // rotate by half a circle
         x = -x;
         y = -y;
-    	phi = project_angle_0_2pi(phi + M_PI);
+        phi = project_angle_0_2pi(phi + M_PI);
     }
-	return (*this);
+    return (*this);
 }
 
 Position2D& Position2D::transform_acs2fcs(bool playing_left_to_right)
@@ -153,9 +174,9 @@ Position2D& Position2D::transform_acs2fcs(bool playing_left_to_right)
         // rotate by half a circle
         x = -x;
         y = -y;
-    	phi = project_angle_0_2pi(phi + M_PI);
+        phi = project_angle_0_2pi(phi + M_PI);
     }
-	return (*this);
+    return (*this);
 }
 
 Velocity2D& Velocity2D::transform_fcs2acs(bool playing_left_to_right)
@@ -167,7 +188,7 @@ Velocity2D& Velocity2D::transform_fcs2acs(bool playing_left_to_right)
         x = -x;
         y = -y;
     }
-	return (*this);
+    return (*this);
 }
 
 Velocity2D& Velocity2D::transform_acs2fcs(bool playing_left_to_right)
@@ -179,97 +200,90 @@ Velocity2D& Velocity2D::transform_acs2fcs(bool playing_left_to_right)
         x = -x;
         y = -y;
     }
-	return (*this);
-}
-
-int getHops()
-{
-    if (isSimulatedEnvironment())
-    {
-        return 0;
-    }
-    return 5; 
-    // one hop between coach laptop and router; one hop between robot and router
-    // add a few more hops for situations like wired to our mobile rack
+    return (*this);
 }
 
 bool isSimulatedEnvironment()
 {
-   bool isSimulated = false;
-   std::string env_simulated;
-   try
-   {
-      char* env_sim = getenv("SIMULATED");
-      env_simulated = std::string(env_sim);
-   }
-   catch (...)
-   {
-       //std::cout << "Environment variable SIMULATED not found." << std::endl; // suppress spam
-       // this is an error state, suggesting something weird in scripting or stand-alone deployment
-       // hence we SET the simulated flag, so at least traffic will remain local
-       isSimulated = true;
-   }
+    bool isSimulated = false;
+    std::string env_simulated;
+    try
+    {
+        char* env_sim = getenv("SIMULATED");
+        env_simulated = std::string(env_sim);
+    }
+    catch (...)
+    {
+        //std::cout << "Environment variable SIMULATED not found." << std::endl; // suppress spam
+        // this is an error state, suggesting something weird in scripting or stand-alone deployment
+        // hence we SET the simulated flag, so at least traffic will remain local
+        isSimulated = true;
+    }
 
-   if (env_simulated == "1")
-   {
-       isSimulated = true;
-   }
+    if (env_simulated == "1")
+    { 
+        isSimulated = true;
+    }
 
-   return isSimulated;
+    return isSimulated;
 }
 
 int getRobotNumber()
 {
-   int robotNumber = 0;
-   std::string robot_namespace;
-   size_t found_index = std::string::npos;
+    int robotNumber = 0;
+    std::string robot_namespace;
+    size_t found_index = std::string::npos;
 
-   if (getenv("ROS_NAMESPACE") != NULL)
-   {
-	   robot_namespace = getenv("ROS_NAMESPACE");
-   }
+    if (getenv("ROS_NAMESPACE") != NULL)
+    {
+        robot_namespace = getenv("ROS_NAMESPACE");
+    }
 
-   found_index = robot_namespace.find("robot");
-   if (found_index != std::string::npos)
-   {
-	   robotNumber = atoi(&robot_namespace.at(found_index + 5));
-   }
+    found_index = robot_namespace.find("robot");
+    if (found_index != std::string::npos)
+    {
+        robotNumber = atoi(&robot_namespace.at(found_index + 5));
+    }
 
-   // try dedicated env var if ROS_NAMESPACE did not tell us anything yet
-   if (robotNumber == 0)
-   {
-      if (getenv("TURTLE5K_ROBOTNUMBER") != NULL)
-      {
-         robotNumber = fromStr(getenv("TURTLE5K_ROBOTNUMBER"));
-      }
-   }
+    // try dedicated env var if ROS_NAMESPACE did not tell us anything yet
+    if (robotNumber == 0)
+    {
+        if (getenv("TURTLE5K_ROBOTNUMBER") != NULL)
+        {
+            robotNumber = fromStr(getenv("TURTLE5K_ROBOTNUMBER"));
+        }
+    }
 
-   return robotNumber;
+    return robotNumber;
 }
 
 bool isGoalKeeper()
 {
-   return (getRobotNumber() == 1);
+    // TODO this should not depend on robotNumber; what if r2 decides to behave as goalKeeper?
+    // definition is vague anyway -- 
+    // are we interested in hardware aspects (do we have a frame, then let's ignore some fake obstacles?)
+    // or in software / behavior (behave as goalKeeper?)
+    return (getRobotNumber() == 1);
 }
 
 char getTeamChar() // A or B
 {
-   char teamChar = 'A';
-   std::string robot_namespace;
-   size_t found_index = std::string::npos;
+    char teamChar = 'A';
+    std::string robot_namespace;
+    size_t found_index = std::string::npos;
 
-   if (getenv("ROS_NAMESPACE") != NULL)
-   {
-	   robot_namespace = getenv("ROS_NAMESPACE");
-   }
+    if (getenv("ROS_NAMESPACE") != NULL)
+    {
+        robot_namespace = getenv("ROS_NAMESPACE");
+    }
 
-   found_index = robot_namespace.find("team");
-   if (found_index != std::string::npos)
-   {
-	   teamChar = robot_namespace.at(found_index + 4);
-   }
+    found_index = robot_namespace.find("team");
+    if (found_index != std::string::npos)
+    {
+        teamChar = robot_namespace.at(found_index + 4);
+    }
 
-   return teamChar;
+    return teamChar;
 }
 
 // handy function to return output of a command
@@ -293,30 +307,22 @@ std::string getProcessId()
 }
 
 
-// wait for service but also trace start/end
-void wait_for_service_with_tracing(std::string servicename)
-{
-    TRACE("waiting for service %s to come online...", servicename.c_str());
-    ros::service::waitForService(servicename);
-    TRACE("service %s has come online!", servicename.c_str());
-}
-
 float restrictValue( float a, float minA, float maxA )  //returns restricted value position within given limits
 {
-	if( a > maxA )
-		return maxA;
-	if( a < minA )
-		return minA;
-	return a;
+    if( a > maxA )
+        return maxA;
+    if( a < minA )
+        return minA;
+    return a;
 }
 
 bool isValueInRange( float a, float minA, float maxA )  //check if value falls in min-max range
 {
-	if( a > maxA )
-		return false;
-	if( a < minA )
-		return false;
-	return true;
+    if( a > maxA )
+        return false;
+    if( a < minA )
+        return false;
+    return true;
 }
 
 double calc_angle(double dX, double dY)
@@ -396,12 +402,37 @@ double calc_distance_point_line(Vector2D p, double a, double b, double c)
 {
     if (a != 0 || b != 0)
     {
-       return (a * p.x +  b * p.y + c) / sqrt(a*a + b*b);
+        return (a * p.x +  b * p.y + c) / sqrt(a*a + b*b);
     }
     else
     {
-       return 0;
+        return 0;
     }
+}
+
+// based on http://stackoverflow.com/a/385355
+bool intersect(Vector2D const &a1, Vector2D const &a2, Vector2D const &b1, Vector2D const &b2, Vector2D &result)
+{
+    float x12 = a1.x - a2.x;
+    float x34 = b1.x - b2.x;
+    float y12 = a1.y - a2.y;
+    float y34 = b1.y - b2.y;
+
+    float c = x12 * y34 - y12 * x34;
+
+    if (fabs(c) < 0.01)
+    {
+        // No intersection
+        return false;
+    }
+    // Intersection
+    float a = a1.x * a2.y - a1.y * a2.x;
+    float b = b1.x * b2.y - b1.y * b2.x;
+
+    result.x = (a * x34 - b * x12) / c;
+    result.y = (a * y34 - b * y12) / c;
+
+    return true;
 }
 
 double calc_hypothenusa(double dX, double dY)
@@ -422,34 +453,32 @@ float calc_hypothenusa(float dX, float dY)
 
 double calc_distance( double x1, double y1, double x2, double y2)
 {
-	double dX=x2-x1;
-	double dY=y2-y1;
+    double dX=x2-x1;
+    double dY=y2-y1;
 
-	return calc_hypothenusa( dX, dY );
-};
-
-float calc_distance( float x1, float y1, float x2, float y2)
-{
-	float dX=x2-x1;
-	float dY=y2-y1;
-
-	return calc_hypothenusa( dX, dY );
+    return calc_hypothenusa( dX, dY );
 };
 
 double calc_distance( Position2D p1, Position2D p2 )
 {
-	double dX=p2.x - p1.x;
-	double dY=p2.y - p1.y;
+    double dX=p2.x - p1.x;
+    double dY=p2.y - p1.y;
 
-	return calc_hypothenusa( dX, dY );
+    return calc_hypothenusa( dX, dY );
 }
 
 double calc_distance( Point2D p1, Point2D p2 )
 {
-	double dX=p2.x - p1.x;
-	double dY=p2.y - p1.y;
+    double dX=p2.x - p1.x;
+    double dY=p2.y - p1.y;
 
-	return calc_hypothenusa( dX, dY );
+    return calc_hypothenusa( dX, dY );
+}
+
+bool ignoreIfaName(std::string ifa_name)
+{
+    if (ifa_name == "enp0s31f6") return true; // the port on top-side of CPU-box, located most inward, is reserved for multiCam
+    return false;
 }
 
 connectionType GetPrimaryIp(char* buffer, size_t buflen)
@@ -475,15 +504,18 @@ connectionType GetPrimaryIp(char* buffer, size_t buflen)
                 char addressBuffer[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
 
-                if(strstr(ifa->ifa_name, "eth") != NULL)
+                if((strstr(ifa->ifa_name, "en") != NULL) ||
+                    (strstr(ifa->ifa_name, "eth") != NULL))
                 {
-                    /* Copy IP address to output */
-                    inet_ntop(AF_INET, tmpAddrPtr, buffer, buflen);
+                    if (!ignoreIfaName(ifa->ifa_name))
+                    {
+                        /* Copy IP address to output */
+                        inet_ntop(AF_INET, tmpAddrPtr, buffer, buflen);
 
-                    /* Alright meow! It is time to stop now Mack */
-                    LANFound = true;
-                    retVal = connectionType::LAN;
-                    TRACE("Using %s IP Address %s\n", ifa->ifa_name, addressBuffer);
+                        /* Alright meow! It is time to stop now Mack */
+                        LANFound = true;
+                        retVal = connectionType::LAN;
+                    }
                 }
             }
         }
@@ -499,7 +531,7 @@ connectionType GetPrimaryIp(char* buffer, size_t buflen)
             char addressBuffer[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
 
-            if(strstr(ifa->ifa_name, "wlan") != NULL)
+            if(strstr(ifa->ifa_name, "wl") != NULL)
             {
                 /* Copy IP address to output */
                 inet_ntop(AF_INET, tmpAddrPtr, buffer, buflen);
@@ -507,7 +539,6 @@ connectionType GetPrimaryIp(char* buffer, size_t buflen)
                 /* Alright meow! It is time to stop now Mack */
                 LANFound = true;
                 retVal = connectionType::WAN;
-                TRACE("Using %s IP Address %s\n", ifa->ifa_name, addressBuffer);
             }
         }
     }
@@ -530,41 +561,38 @@ connectionType GetPrimaryIp(char* buffer, size_t buflen)
                 /* Alright meow! It is time to stop now Mack */
                 LANFound = true;
                 retVal = connectionType::USB;
-                TRACE("Using %s IP Address %s\n", ifa->ifa_name, addressBuffer);
             }
         }
     }
 
     if(!LANFound)
-	{
-		for (ifa = ifAddrStruct; ((ifa != NULL) && (!LANFound)); ifa = ifa->ifa_next)
-		{
-			/* Filter IPV4 addresses */
-			if (ifa->ifa_addr->sa_family == AF_INET)
-			{
+    {
+        for (ifa = ifAddrStruct; ((ifa != NULL) && (!LANFound)); ifa = ifa->ifa_next)
+        {
+            /* Filter IPV4 addresses */
+            if (ifa->ifa_addr->sa_family == AF_INET)
+            {
 
-				tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
-				char addressBuffer[INET_ADDRSTRLEN];
-				inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+                tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+                char addressBuffer[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
 
-				if(strstr(ifa->ifa_name, "lo") != NULL)
-				{
-					/* Copy IP address to output */
-					inet_ntop(AF_INET, tmpAddrPtr, buffer, buflen);
+                if(strstr(ifa->ifa_name, "lo") != NULL)
+                {
+                    /* Copy IP address to output */
+                    inet_ntop(AF_INET, tmpAddrPtr, buffer, buflen);
 
-					/* Alright meow! It is time to stop now Mack */
-					LANFound = true;
-					retVal = connectionType::LOOPBACK;
-					TRACE("Using %s IP Address %s\n", ifa->ifa_name, addressBuffer);
-				}
-			}
-		}
-	}
+                    /* Alright meow! It is time to stop now Mack */
+                    LANFound = true;
+                    retVal = connectionType::LOOPBACK;
+                }
+            }
+        }
+    }
 
     if(!LANFound)
     {
-    	TRACE("No adapter found for fetching an IP address");
-    	ROS_ERROR("No adapter found for fetching an IP address");
+        ROS_ERROR("No adapter found for fetching an IP address");
     }
 
     if (ifAddrStruct!=NULL)
@@ -577,7 +605,7 @@ connectionType GetPrimaryIp(char* buffer, size_t buflen)
 
 connectionType GetPrimaryConnectionType()
 {
-	struct ifaddrs * ifAddrStruct=NULL;
+    struct ifaddrs * ifAddrStruct=NULL;
     struct ifaddrs * ifa=NULL;
     void * tmpAddrPtr=NULL;
     connectionType retVal = connectionType::INVALID;
@@ -596,10 +624,14 @@ connectionType GetPrimaryConnectionType()
                 char addressBuffer[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
 
-                if(strstr(ifa->ifa_name, "eth") != NULL)
+                if((strstr(ifa->ifa_name, "en") != NULL) ||
+                    (strstr(ifa->ifa_name, "eth") != NULL))
                 {
-                    /* Alright meow! It is time to stop now Mack */
-                    retVal = connectionType::LAN;
+                    if (!ignoreIfaName(ifa->ifa_name))
+                    {
+                        /* Alright meow! It is time to stop now Mack */
+                        retVal = connectionType::LAN;
+                    }
                 }
             }
         }
@@ -615,7 +647,7 @@ connectionType GetPrimaryConnectionType()
             char addressBuffer[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
 
-            if(strstr(ifa->ifa_name, "wlan") != NULL)
+            if(strstr(ifa->ifa_name, "wl") != NULL)
             {
                 /* Alright meow! It is time to stop now Mack */
                 retVal = connectionType::WAN;
@@ -642,31 +674,29 @@ connectionType GetPrimaryConnectionType()
     }
 
     if(retVal == connectionType::INVALID)
-	{
-		for (ifa = ifAddrStruct; ((ifa != NULL) && (retVal == connectionType::INVALID)); ifa = ifa->ifa_next)
-		{
-			/* Filter IPV4 addresses */
-			if (ifa->ifa_addr->sa_family == AF_INET)
-			{
+    {
+        for (ifa = ifAddrStruct; ((ifa != NULL) && (retVal == connectionType::INVALID)); ifa = ifa->ifa_next)
+        {
+            /* Filter IPV4 addresses */
+            if (ifa->ifa_addr->sa_family == AF_INET)
+            {
 
-				tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
-				char addressBuffer[INET_ADDRSTRLEN];
-				inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+                tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+                char addressBuffer[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
 
-				if(strstr(ifa->ifa_name, "lo") != NULL)
-				{
-					/* Alright meow! It is time to stop now Mack */
-					retVal = connectionType::LOOPBACK;
-					TRACE("Using %s IP Address %s\n", ifa->ifa_name, addressBuffer);
-				}
-			}
-		}
-	}
+                if(strstr(ifa->ifa_name, "lo") != NULL)
+                {
+                    /* Alright meow! It is time to stop now Mack */
+                    retVal = connectionType::LOOPBACK;
+                }
+            }
+        }
+    }
 
     if(retVal == connectionType::INVALID)
     {
-    	TRACE("No adapter found for fetching an IP address");
-    	ROS_ERROR("No adapter found for fetching an IP address");
+        ROS_ERROR("No adapter found for fetching an IP address");
     }
 
     if (ifAddrStruct!=NULL)
@@ -675,12 +705,6 @@ connectionType GetPrimaryConnectionType()
     }
 
     return retVal;
-}
-
-double diff_seconds(timeval t1, timeval t2)
-{
-    return  (t1.tv_sec - t2.tv_sec)
-            + ((t1.tv_usec - t2.tv_usec) / 1000000.0);
 }
 
 /* Double comparison */
@@ -717,7 +741,7 @@ std::string systemStdout(std::string cmd, int bufferLimit)
 
 std::string configFolder()
 {
-	struct passwd *pw = NULL;
+    struct passwd *pw = NULL;
     pw = getpwuid(getuid());
     return std::string(pw->pw_dir) + "/falcons/code/config";
 }
@@ -733,11 +757,10 @@ std::string configFolder()
  * This provides for a consistent way to manage configuration without having to rebuild components when switching 
  * from generic to robot-specific configuration.
  */
-std::string determineConfig(std::string key)
+std::string determineConfig(std::string key, std::string fileExtension)
 {
     // determine config folder
     std::string cfgFolder = configFolder();
-    std::string fileExtension = ".yaml";
     // determine yaml file to load
     std::string target = key;
     if (isSimulatedEnvironment()) // simulator override?
@@ -770,11 +793,11 @@ std::string determineConfig(std::string key)
     std::string result = cfgFolder + "/" + target + fileExtension;
     if (!boost::filesystem::exists(result))
     {
-        TRACE("ERROR: could not resolve yaml file for %s", key.c_str());
+        printf("ERROR: could not resolve yaml file for %s\n", key.c_str());
     }
     else
     {
-        TRACE("resolved yaml file %s -> %s", key.c_str(), result.c_str());
+        printf("resolved yaml file %s -> %s\n", key.c_str(), result.c_str());
     }
     return result;
 }
@@ -785,9 +808,9 @@ void loadConfig(std::string key)
     std::string configFileCmd("rosparam load ");
     configFileCmd.append(determineConfig(key));
     // run the command
-    TRACE("about to run system command: '%s'", configFileCmd.c_str());
+    printf("about to run system command: '%s'\n", configFileCmd.c_str());
     int r = system(configFileCmd.c_str());
-    TRACE("got return code %d from system command '%s'", r, configFileCmd.c_str());
+    printf("got return code %d from system command '%s'\n", r, configFileCmd.c_str());
 }
 
 

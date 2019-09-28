@@ -1,4 +1,4 @@
-// Copyright 2015 Andre Pool
+// Copyright 2015, 2016 Andre Pool
 // Licensed under the Apache License version 2.0
 // You may not use this file except in compliance with this License
 // You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -10,7 +10,7 @@
 #include "genericFilter2nd.h"
 
 #define HARDWARE_VERSION 0x0002
-#define SOFTWARE_VERSION 0x0011
+#define SOFTWARE_VERSION 0x0016
 
 #define DEVICE_ID 0x0042
 #define VENDOR_ID 0x0009
@@ -38,11 +38,11 @@
 
 #define PID_ERROR_INIT_NOT_PERFORMED                 0x0001
 #define PID_ERROR_PRIMARY_CURRENT_ERROR_OUT_OF_RANGE 0x0002
-#define PID_ERROR_PRIMARY_INTEGRAL_OUT_OF_RANGE      0x0004
+#define PID_ERROR_PRIMARY_INTEGRAL_OUT_OF_RANGE      0x0004 // not used anymore
 #define PID_ERROR_PRIMARY_DERIVATIVE_OUT_OF_RANGE    0x0008
 #define PID_ERROR_PRIMARY_RESULT_OUT_OF_RANGE        0x0010
 #define PID_ERROR_ANGLE_CURRENT_ERROR_OUT_OF_RANGE   0x0020
-#define PID_ERROR_ANGLE_INTEGRAL_OUT_OF_RANGE        0x0040
+#define PID_ERROR_ANGLE_INTEGRAL_OUT_OF_RANGE        0x0040 // not used anymore
 #define PID_ERROR_ANGLE_DERIVATIVE_OUT_OF_RANGE      0x0080
 #define PID_ERROR_ANGLE_RESULT_OUT_OF_RANGE          0x0100
 #define PID_ERROR_REQUEST_CLEAR_STATE                0x8000
@@ -63,8 +63,8 @@
 #define PWM_ERROR_INIT_NOT_PERFORMED                 0x0001
 #define PWM_ERROR_POSITIVE_LIMIT                     0x0002
 #define PWM_ERROR_NEGATIVE_LIMIT                     0x0004
-#define PWM_ERROR_POSITIVE_DELTA                     0x0008
-#define PWM_ERROR_NEGATIVE_DELTA                     0x0010
+#define PWM_ERROR_POSITIVE_DELTA                     0x0008 // not used anymore
+#define PWM_ERROR_NEGATIVE_DELTA                     0x0010 // not used anymore
 #define PWM_ERROR_REQUEST_CLEAR_STATE                0x8000
 
 #define DRV8301_ERROR_INIT_NOT_PERFORMED             0x0001

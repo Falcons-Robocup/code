@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,13 +20,16 @@
 #define CXYLINEARACCELERATION_HPP_
 
 #include "int/cAbstractPathPlanning.hpp"
+//#include "pathPlanning/s_pathplanning_setpointGeneratorType.h"
 
 class cXYLinearAcceleration : public cAbstractPathPlanning
 {
     public:
         cXYLinearAcceleration(cPathPlanningMain* main) : cAbstractPathPlanning(main)
         {
+            _n.reset(new ros::NodeHandle());
             _isBraking = false;
+            //_s_getJerk = _n->serviceClient<pathPlanning::s_pathplanning_setpointGeneratorType>("getJerk", USE_SERVICE_PERSISTENCY);
         };
         ~cXYLinearAcceleration() { };
 
@@ -35,9 +38,32 @@ class cXYLinearAcceleration : public cAbstractPathPlanning
     private:
 
         double getBrakeDistance(Velocity2D currVel);
+        std::vector< std::vector<double> > calcNewTrajectory(double startpos, double endpos, double startvel, double endvel, double maxV, double maxA, double maxJ);
+        double getNewVel(std::vector< std::vector<double> > polynomials, rtime timeComputed);
 
         Position2D _currTarget;
         bool        _isBraking;
+
+        std::vector< std::vector<double> > trajectoryX;
+        std::vector< std::vector<double> > trajectoryY;
+
+        timeval trajectoryXComputed;
+        timeval trajectoryYComputed;
+
+        double prevAccX;
+        double prevExpAccX; // expected Acceleration from SPG
+        double prevVelX;
+        double prevPosX;
+
+        double prevAccY;
+        double prevExpAccY; // expected Acceleration from SPG
+        double prevVelY;
+        double prevPosY;
+
+        //ros::ServiceClient _s_getJerk;
+        boost::shared_ptr<ros::NodeHandle> _n;
+        pp_setpoint_output newJerk2(double startpos, double startvel, double startacc, double endpos, double endvel, double endacc, double maxV, double maxA, double maxJ);
+        pp_setpoint_output newAcc_2ndorder(double startpos, double startvel, double endpos, double endvel, double maxV, double maxA);
 };
 
 #endif /* CXYLINEARACCELERATION_HPP_ */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,7 +17,8 @@
  */
 
 #include "int/facilities/cObstacleFacilities.hpp"
-#include <boost/thread/thread.hpp>
+#include "cDiagnostics.hpp"
+
 
 void cObstacleFacilities::projectObstaclesOnForbiddenAreaSide(Vector2D& startPoint, Vector2D& endPoint, std::vector<pp_obstacle_struct_t>& obstacles)
 {
@@ -43,16 +44,31 @@ void cObstacleFacilities::projectObstaclesOnForbiddenAreaSide(Vector2D& startPoi
         currentProjectedObst.velocity.phi = 0.0;
 
         obstacles.push_back(currentProjectedObst);
+        
+        // sanity check, we have see this loop run forever causing robot to freeze ... 
+        // see for instance r4 /var/tmp/falcons_control_20190323_134644/stdout_A4_pp_3.txt
+        if (j > 100)
+        {
+            TRACE_WARNING_TIMEOUT(1.0, "for loop did not converge, vStart=(%6.2f, %6.2f) vEnd=(%6.2f, %6.2f)", 
+                startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+            return;
+        }
     }
 }
 
 void cObstacleFacilities::projectObstaclesOnForbiddenArea(polygon2D& area, std::vector<pp_obstacle_struct_t>& obstacles)
 {
     std::vector<linepoint2D> linepoints = area.getLinepoints();
-	for(auto it = linepoints.begin(); it != linepoints.end(); it++)
-	{
-		Vector2D src = it->getSourceVector2D();
-		Vector2D dst = it->getDestinationVector2D();
-		projectObstaclesOnForbiddenAreaSide(src, dst, obstacles);
-	}
+    // sanity check
+    int n = linepoints.size();
+    if (n > 100)
+    {
+        TRACE_WARNING_TIMEOUT(1.0, "too many linepoints: %d", n);
+    }
+    for(auto it = linepoints.begin(); it != linepoints.end(); it++)
+    {
+        Vector2D src = it->getSourceVector2D();
+        Vector2D dst = it->getDestinationVector2D();
+        projectObstaclesOnForbiddenAreaSide(src, dst, obstacles);
+    }
 }

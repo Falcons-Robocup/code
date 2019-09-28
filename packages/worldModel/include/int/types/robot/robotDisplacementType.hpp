@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #ifndef ROBOTDISPLACEMENTTYPE_HPP_
 #define ROBOTDISPLACEMENTTYPE_HPP_
 
-#include "int/types/uniqueWorldModelIDtype.hpp"
+#include "uniqueObjectID.hpp"
 #include "int/types/coordinateType.hpp"
 #include "int/types/displacementType.hpp"
 
@@ -29,36 +29,29 @@ class robotDisplacementClass_t
 		robotDisplacementClass_t();
 		~robotDisplacementClass_t();
 
-		void setID(const uniqueWorldModelID identifier);
+		void setID(const uniqueObjectID identifier);
 		void setCoordinateType(const coordinateType coordinates);
 		void setDisplacementSource(const displacementType displacementSource);
 		void setTimestamp(const double timestamp);
-		// NOTE: it is assumed that consistent position/velocity is provided (by peripheralInterface)
+		// NOTE: it is assumed that consistent position/velocity is provided (by peripheralsInterface)
 		void setDeltaPosition(const float dx, const float dy, const float dtheta);
-		void setDeltaVelocity(const float vx, const float vy, const float vtheta);
 
-		uniqueWorldModelID getID() const;
-		coordinateType getCoordindateType() const; // TODO: fix typo (impact on many files)
+		uniqueObjectID getID() const;
+		coordinateType getCoordinateType() const;
 		displacementType getDisplacementSource() const;
 		double getTimestamp() const;
 		float getdX() const;
 		float getdY() const;
 		float getdTheta() const;
-		float getvX() const;
-		float getvY() const;
-		float getvTheta() const;
 
 	private:
-		uniqueWorldModelID _identifier;
+		uniqueObjectID _identifier;
 		coordinateType _coordinate;
 		displacementType _displacementSource;
 		double _timestamp;
 		float _dx;
 		float _dy;
 		float _dtheta;
-		float _vx;
-		float _vy;
-		float _vtheta;
 };
 
 #endif /* ROBOTDISPLACEMENTTYPE_HPP_ */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,14 +16,15 @@
 
 #include <pwd.h>
 
-#include <cDiagnosticsEvents.hpp>
-#include <FalconsCommon.h>
+#include "cDiagnostics.hpp"
+#include "FalconsCommon.h"
+#include "tracing.hpp"
 
-#include "int/adapters/cRosAdapterMotion.hpp"
+#include "int/adapters/cRTDBInputAdapter.hpp"
+#include "int/adapters/cRTDBOutputAdapter.hpp"
+
 #include "int/adapters/cRosAdapterMotionConfig.hpp"
-#include "int/adapters/cRosAdapterWorldModel.hpp"
-#include <int/adapters/cRosAdapterBallhandlers.hpp>
-#include <int/adapters/cRosAdapterBallhandlersConfig.hpp>
+#include "int/adapters/cRosAdapterBallhandlersConfig.hpp"
 
 #include "int/PeripheralsInterfaceData.hpp"
 #include "int/PeripheralsInterfaceTypes.hpp"
@@ -49,9 +50,9 @@ private:
 	void loadRosAdapters();
 	void loadDeviceManager();
 	void loadDiagnostics();
-	void loadControlLoops();
+	void loadController();
 
-	void publisherTimer();
+	void controllerTimer();
 
 	PeripheralsInterfaceData _piData;
 	DeviceManager _deviceManager;
@@ -66,20 +67,20 @@ private:
 	Motion _motion;
 	Ballhandlers _ballhandlers;
 
+	// RTDB adapters
+	cRTDBInputAdapter _rtdbInputAdapter;
+	cRTDBOutputAdapter _rtdbOutputAdapter;
+
 //	// RosAdapter objects
-	cRosAdapterMotion _rosAdapterMotion;
 	cRosAdapterMotionConfig _rosAdapterMotionConfig;
-	cRosAdapterBallhandlers _rosAdapterBallhandlers;
 	cRosAdapterBallhandlersConfig _rosAdapterBallhandlersConfig;
-	cRosAdapterWorldModel _rosAdapterWorldModel;
 
 	Diagnostics _diagnostics;
 
 	// Timer threads
-	thread _publisherThread;
+	thread _controllerThread;
 
 	bool _ballhandlersAvailable;
-	bool _worldModelAvailable;
 };
 
 peripheralsInterfaceMain::~peripheralsInterfaceMain() {
@@ -94,45 +95,32 @@ peripheralsInterfaceMain::peripheralsInterfaceMain():
 		_leftBallhandlerBoard(BALLHANDLER_BOARD_LEFT, _deviceManager),
 		_motion(_piData, _leftMotionBoard, _rightMotionBoard, _rearMotionBoard),
 		_ballhandlers(_piData, _leftBallhandlerBoard, _rightBallhandlerBoard),
-		_rosAdapterMotion(_piData),
+		_rtdbInputAdapter(_piData),
+		_rtdbOutputAdapter(_piData),
 		_rosAdapterMotionConfig(_piData),
-		_rosAdapterBallhandlers(_piData),
 		_rosAdapterBallhandlersConfig(_piData),
-		_rosAdapterWorldModel(_piData),
 		_diagnostics(_piData, _ballhandlersAvailable),
-		_ballhandlersAvailable(!isGoalKeeper()),
-		_worldModelAvailable(true)
+		_ballhandlersAvailable(!isGoalKeeper())
 {
 	loadDeviceManager();
 	loadRosAdapters();
+	loadController();
 
-	_publisherThread = thread(&peripheralsInterfaceMain::publisherTimer, this);
-
-	loadControlLoops();
 	// Wait one or so second for the boards to be identified.
 	this_thread::sleep_for(chrono::milliseconds(1200));
 	loadDiagnostics();
 }
 
 void peripheralsInterfaceMain::loadRosAdapters() {
-	cout << "INFO    : Initializing Motion ROS adapter." << endl;
-	_rosAdapterMotion.initialize();
 
 	cout << "INFO    : Initializing Motion Config ROS adapter." << endl;
 	_rosAdapterMotionConfig.initialize();
 
 	if (_ballhandlersAvailable) {
-		cout << "INFO    : Initializing Ballhandlers ROS adapter." << endl;
-		_rosAdapterBallhandlers.initialize();
-
 		cout << "INFO    : Initializing Ballhandlers Config ROS adapter." << endl;
 		_rosAdapterBallhandlersConfig.initialize();
 	}
 
-	if (_worldModelAvailable) {
-		cout << "INFO    : Initializing World Model ROS adapter." << endl;
-		_rosAdapterWorldModel.initialize();
-	}
 }
 
 void peripheralsInterfaceMain::loadDeviceManager() {
@@ -143,58 +131,29 @@ void peripheralsInterfaceMain::loadDiagnostics() {
 	_diagnostics.start();
 }
 
-void peripheralsInterfaceMain::loadControlLoops() {
-	_motion.start();
-
-	if (_ballhandlersAvailable) {
-		_ballhandlers.start();
-	}
+void peripheralsInterfaceMain::loadController() {
+	_controllerThread = thread(&peripheralsInterfaceMain::controllerTimer, this);
 }
 
-void peripheralsInterfaceMain::publisherTimer() {
-	cout << "INFO    : Starting publisher." << endl;
+void peripheralsInterfaceMain::controllerTimer() {
+	TRACE("Starting controller.");
 
 	while (true) {
-		_rosAdapterMotion.publishPidParameters();
+		// Calculate the time when the next iteration should be started.
+		chrono::system_clock::time_point end_time = chrono::system_clock::now() + chrono::milliseconds(10);
 
-		_rosAdapterMotion.publishRobotSpeed();
+		_rtdbInputAdapter.getMotorVelocitySetpoint();
+		_rtdbInputAdapter.getBallHandlersMotorSetpoint();
 
-		if (_ballhandlersAvailable) {
-			_rosAdapterBallhandlers.publishPidParameters();
-		}
+		_motion.update();
+		_ballhandlers.update();
 
-		if (_worldModelAvailable) {
-			_rosAdapterWorldModel.notifyWorldModel();
-		}
+		_rtdbOutputAdapter.setMotorFeedback();
+		_rtdbOutputAdapter.setBallHandlersFeedback();
 
-		if (_piData.getLeftMotionBoard().getSettings().motorPlotEnabled){
-			//Trace motor 1-3
-			MotionBoardDataOutput mLe, mRi, mRe;
-			mLe = _piData.getLeftMotionBoard().getDataOutput();
-			mRi = _piData.getRightMotionBoard().getDataOutput();
-			mRe = _piData.getRearMotionBoard().getDataOutput();
+		this_thread::sleep_until(end_time);
 
-			//double t = timeConvert
-			/*Labels defined in test script:
-			 * 		"mLeSetpoint;mLeVelocity;mLeError;mLeProportional;mLeIntegral;mLeDerivative;mLePIDOutput;mLeDisplDist;mLeDisplTicks;mLePWM;"\
-					"mRiSetpoint;mRiVelocity;mRiError;mRiProportional;mRiIntegral;mRiDerivative;mRiPIDOutput;mRiDisplDist;mRiDisplTicks;mRiPWM;"\
-					"mReSetpoint;mReVelocity;mReError;mReProportional;mReIntegral;mReDerivative;mRePIDOutput;mReDisplDist;mReDisplTicks;mRePWM;"\
-			*/
-			TRACE("kstdata %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f; %7.4f;",
-					mLe.motorController.setpoint,mLe.motion.velocity,mLe.motion.velocityError,mLe.motion.errorMs,mLe.motion.integralMs,mLe.motion.derivativeMs,\
-					mLe.motion.pidOutputMs,mLe.motion.displacementDistance,mLe.motion.displacementEncTicks,mLe.motorController.pwm,\
-					mRi.motorController.setpoint,mRi.motion.velocity,mRi.motion.velocityError,mRi.motion.errorMs,mRi.motion.integralMs,mRi.motion.derivativeMs,\
-					mRi.motion.pidOutputMs,mRi.motion.displacementDistance,mRi.motion.displacementEncTicks,mRi.motorController.pwm,\
-					mRe.motorController.setpoint,mRe.motion.velocity,mRe.motion.velocityError,mRe.motion.errorMs,mRe.motion.integralMs,mRe.motion.derivativeMs,\
-					mRe.motion.pidOutputMs,mRe.motion.displacementDistance,mRe.motion.displacementEncTicks,mRe.motorController.pwm);
-
-		}
-		if (_piData.getLeftBallhandlerBoard().getSettings().ballhandlerPlotEnabled) {
-			//Trace ballhandler 1-2
-			//TODO: TRACE();
-
-		}
-		this_thread::sleep_for(chrono::milliseconds(10));
+		WRITE_TRACE;
 	}
 }
 
@@ -216,7 +175,9 @@ void loadConfiguration() {
 
 int main(int argc, char **argv) {
 
-	ros::init(argc, argv, peripheralInterfaceNodeNames::motors);
+	ros::init(argc, argv, peripheralsInterfaceNodeNames::motors);
+
+    INIT_TRACE;
 
 	// Load the active YAML configuration.
 	loadConfiguration();

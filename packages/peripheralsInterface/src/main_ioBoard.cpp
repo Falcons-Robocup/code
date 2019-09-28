@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,228 +24,301 @@
 
 #include <sys/stat.h>
 
-#include <cDiagnosticsEvents.hpp>
+#include <cDiagnostics.hpp>
 #include <FalconsCommon.h>
+#include "tracing.hpp"
 #include <peripheralsInterface/ioBoardConfig.h>
+#include "../include/ext/peripheralsInterfaceNames.hpp"
 
 #include "int/ioBoard/IoBoard.hpp"
 #include "int/Kicker.hpp"
+#include "int/KeeperFrame.hpp"
 
 #include "int/adapters/cRosAdapterKicker.hpp"
-#include "int/adapters/cRosAdapterRobotStatus.hpp"
+#include "int/adapters/cRTDBAdapterRobotStatus.hpp"
+#include "int/adapters/cRTDBInputKickerAdapter.hpp"
+#include "int/adapters/RTDBInputKeeperFrameAdapter.hpp"
 
-#include "ext/peripheralInterfaceNames.hpp"
+
 
 using std::atomic;
-using std::cerr;
-using std::cout;
 using std::chrono::milliseconds;
 using std::endl;
 using std::exception;
 using std::thread;
 
-class PeripheralsInterfaceIoBoard {
+class PeripheralsInterfaceIoBoard
+{
 public:
-	PeripheralsInterfaceIoBoard(string portName);
-	~PeripheralsInterfaceIoBoard();
+    PeripheralsInterfaceIoBoard(string portName);
+    ~PeripheralsInterfaceIoBoard();
 
 private:
-	IoBoard ioBoard;
-	Kicker kicker;
+    IoBoard ioBoard;
+    Kicker kicker;
+    KeeperFrame _keeperFrame;
 
-	thread robotStatusUpdateThread;
-	atomic<bool> robotStatusUpdateRunning;
+    thread robotStatusUpdateThread;
+    thread rtdbKickerThread;
+    thread _rtdbKeeperFrameThread;
+    atomic<bool> robotStatusUpdateRunning;
 
-	cRosAdapterKicker rosAdapterKicker;
-	cRosAdapterRobotStatus rosAdapterRobotStatus;
+    cRosAdapterKicker rosAdapterKicker;
+    cRTDBAdapterRobotStatus rtdbAdapterRobotStatus;
+    cRTDBInputKickerAdapter rtdbAdapterKicker;
+    RTDBInputKeeperFrameAdapter _rtdbAdapterKeeperFrame;
 
-	void robotStatusUpdate();
+    void robotStatusUpdate();
 
-	void initializeIoBoard();
+    void initializeIoBoard();
 
-	void processRobotStatus(IoBoard::Status data);
-	void processRobotInPlay(bool inPlay);
-	void processRobotSoftwareOn(bool softwareOn);
+    void processRobotStatus(IoBoard::Status data);
+    void processRobotInPlay(bool inPlay);
+    void processRobotSoftwareOn(bool softwareOn);
 
-	void startSoftware();
-	void stopSoftware();
+    void startSoftware();
+    void stopSoftware();
 
-	bool inPlay;
-	bool softwareOn;
+    bool inPlay;
+    bool softwareOn;
 };
 
 PeripheralsInterfaceIoBoard::PeripheralsInterfaceIoBoard(string portName) :
-	ioBoard(portName),
-	kicker(ioBoard),
-	rosAdapterKicker(kicker) {
+        ioBoard(portName),
+        kicker(ioBoard),
+        _keeperFrame(ioBoard),
+        rosAdapterKicker(kicker),
+        rtdbAdapterKicker(kicker),
+        _rtdbAdapterKeeperFrame(_keeperFrame)
+{
+    TRACE(">");
 
-	inPlay = false;
-	softwareOn = false;
+    inPlay = false;
+    softwareOn = false;
 
-	initializeIoBoard();
+    initializeIoBoard();
 
-	rosAdapterKicker.initialize();
-	rosAdapterRobotStatus.initialize();
+    rosAdapterKicker.initialize();
+    rtdbKickerThread = thread(&cRTDBInputKickerAdapter::waitForKickerSetpoint, &rtdbAdapterKicker);
+    _rtdbKeeperFrameThread = thread(&RTDBInputKeeperFrameAdapter::loop, &_rtdbAdapterKeeperFrame);
 
-	robotStatusUpdateRunning = true;
-	robotStatusUpdateThread = thread(&PeripheralsInterfaceIoBoard::robotStatusUpdate, this);
+    rtdbAdapterRobotStatus.initialize();
+    robotStatusUpdateRunning = true;
+    robotStatusUpdateThread = thread(&PeripheralsInterfaceIoBoard::robotStatusUpdate, this);
+
+TRACE("<");
 }
 
-PeripheralsInterfaceIoBoard::~PeripheralsInterfaceIoBoard() {
-	if (robotStatusUpdateThread.joinable()) {
-		robotStatusUpdateRunning = false;
-	}
+PeripheralsInterfaceIoBoard::~PeripheralsInterfaceIoBoard()
+{
+    TRACE(">");
+
+    if (robotStatusUpdateThread.joinable())
+    {
+        robotStatusUpdateRunning = false;
+    }
+
+    TRACE("<");
 }
 
-void PeripheralsInterfaceIoBoard::initializeIoBoard() {
-	bool initialized = false;
+void PeripheralsInterfaceIoBoard::initializeIoBoard()
+{
+    TRACE(">");
 
-	while (!initialized) {
-		try {
-			ioBoard.initialize();
-			initialized = true;
-			TRACE_INFO("Connection with IoBoard established.");
-		}
-		catch (exception &e) {
-			TRACE_ERROR_TIMEOUT(30.0, "First connection with IoBoard not yet established, retrying.");
-		}
-	}
+    bool initialized = false;
+
+    while (!initialized)
+    {
+        try
+        {
+            ioBoard.initialize();
+            initialized = true;
+            TRACE_INFO("Connection with IoBoard established.");
+        }
+        catch (exception &e)
+        {
+            TRACE_ERROR_TIMEOUT(30.0, "First connection with IoBoard not yet established, retrying.");
+        }
+    }
+
+    TRACE("<");
 }
 
-void PeripheralsInterfaceIoBoard::robotStatusUpdate() {
+void PeripheralsInterfaceIoBoard::robotStatusUpdate()
+{
+    TRACE(">");
 
-	bool board_online = true;
+    bool board_online = true;
 
-	while(robotStatusUpdateRunning) {
+    while(robotStatusUpdateRunning)
+    {
+        try
+        {
+            // Retrieve latest status from the ioBoard and process
+            IoBoard::Status status = ioBoard.getStatus();
+            processRobotStatus(status);
 
-		try {
-			IoBoard::Status status = ioBoard.getStatus();
+            if (!board_online)
+            {
+                TRACE_INFO("Communication with IO board restored!");
+                board_online = true;
+            }
+        }
+        catch(exception &e)
+        {
+            // When communication to the IoBoard fails, set the robot to out of play.
+            // This ensures that robot is set to out of play when the EMO is pressed.
+            processRobotInPlay(false);
 
-			processRobotStatus(status);
+            if (board_online)
+            {
+                board_online = false;
+                TRACE_ERROR("Communication with IO board seems offline!");
+            }
+        }
 
-			if (!board_online) {
-				TRACE_INFO("Communication with IO board restored!");
-				cout << "Communication with IO board restored!" << endl;
-				board_online = true;
-			}
-		}
-		catch(exception &e) {
-			// When communication to the IoBoard fails, set the robot to out of play.
-			// This ensures that robot is set to out of play when the EMO is pressed.
-			inPlay = false;
-			rosAdapterRobotStatus.setRobotStatus(inPlay);
+        this_thread::sleep_for(milliseconds(500));
+    }
 
-			if (board_online) {
-				board_online = false;
-				TRACE_ERROR("Communication with IO board seems offline!");
-				cerr << "Communication with IO board seems offline!" << endl;
-			}
-		}
-
-		this_thread::sleep_for(milliseconds(500));
-	}
+    TRACE("<");
 }
 
 void PeripheralsInterfaceIoBoard::processRobotStatus(IoBoard::Status status)
 {
-	processRobotInPlay(status.inPlay);
-	processRobotSoftwareOn(status.softwareOn);
+    TRACE(">");
+
+    processRobotInPlay(status.inPlay);
+    processRobotSoftwareOn(status.softwareOn);
+
+    TRACE("<");
 }
 
 void PeripheralsInterfaceIoBoard::processRobotInPlay(bool newInPlay)
 {
-	// Just publish the inPlay status every 500 ms, this way wordmodel always has
-	// the latest
-//	if (newInPlay != inPlay) {
-		inPlay = newInPlay;
-		rosAdapterRobotStatus.setRobotStatus(inPlay);
+    TRACE(">");
 
-		if (inPlay) {
-			cout << "Robot now in play." << endl;
-		}
-		else {
-			cout << "Robot now out of play." << endl;
-		}
-//	}
+    // Just publish the inPlay status every 500 ms, this way wordmodel always has
+    // the latest
+    //    if (newInPlay != inPlay) {
+    inPlay = newInPlay;
+    rtdbAdapterRobotStatus.setRobotStatus(inPlay);
+
+    if (inPlay)
+    {
+        TRACE("Robot now in play.");
+    }
+    else
+    {
+        TRACE("Robot now out of play.");
+    }
+    //    }
+
+    TRACE("<");
 }
 
 void PeripheralsInterfaceIoBoard::processRobotSoftwareOn(bool newSoftwareOn)
 {
-	if (newSoftwareOn != softwareOn)
-	{
-		try {
-			if (newSoftwareOn) {
-				startSoftware();
-				TRACE_INFO("Software On switch triggered, software is being turned on.");
-				cout << "Software On switch triggered, software is being turned on." << endl;
-			}
-			else {
-				stopSoftware();
-				TRACE_INFO("Software On switch triggered, software is being turned off.");
-				cout << "Software On switch triggered, software is being turned off." << endl;
-			}
+    TRACE(">");
 
-			softwareOn = newSoftwareOn;
-		}
+    if (newSoftwareOn != softwareOn)
+    {
+        try
+        {
+            if (newSoftwareOn)
+            {
+                startSoftware();
+                TRACE_INFO("Software On switch triggered, software is starting.");
+            }
+            else
+            {
+                stopSoftware();
+                TRACE_INFO("Software On switch triggered, software is shutting down.");
+            }
 
-		catch (exception &e) {
-			TRACE_ERROR("Failed to stop or start software, retrying in 1 second: %s", e.what());
-			cerr << "Failed to stop or start software, retrying in 1 second: " << e.what() << endl;
-		}
-	}
+            softwareOn = newSoftwareOn;
+        }
+
+        catch (exception &e)
+        {
+            TRACE_ERROR("Failed to stop or start software, retrying in 1 second: %s", e.what());
+        }
+    }
+
+    TRACE("<");
 }
 
 void PeripheralsInterfaceIoBoard::startSoftware()
 {
-	int result = system("robotControl start");
+    TRACE(">");
 
-	if (result != 0) {
-		throw(runtime_error("robotControl start returned " + to_string(result)));
-	}
+    int result = system("robotControl start");
+
+    if (result != 0)
+    {
+        throw(runtime_error("robotControl start returned " + to_string(result)));
+    }
+
+    TRACE("<");
 }
 
 void PeripheralsInterfaceIoBoard::stopSoftware()
 {
-	// TODO: Investigate JFEI, robotControl stop doesn't work
-	int result = system("jobStopAll");
+    TRACE(">");
 
-	if (result < 0) {
-		throw(runtime_error("jobStopAll returned " + to_string(result)));
-	}
+    // TODO: Investigate JFEI, robotControl stop doesn't work
+    int result = system("jobStopAll");
+
+    if (result < 0)
+    {
+        throw(runtime_error("jobStopAll returned " + to_string(result)));
+    }
+
+    TRACE("<");
 }
 
-void loadIoBoardSettings() {
+void loadIoBoardSettings()
+{
+    TRACE(">");
 
-	// Load the specific IO board settings for this robot.
-	loadConfig("IoBoard");
+    // Load the specific IO board settings for this robot.
+    loadConfig("IoBoard");
+
+    TRACE("<");
 }
 
-string getSerialPortName() {
+string getSerialPortName()
+{
+    TRACE(">");
 
-	// Create the NodeHandle to read the parameters from
-	ros::NodeHandle nh = ros::NodeHandle(peripheralInterfaceNodeNames::ioBoard);
+    // Create the NodeHandle to read the parameters from
+    ros::NodeHandle nh = ros::NodeHandle(peripheralsInterfaceNodeNames::ioBoard);
 
-	// Read parameters from NodeHandle
-	peripheralsInterface::ioBoardConfig config;
-	config.__fromServer__(nh);
+    // Read parameters from NodeHandle
+    peripheralsInterface::ioBoardConfig config;
+    config.__fromServer__(nh);
 
-	return config.PortName;
+    TRACE("<");
+    return config.PortName;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
+    TRACE(">");
 
-	cout << "Starting ROS for name " << peripheralInterfaceNodeNames::ioBoard << endl;
-	ros::init(argc, argv, peripheralInterfaceNodeNames::ioBoard);
+    TRACE("Starting ROS for name %s.", peripheralsInterfaceNodeNames::ioBoard);
+    ros::init(argc, argv, peripheralsInterfaceNodeNames::ioBoard);
 
-	cout << "Loading IO board settings" << endl;
-	loadIoBoardSettings();
+    TRACE("Loading IO board settings");
+    loadIoBoardSettings();
 
-	cout << "Retrieve the serial port name to instantiate the IO board communication." << endl;
-	string portName = getSerialPortName();
+    TRACE("Retrieve the serial port name to instantiate the IO board communication.");
+    string portName = getSerialPortName();
 
-	cout << "Starting peripheralsInterface IO board on port " << portName << "." << endl;
-	PeripheralsInterfaceIoBoard peripheralsInterfaceIoBoard(portName);
+    TRACE("Starting peripheralsInterface IO board on port %s.", portName);
+    PeripheralsInterfaceIoBoard peripheralsInterfaceIoBoard(portName);
 
-	cout << "ROS spin." << endl;
-	ros::spin();
+    TRACE("ROS spin.");
+    ros::spin();
+
+    TRACE("<");
 }

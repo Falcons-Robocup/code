@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,6 +20,7 @@
 #define WIDGET_H
 
 #include <QtGui>
+#include <qdialog.h>
 
 // Internal:
 #include "int/TeamRobotSelection.h"
@@ -106,7 +107,6 @@ public:
         }
     }
 
-protected:
     // Called after widget settings were changed
     virtual void reloadSettings() {};
 

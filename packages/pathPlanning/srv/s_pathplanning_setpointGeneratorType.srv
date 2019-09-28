@@ -1,0 +1,15 @@
+float64 s_0
+float64 v_0
+float64 a_0
+float64 s_end
+float64 v_end
+float64 a_end
+float64 v_max
+float64 a_max
+float64 j_max
+float64 dt
+---
+float64 pos
+float64 vel
+float64 acc
+float64 jerk

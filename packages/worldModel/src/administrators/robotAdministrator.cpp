@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,8 +20,10 @@
 
 #include "int/configurators/administrationConfigurator.hpp"
 
-#include "cDiagnosticsEvents.hpp"
-#include "timeConvert.hpp"
+#include "cDiagnostics.hpp"
+
+#include "FalconsCommon.h"
+#include "tracing.hpp"
 
 robotAdministrator::robotAdministrator()
 /*!
@@ -33,93 +35,112 @@ robotAdministrator::robotAdministrator()
  *
  */
 {
-	_ownRobotID = getRobotNumber();
-	_robots.clear();
-	_isSimulated = isSimulatedEnvironment();
-	_ballPossessions.clear();
-	_robotStatus.clear();
-	_isLocationValid = false;
-    _diagSender = NULL;
-    enableDiagnostics(); // TODO if this class is reused, then explicitly only enable diagnostics for own robot
+    _ownRobotID = getRobotNumber();
+    _robots.clear();
+    _isSimulated = isSimulatedEnvironment();
+    _ballPossessionBallHandlers = false;
+    _ballPossessionVision = false;
+    _ballPossession = false;
+    _prevBallPossession = false;
+    _ballClaimedX = 0.0;
+    _ballClaimedY = 0.0;
+    _robotStatus.clear();
+    _isLocationValid = false;
+    _inplay = false;
+    _wasInplay = false;
 }
 
 robotAdministrator::~robotAdministrator()
-/*
- * Chuck Norris can hear sign language
- */
+// Chuck Norris can hear sign language
 {
 
-}
-
-void robotAdministrator::enableDiagnostics()
-{
-    _diagSender = new diagnostics::cDiagnosticsSender<rosMsgs::t_diag_wm_loc>(diagnostics::DIAG_WM_LOC, 10, false);
 }
 
 void robotAdministrator::appendRobotVisionMeasurements(const std::vector<robotMeasurementClass_t> measurements)
 {
     //TRACE("> count=%d", (int)measurements.size());
-	try
-	{
-		for(auto itMeasurement = measurements.begin(); itMeasurement != measurements.end(); itMeasurement++)
-		{
-			/*
-			 * Verify correct measurement is received
-			 */
-			if(itMeasurement->getID().robotID != _ownRobotID)
-			{
-				TRACE_ERROR("Received vision measurement of other robot. OwnID: %d, receivedID: %d",
-						_ownRobotID, itMeasurement->getID().robotID);
-			}
-			else
-			{
-				/*
-				 * In the past, here we would add both the original vision candidate as well as the mirror, 
-				 * but now this symmetry is handled within localizationTracker
- 				 */
-				_localizationAlgorithm.addVisionMeasurement(*itMeasurement);
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        for(auto itMeasurement = measurements.begin(); itMeasurement != measurements.end(); itMeasurement++)
+        {
+            // Verify correct measurement is received
+            if(itMeasurement->getID().robotID != _ownRobotID)
+            {
+                TRACE_ERROR("Received vision measurement of other robot. OwnID: %d, receivedID: %d",
+                        _ownRobotID, itMeasurement->getID().robotID);
+            }
+            else
+            {
+                // In the past, here we would add both the original vision candidate as well as the mirror, 
+                // but now this symmetry is handled within localizationTracker
+                _localizationAlgorithm.addVisionMeasurement(*itMeasurement);
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("<");
 }
 
 void robotAdministrator::appendRobotDisplacementMeasurements(const std::vector<robotDisplacementClass_t> displacements)
 {
     //TRACE(">");
-	try
-	{
-		for(auto itDisplacement = displacements.begin(); itDisplacement != displacements.end(); itDisplacement++)
-		{
-			/*
-			 * Verify correct displacement is received
-			 */
-			if(itDisplacement->getID().robotID != _ownRobotID)
-			{
-				TRACE_ERROR("Received displacement of other robot. OwnID: %d, receivedID: %d",
-						_ownRobotID, itDisplacement->getID().robotID);
-			}
-			else
-			{
-				/*
-				 * Add displacement to localization algorithm
-				 */
-				_localizationAlgorithm.addDisplacement(*itDisplacement);
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        for(auto itDisplacement = displacements.begin(); itDisplacement != displacements.end(); itDisplacement++)
+        {
+            // Verify correct displacement is received
+            if(itDisplacement->getID().robotID != _ownRobotID)
+            {
+                TRACE_ERROR("Received displacement of other robot. OwnID: %d, receivedID: %d",
+                        _ownRobotID, itDisplacement->getID().robotID);
+            }
+            else
+            {
+                // Add displacement to localization algorithm
+                _localizationAlgorithm.addDisplacement(*itDisplacement);
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+    //TRACE("<");
+}
+
+void robotAdministrator::appendRobotVelocityMeasurements(const std::vector<robotVelocityClass_t> velocities)
+{
+    //TRACE(">");
+    try
+    {
+        for(auto itVelocity = velocities.begin(); itVelocity != velocities.end(); itVelocity++)
+        {
+            // Verify correct displacement is received
+            if(itVelocity->getID().robotID != _ownRobotID)
+            {
+                TRACE_ERROR("Received velocity of other robot. OwnID: %d, receivedID: %d",
+                        _ownRobotID, itVelocity->getID().robotID);
+            }
+            else
+            {
+                // Add displacement to localization algorithm
+                _localizationAlgorithm.addVelocity(*itVelocity);
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("<");
 }
 
@@ -134,230 +155,100 @@ void robotAdministrator::updateRobotPositionAndVelocity(const robotClass_t robot
  */
 {
     //TRACE("> id=%d", (int)robot.getRobotID());
-	try
-	{
-		/*
-		 * Update member with new position and velocity
-		 */
-		_robots[robot.getRobotID()] = robot;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        // Update member with new position and velocity
+        _robots[robot.getRobotID()] = robot;
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("<");
 }
 
 void robotAdministrator::disableOverrulingOfLocalRobot()
 {
     //TRACE(">");
-	if(_robots.find(_ownRobotID) != _robots.end())
-	{
-		_robots.erase(_ownRobotID);
-	}
+    if(_robots.find(_ownRobotID) != _robots.end())
+    {
+        _robots.erase(_ownRobotID);
+    }
 
-	if(_ballPossessions.find(_ownRobotID) != _ballPossessions.end())
-	{
-		_ballPossessions.erase(_ownRobotID);
-	}
-
-	if(_robotStatus.find(_ownRobotID) != _robotStatus.end())
-	{
-		_robotStatus.erase(_ownRobotID);
-	}
+    if(_robotStatus.find(_ownRobotID) != _robotStatus.end())
+    {
+        _robotStatus.erase(_ownRobotID);
+    }
     //TRACE("<");
 }
 
-void robotAdministrator::claimBallPossession(const uint8_t robotID, const ballClaimType claimType)
-/*!
- * \brief Claim the ball from multiple sources
- * 1) Verify robotID is present in mapping
- *  a) If not present add to mapping
- *  b) if remote ID, then already set camera claim to true
- * 2) See what type of claim it is
- *  a) If camera claim, do a camera claim call (will only happen with own robotID)
- *  b) If ball handlers claim, do a ball handlers claim with the current position
- */
+void robotAdministrator::setRobotStatus(const uint8_t robotID, const robotStatusType status, rtime const timeNow)
 {
     //TRACE(">");
-	try
-	{
-		if(_ballPossessions.find(robotID) == _ballPossessions.end())
-		{
-			ballPossessionClass_t ballPossession = ballPossessionClass_t(robotID);
+    try
+    {
+        TRACE("setRobotStatus robotID=%d status=%d", robotID, (int)status);
+        _robotStatus[robotID] = status;
+        // when out of play, robot administrator does not communicate data
+        // when GOING in play, we need ALSO a valid lock, so we poke _localizationAlgorithm
 
-			// 1a
-			if(robotID != _ownRobotID)
-			{
-				ballPossession.claimBallByCamera();
-			}
+        if((status == robotStatusType::INPLAY) && (robotID == _ownRobotID) && !_isSimulated)
+        {
+            _localizationAlgorithm = robotLocalization();
+        }
 
-			// 1b
-			_ballPossessions[robotID] = ballPossession;
-		}
-
-		// 2
-		switch(claimType)
-		{
-			// 2a
-			case ballClaimType::CAMERA:
-			{
-				_ballPossessions.at(robotID).claimBallByCamera();
-				break;
-			}
-
-			// 2b
-			case ballClaimType::BALL_HANDLERS:
-			{
-				if(robotID == _ownRobotID)
-				{
-					robotClass_t robot = getLocalRobotPosition();
-					_ballPossessions.at(robotID).claimBallByBallHandlers(robot.getX(), robot.getY());
-				}
-				else
-				{
-					if(_robots.find(robotID) != _robots.end())
-					{
-						robotClass_t robot = _robots.at(robotID);
-						_ballPossessions.at(robotID).claimBallByBallHandlers(robot.getX(), robot.getY());
-					}
-					else
-					{
-						TRACE_ERROR("Ignoring ball claim of robot %d due to no position found",
-								robotID);
-					}
-				}
-				break;
-			}
-
-			default:
-			{
-				TRACE_ERROR("Ignoring ball claim of robot %d due to INVALID claim type",
-						robotID);
-				break;
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("<");
 }
 
-void robotAdministrator::releaseBallPossession(const uint8_t robotID, const ballClaimType releaseType)
-/*!
- * \brief Release the ball from multiple sources
- * 1) Verify robotID is present in mapping
- *  a) If not present skip function
- * 2) See what type of release it is
- *  a) If camera release, do a camera release call (will only happen with own robotID)
- *  b) If ball handlers release, do a ball handlers release
- */
-{
-    //TRACE("> robotID=%d", (int)robotID);
-	try
-	{
-		// 1
-		if(_ballPossessions.find(robotID) != _ballPossessions.end())
-		{
-			// 2
-			switch(releaseType)
-			{
-				// 2a
-				case ballClaimType::CAMERA:
-				{
-					_ballPossessions.at(robotID).releaseBallByCamera();
-					break;
-				}
-
-				// 2b
-				case ballClaimType::BALL_HANDLERS:
-				{
-
-					_ballPossessions.at(robotID).releaseBallByBallHandlers();
-					break;
-				}
-
-				default:
-				{
-					TRACE_ERROR("Ignoring ball release of robot %d due to INVALID claim type",
-							robotID);
-					break;
-				}
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("<");
-}
-
-void robotAdministrator::setRobotStatus(const uint8_t robotID, const robotStatusType status, const double timeNow)
-{
-    //TRACE(">");
-	try
-	{
-	    TRACE("setRobotStatus robotID=%d status=%d", robotID, (int)status);
-		_robotStatus[robotID] = status;
-		// when out of play, robot administrator does not communicate data
-		// when GOING in play, we need ALSO a valid lock, so we poke _localizationAlgorithm
-
-
-
-		if((status == robotStatusType::INPLAY) && (robotID == _ownRobotID) && !_isSimulated)
-		{
-			_localizationAlgorithm = robotLocalization();
-		}
-
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("<");
-}
-
-void robotAdministrator::performCalculation(const double timeNow)
+void robotAdministrator::performCalculation(rtime const timeNow)
 /*!
  * \brief Perform the worldmodel calculations
  */
 {
-    //TRACE("> t=%16.6f", timeNow);
-	try
-	{
-	    if (!_isSimulated)
-	    {
-		    _localizationAlgorithm.calculatePositionAndVelocity(timeNow);
+    std::ostringstream ss;
+    ss << "timeNow: " << double(timeNow);
+    TRACE_FUNCTION(ss.str().c_str());
+    try
+    {
+        determineInPlay();
+        if (!_isSimulated)
+        {
+            _localizationAlgorithm.calculatePositionAndVelocity(timeNow);
             _isLocationValid = _localizationAlgorithm.isValid();
-            sendDiagnostics();
-		    removeTimedoutRobots(timeNow);
-	    }
-	    else
-	    {
-            sendDiagnostics();
-	    }
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+            removeTimedoutRobots(timeNow);
+            calcBallPossession(timeNow);
+            // TODO redesign. time should not be passed around. 'local robot' and overruling is messy. Remove simulation bool. etc.
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("<");
 }
 
-robotClass_t robotAdministrator::getLocalRobotPosition()
+bool robotAdministrator::inplay()
+{
+    // overrule for coach: always inplay; we always want to see balls & obstacles in worldModel
+    if (_ownRobotID == 0)
+    {
+        return true;
+    }
+    return _inplay;
+}
+
+robotClass_t robotAdministrator::getLocalRobotPosition(double timestamp)
 /*!
  * \brief Fetch local robot position and velocity
  * This function can return 2 different robot positions depending whether
@@ -366,253 +257,205 @@ robotClass_t robotAdministrator::getLocalRobotPosition()
  * 2) It NOT overruled (normal use-case) then give back the calculated local position and velocity
  */
 {
-    //TRACE(">");
-	try
-	{
-		robotClass_t ownRobot;
+    TRACE_FUNCTION("");
+    try
+    {
+        robotClass_t ownRobot;
 
-		if(_robots.find(_ownRobotID) != _robots.end())
-		{
-			/*
-			 * Own robot ID present in mapping of overruled robots
-			 */
-			ownRobot = _robots.at(_ownRobotID);
-		}
-		else
-		{
-			/*
-			 * Get new robot position
-			 */
-			ownRobot = _localizationAlgorithm.getRobotPositionAndVelocity();
-		}
+        if(_robots.find(_ownRobotID) != _robots.end())
+        {
+            // Own robot ID present in mapping of overruled robots
+            ownRobot = _robots.at(_ownRobotID);
+        }
+        else
+        {
+            // Get new robot position
+            ownRobot = _localizationAlgorithm.getRobotPositionAndVelocity(timestamp);
+        }
 
-		return ownRobot;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("<");
+        return ownRobot;
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 std::vector<robotClass_t> robotAdministrator::getTeammembers()
 {
     //TRACE(">");
-	try
-	{
-		std::vector<robotClass_t> members;
+    try
+    {
+        std::vector<robotClass_t> members;
 
-		for(auto it = _robots.begin(); it !=_robots.end(); it++)
-		{
-			if(it->second.getRobotID() != _ownRobotID)
-			{
-				members.push_back(it->second);
-			}
-		}
+        for(auto it = _robots.begin(); it !=_robots.end(); it++)
+        {
+            if(it->second.getRobotID() != _ownRobotID)
+            {
+                members.push_back(it->second);
+            }
+        }
 
-		/*
-		 * Sort members on increasing robot ID
-		 */
-		std::sort(members.begin(), members.end(), robotClass_t::sortOnIncreasingRobotID);
+        // Sort members on increasing robot ID
+        std::sort(members.begin(), members.end(), robotClass_t::sortOnIncreasingRobotID);
 
-		return members;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+        return members;
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("<");
+}
+
+void robotAdministrator::determineInPlay()
+{
+    _inplay = (_robotStatus[_ownRobotID] == robotStatusType::INPLAY) && (_isLocationValid || _isSimulated);
+    // log state change, to show in visualizer
+    if (_inplay && !_wasInplay)
+    {
+        TRACE_INFO("software is INPLAY");
+    }
+    if (!_inplay && _wasInplay)
+    {
+        TRACE_INFO("software is OUTOFPLAY");
+    }
+    _wasInplay = _inplay;
 }
 
 std::vector<uint8_t> robotAdministrator::getActiveMembers()
 {
-    //TRACE("> _robotStatus.size()=%d", (int)_robotStatus.size());
-    std::string activeString;
-	std::vector<uint8_t> members;
-	try
-	{
+    std::vector<uint8_t> members;
+    try
+    {
 
-		for(auto it = _robotStatus.begin(); it != _robotStatus.end(); it++)
-		{
-			if(it->first == _ownRobotID)
-			{
-				if(it->second == robotStatusType::INPLAY)
-				{
-    				if (_isLocationValid || _isSimulated)
-    				{
-    					members.push_back(it->first);
-	    				activeString += boost::lexical_cast<std::string>((int)it->first) + " ";
-    				}
-				}
-			}
-			else if(it->second == robotStatusType::INPLAY)
-			{
-				members.push_back(it->first);
-				activeString += boost::lexical_cast<std::string>((int)it->first) + " ";
-			}
-		}
-
-		/*
-		 * Sort members
-		 */
-		std::sort(members.begin(), members.end());
-
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("< members.size()=%d active=[%s]", (int)members.size(), activeString.c_str());
-	return members;
-}
-
-ballPossessionClass_t robotAdministrator::getLocalBallPossession()
-{
-    //TRACE(">");
-	try
-	{
-		ballPossessionClass_t possession;
-
-		if(_ballPossessions.find(_ownRobotID) != _ballPossessions.end())
-		{
-			possession = _ballPossessions.at(_ownRobotID);
-		}
-
-		return possession;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("<");
-}
-
-ballPossessionClass_t robotAdministrator::getBallPossession()
-/*!
- * \brief Get ball possession
- * First look at own ball possession. If own robot has possession give prio
- * over other robots. This is done in code by the found boolean.
- */
-{
-    //TRACE(">");
-	try
-	{
-		ballPossessionClass_t possession = getLocalBallPossession();
-		bool found = possession.hasBallPossession();
-
-		for(auto it = _ballPossessions.begin(); ((it != _ballPossessions.end()) && !found); it++)
-		{
-			if(it->second.hasBallPossession())
-			{
-				possession = it->second;
-				found = true;
-			}
-		}
-
-		return possession;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("<");
-}
-
-void robotAdministrator::removeTimedoutRobots(const double timeNow)
-{
-    //TRACE(">");
-	try
-	{
-		double maxTimeToLive = administrationConfigurator::getInstance().getRobotTimeToLive();
-
-		for(auto i = _robots.begin(); i != _robots.end(); )
-		{
-			double time_diff = timeNow - i->second.getTimestamp();
-			if((time_diff > maxTimeToLive) && (i->first != _ownRobotID))
+        for(auto it = _robotStatus.begin(); it != _robotStatus.end(); it++)
+        {
+            if(it->first == _ownRobotID)
             {
-				// Remove ball possession as well using key instead of iterator
-				if(_ballPossessions.find(i->first) != _ballPossessions.end())
-				{
-					_ballPossessions.erase(i->first);
-				}
+                if(it->second == robotStatusType::INPLAY)
+                {
+                    if (_isLocationValid || _isSimulated)
+                    {
+                        members.push_back(it->first);
+                    }
+                }
+            }
+            else if(it->second == robotStatusType::INPLAY)
+            {
+                members.push_back(it->first);
+            }
+        }
 
-				// Remove active robot as well
-				if(_robotStatus.find(i->first) != _robotStatus.end())
-				{
-					_robotStatus.erase(i->first);
-				}
+        // Sort members
+        std::sort(members.begin(), members.end());
+
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+    return members;
+}
+
+void robotAdministrator::removeTimedoutRobots(rtime const timeNow)
+{
+    TRACE_FUNCTION("");
+    try
+    {
+        double maxTimeToLive = administrationConfigurator::getInstance().getRobotTimeToLive();
+
+        for(auto i = _robots.begin(); i != _robots.end(); )
+        {
+            double time_diff = double(timeNow) - double(i->second.getTimestamp());
+            if((time_diff > maxTimeToLive) && (i->first != _ownRobotID))
+            {
+                // Remove active robot as well
+                if(_robotStatus.find(i->first) != _robotStatus.end())
+                {
+                    _robotStatus.erase(i->first);
+                }
 
                 // Delete robot with iterator
-				i = _robots.erase(i);
+                i = _robots.erase(i);
             }
-			else
-			{
-				i++;
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("<");
+            else
+            {
+                i++;
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
-void robotAdministrator::sendDiagnostics()
+bool robotAdministrator::getBallPossession() const
 {
-    if (_diagSender != NULL)
+    return _ballPossession;
+}
+
+void robotAdministrator::calcBallPossession(double timestamp)
+{
+    _ballPossession = _ballPossessionVision && _ballPossessionBallHandlers;
+    // check for state change, for storing claimed position (dribble rule)
+    if (_ballPossession && !_prevBallPossession && _isLocationValid)
     {
-        // convert internal struct to ROS message
-        rosMsgs::t_diag_wm_loc msg;
-        if (_isSimulated)
-        {
-            msg.isLocationValid = true; // by definition valid loc
-            // get position from overruled administration
-            robotClass_t pos = getLocalRobotPosition();
-            msg.ownpos.x = pos.getX();
-            msg.ownpos.y = pos.getY();
-            msg.ownpos.phi = pos.getTheta();
-            msg.ownpos.vx = pos.getVX();
-            msg.ownpos.vy = pos.getVY();
-            msg.ownpos.vphi = pos.getVTheta();
-            // remainder: leave to ROS default values (typically zero)
-        }
-        else
-        {
-            // get data from algorithm
-            localizationDiagnostics_t diagData = _localizationAlgorithm.getDiagnostics();
-            // TODO consider making a facility for this -- currently error-prone to make&extend
-            msg.isLocationValid = diagData.isValid;
-            msg.numVisionCandidates = diagData.numVisionCandidates;
-            msg.numMotorDisplacementSamples = diagData.numMotorDisplacementSamples;
-            msg.confidence = diagData.confidence;
-            msg.visionNoiseXY = diagData.visionNoiseXY;
-            msg.visionNoisePhi = diagData.visionNoisePhi;
-            msg.ownpos.x = diagData.ownpos.x;
-            msg.ownpos.y = diagData.ownpos.y;
-            msg.ownpos.phi = diagData.ownpos.phi;
-            msg.ownpos.vx = diagData.ownpos.vx;
-            msg.ownpos.vy = diagData.ownpos.vy;
-            msg.ownpos.vphi = diagData.ownpos.vphi;
-            msg.bestVisionCandidate.x = diagData.bestVisionCandidate.x;
-            msg.bestVisionCandidate.y = diagData.bestVisionCandidate.y;
-            msg.bestVisionCandidate.phi = diagData.bestVisionCandidate.phi;
-            msg.bestVisionCandidate.confidence = diagData.bestVisionCandidate.confidence;
-        }
-        // update data, for low-frequent sender to pick up
-        _diagSender->set(msg);
+        robotClass_t ownRobot = getLocalRobotPosition(timestamp); // TODO this is messy
+        _ballClaimedX = ownRobot.getX();
+        _ballClaimedY = ownRobot.getY();
     }
+    if (_ballPossession != _prevBallPossession)
+    {
+        _prevBallPossession = _ballPossession;
+    }
+}
+
+void robotAdministrator::getBallClaimedPosition(float &x, float &y)
+{
+    x = _ballClaimedX;
+    y = _ballClaimedY;
+}
+
+void robotAdministrator::fillDiagnostics(diagWorldModel &diagnostics)
+{
+    TRACE_FUNCTION("");
+    // activity
+    diagnostics.shared.inplay = _inplay;
+    diagnostics.shared.teamActivity = "";
+    for (auto it = _robotStatus.begin(); it != _robotStatus.end(); it++)
+    {
+        if (it->second == robotStatusType::INPLAY)
+        {
+            diagnostics.shared.teamActivity += boost::lexical_cast<std::string>((int)(it->first)) + " ";
+        }
+    }
+    // localization
+    localizationDiagnostics_t locDiagStruct = _localizationAlgorithm.getDiagnostics();
+    diagnostics.shared.numVisionCandidates = locDiagStruct.numVisionCandidates;
+    diagnostics.shared.visionLocAge = locDiagStruct.visionLocAge;
+    // generate warning in case vision is running dry (e.g. when positioning for throwin, or robot is tilted, or something wrong with assy)
+    if (diagnostics.shared.inplay && diagnostics.shared.visionLocAge > 6.0) // TODO make reconfigurable
+    {
+        TRACE_WARNING_TIMEOUT(6.0, "vision lock lost -- driving blind");
+    }
+    diagnostics.shared.numMotorDisplacementSamples = locDiagStruct.numMotorDisplacementSamples;
+    diagnostics.shared.bestVisionCandidate = locDiagStruct.bestVisionCandidate;
+    diagnostics.shared.visionConfidence = locDiagStruct.confidence;
+    diagnostics.shared.visionNoiseXY = locDiagStruct.visionNoiseXY;
+    diagnostics.shared.visionNoisePhi = locDiagStruct.visionNoisePhi;
+    diagnostics.shared.locationValid = locDiagStruct.isValid;
+    // ball possession
+    diagnostics.shared.ballPossessionBallHandlers = _ballPossessionBallHandlers;
+    diagnostics.shared.ballPossessionVision = _ballPossessionVision;
 }
 

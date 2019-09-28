@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,25 +19,14 @@
 #ifndef FALCONSCOMMON_H_
 #define FALCONSCOMMON_H_
 
+#ifndef NOROS
 #include <ros/ros.h>
-#include <sys/time.h>
-
-// comment the next line in order to use WorldModel get_position instead of simulated position
-//#define USE_SIMULATOR_PATHPLANNING_WORKAROUND
-
-// uncomment the next line in order to use clipped speed/acceleration on robot
-#define PATH_PLANNING_LOWSPEED
-
-// uncomment the next line in order to disable angular pathplanning
-//#define PATH_PLANNING_XY_ONLY
+#endif
 
 // compile time flag used to make services persistent.
 // NEEDED FOR PERFORMANCE
 #define USE_SERVICE_PERSISTENCY true
 
-
-// wait for service but also trace start/end
-void wait_for_service_with_tracing(std::string servicename);
 
 // Main facilities for robot numbers
 bool isSimulatedEnvironment();
@@ -51,10 +40,6 @@ std::string getProcessId();
 
 // get output of process
 std::string systemStdout(std::string cmd, int bufferLimit = 512) ;
-
-// runtime tracing using TRACE() macro
-#include "tracer.hpp"
-// see cDiagnosticsEvents.hpp for TRACE_ERROR and TRACE_INFO wrappers
 
 // Vector2D and Position2D class and operations
 // A Position2D is a Vector2D with an orientation
@@ -86,6 +71,9 @@ std::string systemStdout(std::string cmd, int bufferLimit = 512) ;
 // Needed for pathplanning and teamplay
 #define ROBOT_RADIUS 75.0 / 100.0 / 2.0 // 75cm diameter = 37.5cm radius = 0.375
 
+#define MAX_ROBOTS 9
+#define COACH 0
+
 // transformations
 Position2D getPosition2D( const geometry::Pose2D& pose);
 Position2D getPosition2D( const Point3D& point3d);
@@ -109,7 +97,6 @@ double calc_angle(double dX, double dY);
 float calc_angle(float dX, float dY);
 
 double calc_distance(double x1, double y1, double x2, double y2);
-float calc_distance(float x1, float y1, float x2, float y2);
 double calc_distance(  Position2D p1, Position2D p2 );
 double calc_distance(  Point2D p1, Point2D p2);
 
@@ -120,7 +107,7 @@ bool isValueInRange( float a, float minA, float maxA );  //check if value falls 
 void calculate_line_equation(Vector2D v1, Vector2D v2, double &a, double &b, double &c);
 double calc_distance_point_line(Vector2D p, double a, double b, double c);
 
-double diff_seconds(timeval t1, timeval t2);
+bool intersect(Vector2D const &a1, Vector2D const &a2, Vector2D const &b1, Vector2D const &b2, Vector2D &result);
 
 /* Fetch correct ip-address
  * First search for wlan
@@ -128,11 +115,11 @@ double diff_seconds(timeval t1, timeval t2);
  */
 enum class connectionType
 {
-	INVALID,
-	LAN,
-	WAN,
-	LOOPBACK,
-	USB
+    INVALID,
+    LAN,
+    WAN,
+    LOOPBACK,
+    USB
 };
 
 connectionType GetPrimaryIp(char* buffer, size_t buflen);
@@ -141,8 +128,8 @@ connectionType GetPrimaryConnectionType();
 // value clipping
 template <typename T> void clip(T &v, T const & lo, T const & up)
 {
-   if (v < lo) v = lo;
-   if (v > up) v = up;
+    if (v < lo) v = lo;
+    if (v > up) v = up;
 }
 
 /* Double comparison */
@@ -155,7 +142,7 @@ bool floatIsEqual(float a, float b);
  *   in simulation mode it will take heartBeatSim.yaml if existing
  */
 void loadConfig(std::string key);
-std::string determineConfig(std::string key);
+std::string determineConfig(std::string key, std::string ext = ".yaml");
 std::string configFolder(); // typcially /home/robocup/falcons/code/config
 
 #endif /* FALCONSCOMMON_H_ */

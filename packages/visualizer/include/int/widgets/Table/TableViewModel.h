@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -41,13 +41,14 @@ public:
 
     void setData(std::string category, std::string key, int column, QVariant value);
     void add(std::string category, std::string key); // Add for display
+    void clearColumn(int column);
 
 private:
     int _nrValuesPerKey;
     QList<QStandardItem *> _tableData;
 
     bool displayValue(std::string category, std::string key); // Whether or not to display values for the given category/key pair.
-    std::vector<std::tuple<std::string /* category */, std::string /* key */ >> _toDisplay;
+    std::map<std::tuple<std::string /* category */, std::string /* key */ >, bool> _toDisplay;
 };
 
 #endif // TABLEVIEWMODEL_H

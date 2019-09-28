@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,6 +22,7 @@
 #include <boost/thread/thread.hpp>
 
 #include "FalconsCommon.h"
+#include "tracing.hpp"
 
 using namespace std;
 

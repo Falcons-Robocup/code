@@ -1,0 +1,37 @@
+{   
+   "field"   :
+   {
+      "_comment": "A",
+      "length":      22.0,
+      "_comment": "B",
+      "width":      14.0,
+      "_comment": "F",
+      "goalAreaOffset":   0.75,
+      "_comment": "E",
+      "penaltyAreaOffset":   2.25,
+      "_comment": "I",
+      "penaltySpotOffset":   3.0,
+      "_comment": "H/2",
+      "centerCircleRadius":   2.0,
+      "_comment": "touchLineBorder",
+      "safetyBoundaryOffset":   1.50,
+      "_comment": "lineThickness",
+      "lineThickness":   0.132,
+      "_comment": "goalDepth",
+      "goalDepth":      0.6,
+      "_comment": "goalWidth/2 - goalPostWidth",
+      "goalPostOffset":   1.2,
+      "goalPostWidth":   0.125,
+      "goalHeight":      1.0
+   },
+   "ball"   :
+   {
+      "radius":      0.15
+   },
+   "robot"   :
+   {
+      "radius":      0.25,
+      "radiusMargin":      0.05      
+   }      
+
+}

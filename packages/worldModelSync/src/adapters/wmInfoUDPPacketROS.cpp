@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,8 +28,8 @@
 #include <worldModel/set_member_location.h>
 #include "WorldModelNames.h"
 
-#include "cDiagnosticsEvents.hpp"
-#include "tracer.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 #include "FalconsCommon.h" // getRobotNumber
 #include <ros/ros.h>
 
@@ -97,7 +97,7 @@ static void checkPacketGap(packetStructureWorldModel const &wmStruct)
     lastTimeStamps[wmStruct.robotID] = wmStruct.robotPosition.timestamp;
 }
 
-void wmInfoUDPPacketROS::notifyNewUDPPacket(Facilities::Network::cByteArray array)
+void wmInfoUDPPacketROS::notifyNewUDPPacket(Facilities::cByteArray array)
 {
 	try
 	{

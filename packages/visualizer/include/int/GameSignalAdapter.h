@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,6 +18,7 @@
 #include "types/LogEvent.h"
 #include "types/ObjectId.h"
 #include "polygon2D.hpp"
+#include "rtdbStructs.hpp"
 
 enum BallPossessionType : uint8_t
 {
@@ -32,7 +33,9 @@ enum SignalMode
     WORLD,
     VISION,
     PATHPLANNING,
-    TEAMPLAY
+    TEAMPLAY,
+    GAUSSIAN_WORLD,
+    GAUSSIAN_MEASUREMENTS
 };
 
 enum DataType
@@ -42,8 +45,18 @@ enum DataType
     BALLPOSITION,
     BALLPOSSESSION,
     OBSTACLEPOSITION,
+    FORBIDDENAREA,
     SHOOTTARGET,
-    PROJECTSPEEDVECTOR
+    PROJECTSPEEDVECTOR,
+    PATHPLANNINGPROGRESS,
+    WORLDMODEL_LOCAL
+};
+
+enum CameraType
+{
+    OMNIVISION,
+    FRONTVISION,
+    MULTIVISION,
 };
 
 /*
@@ -58,17 +71,20 @@ class GameSignalAdapter : public QObject
 
 Q_SIGNALS:
     /* == Robot view  == */
-    void signalBallPositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel, float confidence); // Ball position according to one robot
+    void signalBallPositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel, float confidence, float age, CameraType camera); // Ball position according to one robot, also used for vision measurements
     void signalBallPossessionChanged(uint8_t senderRobotId, SignalMode mode, BallPossessionType type, uint8_t robotId); // Ball possession according to one robot
     void signalOwnTeamPositionChanged(uint8_t senderRobotId, SignalMode mode, uint8_t robotId, PositionVelocity& posvel); // Team member position according to one robot
+    void signalRobotStatusChanged(uint8_t senderRobotId, SignalMode mode, uint8_t robotId, int status); // indicator for robot status
     void signalObstaclePositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel); // Obstacle position according to one robot
     void signalForbiddenAreaChanged(ObjectId _t1, SignalMode _t2, polygon2D & _t3); // Forbidden area according to one robot
     void signalShootTargetChanged(uint8_t id, SignalMode mode, PositionVelocity& posvel, bool aiming);
     void signalProjectSpeedChanged(ObjectId id, SignalMode mode, linepoint2D& speedVector);
-
+    void signalClearRobot(uint8_t robotId);
+    void signalGaussianObstaclesUpdate(uint8_t senderRobotId, SignalMode mode, T_DIAG_WORLDMODEL_LOCAL& worldmodel_local);
     /*
     * Time since start of data log, used in renderer for hiding objects
     */
+    void signalClearAll();
     void signalElapsedTimeChanged(double logElapsedTime);
     
     /*
@@ -89,7 +105,6 @@ Q_SIGNALS:
     void signalValue(uint8_t senderRobotId, std::string category, std::string key, bool value);
     void signalValue(uint8_t senderRobotId, std::string category, std::string key, std::string value);
     void signalValue(uint8_t senderRobotId, std::string category, std::string key, std::vector<std::string> value);
-
     /*
     * Match analytics
     * logElapsedTime: The time elapsed during this logging (t=0 is the start of the logfile)
@@ -97,6 +112,12 @@ Q_SIGNALS:
     */
     void signalClockTick(double logElapsedTime, double actualTime);
     // TODO: signalMatchTick: The time elapsed during match (t=0 at refbox half start)
+
+    void signalRefBoxCommand(uint8_t senderRobotId, std::string command);
+    void signalRefBoxCommandTime(uint8_t senderRobotId, double commandTime);
+    void signalGoal(uint8_t senderRobotId, int goals);
+    void signalPhase(uint8_t senderRobotId, int phase);
+    void signalOutOfPlay(uint8_t senderRobotId, bool outofplay);
 };
 
 #endif // GAMESIGNALADAPTER_H

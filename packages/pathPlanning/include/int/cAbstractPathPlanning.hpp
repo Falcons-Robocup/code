@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,6 +25,9 @@
 #include <math.h>
 #include <boost/algorithm/string.hpp>
 #include <sstream>
+#include "tracing.hpp"
+
+#include "FalconsRtDB2.hpp" // for rtime
 
 #include "int/cPathPlanningMain.hpp"
 
@@ -90,7 +93,7 @@ class cAbstractPathPlanning
         /*! \brief The parent class */
         cPathPlanningMain* _main;
 
-        timeval _prevTimestamp;
+        rtime _prevTimestamp;
 
         /*! \brief The velocity of the previous interval. Often used by the different algorithms. */
         Velocity2D         _prev_vel;

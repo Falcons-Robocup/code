@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #ifndef ROBOTMEASUREMENTTYPE_HPP_
 #define ROBOTMEASUREMENTTYPE_HPP_
 
-#include "int/types/uniqueWorldModelIDtype.hpp"
+#include "uniqueObjectID.hpp"
 #include "int/types/coordinateType.hpp"
 #include "position2d.hpp"
 
@@ -36,13 +36,13 @@ class robotMeasurementClass_t
 		robotMeasurementClass_t();
 		~robotMeasurementClass_t();
 
-		void setID(const uniqueWorldModelID identifier);
+		void setID(const uniqueObjectID identifier);
 		void setCoordinateType(const coordinateType coordinates); // unused
 		void setTimestamp(const double timestamp);
 		void setConfidence(const float confidence);
 		void setPosition(const float x, const float y, const float theta);
 
-		uniqueWorldModelID getID() const;
+		uniqueObjectID getID() const;
 		coordinateType getCoordindateType() const;
 		double getTimestamp() const;
 		float getConfidence() const;
@@ -52,7 +52,7 @@ class robotMeasurementClass_t
         Position2D getPosition() const;
 
 	private:
-		uniqueWorldModelID _identifier;
+		uniqueObjectID _identifier;
 		coordinateType _coordinate;
 		double _timestamp;
 		float _confidence;

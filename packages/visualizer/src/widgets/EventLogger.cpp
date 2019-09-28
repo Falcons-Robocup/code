@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -15,6 +15,12 @@
  *  Created on: November 4, 2016
  *      Author: Diana Koenraadt
  */
+
+#include <qboxlayout.h>
+#include <qcheckbox.h>
+#include <qlabel.h>
+#include <qcombobox.h>
+#include <qpushbutton.h>
 
 // Internal:
 #include "int/widgets/EventLogger.h"

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -12,18 +12,21 @@
  /*
  * IoBoard.cpp
  *
- *  Created on: Apr 25, 2017
- *      Author: Edwin Schreuder
+ *    Created on: Apr 25, 2017
+ *            Author: Edwin Schreuder
  */
 
 #include <algorithm>
 #include <iostream>
 #include <exception>
 
+#include <cDiagnostics.hpp>
+#include <FalconsCommon.h>
+#include "tracing.hpp"
+
 #include "int/ioBoard/IoBoardCommunication.hpp"
 
 using std::array;
-using std::cerr;
 using std::copy;
 using std::endl;
 using std::exception;
@@ -34,126 +37,173 @@ const unsigned char sof = 0x5a;
 const size_t maxRetries = 2;
 
 IoBoardCommunication::IoBoardCommunication(string portName) :
-	serial(portName, B115200, 0.1, 0)
+                serial(portName, B115200, 0.1, 0)
 {
+    TRACE(">");
+    TRACE("<");
 }
 
 IoBoardCommunication::~IoBoardCommunication()
 {
+    TRACE(">");
+    TRACE("<");
 }
 
-void IoBoardCommunication::set(unsigned char command, Data data) {
-	do_transaction(command, data);
+void IoBoardCommunication::set(unsigned char command, Data data)
+{
+    TRACE(">");
+
+    do_transaction(command, data);
+
+    TRACE("<");
 }
 
 IoBoardCommunication::Data IoBoardCommunication::get(unsigned char command)
 {
-	return do_transaction(command, IoBoardCommunication::Data());
+    TRACE(">");
+
+    Data result;
+    result = do_transaction(command, IoBoardCommunication::Data());
+
+    TRACE("<");
+    return result;
 }
+
+#include <iostream>
 
 IoBoardCommunication::Data IoBoardCommunication::do_transaction(unsigned char command, Data data)
 {
-	bool transaction_complete = false;
-	Package package = {command, data};
+    TRACE(">");
 
-	for (size_t retries = 0; (retries < maxRetries) && !transaction_complete; retries++) {
-		try {
-			package = transceive_package(package);
-			transaction_complete = true;
-		}
-		catch (exception &e) {
-			cerr << "Package transaction failed, try again: " << e.what() << endl;
-		}
-	}
+    bool transaction_complete = false;
+    Package package = {command, data};
 
-	if (!transaction_complete) {
-		throw runtime_error("Could not transmit the package after " + to_string(maxRetries) + " retries.");
-	}
+    for (size_t retries = 0; (retries < maxRetries) && !transaction_complete; retries++)
+    {
+        try
+        {
+            package = transceive_package(package);
+            transaction_complete = true;
+        }
+        catch (exception &e)
+        {
+            TRACE("Package transaction failed, try again: %s", e.what());
+        }
+    }
 
-	return package.data;
+    if (!transaction_complete)
+    {
+        //TRACE_ERROR_TIMEOUT(4.0, "Cannot transmit packages to the IO board.");
+        throw runtime_error("Could not transmit the package after " + to_string(maxRetries) + " retries.");
+    }
+
+    TRACE("<");
+    return package.data;
 }
 
 IoBoardCommunication::Package IoBoardCommunication::transceive_package(Package send_package)
 {
-	transmit_package(send_package);
-	Package return_package = receive_package();
+    TRACE(">");
 
-	if (send_package.command != return_package.command) {
-		throw(runtime_error(
-				"The returned command (" + to_string(return_package.command) +
-				") does not contain the same error message as the requested command (" + to_string(send_package.command) +
-				"."));
-	}
+    transmit_package(send_package);
+    Package return_package = receive_package();
 
-	return return_package;
+    if (send_package.command != return_package.command)
+    {
+        throw(runtime_error(
+                "The returned command (" + to_string(return_package.command) +
+                ") does not contain the same error message as the requested command (" + to_string(send_package.command) +
+                "."));
+    }
+
+    TRACE("<");
+    return return_package;
 }
 
-void IoBoardCommunication::transmit_package(Package package) {
+void IoBoardCommunication::transmit_package(Package package)
+{
+    TRACE(">");
 
-	vector<unsigned char> buffer = vector<unsigned char>(Data().size() + 3);
-	buffer[0] = sof;
-	buffer[1] = package.command;
-	copy(package.data.begin(), package.data.end(), buffer.begin() + 2);
-	buffer.back() = calculate_checksum(buffer);
+    vector<unsigned char> buffer = vector<unsigned char>(Data().size() + 3);
+    buffer[0] = sof;
+    buffer[1] = package.command;
+    copy(package.data.begin(), package.data.end(), buffer.begin() + 2);
+    buffer.back() = calculate_checksum(buffer);
 
-	serial.writePort(buffer);
+    serial.writePort(buffer);
+
+    TRACE("<");
 }
 
-IoBoardCommunication::Package IoBoardCommunication::receive_package() {
-	bool packageFound = false;
-	vector<unsigned char> data;
+IoBoardCommunication::Package IoBoardCommunication::receive_package()
+{
+    TRACE(">");
 
-	while (!packageFound) {
-		vector<unsigned char> serialData = serial.readPort(Data().size() + 3 - data.size());
+    bool packageFound = false;
+    vector<unsigned char> data;
 
-		if (serialData.size() == 0) {
-			throw(runtime_error("Did not receive any character"));
-		}
+    while (!packageFound)
+    {
+        vector<unsigned char> serialData = serial.readPort(Data().size() + 3 - data.size());
 
-		data.insert(data.end(), serialData.begin(), serialData.end());
+        if (serialData.size() == 0)
+        {
+            throw(runtime_error("Did not receive any character"));
+        }
 
-		if (data.size() >= (Data().size() + 3)) {
+        data.insert(data.end(), serialData.begin(), serialData.end());
 
-			if (data[0] == sof) {
+        if (data.size() >= (Data().size() + 3))
+        {
+            if (data[0] == sof)
+            {
+                // Analyze if we have a correct package.
+                if (calculate_checksum(data) == 0x00)
+                {
+                    // If you add all values including the checksum byte, the inverted sum of all values should be 0x00.
+                    packageFound = true;
+                }
+            }
 
-				// Analyze if we have a correct package.
-				if (calculate_checksum(data) == 0x00) {
+            if (!packageFound)
+            {
+                // Either the first character of the data stream was not a SOF,
+                // or the first character is a SOF but the checksum doesn't match.
+                // In both cases, search for a new SOF.
+                auto sofIndex = find(data.begin() + 1, data.end(), sof);
 
-					// If you add all values including the checksum byte, the inverted sum of all values should be 0x00.
-					packageFound = true;
-				}
-			}
+                if (sofIndex != data.end())
+                {
+                    // Set data equal to the last part of the vector.
+                    data = vector<unsigned char>(sofIndex, data.end());
+                }
+                else
+                {
+                    data = vector<unsigned char>();
+                }
+            }
+        }
+    }
 
-			if (!packageFound) {
-				// Either the first character of the data stream was not a SOF,
-				// or the first character is a SOF but the checksum doesn't match.
-				// In both cases, search for a new SOF.
-				auto sofIndex = find(data.begin() + 1, data.end(), sof);
-				if (sofIndex != data.end()) {
-					// Set data equal to the last part of the vector.
-					data = vector<unsigned char>(sofIndex, data.end());
-				}
-				else {
-					data = vector<unsigned char>();
-				}
-			}
-		}
-	}
+    Package package;
+    package.command = data[1];
+    copy(data.begin() + 2, data.end() - 1, package.data.begin());
 
-	Package package;
-	package.command = data[1];
-	copy(data.begin() + 2, data.end() - 1, package.data.begin());
-
-	return package;
+    TRACE("<");
+    return package;
 }
 
-unsigned char IoBoardCommunication::calculate_checksum(vector<unsigned char> buffer) {
-	unsigned char checksum = 0x00;
+unsigned char IoBoardCommunication::calculate_checksum(vector<unsigned char> buffer)
+{
+    TRACE(">");
 
-	for (auto data = buffer.begin() + 1; data != buffer.end(); data++)
-	{
-		checksum += *data;
-	}
+    unsigned char checksum = 0x00;
 
-	return ~checksum;
+    for (auto data = buffer.begin() + 1; data != buffer.end(); data++)
+    {
+        checksum += *data;
+    }
+
+    TRACE("<");
+    return ~checksum;
 }

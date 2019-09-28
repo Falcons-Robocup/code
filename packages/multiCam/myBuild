@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# build and run the multiCam with ros
+
+set -e
+
+# when failing type
+# rosmake --pre-clean
+
+# rosmake -s multiCam
+rosmake multiCam
+./myRun

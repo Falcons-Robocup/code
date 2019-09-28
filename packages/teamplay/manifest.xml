@@ -11,16 +11,11 @@
   <depend package="rospy"/>
   <depend package="roscpp"/>
   <depend package="environment"/>
-  <depend package="networkUDP"/>
   <depend package="worldModel"/>
-  <depend package="networkUDP"/>
   <depend package="common"/>
-  <depend package="shootPlanning"/>
-  <depend package="pathPlanning"/>
-  <depend package="peripheralsInterface"/>
+  <depend package="sharedTypes"/>
+  <depend package="motionPlanning"/>
   <depend package="diagnostics"/>
-
-  <depend package="gmock"/>
 </package>
 
 

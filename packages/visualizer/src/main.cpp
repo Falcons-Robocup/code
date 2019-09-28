@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -15,8 +15,11 @@
 #include <string>
 #include <ros/ros.h>
 
+#include "tracing.hpp"
+
 // Internal:
 #include "int/MainWindow.h"
+
 
 using namespace std;
 
@@ -39,16 +42,32 @@ int main(int argc, char *argv[])
     string nodename = "visualizer";
     ros::init(argc, argv, nodename);
 
+    INIT_TRACE;
+
     application = new QApplication(argc, argv);
-    
     glutInit(&argc,argv);
 
+    // Playback control
+    bool fileMode = (argc > 1);
+    std::string logFileName = "";
+    if (fileMode)
+    {
+        logFileName = argv[1];
+    }
+    printf("initializing PlaybackControl\n"); fflush(stdout);
+    TRACE("initializing PlaybackControl");
+    PlaybackControl *pbControl = new PlaybackControl(fileMode, logFileName);
+
     // Setting up the visualizer main window
-    Visualizer::MainWindow * visualizerWindow = new Visualizer::MainWindow();
+    printf("initializing Visualizer::MainWindow\n"); fflush(stdout);
+    TRACE("initializing Visualizer::MainWindow");
+    Visualizer::MainWindow * visualizerWindow = new Visualizer::MainWindow(pbControl);
     visualizerWindow->show();
 
-    // Setting up QPlastiqueStyle
-    QApplication::setStyle(new QPlastiqueStyle);
+    // Setting up fusion
+    printf("setStyle fusion\n"); fflush(stdout);
+    TRACE("setStyle fusion");
+    application->setStyle("fusion");
 
     // Override default ROS SIGINT handler
     // Must be done after first NodeHandle is created.
@@ -59,6 +78,7 @@ int main(int argc, char *argv[])
     }
 
     // Starting gui loop
+    TRACE("start gui loop");
     int ret = application->exec();
 
     // Shutting down

@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Copyright 2018-2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to kill all vision related scripts and processes on the raspi board
+# except for the runRaspi script
+
+set -e
+
+# echo "KILLMOST  : `date +%Y-%m-%d_%H:%M:%S`"
+
+ps aux | grep -ie runSystem | awk '{print $2}' | xargs kill -9  2>/dev/null || true
+ps aux | grep -ie runSystem | awk '{print $2}' | xargs kill -15 2>/dev/null || true
+
+ps aux | grep -ie runAnalyze | awk '{print $2}' | xargs kill -9  2>/dev/null || true
+ps aux | grep -ie runAnalyze | awk '{print $2}' | xargs kill -15 2>/dev/null || true
+
+ps aux | grep -ie runGrab | awk '{print $2}' | xargs kill -9  2>/dev/null || true
+ps aux | grep -ie runGrab | awk '{print $2}' | xargs kill -15 2>/dev/null || true
+
+
+sudo killall raspiAnalyze 2>/dev/null || true
+sudo killall -9 raspiAnalyze 2>/dev/null || true
+sudo killall -15 raspiAnalyze 2>/dev/null || true
+
+killall raspiSystem 2>/dev/null || true
+killall -9 raspiSystem 2>/dev/null || true
+killall -15 raspiSystem 2>/dev/null || true
+
+
+# raspiSystem process should be killed before raspiGrab process because of i2c dependency
+# raspiAnalyze process should be killed before raspiGrab process because of /dev/shm/raspiGrab
+# The killall command not alwasy kills the raspiGrab process, use the normal kill command instead
+# sudo killall raspiGrab 2>/dev/null || true
+# sudo killall -9 raspiGrab 2>/dev/null || true
+# sudo killall -15 raspiGrab 2>/dev/null || true
+ps aux | grep -ie raspiGrab | awk '{print $2}'  | sudo xargs kill -9 2>/dev/null || true
+ps aux | grep -ie raspiGrab | awk '{print $2}'  | sudo xargs kill -15 2>/dev/null || true
+
+# echo "KILLMOST  : done"
+
+exit 0 # success

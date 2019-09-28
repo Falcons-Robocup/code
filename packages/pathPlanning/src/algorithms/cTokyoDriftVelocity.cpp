@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -117,6 +117,7 @@ void cTokyoDriftVelocity::calculateTokyoDriftSubtarget(const Position2D& R, cons
 /* Overwrite functionality of cAbstractPathPlanning update function */
 void cTokyoDriftVelocity::execute()
 {
+    TRACE_FUNCTION(_ppData.pos.tostr());
     TRACE("> target: %s", _ppData.pos.tostr());
     // Get current position from cPathPlanningData
     Position2D currPos;

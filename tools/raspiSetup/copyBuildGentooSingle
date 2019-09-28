@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Copyright 2018 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to copy, build and run the raspi grabber on the raspi board
+
+setupPath=../../tools/raspiSetup
+controlPath=../../packages/raspiControl
+grabPath=../../peripherals/raspiGrab
+analyzePath=../../peripherals/raspiAnalyze
+systemPath=../../peripherals/raspiSystem
+
+sshOptions="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no"
+scpCommand="sshpass -p raspberry scp $sshOptions"
+sshCommand="sshpass -p raspberry ssh $sshOptions"
+
+host="10.0.0.195"
+
+pending=true
+while $pending; do
+   ping -W 1 -c 1 $host >/dev/null 2>/dev/null
+   if [ "$?" != "0" ]; then
+      echo "ERROR     : raspi camera $host not available, keep trying"
+      sleep 5
+   else
+      pending=false
+   fi
+done
+
+echo "INFO      : $host available, update start update"
+
+echo "INFO      : $host kill system process, otherwise old md5sum will be resent"
+$sshCommand demouser@$host $sshOptions -t "killall runSystem"
+$sshCommand demouser@$host $sshOptions -t "killall raspiSystem"
+
+echo "INFO      : $host kill analyze process, otherwise ssh/scp does not work very well"
+$sshCommand demouser@$host $sshOptions -t "killall runAnalyze"
+$sshCommand demouser@$host $sshOptions -t "sudo killall raspiAnalyze"
+
+echo "INFO      : $host make directories for script and sources"
+$sshCommand demouser@$host $sshOptions -t "mkdir -p raspiGrab raspiAnalyze raspiSystem tmp"
+
+# echo "INFO      : $host remove legacy files"
+# $sshCommand demouser@$host -t "cd /home/pi/userland/host_applications/linux/apps/raspicam; rm -f raspiDefaults.hpp; rm -f RaspiVidYUV.c"
+
+echo "INFO      : $host copy grabber"
+$scpCommand $grabPath/armBuild/Makefile $grabPath/src/RaspiVidYUVFalcons.c $controlPath/include/raspiDefaults.hpp demouser@$host:raspiGrab
+
+echo "INFO      : $host copy analyzer"
+$scpCommand $analyzePath/aarch64/Makefile $analyzePath/src/raspiAnalyze.c $controlPath/include/raspiDefaults.hpp demouser@$host:raspiAnalyze
+
+echo "INFO      : $host copy system"
+$scpCommand $systemPath/aarch64/Makefile $systemPath/src/raspiSystem.c $controlPath/include/raspiDefaults.hpp demouser@$host:raspiSystem
+
+echo "INFO      : $host copy not used config.txt (for md5sum calculation)"
+$scpCommand $setupPath/config.txt demouser@$host:tmp
+
+echo "INFO      : $host copy not used rc.local (for md5sum calculation)"
+$scpCommand $setupPath/rc.local demouser@$host:tmp
+
+echo "INFO      : $host copy sshkey"
+$scpCommand ../../config/authorized_keys demouser@$host:.ssh
+
+echo "INFO      : $host copy scripts"
+# runRaspi script is likely in use on raspi, move to other name instead of overwriting 
+$sshCommand demouser@$host -t "mv runRaspi tmp/runRaspi_`date +%Y-%m-%d_%H:%M:%S`"
+$scpCommand $setupPath/killRaspi $setupPath/killMostRaspi $setupPath/runRaspi $setupPath/runGrab $setupPath/runAnalyze $setupPath/runSystem  $setupPath/md5sumAllFiles demouser@$host:
+
+echo "INFO      : $host kill most processes, this triggers the build process and restart the grabber, analyzer and system"
+# stopping the system on the raspi board triggers the rebuild and restart
+$sshCommand demouser@$host -t "./killMostRaspi || true"
+
+echo "INFO      : $host all done"
+
+exit 1

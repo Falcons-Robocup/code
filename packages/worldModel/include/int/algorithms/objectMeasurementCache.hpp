@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,23 +20,23 @@
 #ifndef OBJECTMEASUREMENTCACHE_HPP_
 #define OBJECTMEASUREMENTCACHE_HPP_
 
-#include "int/types/object/objectMeasurementType.hpp"
+#include "objectMeasurement.hpp"
 #include "FalconsCommon.h"
 #include "opencv2/core/core.hpp"
 
 class objectMeasurementCache
 {
     public:
-        objectMeasurementCache(objectMeasurementType const &objectMeasurement);
+        objectMeasurementCache(objectMeasurement const &objectMeasurement);
         ~objectMeasurementCache();
 
-        objectMeasurementType getObjectMeasurement() const;
+        objectMeasurement getObjectMeasurement() const;
         Vector3D getPositionFcs() const;
         cv::Mat getCvMatrix() const;
 
     private:
         // data members
-        objectMeasurementType _objectMeasurement;
+        objectMeasurement _objectMeasurement;
         Vector3D _positionFcs;
         cv::Mat _matrix;
         

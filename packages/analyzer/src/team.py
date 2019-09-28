@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -94,19 +94,12 @@ class AnalyzeTeam():
         if "END_GAME" == msg.refboxCmd:
             self.matchState.state = "afterMatch"
                 
-    def getRobots(self, state=t_ana_online.ONLINE, exact=False):
+    def getRobots(self, state=t_robot_state.ONLINE, exact=False):
         if exact:
             return [n for n in range(1,7) if self.robots[n].state == state]
         return [n for n in range(1,7) if self.robots[n].state >= state]
         
     def checkRobotState(self):
-        # check if robots went offline 
-        t = time.time()
-        for robotnum in range(1,7):
-            if t - self.robots[robotnum].lastAlive > ONLINE_TIMEOUT:
-                self.robots[robotnum].state = t_ana_online.OFFLINE
-            if t - self.robots[robotnum].lastWm > ONLINE_TIMEOUT:
-                self.robots[robotnum].state = t_ana_online.ONLINE
         # fill message and publish
         msg = t_ana_online()
         msg.state = [0] # dummy at pos 0
@@ -152,7 +145,7 @@ class AnalyzeTeam():
             trace('elapsed = %6.2f' % (elapsed))
             if elapsed > REFBOX_CHECK_TIME:
                 ok = True
-                for robotnum in self.getRobots(t_ana_online.INGAME):
+                for robotnum in self.getRobots(t_robot_state.INGAME):
                     if self.robots[robotnum].lastRefboxCmd != self.lastRefboxCmd[0]:
                         ok = False
                         eventString = 'refbox inconsistency (%s)' % (self.robots[robotnum].lastRefboxCmd)
@@ -166,7 +159,7 @@ class AnalyzeTeam():
         #trace('checkRoleAssignment')
         roles = {}
         # check if every role in array is unique
-        onlineRobots = self.getRobots(t_ana_online.INGAME) 
+        onlineRobots = self.getRobots(t_robot_state.INGAME) 
         for robotnumA in onlineRobots:
             robotA = self.robots[robotnumA] 
             if robotA.role != None and robotA.role != "":
@@ -263,8 +256,14 @@ class AnalyzeTeam():
         # initialize
         wmAverage = t_worldmodel_team()
         # online, fixed-length array, index is robotnum (so 0 unused)
-        activeRobots = self.getRobots(t_ana_online.ACTIVE)
-        inplayRobots = self.getRobots(t_ana_online.INPLAY)
+        activeRobots = self.getRobots(t_robot_state.ACTIVE)
+        inplayRobots = self.getRobots(t_robot_state.INPLAY)
+        # require worldModel data to be present
+        for robotnum in range(7):
+            if (robotnum in activeRobots) and (self.robots[robotnum].posvel == None):
+                activeRobots.remove(robotnum)
+            if (robotnum in inplayRobots) and (self.robots[robotnum].wmTop == None):
+                inplayRobots.remove(robotnum)
         trace("inplayRobots=%s", str(inplayRobots))
         wmAverage.active = [r in inplayRobots for r in range(7)] # use INPLAY for analyzer consistency checks etc
         # simply copy robot position and speed, as reported by themselves, no need to check consistencies
@@ -296,27 +295,34 @@ class AnalyzeTeam():
                     m = possessionCount[e]
                     wmAverage.ballPossession = e
             # find irregularities
-            ballPossessionStringTeam = self.ballPossessionString(wmAverage.ballPossession)
-            for robotnum in inplayRobots:
-                ballPossessionStringRobot = self.ballPossessionString(self.robots[robotnum].wmTop.ballPossession)
-                glitch = ("ball possession inconsistency (robot:%s, team:%s)" % (ballPossessionStringRobot, ballPossessionStringTeam), t_event.TYPE_WARNING, robotnum)
-                if ballPossessionStringRobot != ballPossessionStringTeam:
-                    self.handleGlitch(GLITCH_ALLOWED_TIME, glitch)
-                else:
-                    self.resetGlitch(glitch)
+            if 0:
+                ballPossessionStringTeam = self.ballPossessionString(wmAverage.ballPossession)
+                for robotnum in inplayRobots:
+                    ballPossessionStringRobot = self.ballPossessionString(self.robots[robotnum].wmTop.ballPossession)
+                    if ballPossessionStringRobot != 'opponent': # opponent versus field is very sensitive
+                        glitch = ("ball possession inconsistency (robot:%s, team:%s)" % (ballPossessionStringRobot, ballPossessionStringTeam), t_event.TYPE_WARNING, robotnum)
+                        if ballPossessionStringRobot != ballPossessionStringTeam:
+                            self.handleGlitch(GLITCH_ALLOWED_TIME, glitch)
+                        else:
+                            self.resetGlitch(glitch)
         # number of balls
-        if 0 * len(inplayRobots): # JFEI disabled due to tuning differences (e.g. r1 is tuned much more aggressively, lower timeout)
+        if len(inplayRobots) * 0: # spam
             ballCount = [len(self.robots[robotnum].balls) for robotnum in inplayRobots]
             numBallsTeam = max(ballCount) # not necessarily max-occurrence...
             for robotnum in inplayRobots:
                 numBallsRobot = len(self.robots[robotnum].balls)
-                glitch = ("ball count inconsistency (robot:%d, team:%d)" % (numBallsRobot, numBallsTeam), t_event.TYPE_WARNING, robotnum)
-                if numBallsRobot != numBallsTeam:
-                    self.handleGlitch(GLITCH_ALLOWED_TIME, glitch)
-                else:
-                    self.resetGlitch(glitch)
+                if robotnum != 1: # r1 is tuned much more aggressively, lower timeout
+                    glitch = ("ball count inconsistency (robot:%d, team:%d)" % (numBallsRobot, numBallsTeam), t_event.TYPE_WARNING, robotnum)
+                    if numBallsRobot != numBallsTeam:
+                        self.handleGlitch(GLITCH_ALLOWED_TIME, glitch)
+                    else:
+                        self.resetGlitch(glitch)
         # ball(s) position&speed
         if len(inplayRobots):
+            # HACK: ignore balls from r1, which uses frontVision - this can cause confusion in visualizer if vision/ballTracking not properly calibrated
+            robotsToUse = inplayRobots
+            if len(robotsToUse) > 1 and (1 in robotsToUse):
+                robotsToUse.remove(1)
             allBalls = sum([self.robots[robotnum].balls for robotnum in inplayRobots], [])
             wmAverage.balls = self.averageObjects(allBalls, len(inplayRobots))
         # TODO also send inconsistencies to be drawn as red or something?

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,12 +16,11 @@
  *      Author: Erik Kouters
  */
 
+#include "FalconsCommon.h"
 #include "int/actions/cActionGetBall.hpp"
 #include "int/stores/ballStore.hpp"
-#include "int/cTeamplayCommon.hpp"
-#include "int/cWorldModelInterface.hpp"
 #include "int/utilities/trace.hpp"
-#include "int/stores/ownRobotStore.hpp"
+#include "int/stores/robotStore.hpp"
 
 using namespace teamplay;
 
@@ -31,7 +30,7 @@ cActionGetBall::cActionGetBall()
         ("motionProfile", std::make_pair(std::vector<std::string>{defaultMotionProfiles}, true))
         ;
 
-    intention.actionType = actionEnum::GET_BALL;
+    _intention.action = actionTypeEnum::MOVE;
 }
 
 cActionGetBall::~cActionGetBall()
@@ -50,9 +49,13 @@ behTreeReturnEnum cActionGetBall::execute(const std::map<std::string, std::strin
 {
     try
     {
-        Position2D myPos;
-        cWorldModelInterface::getInstance().getOwnLocation(myPos);
-        ball ball = ballStore::getBall();
+        // ensure that we move according to the rules
+        if (!isCurrentPosValid())
+        {
+            // Move towards the center, while maintaining angle
+            moveTo(0.0, 0.0);
+            return behTreeReturnEnum::RUNNING;
+        }
 
         // parameter "motionProfile" defines with which profile to move with (e.g., normal play or more careful during a setpiece)
         std::string motionProfileStr("motionProfile");
@@ -63,57 +66,14 @@ behTreeReturnEnum cActionGetBall::execute(const std::map<std::string, std::strin
             motionProfileValue = paramValPair->second;
         }
 
-        if (ball.isLocationKnown())
-        {
-            Point3D ballPosition = ball.getPosition();
-            double angle = angle_between_two_points_0_2pi(myPos.x, myPos.y, ballPosition.x, ballPosition.y);
-            Position2D targetPos = Position2D(ballPosition.x, ballPosition.y, angle);
+        sendIntention();
 
-            ballPossession_struct_t ballPossession;
-            cWorldModelInterface::getInstance().getBallPossession(ballPossession);
-
-            auto own_robot_id = teamplay::ownRobotStore::getOwnRobot().getNumber();
-            if ((ballPossession.possessionType == ballPossessionEnum::TEAMMEMBER) && (ballPossession.robotID == own_robot_id))
-            {
-                // Got ball. Do nothing and return PASSED
-                TRACE("cActionGetBall PASSED");
-                return behTreeReturnEnum::PASSED;
-            }
-            else
-            {
-            	intention.x = targetPos.x;
-            	intention.y = targetPos.y;
-            	sendIntention();
-
-                // ensure that we move according to the rules
-                if (!isCurrentPosValid())
-                {
-                    // Move towards the center, while maintaining angle and motion profile
-                    moveTo(0.0, 0.0, targetPos.phi, motionProfileValue);
-                    return behTreeReturnEnum::RUNNING;
-                }
-
-                if (!isTargetPosInsideSafetyBoundaries(targetPos))
-                {
-                    return behTreeReturnEnum::FAILED;
-                }
-
-                // if ball is outside field, stop chasing the ball
-                if (!ball.isInsideField())
-                {
-                	return behTreeReturnEnum::FAILED;
-                }
-
-                // Do not have ball. moveTo ball and return RUNNING
-                moveTo(targetPos.x, targetPos.y, targetPos.phi, motionProfileValue);
-                return behTreeReturnEnum::RUNNING;
-            }
-        }
+        return getBall(motionProfileValue);
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+        throw std::runtime_error(std::string("cActionGetBall::execute Linked to: ") + e.what());
     }
 
     return behTreeReturnEnum::FAILED;

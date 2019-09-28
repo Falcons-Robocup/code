@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -42,17 +42,16 @@ BallhandlerBoard::BallhandlerBoard(BallhandlerBoardType type, DeviceManager &dev
 	ballhandlerSettings = BallhandlerBoardSettings();
 	ballhandlerControlMode = BALLHANDLER_CONTROL_MODE_ON;
 
-	angleCalibrated = false;
+	calibrated = false;
 }
 
-void BallhandlerBoard::setSetpoint(float angle, float setpoint) {
+void BallhandlerBoard::setSetpoint(int angle, int setpoint) {
 	if (configured) {
 		// Set angle setpoint.
-		changeAngleSetpoint(ballhandlerData.angleZero + (((ballhandlerSettings.maxAngle - ballhandlerData.angleZero) / 100) * angle));
+		changeAngleSetpoint(angle);
 
-		//TODO: Remove ugly feedforward factor.)
 		// Set feedforward data
-		changePrimarySetpoint(ballhandlerData.tachoZero + (setpoint * ballhandlerSettings.feedForwardFactor));
+		changePrimarySetpoint(ballhandlerData.tachoZero + setpoint);
 	}
 }
 
@@ -62,12 +61,17 @@ void BallhandlerBoard::setSettings(BallhandlerBoardSettings settings) {
 	configure();
 }
 
+BallhandlerBoardControlMode BallhandlerBoard::getControlMode()
+{
+    return ballhandlerControlMode;
+}
+
 void BallhandlerBoard::setControlMode(BallhandlerBoardControlMode controlMode) {
-
 	if (controlMode != ballhandlerControlMode) {
-		ballhandlerControlMode = controlMode;
-
 		if (configured) {
+		    // Update own administration
+		    ballhandlerControlMode = controlMode;
+		    
 			// Prepare for configuration
 			forceConfiguration();
 
@@ -99,7 +103,7 @@ void BallhandlerBoard::configure() {
 
 	requestCommand(CMD_GET_ANGLE_TACHO_ZERO);
 	expectedResponses.push_back(RESP_ANGLE_TACHO_ZERO);
-	angleCalibrated = false;
+	calibrated = false;
 
 	changeMode(MODE_PID_ANGLE);
 	requestCommand(CMD_GET_MODE);
@@ -134,16 +138,15 @@ void BallhandlerBoard::configure() {
 bool BallhandlerBoard::isConfigurationDone() {
 
 	// TODO: Ballhandlerboard is configured when angle zero is calibrated.
-	return angleCalibrated;
+	return calibrated;
 }
 
 void BallhandlerBoard::handleAngleTachoZeroResponse(ReceivePackage &package) {
 	cout << "INFO    : [" << boardName << "] angle zero " << package.getData<uint16_t>(0) <<" tacho zero "<< package.getData<uint16_t>(1) << endl;
 
-	ballhandlerData.angleZero = package.getData<uint16_t>(0);
 	ballhandlerData.tachoZero = package.getData<uint16_t>(1);
 
-	calibrateAngle();
+	finishCalibration();
 }
 
 void BallhandlerBoard::handleDefaultResponse(ReceivePackage &package) {
@@ -152,15 +155,15 @@ void BallhandlerBoard::handleDefaultResponse(ReceivePackage &package) {
 	ballhandlerData.angle = package.getData<uint16_t>(19);
 }
 
-void BallhandlerBoard::calibrateAngle() {
+void BallhandlerBoard::finishCalibration() {
 	// TODO: This calibration routine needs a better implementation.
 
-	if (ballhandlerData.angleZero != 0)
+	if (ballhandlerData.tachoZero != 0)
 	{
-		angleCalibrated = true;
+		calibrated = true;
 		updateControlMode();
 	} else {
-		angleCalibrated = false;
+		calibrated = false;
 		requestCommand(CMD_GET_ANGLE_TACHO_ZERO);
 		expectedResponses.push_back(RESP_ANGLE_TACHO_ZERO);
 	}

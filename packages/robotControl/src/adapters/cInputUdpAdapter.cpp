@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,6 +19,7 @@
 #include "int/adapters/cInputUdpAdapter.hpp"
 
 #include "FalconsCommon.h"
+#include "tracing.hpp"
 
 using namespace std;
 
@@ -43,7 +44,7 @@ cInputUdpAdapter::~cInputUdpAdapter()
 
 
 // implement the abstract notification callback (defined in cAbstractObserverByteArray)
-void cInputUdpAdapter::notifyNewPacket(Facilities::Network::cByteArray &data)
+void cInputUdpAdapter::notifyNewPacket(Facilities::cByteArray &data)
 {
     // convert to string
     std::vector<uint8_t> vdata;

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -11,6 +11,7 @@
  ***/ 
  #include <vector>
 #include <string>
+#include <math.h>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 
@@ -23,8 +24,7 @@
 #include "position2d.hpp"
 #include "linepoint2D.hpp"
 #include "polygon2D.hpp"
-#include "tracer.hpp"
-#include "timeConvert.hpp"
+#include "tracing.hpp"
 
 using namespace falconsRosTopicsInterface;
 
@@ -41,6 +41,7 @@ RosGameSignalAdapter::RosGameSignalAdapter()
     subscribe<rosMsgs::t_ana_online>(analytics_online, bufferSize, &RosGameSignalAdapter::teamAnalyticsOnlineCallback);
     subscribe<rosMsgs::t_event>(analytics_event, bufferSize, &RosGameSignalAdapter::teamAnalyticsEventCallback);
     subscribe<rosMsgs::t_worldmodel_team>(team_worldmodel, bufferSize, &RosGameSignalAdapter::teamWorldModelCallback);
+    subscribe<rosMsgs::t_worldmodel>(team_worldmodel_old, bufferSize, &RosGameSignalAdapter::teamWorldModelOldCallback);
 
     // Subscribe to topics per robot
     boost::format format_worldmodel(robot_worldmodel);
@@ -59,8 +60,6 @@ RosGameSignalAdapter::RosGameSignalAdapter()
     boost::format format_error(robot_error);
     boost::format format_info(robot_info);
     boost::format format_halmw(robot_halmw);
-    boost::format format_compass(robot_compass);
-    boost::format format_active(robot_active);
     boost::format format_frontvision(robot_frontvision);
     boost::format format_refbox(robot_refbox);
     boost::format format_ana_comm(robot_ana_comm);
@@ -137,15 +136,7 @@ RosGameSignalAdapter::RosGameSignalAdapter()
         // Subscribe halmw callback per robot
         std::string message_halmw = boost::str(format_halmw % id);
         subscribe<rosMsgs::t_diag_halmw>(id, message_halmw, bufferSize, &RosGameSignalAdapter::robotHalMWCallback);
-
-        // Subscribe compass callback per robot
-        std::string message_compass = boost::str(format_compass % id);
-        subscribe<rosMsgs::t_diag_compass>(id, message_compass, bufferSize, &RosGameSignalAdapter::robotCompassCallback);
-
-        // Subscribe active callback per robot
-        std::string message_active = boost::str(format_active % id);
-        subscribe<rosMsgs::t_diag_active>(id, message_active, bufferSize, &RosGameSignalAdapter::robotActiveCallback);
-
+        
         // Subscribe frontvision callback per robot
         std::string message_frontvision = boost::str(format_frontvision % id);
         subscribe<rosMsgs::t_diag_frontvision>(id, message_frontvision, bufferSize, &RosGameSignalAdapter::robotFrontVisionCallback);
@@ -191,6 +182,16 @@ void RosGameSignalAdapter::spinOnce()
     ros::spinOnce();
 }
 
+double RosGameSignalAdapter::getCurrentTimestamp()
+{
+    return _currentTimestamp;
+}
+
+void RosGameSignalAdapter::setCurrentTimestamp(double t)
+{
+    _currentTimestamp = t;
+}
+
 LogEvent RosGameSignalAdapter::convertRosEvent(const rosMsgs::t_event::ConstPtr& rosEvent)
 {
     LogEvent result(rosEvent->eventString);
@@ -209,6 +210,45 @@ LogEvent RosGameSignalAdapter::convertRosEvent(const rosMsgs::t_event::ConstPtr&
 * ======================================== 
 */
 
+void RosGameSignalAdapter::teamWorldModelOldCallback(const rosMsgs::t_worldmodel::ConstPtr& msg)
+{
+    // legacy wmV1 (2016_Leipzig data and older) 
+    uint8_t senderRobotId = 0;
+    
+    // Ball position
+    if (msg->ballpos.size())
+    {
+        // for now simply draw all
+        for (size_t i = 0; i < msg->ballpos.size(); ++i)
+        {
+            rosMsgs::t_ball ball = msg->ballpos[i];
+            PositionVelocity posvel(ball.x, ball.y, ball.z, ball.vx, ball.vy, ball.vz);
+            emit signalBallPositionChanged(ObjectId(senderRobotId, i), WORLD, posvel, ball.confidence, 0, OMNIVISION);
+        }
+    }
+    
+    // Ball possession
+    emit signalBallPossessionChanged(senderRobotId, WORLD, (BallPossessionType)msg->ballPossession.type, msg->ballPossession.robotID);
+
+    // Iterate over enemies and signal position changes
+    for (size_t i = 0; i < msg->enemies.size(); ++i)
+    {
+        rosMsgs::t_object obstacle = msg->enemies[i];
+        PositionVelocity posvel(obstacle.x, obstacle.y, 0, 0, obstacle.vx, obstacle.vy, 0, 0);
+        emit signalObstaclePositionChanged(ObjectId(senderRobotId, obstacle.id), WORLD, posvel);
+    }
+
+    // Iterate over friends and signal position changes
+    for (size_t i = 0; i < msg->friends.size(); ++i)
+    {
+        rosMsgs::t_object robot = msg->friends[i];
+        PositionVelocity posvel(robot.x, robot.y, 0, robot.phi, robot.vx, robot.vy, 0, robot.vphi);
+        emit signalOwnTeamPositionChanged(senderRobotId, WORLD, robot.id, posvel); 
+    }
+
+    // ownpos is irrelevant/meaningless here.
+}
+
 void RosGameSignalAdapter::teamWorldModelCallback(const rosMsgs::t_worldmodel_team::ConstPtr& msg)
 {
     TRACE("got new team avg data");
@@ -220,7 +260,7 @@ void RosGameSignalAdapter::teamWorldModelCallback(const rosMsgs::t_worldmodel_te
     {
         rosMsgs::t_ball ball = msg->balls[i];
         PositionVelocity posvel(ball.x, ball.y, ball.z, ball.vx, ball.vy, ball.vz);
-        emit signalBallPositionChanged(ObjectId(senderRobotId, ball.id), WORLD, posvel, ball.confidence);
+        emit signalBallPositionChanged(ObjectId(senderRobotId, ball.id), WORLD, posvel, ball.confidence, 0, OMNIVISION);
     }
     
     // Ball possession
@@ -257,11 +297,14 @@ void RosGameSignalAdapter::teamAnalyticsMatchStateCallback(const rosMsgs::t_ana_
     
     // TODO in case time slider is pulled back, then we can detect it here by comparing logElapsedTime against previous
     // FieldWidget3D does the same inside already, but we should also call EventLogger::clear 
+    
+    // store current time for age calculations
+    setCurrentTimestamp(msg->currentTime - EPOCH);
 }
 
 void RosGameSignalAdapter::teamAnalyticsEventCallback(const rosMsgs::t_event::ConstPtr& msg)
 {
-    double delay = getTimeNow() - msg->timeStamp;
+    double delay = getCurrentTimestamp() - msg->timeStamp;
     TRACE("received event (delay=%.2fs) '%s'", delay, msg->eventString.c_str());
     emit signalLog(convertRosEvent(msg));
 }
@@ -269,9 +312,14 @@ void RosGameSignalAdapter::teamAnalyticsEventCallback(const rosMsgs::t_event::Co
 void RosGameSignalAdapter::teamAnalyticsOnlineCallback(const rosMsgs::t_ana_online::ConstPtr& msg)
 {
     const std::string enumState2Str[] = {"offline", "online", "starting", "active", "inplay", "ingame"};
-    for (uint8_t robotId = 1; robotId <= 6; ++ robotId)
+    for (uint8_t robotId = 1; robotId <= MAX_ROBOTS; ++ robotId)
     {
         emit signalValue(robotId, "HEALTH", "state", enumState2Str[msg->state[robotId]]);
+        if (enumState2Str[msg->state[robotId]] == "offline")
+        {
+            TRACE("emit signalClearRobot(%d)", (int)robotId);
+            emit signalClearRobot(robotId);
+        }
     }
 }
 
@@ -292,7 +340,7 @@ void RosGameSignalAdapter::robotWorldModelCallback(uint8_t senderRobotId, const 
     {
         rosMsgs::t_ball ball = msg->ballpos[i];
         PositionVelocity posvel(ball.x, ball.y, ball.z, ball.vx, ball.vy, ball.vz);
-        emit signalBallPositionChanged(ObjectId(senderRobotId, 0), WORLD, posvel, ball.confidence);
+        emit signalBallPositionChanged(ObjectId(senderRobotId, 0), WORLD, posvel, ball.confidence, 0, OMNIVISION);
     }
     
     // Ball possession
@@ -345,7 +393,7 @@ void RosGameSignalAdapter::robotWorldModelBallTrackingCallback(uint8_t senderRob
     {
         rosMsgs::t_ball ball = msg->balls[i];
         PositionVelocity posvel(ball.x, ball.y, ball.z, ball.vx, ball.vy, ball.vz);
-        emit signalBallPositionChanged(ObjectId(senderRobotId, ball.id), WORLD, posvel, ball.confidence);
+        emit signalBallPositionChanged(ObjectId(senderRobotId, ball.id), WORLD, posvel, ball.confidence, 0, OMNIVISION);
         // TODO draw confidence details as a label next to actor if requested (menu checkbox "ballTrackingDetails" ?)
     }
     
@@ -403,49 +451,21 @@ void RosGameSignalAdapter::robotVisionCallback(uint8_t robotId, const rosMsgs::t
     
     // legacy (pre-worldModelV2)
     // TODO emit these but only if data if applicable (old bag) - how to determine nicely?
-    /*
-    emit signalValue(robotId, "VISION", "age", msg->age);
-    emit signalValue(robotId, "VISION", "lastActive", msg->lastActive);
-    emit signalValue(robotId, "VISION", "numberOfBalls", (float)msg->ballpos.size());
-    emit signalValue(robotId, "VISION", "numberOfObstacles", (float)msg->obstacles.size());
-    */
-
-    // Iterate over ball positions and signal
-    for (size_t i = 0; i < msg->ballpos.size(); ++i)
-    {
-        Position2D position;
-        position.x = cos(msg->ballpos[i].angle) * msg->ballpos[i].radius;
-        position.y = sin(msg->ballpos[i].angle) * msg->ballpos[i].radius;
-        position.transform_rcs2fcs(Position2D(msg->ownpos.x, msg->ownpos.y, msg->ownpos.phi));
-
-        PositionVelocity posvel(position.x, position.y);
-        emit signalBallPositionChanged(ObjectId(robotId, 0), VISION, posvel, 0);
-    }
-
-    // Iterate over obstacles and signal 
-    for (size_t i = 0; i < msg->obstacles.size(); ++i)
-    {
-        Position2D position;
-        position.x = cos(msg->obstacles[i].angle) * msg->obstacles[i].radius;
-        position.y = sin(msg->obstacles[i].angle) * msg->obstacles[i].radius;
-        position.transform_rcs2fcs(Position2D(msg->ownpos.x, msg->ownpos.y, msg->ownpos.phi));
-
-        PositionVelocity posvel(position.x, position.y);
-        emit signalObstaclePositionChanged(ObjectId(robotId, 0), VISION, posvel); 
-    }
-
-    // Signal own position
-    PositionVelocity posvel(msg->ownpos.x, msg->ownpos.y, 0, msg->ownpos.phi);
-    emit signalOwnTeamPositionChanged(robotId, VISION, robotId, posvel); 
+    
+    // no use case anymore -- remove
 }
 
 void RosGameSignalAdapter::robotVisionV2Callback(uint8_t robotId, const rosMsgs::t_diag_vision_v2::ConstPtr& msg)
 {
     // Iterate over ball positions and signal
+    double tNow = getCurrentTimestamp();
     for (size_t i = 0; i < msg->balls.size(); ++i)
     {
         PositionVelocity posvel(msg->balls[i].x, msg->balls[i].y, msg->balls[i].z);
-        emit signalBallPositionChanged(ObjectId(robotId, msg->balls[i].objectID), VISION, posvel, 0);
+        TRACE("tNow=%.3f ball.timestamp=%.3f", tNow, msg->balls[i].timestamp);
+        float age = tNow - msg->balls[i].timestamp;
+        CameraType camType = (CameraType)(int)msg->balls[i].cameraType.camera_type;
+        emit signalBallPositionChanged(ObjectId(robotId, msg->balls[i].objectID), VISION, posvel, 1.0, age, camType);
     }
 
     // Iterate over obstacles and signal 
@@ -529,37 +549,32 @@ void RosGameSignalAdapter::robotPathPlanningCallback(uint8_t robotId, const rosM
     if (msg->active)
     {
         std::vector<PositionVelocity> path;
-        //TRACE("subx=%6.2f suby=%6.2f tgtx=%6.2f tgty=%6.2f", msg->subtarget.x, msg->subtarget.y, msg->target.x, msg->target.y);
-        if (!isnan(msg->subtarget.x) && !isnan(msg->subtarget.y))
+        if (!std::isnan(msg->subtarget.x) && !std::isnan(msg->subtarget.y))
         {
             path.push_back(PositionVelocity(msg->subtarget.x, msg->subtarget.y, 0, msg->subtarget.phi, msg->subtarget.vx, msg->subtarget.vy));
         }
         path.push_back(PositionVelocity(msg->target.x, msg->target.y, 0, msg->target.phi, msg->target.vx, msg->target.vy));
-
         emit signalPathPlanningInProgress(robotId, path);
 
-        for (size_t i = 0; i < msg->obstacles.size(); i++)
-        {
-            PositionVelocity posvel(msg->obstacles[i].x, msg->obstacles[i].y);
-            emit signalObstaclePositionChanged(ObjectId(robotId, msg->obstacles[i].id), PATHPLANNING, posvel);
-        }
 
         for (size_t i = 0; i < msg->forbiddenAreas.size(); i++)
         {
-        	polygon2D forbiddenArea;
-        	for(auto it = msg->forbiddenAreas.at(i).points.begin(); it != msg->forbiddenAreas.at(i).points.end(); it++)
-        	{
-        		forbiddenArea.addPoint(it->x, it->y);
-        	}
+            polygon2D forbiddenArea;
+            for(auto it = msg->forbiddenAreas.at(i).points.begin(); it != msg->forbiddenAreas.at(i).points.end(); it++)
+            {
+                forbiddenArea.addPoint(it->x, it->y);
+            }
 
-        	emit signalForbiddenAreaChanged(ObjectId(robotId, msg->forbiddenAreas.at(i).id), PATHPLANNING, forbiddenArea);
+            emit signalForbiddenAreaChanged(ObjectId(robotId, msg->forbiddenAreas.at(i).id), PATHPLANNING, forbiddenArea);
         }
 
         for (auto it = msg->speedArrowEndPoints.begin(); it != msg->speedArrowEndPoints.end(); it++)
         {
-        	linepoint2D speedVector(it->src.x, it->src.y, it->dst.x, it->dst.y);
 
-        	emit signalProjectSpeedChanged(ObjectId(robotId, it->id), PATHPLANNING, speedVector);
+            linepoint2D speedVector(it->src.x, it->src.y, it->dst.x, it->dst.y);
+            //linepoint2D speedVector(1.0, 2.0, -3.0, -4.0);
+
+            emit signalProjectSpeedChanged(ObjectId(robotId, it->id), PATHPLANNING, speedVector);
         }
     }
 }
@@ -596,12 +611,12 @@ void RosGameSignalAdapter::robotInfoCallback(uint8_t robotId, const rosMsgs::t_d
 
 void RosGameSignalAdapter::robotHalMWCallback(uint8_t robotId, const rosMsgs::t_diag_halmw::ConstPtr& msg)
 {
-    emit signalValue(robotId, "HALMW", "feedback_vx", msg->feedback_vx);
-    emit signalValue(robotId, "HALMW", "feedback_vy", msg->feedback_vy);
-    emit signalValue(robotId, "HALMW", "feedback_vphi", msg->feedback_vphi);
-    emit signalValue(robotId, "HALMW", "speed_vx", msg->speed_vx);
-    emit signalValue(robotId, "HALMW", "speed_vy", msg->speed_vy);
-    emit signalValue(robotId, "HALMW", "speed_vphi", msg->speed_vphi);
+    emit signalValue(robotId, "HALMW", "feedback_m1_vel", msg->feedback_m1_vel);
+    emit signalValue(robotId, "HALMW", "feedback_m2_vel", msg->feedback_m2_vel);
+    emit signalValue(robotId, "HALMW", "feedback_m3_vel", msg->feedback_m3_vel);
+    emit signalValue(robotId, "HALMW", "speed_m1_vel", msg->speed_m1_vel);
+    emit signalValue(robotId, "HALMW", "speed_m2_vel", msg->speed_m2_vel);
+    emit signalValue(robotId, "HALMW", "speed_m3_vel", msg->speed_m3_vel);
     emit signalValue(robotId, "HALMW", "has ball", (bool)msg->hasball);
     emit signalValue(robotId, "HALMW", "bh_left_angle", msg->bh_left_angle);
     emit signalValue(robotId, "HALMW", "bh_right_angle", msg->bh_right_angle);
@@ -609,18 +624,6 @@ void RosGameSignalAdapter::robotHalMWCallback(uint8_t robotId, const rosMsgs::t_
     emit signalValue(robotId, "HALMW", "temp_rear", msg->motion_rear_temperature);
     emit signalValue(robotId, "HALMW", "temp_right", msg->motion_right_temperature);
     emit signalValue(robotId, "HALMW", "temp_left", msg->motion_left_temperature);
-}
-
-void RosGameSignalAdapter::robotCompassCallback(uint8_t robotId, const rosMsgs::t_diag_compass::ConstPtr& msg)
-{
-    emit signalValue(robotId, "COMPASS", "orientation", msg->theta);
-}
-
-void RosGameSignalAdapter::robotActiveCallback(uint8_t robotId, const rosMsgs::t_diag_active::ConstPtr& msg)
-{
-    emit signalValue(robotId, "ACTIVE", "inplay", (bool)msg->inplay);
-    emit signalValue(robotId, "ACTIVE", "pathPlanning", (bool)msg->pathPlanning);
-    emit signalValue(robotId, "ACTIVE", "shootPlanning", (bool)msg->shootPlanning);
 }
 
 void RosGameSignalAdapter::robotFrontVisionCallback(uint8_t robotId, const rosMsgs::t_diag_frontvision::ConstPtr& msg)

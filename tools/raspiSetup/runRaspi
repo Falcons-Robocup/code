@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Copyright 2018 -2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to start indirectly the following processes on the raspi board:
+#  - grabber
+#  - analyzer
+#  - system
+
+# WARNING: this script is not restarted when the copyBuildRaspi sript is used!!!
+
+set -e 
+
+# remove old versions of this runRaspi script (which have renamed by the copyBuildRaspiSingle)
+rm -f tmp/runRaspi_20*
+
+# not used services (might save some power)
+# these services are not related to the "eth0: carrier lost / Network is unreachable" issue
+# (which was solved by disabling Energy Efficient Ethernet : dtparam=eee=off in config.txt)
+sudo service alsa-utils stop
+sudo service bluetooth stop
+# without dhcpcd the raspi will not get an ip address
+# sudo service dhcpcd stop
+sudo service avahi-daemon stop
+sudo service raspi-config stop
+sudo service triggerhappy stop
+
+while true; do
+   echo "RUNRASPI  : start while loop on" `date +%Y-%m-%d_%H:%M:%S`
+
+   # kill all vision related scripts and processes on the raspi, except for this script
+   while ! ./killMostRaspi; do
+      sleep 1
+   done
+  
+   # the sync takes about 7 seconds, for now disable to speedup the build process 
+   # echo "RUNRASPI  : before sync" `date +%Y-%m-%d_%H:%M:%S`
+   # sync
+   # echo "RUNRASPI  : after sync" `date +%Y-%m-%d_%H:%M:%S`
+   
+   while ! ./md5sumAllFiles; do
+      sleep 1
+   done
+   
+   # raspiAnalyze has a dependency on raspiGrab through /dev/shm/raspiGrab
+   # prevent race condition by removing /dev/shm/raspiGrab
+   # (which might be a leftover from previous run)
+   sudo rm -f /dev/shm/raspiGrab
+
+   echo "RUNRASPI  : re-start applications on" `date +%Y-%m-%d_%H:%M:%S`
+   ./runAnalyze &
+   
+   ./runSystem &
+
+   # restart loop in runRaspi script if grabber fails, this will indirectly also restart the analyzer and system
+   # because of dependency 
+   ./runGrab || true
+   
+   sleep 1
+done
+
+exit 0 # success

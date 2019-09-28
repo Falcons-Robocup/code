@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+#
+# Inspect matchlog file.
+
+
+
+import argparse
+import os, glob
+
+
+TMPLOGDIR = "/var/tmp"
+
+
+def findNewestLogFile():
+    logdir = TMPLOGDIR
+    result = None
+    list_of_files = glob.glob(logdir + '/' + '*.rdl*') # also allow .gz
+    if len(list_of_files):
+        return max(list_of_files, key=os.path.getctime)
+    return None
+
+    
+def run(logfile):
+    assert(os.path.isfile(logfile))
+    # clear RTDB
+    os.system('rtdbClear')
+    # copy unpacked to /var/tmp if not already there
+    target = TMPLOGDIR + "/" + os.path.basename(os.path.abspath(logfile)).replace('.gz', '')
+    if not os.path.isfile(target):
+        os.system('cp ' + logfile + ' ' + TMPLOGDIR)
+        if logfile.endswith('.gz'):
+            os.system('gunzip ' + target + ".gz")
+    logfile = target
+    # containment for as #46 - always call, the utility is fast in case logfile does not need fixing
+    os.system('rosrun logging rdlfix ' + logfile)
+    # run visualizer in playback mode
+    os.system('rosrun visualizer visualizer ' + logfile)
+    
+
+if __name__ == '__main__':
+    # Argument parsing.
+    parser     = argparse.ArgumentParser(description='RTDB matchlog inspection')
+    parser.add_argument('logfile', help='.rdl log file to use', nargs='?', default=None)
+    args       = parser.parse_args()
+    # In case log file is provided, then use it
+    if args.logfile != None:
+        run(args.logfile)
+    else:
+        run(findNewestLogFile())
+

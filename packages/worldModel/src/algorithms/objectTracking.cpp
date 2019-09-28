@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,9 +21,12 @@
 
 objectTracker::objectTracker()
 {
-	_residual = 0.0;
+    _residual = 0.0;
     _maxSpread = 0.0;
     _avgGroupSize = 0.0;
+    _numGood = 0; 
+    _numBad = 0;
+    _numRemoved = 0;
 }
 
 objectTracker::~objectTracker()
@@ -46,6 +49,21 @@ int objectTracker::getNumRemoved() const
     return _numRemoved;
 }
 
+int objectTracker::getNumGood() const
+{
+    return _numGood;
+}
+
+int objectTracker::getNumBad() const
+{
+    return _numBad;
+}
+
+std::string objectTracker::getDetailsStr() const
+{
+    return _detailsStr;
+}
+
 float objectTracker::getTimeSpread() const
 {
     return _maxSpread;
@@ -66,14 +84,14 @@ void objectTracker::groupMeasurements()
     double currT = 0.0;
     double lastT = -1;
     double prevT = -1;
-    double minT = _measurementsPtr->begin()->getObjectMeasurement().getTimestamp();
+    double minT = _measurementsPtr->begin()->getObjectMeasurement().timestamp;
     double sumT = 0.0;
     _maxSpread = 0.0;
     std::vector<objectMeasurementCache> currentGroup;
     // perform grouping, use a grouping tolerance 'groupingDt'
     for (auto it = _measurementsPtr->begin(); it != _measurementsPtr->end(); ++it)
     {
-        currT = it->getObjectMeasurement().getTimestamp();
+        currT = it->getObjectMeasurement().timestamp;
         assert(prevT <= currT); // require data to be sorted in time
         if (currT - lastT > _objectFitCfg.groupingDt)
         {
@@ -125,6 +143,40 @@ Vector3D objectTracker::triangulate(std::vector<objectMeasurementCache> const &m
     return result;
 }
 
+void objectTracker::makeDetailsStr()
+{
+    // encode data in a string, 1cm/1ms resolution: 
+    // numGood numBad (t,x,y,z)*numGood (t,x,y,z)*numBad
+    _numGood = 0; 
+    _numBad = 0;
+    std::string goodList = "", badList = "";
+    // TODO remove this assertion
+
+    //tprintf("assert 1: %d ... %d", (int)_groupedTime.size(), (int)_positionsFcs.size());
+    //tprintf("assert 2: %d ... %d", (int)_groupedTime.size(), (int)_removedMask.size());
+    assert(_groupedTime.size() == _positionsFcs.size());
+    assert(_groupedTime.size() == _removedMask.size());
+    for (size_t it = 0; it < _groupedTime.size(); ++it)
+    {
+        double t = _groupedTime[it];
+        Vector3D posFcs = _positionsFcs[it];
+        char buf[64] = {0};
+        sprintf(buf, " %.3f %.2f %.2f %.2f", t, posFcs.x, posFcs.y, posFcs.z);
+        if (0 == _removedMask[it])
+        {
+            badList += buf;
+            _numBad++;
+        }
+        else
+        {
+            goodList += buf;
+            _numGood++;
+        }
+    }
+    _detailsStr = boost::lexical_cast<std::string>(_numGood) + goodList + "   " 
+                + boost::lexical_cast<std::string>(_numBad) + badList;
+}
+
 void objectTracker::iterativeTrajectoryFit(double t)
 {
     // iteration was first supposed to be done here, 
@@ -133,7 +185,8 @@ void objectTracker::iterativeTrajectoryFit(double t)
     
     // fit order fallback: cannot fit a line through a point
     int fitOrder = _objectFitCfg.speedFitOrder;
-    if ((int)_positionsFcs.size() < 2)
+    int n        = _positionsFcs.size();
+    if (n < 2)
     {
         fitOrder = 0;
     }
@@ -144,7 +197,58 @@ void objectTracker::iterativeTrajectoryFit(double t)
     float iterFraction = _objectFitCfg.outlierIterFraction;
     
     // calculate
-    objectCoreFitTrajectoryIterative(_groupedTime, _positionsFcs, t, fitOrder, maxIter, nSigma, iterFraction, _result, _residual, _numRemoved);
+    objectCoreFitTrajectoryIterative(_groupedTime, _positionsFcs, t, fitOrder, maxIter, nSigma, iterFraction, _result, _residual, _numRemoved, _removedMask);
+    
+    // If there is enough measurements and most of the outliers are in the 
+    // second half of the measurements, ignore the first half.
+    if (n >= 2 * _objectFitCfg.minVmeas)
+    {
+        int ouliersCountSecondHalf = 0;
+        
+        for (int i = n / 2; i < n; ++i)
+        {
+            if (!_removedMask[i])
+            {
+                ouliersCountSecondHalf++;
+            } 
+        }
+        
+        // Ignore the first measurements if there is enough outliers and most of them are in the second half.
+        if ((ouliersCountSecondHalf > 2) && (ouliersCountSecondHalf >  2 * _numRemoved / 3))
+        {   
+            std::vector<double> timeStamps(_groupedTime.begin() + n / 2, _groupedTime.end());
+            std::vector<Vector3D> positions(_positionsFcs.begin() + n / 2, _positionsFcs.end());
+            objectResultType objectResult(_result);
+            float residual;
+            int numRemovedTotal;
+            std::vector<bool> removedMask(_removedMask.begin() + n / 2, _removedMask.end());
+            
+            objectCoreFitTrajectoryIterative(timeStamps, positions, t, fitOrder, maxIter, nSigma, iterFraction, objectResult, residual, numRemovedTotal, removedMask);
+            
+            // TODO: acceptance criteria: check if residual and numRemoved are better?
+            if (residual < 0.9 * _residual && numRemovedTotal < (ouliersCountSecondHalf * 9) / 10)
+            {
+                // log
+                //tprintf("First fit (numMeasurements=%d, residual=%.3f, numRemoved=%d, ouliersCountSecondHalf=%d)", n, _residual, _numRemoved, ouliersCountSecondHalf);
+                makeDetailsStr();
+                //tprintf("All points: %s", _detailsStr.c_str());
+                //tprintf("First fit: position: %f %f %f velocity: %f %f %f", _result.getX(), _result.getY(), _result.getZ(), _result.getVX(), _result.getVY(), _result.getVZ());
+                
+                _residual = residual;
+                _numRemoved = numRemovedTotal;
+                _removedMask = removedMask;
+                _result = objectResult; 
+                _positionsFcs.erase(_positionsFcs.begin(), _positionsFcs.begin() + n / 2);
+                _groupedTime.erase(_groupedTime.begin(), _groupedTime.begin() + n / 2);
+                
+                
+                //tprintf("Second fit: position: %f %f %f velocity: %f %f %f", _result.getX(), _result.getY(), _result.getZ(), _result.getVX(), _result.getVY(), _result.getVZ());
+                // log
+                //tprintf("Second fit (residual=%.3f, numRemoved=%d)", residual, numRemovedTotal);
+                
+            }
+        }
+    }
 }
 
 void objectTracker::solve(std::vector<objectMeasurementCache> const &measurements, double t, bool withGrouping)
@@ -173,7 +277,7 @@ void objectTracker::solve(std::vector<objectMeasurementCache> const &measurement
         if (_groupedTime.size()) // must be, we might as well assert this
         {
             kpiTriangulation /= _groupedTime.size();
-            TRACE("kpiTriangulation=%.2f", kpiTriangulation); 
+            //TRACE("kpiTriangulation=%.2f", kpiTriangulation); 
             // if 3 robots are looking at one ball, then ideally this value is 3.0
             // which means each heartbeat each robot provides a measurement, which is used in triangulation
             // future: synchronizing heartbeats on robots (actually: cameras) 
@@ -191,7 +295,7 @@ void objectTracker::solve(std::vector<objectMeasurementCache> const &measurement
         {
             Vector3D posFcs = measurements[it].getPositionFcs();
             _positionsFcs.push_back(posFcs);
-            _groupedTime.push_back(measurements[it].getObjectMeasurement().getTimestamp());
+            _groupedTime.push_back(measurements[it].getObjectMeasurement().timestamp);
         }
     }
     
@@ -200,6 +304,11 @@ void objectTracker::solve(std::vector<objectMeasurementCache> const &measurement
     // * if a bounce just occurred, newest FCS positions will be discarded as outliers
     // * if bounce happened a while ago, FCS position before will be discarded as outliers
     iterativeTrajectoryFit(t);
+    
+    // calculate confidence heuristics and tracing details
+    makeDetailsStr();
+    
+    // tprintf
     
 }
 

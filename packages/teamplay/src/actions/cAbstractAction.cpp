@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,20 +18,19 @@
 
 #include "int/actions/cAbstractAction.hpp"
 
-#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
-#include <FalconsCommon.h>
-#include <timeConvert.hpp>
 
-#include "int/cWorldModelInterface.hpp"
+#include "FalconsCommon.h"
 #include "int/cWorldStateFunctions.hpp"
 #include "int/rules/ruleAvoidAreas.hpp"
 #include "int/stores/ballStore.hpp"
 #include "int/stores/configurationStore.hpp"
 #include "int/stores/fieldDimensionsStore.hpp"
-#include "int/types/intentionSync.hpp"
-#include "int/stores/teamMatesStore.hpp"
+#include "int/stores/robotStore.hpp"
+
+#include "int/adapters/cRTDBInputAdapter.hpp"
+#include "int/adapters/cRTDBOutputAdapter.hpp"
 
 /*
  * Include as last file
@@ -48,14 +47,8 @@ static boost::shared_ptr<timer> timer_p;
 
 cAbstractAction::cAbstractAction()
 {
-    hal = 0;
-    pp = 0;
-    sp = 0;
-    intention.actionType = actionEnum::INVALID;
-    intention.robotID = getRobotNumber();
-    intention.x = 0.0;
-    intention.y = 0.0;
-    intention.timestamp = getTimeNow();
+    _intention.action = actionTypeEnum::UNKNOWN;
+    _actionId = 0;
 
     timer_p.reset(new timer());
     rule_p.reset(new ruleAvoidAreas(timer_p));
@@ -67,24 +60,9 @@ cAbstractAction::~cAbstractAction()
     timer_p.reset();
 }
 
-void cAbstractAction::setHALInterface(cHALInterface* halInterface)
-{
-    hal = halInterface;
-}
-
-void cAbstractAction::setPathPlanningInterface (cPathPlanningInterface* pathPlanningInterface)
-{
-    pp = pathPlanningInterface;
-}
-
-void cAbstractAction::setShootPlanningInterface (cShootPlanningInterface* shootPlanningInterface)
-{
-    sp = shootPlanningInterface;
-}
-
 behTreeReturnEnum cAbstractAction::execute(const std::map<std::string, std::string> &parameters)
 {
-	throw std::runtime_error("Not implemented");
+    throw std::runtime_error("Not implemented");
 }
 
 /* \brief Parses string to get Position2D from POI, ball or robotPos.
@@ -98,177 +76,9 @@ boost::optional<Position2D> cAbstractAction::getPos2DFromStr(const std::map<std:
     if (paramVal != parameters.end())
     {
         std::string strParam = paramVal->second;
-
-        // If param is the empty value, return boost::none;
-        if (strParam.compare(emptyValue) == 0)
-        {
-            return boost::none;
-        }
-        // If param has value 'ball', return ballposition (if possible)
-        else if (strParam.compare("ball") == 0)
-        {
-            ball ball = ballStore::getBall();
-
-            if (ball.isLocationKnown())
-            {
-                retVal.x = ball.getPosition().x;
-                retVal.y = ball.getPosition().y;
-                return retVal;
-            }
-        }
-        else if(strParam.compare("lastKnownBallLocation") == 0)
-        {
-            Point3D ball = ballStore::getBall().getPosition();
-
-        	retVal.x = ball.x;
-        	retVal.y = ball.y;
-        	return retVal;
-        }
-        else if (strParam.compare("robot") == 0)
-        {
-            Position2D myPos;
-            cWorldModelInterface::getInstance().getOwnLocation(myPos);
-
-            retVal.x = myPos.x;
-            retVal.y = myPos.y;
-            return retVal;
-        }
-        else if (strParam.compare("closestTeammemberIncludeGoalie") == 0)
-        {
-        	Position2D teammemberPos;
-        	cWorldStateFunctions::getInstance().getClosestTeammember(teammemberPos.x, teammemberPos.y, true);
-
-        	retVal.x = teammemberPos.x;
-        	retVal.y = teammemberPos.y;
-        	return retVal;
-        }
-        else if (strParam.compare("closestTeammember") == 0)
-        {
-        	Position2D teammemberPos;
-        	cWorldStateFunctions::getInstance().getClosestTeammember(teammemberPos.x, teammemberPos.y, false);
-
-        	retVal.x = teammemberPos.x;
-        	retVal.y = teammemberPos.y;
-        	return retVal;
-        }
-        else if (strParam.compare("closestAttacker") == 0)
-        {
-            double attackerPosX = 0.0;
-            double attackerPosY = 0.0;
-            cWorldStateFunctions::getInstance().getClosestAttacker(A_FIELD, attackerPosX, attackerPosY);
-
-            retVal.x = attackerPosX;
-            retVal.y = attackerPosY;
-            return retVal;
-        }
-        else if (strParam.compare("closestAttackerOnOppHalf") == 0)
-        {
-            double attackerPosX = 0.0;
-            double attackerPosY = 0.0;
-            cWorldStateFunctions::getInstance().getClosestAttacker(A_OPP_SIDE, attackerPosX, attackerPosY);
-
-            retVal.x = attackerPosX;
-            retVal.y = attackerPosY;
-            return retVal;
-        }
-        else if (strParam.compare("closestAttackerToOppGoal") == 0)
-        {
-            double attackerPosX = 0.0;
-            double attackerPosY = 0.0;
-            cWorldStateFunctions::getInstance().getClosestAttackerToOpponentGoal(attackerPosX, attackerPosY);
-
-            retVal.x = attackerPosX;
-            retVal.y = attackerPosY;
-            return retVal;
-        }
-        else if (strParam.compare("closestDefender") == 0)
-        {
-            double defenderPosX = 0.0;
-            double defenderPosY = 0.0;
-            cWorldStateFunctions::getInstance().getClosestDefender(defenderPosX, defenderPosY);
-
-            retVal.x = defenderPosX;
-            retVal.y = defenderPosY;
-            return retVal;
-        }
-        else if (strParam.compare("closestOpponent") == 0)
-        {
-        	float opponentPosX = 0.0;
-        	float opponentPosY = 0.0;
-        	cWorldStateFunctions::getInstance().getClosestOpponent(opponentPosX, opponentPosY);
-
-        	retVal.x = opponentPosX;
-        	retVal.y = opponentPosY;
-        	return retVal;
-        }
-        else if (strParam.compare("closestOpponentToOwnGoal") == 0)
-        {
-            Point2D own_goalline_center = teamplay::fieldDimensionsStore::getFieldDimensions().getLocation(teamplay::fieldPOI::OWN_GOALLINE_CENTER);
-        	float opponentPosX = 0.0;
-        	float opponentPosY = 0.0;
-        	cWorldStateFunctions::getInstance().getClosestOpponentToLocationXY(opponentPosX, opponentPosY, (float) own_goalline_center.x, (float) own_goalline_center.y);
-
-        	retVal.x = opponentPosX;
-        	retVal.y = opponentPosY;
-        	return retVal;
-        }
-        else if (strParam.compare("potentialOppAttacker") == 0)
-        {
-            float opponentAttackerPosX = 0.0;
-            float opponentAttackerPosY = 0.0;
-            cWorldStateFunctions::getInstance().getPotentialOpponentAttacker(opponentAttackerPosX, opponentAttackerPosY);
-
-            retVal.x = opponentAttackerPosX;
-            retVal.y = opponentAttackerPosY;
-            return retVal;
-        }
-        else if( boost::starts_with( strParam, "coord:"))
-        {   //expected syntax example:  coord 4.5,6.8
-        	std::vector<std::string> splittedString;
-        	boost::split( splittedString, strParam, boost::is_any_of(":,"));
-        	if ( splittedString.size() != 3)
-        	{
-        		TRACE("MALFORMED coord parameter encountered: ") << strParam;
-        		return boost::none;
-        	}
-
-        	try
-        	{
-        	   retVal.x = boost::lexical_cast<double>( splittedString[1]);
-        	}
-        	catch (std::exception &e)
-			{
-        		TRACE("MALFORMED coord parameter encountered for X in: ") << strParam;
-        		return boost::none;
-			}
-
-        	try
-        	{
-        	   retVal.y = boost::lexical_cast<double>( splittedString[2]);
-        	}
-        	catch (std::exception &e)
-			{
-        		TRACE("MALFORMED coord parameter encountered for Y in: ") << strParam;
-        		return boost::none;
-			}
-        	return retVal;
-        }
-        else
-        {
-            try
-            {
-                Point2D paramInfo = fieldDimensionsStore::getFieldDimensions().getLocation(strParam);
-                retVal.x = paramInfo.x;
-                retVal.y = paramInfo.y;
-            }
-            catch (std::exception &e)
-            {
-                TRACE("MALFORMED location parameter encountered: ") << strParam;
-                return boost::none;
-            }
-            return retVal;
-        }
+        return cWorldStateFunctions::getInstance().getPositionOfPOI(strParam);
     }
+
     return boost::none;
 }
 
@@ -297,148 +107,200 @@ boost::optional<Area2D> cAbstractAction::getArea2DFromStr(const std::map<std::st
     return boost::none;
 }
 
-
-void cAbstractAction::moveTo( double x, double y, double phi, const std::string& motionProfile )
+T_ACTION cAbstractAction::makeAction()
 {
-    if (!hal)
-    {
-        hal = new cHALInterface();
-        hal->connect();
-    }
+    T_ACTION actionData;
+    static int staticActionId = 0; // needed because teamplay sometimes re-starts the counter
+    actionData.id = _actionId = staticActionId++;
+    actionData.action = actionTypeEnum::UNKNOWN;
+    actionData.position.x = 0.0;
+    actionData.position.y = 0.0;
+    actionData.position.z = 0.0;
+    actionData.slow = false;
+    actionData.ballHandlersEnabled = false;
+    return actionData;
+}
 
-    if (isPrepareSetPiece())
-    {
-        hal->disableBallhandlers();
-    }
-    else
-    {
-        hal->enableBallhandlers();
-    }
-
-    if (!pp)
-    {
-        pp = new cPathPlanningInterface();
-        pp->connect();
-    }
-
-    if (!pp->isEnabled())
-    {
-        pp->enable();
-    }
-
-    geometry::Pose2D pose(x, y, phi);
+void cAbstractAction::setForbiddenAreas()
+{
     auto forbidden_areas = getForbiddenAreas();
-    pp->moveTo(pose, forbidden_areas, motionProfile);
+    // Convert std::vector<polygon2D> to std::vector<forbiddenArea>
+    T_FORBIDDEN_AREAS forbiddenAreas;
+    for (auto itArea = forbidden_areas.begin(); itArea != forbidden_areas.end(); ++itArea)
+    {
+        forbiddenArea newForbiddenArea;
+
+        auto points = itArea->getPoints();
+        for (auto it = points.begin(); it != points.end(); ++it)
+        {
+            vec2d point;
+            point.x = it->x;
+            point.y = it->y;
+            newForbiddenArea.points.push_back(point);
+        }
+
+        forbiddenAreas.push_back(newForbiddenArea);
+    }
+    cRTDBOutputAdapter::getInstance().setForbiddenAreas(forbiddenAreas);
 }
 
-
-void cAbstractAction::shoot(double shotPower)
+behTreeReturnEnum cAbstractAction::moveTo( double x, double y, const std::string& motionProfile )
 {
-    if (!sp)
+    std::ostringstream ss;
+    ss << "target: (" << x << ", " << y << ")";
+    TRACE_FUNCTION(ss.str().c_str());
+
+    std::map<std::string, std::string> params;
+    bool ballHandlersEnabled = true;
+    if (isPrepareSetPiece(params))
     {
-        sp = new cShootPlanningInterface();
-        sp->connect();
+        ballHandlersEnabled = false;
     }
 
-    if (!sp->isEnabled())
-    {
-        sp->enable();
-    }
+    Position2D pose(x, y, 0.0);
+    bool slow = (motionProfile != "normal");
 
-    TRACE("Shooting with power: ") << std::to_string(shotPower);
-    sp->shoot(shotPower);
+    setForbiddenAreas();
+    
+    T_ACTION actionData = makeAction();
+    actionData.action = actionTypeEnum::MOVE;
+    actionData.position.x = pose.x;
+    actionData.position.y = pose.y;
+    actionData.position.z = pose.phi;
+    actionData.slow = slow;
+    actionData.ballHandlersEnabled = ballHandlersEnabled;
+    cRTDBOutputAdapter::getInstance().setActionData(actionData);
 
-    // TODO this is a quick HACK, applied during practice matches against TU/e and VDL
-    // Currently, after any pass, the closest robot intercepts the ball 
-    // This often turns out to be the one that did the pass... 
-    // Add a short sleep (for now) to allow other robots to get the ball instead.
-    auto settleTime = configurationStore::getConfiguration().getSettleTimeAfterShooting();
-    TRACE("About to sleep for ") << std::to_string(settleTime) << " seconds...";
-    sleep(settleTime);
-    TRACE("Awake again after shooting");
+    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
 }
 
-void cAbstractAction::lobShot(const Point2D& target)
+behTreeReturnEnum cAbstractAction::pass(float x, float y)
 {
-    if (!sp)
-    {
-        sp = new cShootPlanningInterface();
-        sp->connect();
-    }
+    std::ostringstream ss;
+    ss << "target: (" << x << ", " << y << ")";
+    TRACE_FUNCTION(ss.str().c_str());
 
-    if (!sp->isEnabled())
-    {
-        sp->enable();
-    }
+    T_ACTION actionData = makeAction();
+    actionData.action = actionTypeEnum::PASS;
+    actionData.position.x = x;
+    actionData.position.y = y;
+    cRTDBOutputAdapter::getInstance().setActionData(actionData);
+
+    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+}
+
+behTreeReturnEnum cAbstractAction::shoot(float x, float y, float z)
+{
+    std::ostringstream ss;
+    ss << "target: (" << x << ", " << y << ")";
+    TRACE_FUNCTION(ss.str().c_str());
+
+    T_ACTION actionData = makeAction();
+    actionData.action = actionTypeEnum::SHOOT;
+    actionData.position.x = x;
+    actionData.position.y = y;
+    cRTDBOutputAdapter::getInstance().setActionData(actionData);
+
+    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+}
+
+behTreeReturnEnum cAbstractAction::lobShot(const Point2D& target)
+{
+    std::ostringstream ss;
+    ss << "target: (" << target.x << ", " << target.y << ")";
+    TRACE_FUNCTION(ss.str().c_str());
+
+    T_ACTION actionData = makeAction();
+    actionData.action = actionTypeEnum::LOB;
+    actionData.position.x = target.x;
+    actionData.position.y = target.y;
+    actionData.position.z = 0.0;
+    cRTDBOutputAdapter::getInstance().setActionData(actionData);
 
     TRACE("Lob Shooting at target: ") << std::to_string(target.x) << ", " << std::to_string(target.y);
-    sp->lobShot(target);
+    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+}
+
+behTreeReturnEnum cAbstractAction::getBall(const std::string& motionProfile)
+{
+    TRACE_FUNCTION("");
+
+    bool slow = (motionProfile != "normal");
+
+    setForbiddenAreas();
+
+    T_ACTION actionData = makeAction();
+    actionData.action = actionTypeEnum::GET_BALL;
+    actionData.slow = slow;
+    cRTDBOutputAdapter::getInstance().setActionData(actionData);
+
+    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+}
+
+behTreeReturnEnum cAbstractAction::turnAwayFromOpponent(double x, double y, const std::string& motionProfile)
+{
+    std::ostringstream ss;
+    ss << "target: (" << x << ", " << y << ")";
+    TRACE_FUNCTION(ss.str().c_str());
+
+    bool slow = (motionProfile != "normal");
+
+    T_ACTION actionData = makeAction();
+    actionData.action = actionTypeEnum::TURN_AWAY_FROM_OPPONENT;
+    actionData.position.x = x;
+    actionData.position.y = y;
+    actionData.slow = slow;
+    cRTDBOutputAdapter::getInstance().setActionData(actionData);
+
+    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+}
+
+behTreeReturnEnum cAbstractAction::keeperMove(float x)
+{
+    std::ostringstream ss;
+    ss << "target: (x=" << x << ")";
+    TRACE_FUNCTION(ss.str().c_str());
+
+    T_ACTION actionData = makeAction();
+    actionData.action = actionTypeEnum::KEEPER_MOVE;
+    actionData.position.x = x;
+    cRTDBOutputAdapter::getInstance().setActionData(actionData);
+
+    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
 }
 
 void cAbstractAction::stop()
 {
     /* The "stop" must (1) move to current position and (2) disable motion and the HAL
-     * Point (1) is important, otherwise motion will continue persuing its current setpoint
-     * until the setpoint watchdog interferes */
+    * Point (1) is important, otherwise motion will continue pursuing its current setpoint
+    * until the setpoint watchdog interferes 
+    * 
+    * These details are now moved to motionPlanning.
+    */
 
-    if (!pp)
-    {
-        pp = new cPathPlanningInterface();
-        pp->connect();
-    }
-
-    if (pp->isEnabled())
-    {
-        Position2D ownPosition;
-        cWorldModelInterface::getInstance().getOwnLocation( ownPosition );
-
-        geometry::Pose2D pose(ownPosition.x, ownPosition.y, ownPosition.phi);
-        pp->moveTo(pose);
-
-        pp->disable();
-    }
-
-    if (!hal)
-    {
-        hal = new cHALInterface();
-        hal->connect();
-    }
-
-    hal->disableBallhandlers();
+    T_ACTION actionData = makeAction();
+    actionData.action = actionTypeEnum::STOP;
+    cRTDBOutputAdapter::getInstance().setActionData(actionData);
 }
 
-bool cAbstractAction::positionReached(double x, double y, double phi)
+bool cAbstractAction::positionReached(double x, double y)
 {
-    return positionReached(x, y, phi, XYpositionTolerance, PHIpositionTolerance);
+    return positionReached(x, y, XYpositionTolerance);
 }
 
-bool cAbstractAction::positionReached(double x, double y, double phi, double xy_threshold, double phi_threshold)
+bool cAbstractAction::positionReached(double x, double y, double xy_threshold)
 {
-    Position2D myPos;
-    cWorldModelInterface::getInstance().getOwnLocation(myPos);
+    Position2D myPos = robotStore::getInstance().getOwnRobot().getPosition();
 
     TRACE(" x: ") << std::to_string(x)
-       << " y: " << std::to_string(y)
-       << " phi: " << std::to_string(phi)
-       << " xy threshold: " << std::to_string(xy_threshold)
-       << " phi threshold: " << std::to_string(phi_threshold);
+        << " y: " << std::to_string(y)
+        << " xy threshold: " << std::to_string(xy_threshold);
 
     bool positionReached = ((fabs(myPos.x - x) < xy_threshold) && (fabs(myPos.y - y) < xy_threshold));
 
     TRACE("position reached: ") << ((positionReached) ? ("yes") : ("no"));
 
-    bool angleReached = (fabs(project_angle_mpi_pi(myPos.phi - phi)) < phi_threshold);
-
-    TRACE("angle reached: ") << ((angleReached) ? ("yes") : ("no"));
-
-    if (positionReached && angleReached)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return positionReached;
 }
 
 bool cAbstractAction::isCurrentPosValid() const
@@ -454,6 +316,7 @@ bool cAbstractAction::isTargetPosInsideSafetyBoundaries (const Position2D& targe
 std::vector<polygon2D> cAbstractAction::getForbiddenAreas() const
 {
     auto forbiddenAreas = rule_p->getForbiddenAreas();
+    TRACE("FBA: got %d forbiddenAreas from rules", (int)forbiddenAreas.size());
 
     if (ballStore::getBall().mustBeAvoided())
     {
@@ -466,15 +329,18 @@ std::vector<polygon2D> cAbstractAction::getForbiddenAreas() const
 
 
         forbiddenAreas.push_back(squareAroundBall);
+        TRACE("FBA: avoiding ball as well");
     }
 
     /* Check whether other robot is shooting on goal
-     * If so, add forbidden area on those coordinates
-     */
+    * If so, add forbidden area on those coordinates
+    */
     std::vector<polygon2D> forbiddenActionAreas = getForbiddenActionAreas();
+    TRACE("FBA: avoiding %d action areas", (int)forbiddenActionAreas.size());
 
     forbiddenAreas.insert(forbiddenAreas.begin(), forbiddenActionAreas.begin(), forbiddenActionAreas.end());
 
+    TRACE("FBA: total %d forbiddenAreas", (int)forbiddenAreas.size());
     return forbiddenAreas;
 }
 
@@ -482,86 +348,106 @@ std::vector<polygon2D> cAbstractAction::getForbiddenAreas() const
 Point2D cAbstractAction::getPreferredPartOfGoal() const
 {
     // own position
-    Position2D myPos;
-    cWorldModelInterface::getInstance().getOwnLocation(myPos);
+    Position2D myPos = robotStore::getInstance().getOwnRobot().getPosition();
 
     // some variables that read nice
     auto goalCenter = fieldDimensionsStore::getFieldDimensions().getLocation(fieldPOI::OPP_GOALLINE_CENTER);
     auto goalPostLeft = fieldDimensionsStore::getFieldDimensions().getLocation(fieldPOI::OPP_GOALPOST_LEFT);
     auto goalPostRight = fieldDimensionsStore::getFieldDimensions().getLocation(fieldPOI::OPP_GOALPOST_RIGHT);
 
-    double goalPostShootOffset = 0.35; // the robot should shoot inside the goal area i.o. onto the goalpost
-    goalPostLeft.x = goalPostLeft.x + goalPostShootOffset;
-    goalPostRight.x = goalPostRight.x - goalPostShootOffset;
+    // the robot should shoot inside the goal area i.o. onto the goalpost
+    // shoot target is relative to goal width, so robust for legacy and new (2018) field size
+
+    // below code should be identical to cWorldStateFunctions getPreferredShootXYOfGoal
+    // TODO: find common location for this function
+    float goalPostShootOffset = 0.375; // the robot should shoot inside the goal area i.o. onto the goalpost
+    auto targetLeft = goalPostLeft;
+    auto targetRight = goalPostRight;
+    targetLeft.x = goalPostLeft.x + goalPostShootOffset;
+    targetRight.x = goalPostRight.x - goalPostShootOffset;
+    
+    // Shoot on x=0 when far away from opponent goal (shoot accuracy)
+    float distanceThreshold = teamplay::configurationStore::getConfiguration().getAimForCornerThreshold();
+    float distanceToGoal = (goalCenter - Point2D(myPos.x, myPos.y)).size();
+    if (distanceToGoal > distanceThreshold)
+    {
+        // far away -> override to aim at center of goal
+        targetLeft.x = 0.0;
+        targetRight.x = 0.0;
+    }
 
     // default aim is opponent goalline center
     auto preferredPartOfGoal = goalCenter;
 
-	if ( isOpponentGoalKeeperInLeftCorner() )
-	{
-		// Opponent goalkeeper is positioned in left corner, shoot in right corner
-		preferredPartOfGoal = goalPostRight;
-	}
-	else if ( isOpponentGoalKeeperInRightCorner() )
-	{
-		// Opponent goalkeeper is positioned in right corner, shoot in left corner
-		preferredPartOfGoal = goalPostLeft;
-	}
-	else
-	{
-		// is the robot positioned on left side of field, shoot right corner
-		if (fieldDimensionsStore::getFieldDimensions().isPositionInLeftSide(myPos.x, myPos.y))
-		{
-			preferredPartOfGoal = goalPostRight;
-		}
-		else
-		{
-			// else shoot in left corner
-			preferredPartOfGoal = goalPostLeft;
-		}
+    std::map<std::string, std::string> params;
+    if ( isOpponentGoalKeeperInLeftCorner(params) )
+    {
+        // Opponent goalkeeper is positioned in left corner, shoot in right corner
+        preferredPartOfGoal = targetRight;
     }
+    else if ( isOpponentGoalKeeperInRightCorner(params) )
+    {
+        // Opponent goalkeeper is positioned in right corner, shoot in left corner
+        preferredPartOfGoal = targetLeft;
+    }
+    else
+    {
+        // is the robot positioned on left side of field, shoot right corner
+        if (fieldDimensionsStore::getFieldDimensions().isPositionInLeftSide(myPos.x, myPos.y))
+        {
+            preferredPartOfGoal = targetRight;
+        }
+        else
+        {
+            // else shoot in left corner
+            preferredPartOfGoal = targetLeft;
+        }
+    }
+
+    // CONTAINMENT MATCH VDL
+    // ALWAYS SHOOT AT X=0
+    preferredPartOfGoal = goalCenter;
+
     return preferredPartOfGoal;
 }
 
 void cAbstractAction::sendIntention()
 {
-	try
-	{
-		if(intention.actionType != actionEnum::INVALID)
-		{
-			intention.timestamp = getTimeNow();
-			intentionSync::getInstance().sendIntention(intention);
-		}
-	}
-	catch(std::exception &e)
-	{
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        TRACE_FUNCTION("");
+        if (_intention.action != actionTypeEnum::UNKNOWN)
+        {
+            cRTDBOutputAdapter::getInstance().setIntention(_intention);
+        }
+    }
+    catch(std::exception &e)
+    {
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("cAbstractAction::sendIntention Linked to: ") + e.what());
+    }
 }
 
 std::vector<polygon2D> cAbstractAction::getForbiddenActionAreas() const
 {
-	std::vector<polygon2D> retVal;
-	/*
-	 * Check shooting on goal
-	 */
-	robots teammembers = teamMatesStore::getInstance().getTeamMatesIncludingGoalie().getAllRobots();
-	for(auto it = teammembers.begin(); it != teammembers.end(); it++)
-	{
-		intentionStruct intention = teamMatesStore::getInstance().getRobotIntention(it->getNumber());
-		if((intention.actionType == actionEnum::AIM_FOR_SHOT_ON_GOAL) &&
-				it->getNumber() != getRobotNumber())
-		{
-			polygon2D shootArea;
-			shootArea.addPoint(intention.x - 0.25, intention.y - 0.25);
-			shootArea.addPoint(intention.x + 0.25, intention.y + 0.25);
-			shootArea.addPoint(it->getPosition().x + 0.25, it->getPosition().y + 0.25);
-			shootArea.addPoint(it->getPosition().x - 0.25, it->getPosition().y - 0.25);
+    std::vector<polygon2D> retVal;
+    // Check shooting on goal
+    auto teammembers = robotStore::getInstance().getAllRobotsExclOwnRobot();
+    for(auto it = teammembers.begin(); it != teammembers.end(); it++)
+    {
+        auto intention = cRTDBInputAdapter::getInstance().getIntention(it->getNumber());
+        if (intention.action == actionTypeEnum::SHOOT)
+        {
+            polygon2D shootArea;
+            shootArea.addPoint(intention.position.x - 0.25, intention.position.y - 0.25);
+            shootArea.addPoint(intention.position.x + 0.25, intention.position.y + 0.25);
+            shootArea.addPoint(it->getPosition().x + 0.25, it->getPosition().y + 0.25);
+            shootArea.addPoint(it->getPosition().x - 0.25, it->getPosition().y - 0.25);
 
-			retVal.push_back(shootArea);
-		}
-	}
+            retVal.push_back(shootArea);
+        }
+    }
 
-	return retVal;
+    return retVal;
 }
+

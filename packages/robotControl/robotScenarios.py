@@ -1,5 +1,5 @@
 """ 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,9 +17,9 @@
 #    robotCLI.py          # command-line interface
 #    robotLibrary.py      # discloses all basic commands and scenarios, also includes parser
 #    robotScenarios.py    # scenario interface
-#    robotRosInterface.py # basic commands and their ROS interfaces
+#    robotInterface.py # basic commands and their ROS interfaces
 #    scenarios/*.py       # scenario implementations
-# 
+#
 # Jan Feitsma, 2016-12-17
 
 
@@ -28,7 +28,7 @@ import inspect
 
 # load all scenarios dynamically from the folder 'scenarios', which has a special __init.py__
 import scenarios
-    
+
 
 
 def listScenarios():
@@ -38,14 +38,14 @@ def listScenarios():
     """
     result = []
     for f in scenarios.__all__:
-        result += [m[0] for m in inspect.getmembers(getattr(scenarios, f), inspect.isfunction) if "scenarios." in m[1].__module__]
+        result += [m[0] for m in inspect.getmembers(getattr(scenarios, f), inspect.isfunction) if "scenarios." in m[1].__module__ and m[0][0] != '_']
     return result
-    
-    
+
+
 def getScenario(name):
     """
     Return the function which belongs to given name, for example 'driveCircle' or 'intercept'.
-    """    
+    """
     if not name in listScenarios():
         raise Exception("unrecognized scenario '%s'" % (name))
     scenarioFunction = None

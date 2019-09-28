@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,68 +19,42 @@
 #ifndef CWORLDMODELINTERFACE_HPP_
 #define CWORLDMODELINTERFACE_HPP_
 
-#include "int/types/cPositionTypes.hpp"
-#include "int/types/cBallLocationTypes.hpp"
 #include "int/types/cBallPossessionTypes.hpp"
 #include "int/types/cRobotLocationTypes.hpp"
 
-#include "position2d.hpp"
-#include "vector3d.hpp"
-
-#include <vector>
+#include "int/worldModelInfo.hpp"
 
 class cWorldModelInterface
 {
-	public:
-			static cWorldModelInterface& getInstance()
-			{
-				static cWorldModelInterface instance; // Guaranteed to be destroyed.
-											          // Instantiated on first use.
-				return instance;
-			}
+public:
+    static cWorldModelInterface& getInstance()
+    {
+        static cWorldModelInterface instance;
+        return instance;
+    }
 
-			void updateWorldModelValues();
+    /*
+     * Getter functionality (to be phased out)
+     */
+    void getBallPossession(ballPossession_struct_t &ballPossession);
 
-			/*
-			 * Getter functionality for internal use (within Teamplay)
-			 */
-			bool getOwnLocation(Position2D &robotPosition);
-			bool getOwnVelocity(Velocity2D &robotVelocity);
-			void getTeammembers(robotLocations &teammembers);
-			void getOpponents(robotLocations &opponents);
-			void getBallPossession(ballPossession_struct_t &ballPossession);
-			void getActiveRobots(std::vector<robotNumber> &activeRobots);
+    /*
+     * Setter functionality (to be phased out)
+     */
+    void setBallPossession(ballPossession_struct_t const &ballPossession);
 
-			/*
-			 * Setter functionality for external use 
- 			 * (cRosAdapterWorldModel will call these setters at a fixed frequency)
-			 */
-			void setOwnRobot(const Position2D&, const Velocity2D&); /* New-style */
-			void setOwnLocation(Position2D const &robotPosition);   /* Old-style */
-			void setOwnVelocity(Velocity2D const &robotVelocity);   /* Old-style */
-			void setTeammembers(robotLocations const &teammembers, std::vector<robotNumber> const &activeRobots);
-			void setOpponents(robotLocations const &opponents);
-			void setBallLocation(ballLocations const &balls, ballLocation const &lastKnownBallLocation);
-			void setBallPossession(ballPossession_struct_t const &ballPossession);
-			void setBallClaimedLocation(Point3D const &claimLocation);
+    /*
+     * Store functionality for the worldmodel adapter
+     */
+    virtual void store (const teamplay::worldModelInfo&);
 
-		private:
-			    const size_t _NR_ROBOTS = 10;
-			    robotLocations _robotTeammembers;
-			    robotLocations _robotObstacles;
-				Position2D _ownRobotPosition;
-				Velocity2D _ownRobotVelocity;
-				bool _ownRobotPositionValid;
-				bool _ownRobotVelocityValid;
-				ballPossession_struct_t _ballPossession;
-				Point3D _claimedLocation;
-				ballLocation _lastBallLocation;
-				std::vector<robotNumber> _activeRobots;
+private:
+    ballPossession_struct_t _ballPossession;
 
-				cWorldModelInterface();
-				~cWorldModelInterface();
-				cWorldModelInterface(cWorldModelInterface const&); // Don't Implement
-				void operator=(cWorldModelInterface const&);	   // Don't implement
+    cWorldModelInterface();
+    ~cWorldModelInterface();
+    cWorldModelInterface(cWorldModelInterface const&); // Don't Implement
+    void operator=(cWorldModelInterface const&);	   // Don't implement
 };
 
 #endif /* CWORLDMODELINTERFACE_HPP_ */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,9 +22,10 @@
 #include <vector>
 #include <map>
 
-#include "int/types/ball/ballMeasurementType.hpp"
+#include "FalconsRtDB2.hpp"
+
 #include "int/types/ball/ballType.hpp"
-#include "int/types/obstacle/obstacleMeasurementType.hpp"
+#include "diagWorldModel.hpp"
 #include "int/types/obstacle/obstacleType.hpp"
 #include "int/types/robot/robotDisplacementType.hpp"
 #include "int/types/robot/robotStatusType.hpp"
@@ -35,49 +36,52 @@
 #include "int/administrators/obstacleAdministrator.hpp"
 #include "int/administrators/robotAdministrator.hpp"
 
-#include "int/adapters/worldModelInfoUpdater.hpp"
-#include "int/adapters/worldModelSyncInfoUpdater.hpp"
+#include "int/adapters/RTDB/RTDBInputAdapter.hpp"
+#include "int/adapters/RTDB/RTDBOutputAdapter.hpp"
+#include "ext/RTDBConfigAdapter.hpp"
+
+#define WMS_RTDB_TIMEOUT 7.0 // seconds - ignore if data is older
 
 class adaptersCollector
 {
-	public:
-		adaptersCollector();
-		~adaptersCollector();
+public:
+    adaptersCollector();
+    ~adaptersCollector();
 
-		void setBallAdministrator(ballAdministrator *ballAdmin);
-		void setObstacleAdministrator(obstacleAdministrator *obstacleAdmin);
-		void setRobotAdministrator(robotAdministrator *robotAdmin);
-		void setWorldModelInfoUpdater(worldModelInfoUpdater *wmInfo);
-		void setWorldModelSyncInfoUpdater(worldModelSyncInfoUpdater *wmSyncInfo);
-		void updateVisionRobotMeasurement(const std::vector<robotMeasurementClass_t> measurement);
-		void updateVisionBallMeasurement(const std::vector<ballMeasurementType> measurement);
-		void updateVisionObstacleMeasurement(const std::vector<obstacleMeasurementType> measurement);
-		void updateVisionBallPossession(const bool ballIsSeenInFrontOfBallHandlers);
-		void updatePeripheralsDisplacement(const std::vector<robotDisplacementClass_t> displacements);
-		void updatePeripheralsBallPossession(const bool ballIsCaughtByBallHandlers);
-		void updatePeripheralsRobotStatus(const robotStatusType status);
-		void updateWmSyncBallMeasurement(const std::vector<ballMeasurementType> measurements);
-		void updateWmSyncObstacleMeasurement(const std::vector<obstacleMeasurementType> measurements);
-		void updateWmSyncBallPossession(const std::map<uint8_t, bool> possession);
-		void updateWmSyncTeamMember(const robotClass_t robot);
-		void heartBeatRecalculation(bool dummy);
+    void setBallAdministrator(ballAdministrator *ballAdmin);
+    void setObstacleAdministrator(obstacleAdministrator *obstacleAdmin);
+    void setRobotAdministrator(robotAdministrator *robotAdmin);
+    void heartBeatRecalculation(rtime const timeNow);
+    
+    // RTDB functions
+    void initializeRTDB();
+    void setRTDBInputAdapter(RTDBInputAdapter *rtdbInputAdapter);
+    void setRTDBOutputAdapter(RTDBOutputAdapter *rtdbOutputAdapter);
+    void updateInputData();
 
-		/*
-		 * Overruling functions
-		 */
-		void overruleRobotPosition(const robotClass_t robot);
-		void overruleBallPosition(const ballClass_t ball);
-		void overruleObstaclePostions(const std::vector<obstacleClass_t> obstacles);
-        void overruleRobotStatus(const robotStatusType status);
+    void reportToStdout();
+    diagWorldModel getDiagnostics();
 
-	private:
-		ballAdministrator *_ballAdmin;
-		obstacleAdministrator *_obstacleAdmin;
-		robotAdministrator *_robotAdmin;
-		worldModelInfoUpdater *_wmInfo;
-		worldModelSyncInfoUpdater *_wmSyncInfo;
-		bool _ballIsCaughtByBallHandlers;
-		robotStatusType _robotStatus;
+private:
+    ballAdministrator *_ballAdmin;
+    obstacleAdministrator *_obstacleAdmin;
+    robotAdministrator *_robotAdmin;
+    bool _ballIsCaughtByBallHandlers;
+    robotStatusType _robotStatus;
+    diagWorldModel _diagnostics;
+    std::vector<ballClass_t> _balls; // for overruling ... TODO this entire SW component needs an overhaul
+
+    RtDB2 *_rtdb;
+    int _myRobotId;
+    RTDBInputAdapter *_rtdbInputAdapter;
+    RTDBOutputAdapter *_rtdbOutputAdapter;
+    RTDBConfigAdapter _configAdapter;
+
+    void calcBallPossession(ballPossessionTypeEnum &bpType, int &bpRobot);
+    void ballPossessionOverrule(int bpRobot, rtime timeNow);
+    Vector2D getBallHandlerPosition(int robotId);
+    
+    void updateDiagnostics();
 };
 
 #endif /* ADAPTERSCOLLECTOR_HPP_ */

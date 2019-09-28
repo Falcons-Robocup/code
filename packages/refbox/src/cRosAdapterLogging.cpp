@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,6 +19,7 @@
 #include <stdexcept>
 
 #include <FalconsCommon.h>
+#include "tracing.hpp"
 #include "int/cRosAdapterLogging.hpp"
 #include "int/logger/cPacketRefboxLogger.hpp"
 
@@ -78,6 +79,8 @@ void cRosAdapterLogging::updateRobot(packetRefboxLogger::cPacketRefboxLogger &lo
             pose.x = robot.x;
             pose.y = robot.y;
             pose.phi = robot.phi;
+            // correct robot orientation from Falcons FCS to general MSL coordinate system
+            pose.phi = project_angle_0_2pi(pose.phi - 0.5*M_PI); 
             logPacket.setRobotPose(robotID, pose);
             velocity.x = robot.vx;
             velocity.y = robot.vy;
@@ -85,7 +88,7 @@ void cRosAdapterLogging::updateRobot(packetRefboxLogger::cPacketRefboxLogger &lo
             logPacket.setRobotVelocity(robotID, velocity);
 
             // worldModel ball possession
-            bool have_ball = (_lastWmMsg.ballPossession.robotID == robotID);
+            bool have_ball = (_lastWmMsg.ballPossession.type == rosMsgs::BallPossession::TYPE_TEAMMEMBER) && (_lastWmMsg.ballPossession.robotID == robotID);
             logPacket.setRobotBallPossession(robotID, have_ball);
 
             // pathplanning target

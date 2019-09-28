@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -48,15 +48,11 @@
 #include <stdlib.h>
 #include <iostream>
 #include <stdio.h>
-#include <cstring>
+#include <string>
 #include <pthread.h>
 
-
-
-
-
-typedef void (*event_cb_t)(const char *command);
-
+#include <boost/function.hpp>
+typedef boost::function<void(char const *command)> event_cb_t;
 
 class CTCPIP_Client
 {
@@ -105,11 +101,18 @@ class CTCPIP_Client
   pthread_t          _receiveThread;
   bool               _connected;
   event_cb_t         _callback;
+  const char*        _host;
+  int                _port;
   
   /****************************************
    * Connect()
    ***************************************/
   bool Connect2Host(const char * host, int port);
+
+  /****************************************
+   * Reconnect()
+   ***************************************/
+  bool Reconnect();
 
    /****************************************
     * RequestStatus()

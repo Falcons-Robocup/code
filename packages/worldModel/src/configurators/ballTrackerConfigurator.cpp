@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,17 +22,18 @@
 #include <string>
 
 #include "FalconsCommon.h"
-#include "cDiagnosticsEvents.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 void ballTrackerConfigurator::reset()
 {
-	// solver settings - core fit
-	_dataFloat[ballTrackerConfiguratorFloats::solverCoreWeight] = 0.1; // [1] relative depth weights
-	_dataBool[ballTrackerConfiguratorBool::solverCoreSpeed] = true; // [bool] fit with speed - on robot, we always try to fit with speed
-	_dataFloat[ballTrackerConfiguratorFloats::solverCoreMinVdt] = 0.05; // [s] minimum measurement spread required for speed fitting, otherwise fallback to position-only
-	_dataInteger[ballTrackerConfiguratorIntegers::solverCoreMinVmeas] = 3;     // [1] minimum number of measurements required for speed fitting, otherwise fallback to position-only
+    // solver settings - core fit
+    _dataFloat[ballTrackerConfiguratorFloats::solverCoreWeight] = 0.1; // [1] relative depth weights
+    _dataBool[ballTrackerConfiguratorBool::solverCoreSpeed] = true; // [bool] fit with speed - on robot, we always try to fit with speed
+    _dataFloat[ballTrackerConfiguratorFloats::solverCoreMinVdt] = 0.05; // [s] minimum measurement spread required for speed fitting, otherwise fallback to position-only
+    _dataInteger[ballTrackerConfiguratorIntegers::solverCoreMinVmeas] = 3;     // [1] minimum number of measurements required for speed fitting, otherwise fallback to position-only
 
-	// solver settings - bounce detection
+    // solver settings - bounce detection
     _dataFloat[ballTrackerConfiguratorFloats::solverBounceDt] = 0.1; // [s] bounce detection resolution
     _dataFloat[ballTrackerConfiguratorFloats::solverBounceAge] = 0.5; // [s] how far to look back in time in solver
     _dataInteger[ballTrackerConfiguratorIntegers::solverBounceMinMeasurements] = 5; // [1] minimum number of measurements per segment
@@ -41,52 +42,62 @@ void ballTrackerConfigurator::reset()
     _dataFloat[ballTrackerConfiguratorFloats::outlierNSigma] = 3.0; // [1] spread threshold for outlier removal
     _dataInteger[ballTrackerConfiguratorIntegers::outlierMaxIter] = 1; // number of iterations (1 is minimum, no outlier removal)
     _dataFloat[ballTrackerConfiguratorFloats::outlierIterFraction] = 0.1; 
-	_dataInteger[ballTrackerConfiguratorIntegers::measPerOrder] = 5; // [1] required number of FCS measurements per fit order
-     	
-	// solver settings - data selection
-	_dataBool[ballTrackerConfiguratorBool::useFrontVision] = false; // [bool] use frontVision measurements in algorithm 
-	_dataBool[ballTrackerConfiguratorBool::useFriendlyMeas] = true; // [bool] use friendly measurements in algorithm 
-	
-	// solver settings - object tracker
-	_dataFloat[ballTrackerConfiguratorFloats::solverTrackerTimeout] = 2.0; // [s] when to discard measurements
-	_dataFloat[ballTrackerConfiguratorFloats::solverTrackerXYTolerance] = 2.5; // [m] measurement grouping criterion
-	_dataInteger[ballTrackerConfiguratorIntegers::numberOfBallsWarningThreshold] = 1; // [1] warn in case more than this amount of balls are identified
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceGoodLimit] = 0.5; // [1] all balls with a confidence higher than this threshold are accepted
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceMaybeLimit] = 0.2; // [1] if no good balls are seen, then this limit is used
-	_dataInteger[ballTrackerConfiguratorIntegers::maxMaybeBalls] = 1; // [1] amount of 'maybe' balls to accept
-		
+    _dataInteger[ballTrackerConfiguratorIntegers::measPerOrder] = 5; // [1] required number of FCS measurements per fit order
+
+    // solver settings - data selection
+    _dataBool[ballTrackerConfiguratorBool::useOwnHighVision] = false; // [bool] use own HighVision measurements in algorithm 
+    _dataBool[ballTrackerConfiguratorBool::useFriendlyHighVision] = false; // [bool] use friendly HighVision measurements in algorithm 
+    _dataBool[ballTrackerConfiguratorBool::shareHighVision] = false; // [bool] share own Highvision measurements with friends
+    
+    // solver settings - blacklisting
+    _dataBool[ballTrackerConfiguratorBool::blackListDefault] = false; // [bool] accept a new tracker which has not yet been blacklisted
+    _dataFloat[ballTrackerConfiguratorFloats::blackListThresholdZ] = 0.4; // [m] height threshold of ball measurement in FCS used in blacklisting
+    _dataFloat[ballTrackerConfiguratorFloats::blackListFloatingDuration] = 1.0; // [s] time after which to blacklist a tracker
+    _dataFloat[ballTrackerConfiguratorFloats::blackListGroundDuration] = 1.0; // [s] time after which to whitelist a tracker
+    
+    // solver settings - object tracker
+    _dataFloat[ballTrackerConfiguratorFloats::solverTrackerTimeout] = 2.0; // [s] when to discard trackers
+    _dataFloat[ballTrackerConfiguratorFloats::solverTrackerBuffer] = 1.0; // [s] when to discard measurements within tracker
+    _dataFloat[ballTrackerConfiguratorFloats::solverTrackerConeTolerance] = 0.1; // [rad] measurement grouping criterion
+    _dataInteger[ballTrackerConfiguratorIntegers::numberOfBallsWarningThreshold] = 1; // [1] warn in case more than this amount of balls are identified
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceGoodLimit] = 0.5; // [1] all balls with a confidence higher than this threshold are accepted
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceMaybeLimit] = 0.2; // [1] if no good balls are seen, then this limit is used
+    _dataInteger[ballTrackerConfiguratorIntegers::maxMaybeBalls] = 1; // [1] amount of 'maybe' balls to accept
+        
     // solver settings - confidence heuristics
-	_dataInteger[ballTrackerConfiguratorIntegers::confidenceNumCams] = 3; // [1] required number of involved cameras for full confidence
-	_dataInteger[ballTrackerConfiguratorIntegers::confidenceMeasLim] = 20; // [1] required number of measurements for full confidence
-	_dataBool[ballTrackerConfiguratorBool::confidenceOmniPref] = true; // [bool] omnivision required for full confidence
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceFreshLim] = 0.0; // [s] required freshness of tracker for full confidence, see also tracker timeout
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceAgeLim] = 5.0; // [s] required age of tracker for full confidence (if tracker starts at t=1, tcurr=4, then age=3)
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceZLim1] = 1.0; // [m] threshold for fitted z result - we consider values lower than this threshold good
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceZLim2] = 5.0; // [m] threshold for fitted z result - we consider values higher than this threshold bad
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceVLim1] = 2.0; // [m/s] speed (vx,vy,vz) threshold - we consider values lower than this threshold good
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceVLim2] = 20.0; // [m/s] speed (vx,vy,vz) threshold - we consider values higher than this threshold bad
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceFitLim1] = 0.20; // [1] numerical fit residue threshold - we consider values lower than this threshold good
-	_dataFloat[ballTrackerConfiguratorFloats::confidenceFitLim2] = 0.60; // [1] numerical fit residue threshold - we consider values higher than this threshold bad
-	_dataFloat[ballTrackerConfiguratorFloats::friendlyMeasurementsDistance] = 0.0; // [m] 
+    _dataInteger[ballTrackerConfiguratorIntegers::confidenceNumCams] = 3; // [1] required number of involved cameras for full confidence
+    _dataInteger[ballTrackerConfiguratorIntegers::confidenceMeasLim] = 20; // [1] required number of good (i.e. non-outlier) time-clustered measurements for full confidence
+    _dataBool[ballTrackerConfiguratorBool::confidenceOmniPref] = true; // [bool] omnivision required for full confidence
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceFreshLim] = 0.0; // [s] required freshness of tracker for full confidence, see also tracker timeout
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceAgeLim] = 5.0; // [s] required age of tracker for full confidence (if tracker starts at t=1, tcurr=4, then age=3)
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceZLim1] = 1.0; // [m] threshold for fitted z result - we consider values lower than this threshold good
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceZLim2] = 5.0; // [m] threshold for fitted z result - we consider values higher than this threshold bad
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceVLim1] = 2.0; // [m/s] speed (vx,vy,vz) threshold - we consider values lower than this threshold good
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceVLim2] = 20.0; // [m/s] speed (vx,vy,vz) threshold - we consider values higher than this threshold bad
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceFitLim1] = 0.20; // [1] numerical fit residue threshold - we consider values lower than this threshold good
+    _dataFloat[ballTrackerConfiguratorFloats::confidenceFitLim2] = 0.60; // [1] numerical fit residue threshold - we consider values higher than this threshold bad
+    _dataFloat[ballTrackerConfiguratorFloats::friendlyMeasurementsDistance] = 0.0; // [m] 
 }
 
 ballTrackerConfigurator::ballTrackerConfigurator()
 {
     reset();
     
-	// enum2str
-    _enum2strBool[ballTrackerConfiguratorBool::useFrontVision] = "useFrontVision";
-    _enum2strBool[ballTrackerConfiguratorBool::useFriendlyMeas] = "useFriendlyMeas";
-    _enum2strFloat[ballTrackerConfiguratorFloats::solverCoreWeight] = "coreWeight";
-    _enum2strBool[ballTrackerConfiguratorBool::solverCoreSpeed] = "coreSpeed";
-    _enum2strFloat[ballTrackerConfiguratorFloats::solverCoreMinVdt] = "coreMinVdt";
-    _enum2strInteger[ballTrackerConfiguratorIntegers::solverCoreMinVmeas] = "coreMinVmeas";
-    _enum2strFloat[ballTrackerConfiguratorFloats::solverBounceDt] = "bounceDt";
-    _enum2strFloat[ballTrackerConfiguratorFloats::solverBounceAge] = "bounceAge";
-    _enum2strInteger[ballTrackerConfiguratorIntegers::solverBounceMinMeasurements] = "bounceMinMeasurements";
+    // enum2str
+    _enum2strBool[ballTrackerConfiguratorBool::useOwnHighVision] = "useOwnHighVision";
+    _enum2strBool[ballTrackerConfiguratorBool::useFriendlyHighVision] = "useFriendlyHighVision";
+    _enum2strBool[ballTrackerConfiguratorBool::shareHighVision] = "shareHighVision";
+    _enum2strFloat[ballTrackerConfiguratorFloats::solverCoreWeight] = "solverCoreWeight";
+    _enum2strBool[ballTrackerConfiguratorBool::solverCoreSpeed] = "solverCoreSpeed";
+    _enum2strFloat[ballTrackerConfiguratorFloats::solverCoreMinVdt] = "solverCoreMinVdt";
+    _enum2strInteger[ballTrackerConfiguratorIntegers::solverCoreMinVmeas] = "solverCoreMinVmeas";
+    _enum2strFloat[ballTrackerConfiguratorFloats::solverBounceDt] = "solverBounceDt";
+    _enum2strFloat[ballTrackerConfiguratorFloats::solverBounceAge] = "solverBounceAge";
+    _enum2strInteger[ballTrackerConfiguratorIntegers::solverBounceMinMeasurements] = "solverBounceMinMeasurements";
     _enum2strFloat[ballTrackerConfiguratorFloats::solverMinDv] = "solverMinDv";
-    _enum2strFloat[ballTrackerConfiguratorFloats::solverTrackerTimeout] = "trackerTimeout";
-    _enum2strFloat[ballTrackerConfiguratorFloats::solverTrackerXYTolerance] = "trackerXYTolerance";
+    _enum2strFloat[ballTrackerConfiguratorFloats::solverTrackerTimeout] = "solverTrackerTimeout";
+    _enum2strFloat[ballTrackerConfiguratorFloats::solverTrackerBuffer] = "solverTrackerBuffer";    
+    _enum2strFloat[ballTrackerConfiguratorFloats::solverTrackerConeTolerance] = "solverTrackerConeTolerance";
     _enum2strInteger[ballTrackerConfiguratorIntegers::numberOfBallsWarningThreshold] = "numberOfBallsWarningThreshold";
     _enum2strFloat[ballTrackerConfiguratorFloats::confidenceGoodLimit] = "confidenceGoodLimit";
     _enum2strFloat[ballTrackerConfiguratorFloats::confidenceMaybeLimit] = "confidenceMaybeLimit";
@@ -108,6 +119,10 @@ ballTrackerConfigurator::ballTrackerConfigurator()
     _enum2strInteger[ballTrackerConfiguratorIntegers::outlierMaxIter] = "outlierMaxIter";
     _enum2strInteger[ballTrackerConfiguratorIntegers::measPerOrder] = "measPerOrder";
     _enum2strFloat[ballTrackerConfiguratorFloats::friendlyMeasurementsDistance] = "friendlyMeasurementsDistance";
+    _enum2strFloat[ballTrackerConfiguratorFloats::blackListThresholdZ] = "blackListThresholdZ";
+    _enum2strFloat[ballTrackerConfiguratorFloats::blackListFloatingDuration] = "blackListFloatingDuration";
+    _enum2strFloat[ballTrackerConfiguratorFloats::blackListGroundDuration] = "blackListGroundDuration";
+    _enum2strBool[ballTrackerConfiguratorBool::blackListDefault] = "blackListDefault";
 }
 
 ballTrackerConfigurator::~ballTrackerConfigurator()
@@ -120,44 +135,44 @@ ballTrackerConfigurator::~ballTrackerConfigurator()
 
 void ballTrackerConfigurator::set(const ballTrackerConfiguratorBool key, const bool value)
 {
-	try
-	{
-		_dataBool.at(key) = value;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        _dataBool.at(key) = value;
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 void ballTrackerConfigurator::set(const ballTrackerConfiguratorIntegers key, const int value)
 {
-	try
-	{
-		_dataInteger.at(key) = value;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        _dataInteger.at(key) = value;
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 void ballTrackerConfigurator::set(const ballTrackerConfiguratorFloats key, const float value)
 {
-	try
-	{
-		_dataFloat.at(key) = value;
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        _dataFloat.at(key) = value;
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 bool ballTrackerConfigurator::set(const std::string key, const std::string value)
@@ -191,86 +206,86 @@ bool ballTrackerConfigurator::set(const std::string key, const std::string value
 
 bool ballTrackerConfigurator::get(const ballTrackerConfiguratorBool key) const
 {
-	try
-	{
-		return _dataBool.at(key);
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        return _dataBool.at(key);
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 int ballTrackerConfigurator::get(const ballTrackerConfiguratorIntegers key) const
 {
-	try
-	{
-		return _dataInteger.at(key);
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        return _dataInteger.at(key);
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 float ballTrackerConfigurator::get(const ballTrackerConfiguratorFloats key) const
 {
-	try
-	{
-		return _dataFloat.at(key);
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        return _dataFloat.at(key);
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 std::string ballTrackerConfigurator::enum2str(const ballTrackerConfiguratorBool key) const
 {
-	try
-	{
-		return _enum2strBool.at(key);
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        return _enum2strBool.at(key);
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 std::string ballTrackerConfigurator::enum2str(const ballTrackerConfiguratorFloats key) const
 {
-	try
-	{
-		return _enum2strFloat.at(key);
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        return _enum2strFloat.at(key);
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 std::string ballTrackerConfigurator::enum2str(const ballTrackerConfiguratorIntegers key) const
 {
-	try
-	{
-		return _enum2strInteger.at(key);
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+    try
+    {
+        return _enum2strInteger.at(key);
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 void ballTrackerConfigurator::traceAll()
@@ -284,42 +299,42 @@ void ballTrackerConfigurator::traceAll()
             assert(_enum2strBool.count(it->first));
             s += _enum2strBool[it->first];
             s += "=";
-        	if(it->second)
-        	{
-        		s += "True";
-        	}
-        	else
-        	{
-        		s += "False";
-        	}
-    	    s += " ";
-	    }
+            if(it->second)
+            {
+                s += "True";
+            }
+            else
+            {
+                s += "False";
+            }
+            s += " ";
+        }
         for (auto it = _dataFloat.begin(); it != _dataFloat.end(); ++it)
         {
             assert(_enum2strFloat.count(it->first));
             s += _enum2strFloat[it->first];
             s += "=";
             s += boost::lexical_cast<std::string>(it->second);
-    	    s += " ";
-	    }
+            s += " ";
+        }
         for (auto it = _dataInteger.begin(); it != _dataInteger.end(); ++it)
         {
             assert(_enum2strInteger.count(it->first));
             s += _enum2strInteger[it->first];
             s += "=";
             s += boost::lexical_cast<std::string>(it->second);
-    	    s += " ";
-	    }
+            s += " ";
+        }
     }
     catch (std::exception &e)
     {
-		s += "???";
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+        s += "???";
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 
-    // trace it
-    TRACE("%s", s.c_str());
+    // trace it - TODO do this only once, at start of wm initialization, after yaml load, and upon re-configure
+    //tprintf("%s", s.c_str());
 }
 

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,9 +18,9 @@
 
 #include "int/actions/cActionPositionBehindPOI.hpp"
 
-#include "int/cTeamplayCommon.hpp"
+#include "FalconsCommon.h"
+#include "int/stores/robotStore.hpp"
 #include "int/utilities/trace.hpp"
-#include "int/cWorldModelInterface.hpp"
 
 
 cActionPositionBehindPOI::cActionPositionBehindPOI()
@@ -30,13 +30,10 @@ cActionPositionBehindPOI::cActionPositionBehindPOI()
         ("destination", std::make_pair(defaultPOI, false))
         ("distance", std::make_pair(std::vector<std::string>{"float"}, false))
         ("distanceThreshold", std::make_pair(std::vector<std::string>{"float"}, true) )
-        ("angleThreshold", std::make_pair(std::vector<std::string>{"float"}, true))
-        ("facing", std::make_pair(defaultPOI, true))
-        ("lookAway", std::make_pair(std::vector<std::string>{"bool"}, true))
         ("motionProfile", std::make_pair(std::vector<std::string>{defaultMotionProfiles}, true))
         ;
 
-    intention.actionType = actionEnum::POSITION_BEHIND_POI;
+    _intention.action = actionTypeEnum::MOVE;
 }
 
 cActionPositionBehindPOI::~cActionPositionBehindPOI()
@@ -46,15 +43,11 @@ cActionPositionBehindPOI::~cActionPositionBehindPOI()
 
 /* \brief Project a line from a source POI to a destination POI and place target location behind destination POI.
  * The target location is placed 'distance' meters behind the destination POI, taking 'distanceThreshold' into account.
- * Optionally, turn to face the optional argument 'facing' POI.
  *
  * \param source              The source POI for the line projection.
  * \param destination         The destination POI for the line projection.
  * \param distance            The distance between the target location and the POI.
  * \param distanceThreshold   [Optional] The allowed delta between the target position and current position
- * \param angleThreshold      [Optional] The allowed delta between the target angle and current angle
- * \param facing              [Optional] The POI to look towards at the target location.
- * \param lookAway            [Optional] Boolean to indicate whether to look away from location to look at
  *
  * \retval  RUNNING     if the robot is not at the target position
  *          PASSED      if the robot has reached the target position
@@ -65,8 +58,7 @@ behTreeReturnEnum cActionPositionBehindPOI::execute(const std::map<std::string, 
     try
     {
         // Own robot position
-    	Position2D myPos;
-        cWorldModelInterface::getInstance().getOwnLocation(myPos);
+    	Position2D myPos = teamplay::robotStore::getInstance().getOwnRobot().getPosition();
 
         // The source POI for the line projection.
         std::string sourceStr("source");
@@ -76,27 +68,10 @@ behTreeReturnEnum cActionPositionBehindPOI::execute(const std::map<std::string, 
         std::string destinationStr("destination");
         boost::optional<Position2D> destination = getPos2DFromStr(parameters, destinationStr);
 
-        // [Optional] The POI to look towards at the target location.
-        std::string facingStr("facing");
-        boost::optional<Position2D> facing = getPos2DFromStr(parameters, facingStr);
-
-        // [Optional] The POI to look away from
-        std::string lookAwayStr("lookAway");
-        bool lookAway = false;
-        auto paramValPair = parameters.find(lookAwayStr);
-        if(paramValPair != parameters.end())
-        {
-        	std::string paramVal = paramValPair->second;
-        	if(paramVal == "true")
-        	{
-        		lookAway = true;
-        	}
-        }
-
         // The distance between the target location and the POI.
         std::string paramStr("distance");
         double dist = -1.0;
-        paramValPair = parameters.find(paramStr);
+        auto paramValPair = parameters.find(paramStr);
         if (paramValPair != parameters.end())
         {
             std::string paramVal = paramValPair->second;
@@ -116,19 +91,6 @@ behTreeReturnEnum cActionPositionBehindPOI::execute(const std::map<std::string, 
             }
         }
 
-        // parameter "angleThreshold" is the allowed delta between the target and the real angle
-        std::string angleThresholdStr("angleThreshold");
-        double angleThreshold = PHIpositionTolerance;
-        paramValPair = parameters.find(angleThresholdStr);
-        if (paramValPair != parameters.end())
-        {
-            std::string angleThresholdVal = paramValPair->second;
-            if (angleThresholdVal.compare(emptyValue) != 0)
-            {
-                angleThreshold = std::stod(angleThresholdVal);
-            }
-        }
-
         // parameter "motionProfile" defines with which profile to move with (e.g., normal play or more careful during a setpiece)
         std::string motionProfileStr("motionProfile");
         std::string motionProfileValue = "normal";
@@ -145,36 +107,17 @@ behTreeReturnEnum cActionPositionBehindPOI::execute(const std::map<std::string, 
             Vector2D destVec = destination->xy();
 
             Vector2D targetVec = ( ( (destVec - sourceVec).size() + dist ) / (destVec - sourceVec).size() ) * (destVec - sourceVec) + sourceVec;
+            Position2D targetPos(targetVec.x, targetVec.y, 0.0);
 
-            // If 'facing' was given, compute angle towards 'facing'.
-            // Otherwise, face towards 'destination'.
-            double angle = 0.0;
-            if (facing)
-            {
-                angle = angle_between_two_points_0_2pi(targetVec.x, targetVec.y, facing->x, facing->y);
-            }
-            else
-            {
-                angle = angle_between_two_points_0_2pi(targetVec.x, targetVec.y, destination->x, destination->y);
-            }
-
-            // Apply look away for both 'normal' angles and facing angles
-            if(lookAway)
-            {
-            	angle = project_angle_0_2pi(angle + M_PI);
-            }
-
-            Position2D targetPos(targetVec.x, targetVec.y, angle);
-
-            intention.x = targetPos.x;
-            intention.y = targetPos.y;
+            _intention.position.x = targetPos.x;
+            _intention.position.y = targetPos.y;
             sendIntention();
 
-            if (positionReached(targetPos.x, targetPos.y, targetPos.phi, distanceThreshold, angleThreshold))
+            if (positionReached(targetPos.x, targetPos.y, distanceThreshold))
             {
                 // Target reached. Do nothing and return PASSED
                 TRACE("cActionPositionBehindBall PASSED");
-                moveTo(myPos.x, myPos.y, myPos.phi);
+                moveTo(myPos.x, myPos.y);
                 return behTreeReturnEnum::PASSED;
             }
             else
@@ -183,7 +126,7 @@ behTreeReturnEnum cActionPositionBehindPOI::execute(const std::map<std::string, 
                 if (!isCurrentPosValid())
                 {
                     // Move towards the center, while maintaining angle and motion profile
-                    moveTo(0.0, 0.0, targetPos.phi, motionProfileValue);
+                    moveTo(0.0, 0.0, motionProfileValue);
                     return behTreeReturnEnum::RUNNING;
                 }
 
@@ -193,7 +136,7 @@ behTreeReturnEnum cActionPositionBehindPOI::execute(const std::map<std::string, 
                 }
 
                 // Target not reached. moveTo and return RUNNING
-                moveTo(targetPos.x, targetPos.y, targetPos.phi, motionProfileValue);
+                moveTo(targetPos.x, targetPos.y, motionProfileValue);
                 return behTreeReturnEnum::RUNNING;
             }
         }
@@ -201,8 +144,8 @@ behTreeReturnEnum cActionPositionBehindPOI::execute(const std::map<std::string, 
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+        throw std::runtime_error(std::string("cActionPositionBehindPOI::execute Linked to: ") + e.what());
     }
 
     return behTreeReturnEnum::FAILED;

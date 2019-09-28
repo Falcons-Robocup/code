@@ -1,0 +1,73 @@
+<!-- This file can be generated using xrtdb in order to
+     exist backward compatibility between RtDB and RtDB2 -->
+<!-- Every key might have the following parameters:
+     * id that stands for a string identifier;
+     * shared that indicates if the object is shared or local to
+       real-time database;
+     * oid (optional) corresponds to an older identifier in the
+       RtDB older version (this field should disappear after a
+       complete upgrade.
+     * period (optional) and phase (optional) in order to schedule
+       how an item is shared by the Communication Manager -->
+<!-- Communication documentation:
+     * multiCastIP     (mandatory) assigned group address according to MSL rules
+     * interface       (optional)  interface overrule, 'auto' (default) will resolve to available wireless adapter
+     * frequency       (mandatory) transmitter frequency (Hz)
+     * port            (mandatory) port to use
+     * compression     (mandatory) boolean flag to enable compression
+     * loopback        (optional)  whether or not to receive own messages (default 'false')
+     -->
+
+<RtDB2Configuration>
+  <General>
+    <DefaultKeyValue shared="false" period="1" phase="0"/>
+    <Compressor name="zstd" dictionary="false"/>
+    <Communication multiCastIP="224.16.32.74" interface="auto" frequency="30" port="8001" compression="true" loopback="false" send="true"/>
+  </General>
+  <Keys>
+    <key id="BALL_CANDIDATES" shared="false"/>
+    <key id="OBSTACLE_CANDIDATES" shared="false"/>
+    <key id="LOCALIZATION_CANDIDATES" shared="true"/>
+    <key id="VIS_BALL_POSSESSION" shared="false"/>
+    <key id="BALL_CANDIDATES_FCS" shared="true"/>
+    <key id="OBSTACLE_CANDIDATES_FCS" shared="true"/>
+    <key id="ROBOT_STATE" shared="true"/>
+    <key id="BALLS" shared="true"/>
+    <key id="OBSTACLES" shared="true"/>
+    <key id="FORBIDDEN_AREAS" shared="false"/>
+    <key id="ACTION" shared="true"/>
+    <key id="ACTION_RESULT" shared="true"/>
+    <key id="MOTION_SETPOINT" shared="true"/>
+    <key id="ROBOT_VELOCITY_SETPOINT" shared="true"/>
+    <key id="MOTOR_VELOCITY_SETPOINT" shared="false"/>
+    <key id="BALLHANDLERS_SETPOINT" shared="true"/>
+    <key id="BALLHANDLERS_MOTOR_SETPOINT" shared="false"/>
+    <key id="SHOOT_SETPOINT" shared="true"/>
+    <key id="KICKER_SETPOINT" shared="true"/>
+    <key id="MOTOR_FEEDBACK" shared="false"/>
+    <key id="ROBOT_DISPLACEMENT_FEEDBACK" shared="false"/>
+    <key id="ROBOT_VELOCITY_FEEDBACK" shared="false"/>
+    <key id="BALLHANDLERS_FEEDBACK" shared="true"/>
+    <key id="BALLHANDLERS_BALL_POSSESSION" shared="false"/>
+    <key id="REFBOX_CONFIG" shared="false"/>
+    <key id="MATCH_STATE" shared="true"/>
+    <key id="INPLAY_FEEDBACK" shared="false"/>
+    <key id="EVENT_LIST" shared="true"/>
+    <key id="DIAG_TEAMPLAY" period="5" shared="true"/>
+    <key id="DIAG_WORLDMODEL_SHARED" period="5" shared="true"/>
+    <key id="DIAG_WORLDMODEL_LOCAL" shared="false"/>
+    <key id="DIAG_PATHPLANNING" period="5" shared="true"/>
+    <key id="DIAG_PERIPHERALSINTERFACE" period="5" shared="true"/>
+    <key id="DIAG_HEALTH_SLOW" shared="true"/>
+    <key id="DIAG_HEALTH_FAST" shared="true"/>
+    <key id="ROBOT_ROLE" shared="true"/>
+    <key id="INTENTION" shared="true"/>
+    <key id="TP_OVERRIDE_STATE" shared="false"/>
+    <key id="TP_OVERRIDE_RESULT" shared="false"/>
+    <!-- configuration items are shared; logger / comm should only pick them up when changed (which is rare) -->
+    <key id="CONFIG_PATHPLANNING" shared="true"/>
+    <!-- configuration items for simulation are not shared; no robot shall depend on simulation configuration -->
+    <key id="CONFIG_SIMULATION" shared="false"/>
+    <key id="JOYSTICK_CONTROL" shared="true"/>
+  </Keys>
+</RtDB2Configuration>

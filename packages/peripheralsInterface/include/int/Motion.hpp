@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -11,8 +11,6 @@
  ***/ 
  #ifndef MOTION_HPP
 #define MOTION_HPP
-
-#include <thread>
 
 #include "int/PeripheralsInterfaceTypes.hpp"
 #include "int/PeripheralsInterfaceData.hpp"
@@ -37,7 +35,6 @@ public:
 	Motion(PeripheralsInterfaceData &piData, MotionBoard& leftMotionBoard, MotionBoard& rightMotionBoard, MotionBoard& rearMotionBoard);
 	~Motion();
 
-	void start();
 	void update();
 
 private:
@@ -48,10 +45,11 @@ private:
 	void updateBoardSetpoints();
 
 	void calculateEncodersInput();
-	void calculateRobotVelocityAndDisplacementOutput();
+	void calculateVelocityAndDisplacementOutput();
+
+	void traceData();
 
 	PeripheralsInterfaceData &_piData;
-	thread _updateThread;
 
 	size_t _watchDogCycles;
 
@@ -62,11 +60,5 @@ private:
 	MotionMotor _leftMotor;
 	MotionMotor _rightMotor;
 	MotionMotor _rearMotor;
-
-	double _totalDisplX;
-	double _totalDisplY;
-	double _totalDisplPhi;
-
-	MotionSettings _motionSettings;
 };
 #endif /* CPERIPHERALSINTERFACEMOTION_HPP */

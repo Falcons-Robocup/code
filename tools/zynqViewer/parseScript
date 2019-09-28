@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+for jj in ~/data/grab*_2018-04-29_13*.bin
+do
+   base=`basename -s .bin ${jj}`
+   jpg=$base.jpg
+   echo convert ${jj} to $base $jpg
+   ./zynqViewer -f ${jj} -o $jpg
+   qiv -q 3 90 $jpg
+done

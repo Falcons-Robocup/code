@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Copyright 2018-2019 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to kill all vision related scripts and processes on the raspi board
+
+set -e
+
+echo "KILLALL   : `date +%Y-%m-%d_%H:%M:%S`"
+
+ps aux | grep -ie runRaspi | awk '{print $2}' | xargs kill -9  2>/dev/null || true
+ps aux | grep -ie runRaspi | awk '{print $2}' | xargs kill -15 2>/dev/null || true
+
+./killMostRaspi
+
+exit 0

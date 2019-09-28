@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,8 +26,8 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "rosMsgs/t_diag_teamplay.h"
 #include "cDiagnostics.hpp"
+#include "FalconsRtDB2.hpp"
 
 #include "int/types/cDecisionTreeTypes.hpp"
 #include "int/types/cActionTypes.hpp"
@@ -98,9 +98,11 @@ class cDecisionTree
             return instance;
         }
 
+		void loadDecisionTrees(const std::string& directory);
         behTreeReturnEnum executeTree(const treeEnum& tree, std::map<std::string, std::string> &mapParams, memoryStackType& memoryStack, int memoryStackIdx, memoryStackNodes& memoryStackNodes);
         void clearDiagMsg();
-
+        
+        diagTeamplay diagMsg;
 
 	private:
         cDecisionTree();
@@ -110,16 +112,12 @@ class cDecisionTree
 
 		const std::string DECISIONTREE_PATH = "/falcons/code/packages/teamplay/teamplayData/";
 
+        RtDB2 *_rtdb = NULL;
 		// These are the trees that are loaded on startup.
 		std::map<treeEnum, cParsedTree> _trees;
 
-		// Diagnostics
-		diagnostics::cDiagnosticsSender<rosMsgs::t_diag_teamplay> diagSender;
-		rosMsgs::t_diag_teamplay diagMsg;
-
-		void loadDecisionTrees();
         behTreeReturnEnum traverseBehaviorTree(const cParsedTree& tree, const cParsedNode& node, std::map<std::string, std::string> &mapParams, const treeEnum& treeAsEnum, memoryStackType& memoryStack, int memoryStackIdx, memoryStackNodes& memoryStackNodes);
-        behTreeReturnEnum executeAction(const cParsedNode &node);
+        behTreeReturnEnum executeAction(const cParsedNode &node, std::map<std::string, std::string> &mapParams);
         const cParsedTree& getBehaviorTree(const treeEnum &behavior);
         void prettyPrintMemoryStack(memoryStackType& memoryStack, memoryStackNodes& memoryStackNodes);
 

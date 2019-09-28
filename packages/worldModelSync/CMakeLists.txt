@@ -13,8 +13,8 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE RelWithDebInfo)
-set(ROS_BUILD_TYPE Debug)
-#set(ROS_BUILD_TYPE Release)
+#set(ROS_BUILD_TYPE Debug)
+set(ROS_BUILD_TYPE Release)
 
 rosbuild_init()
 
@@ -77,6 +77,7 @@ target_link_libraries(worldModelSyncNode adaptersWmSync)
 target_link_libraries(worldModelSyncNode configuratorsWmSync) 
 target_link_libraries(worldModelSyncNode transceiversWmSync) 
 target_link_libraries(worldModelSyncNode packetsWmSync) 
+rosbuild_link_boost(worldModelSyncNode system thread)
 
 # coach listener, for visualization and diagnostics
 rosbuild_add_executable(worldModelSyncNodeCoach src/mainROScoach.cpp) 
@@ -84,6 +85,7 @@ target_link_libraries(worldModelSyncNodeCoach adaptersWmSync)
 target_link_libraries(worldModelSyncNodeCoach configuratorsWmSync) 
 target_link_libraries(worldModelSyncNodeCoach transceiversWmSync) 
 target_link_libraries(worldModelSyncNodeCoach packetsWmSync) 
+rosbuild_link_boost(worldModelSyncNodeCoach system thread)
 
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)

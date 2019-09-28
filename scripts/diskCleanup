@@ -1,0 +1,82 @@
+#!/bin/bash
+#
+# Check disk usage on robot if option -v is used.
+# Otherwise, attempt to cleanup.
+# 
+# JFEI 2019 creation
+# 
+
+
+# exit upon any error
+set -e
+
+# only run on robot
+if [ -z "$TURTLE5K_ROBOTNUMBER" ]; then
+    exit 0
+fi
+
+# offer a mode to simply check, which is useful for wtf script
+checkMode=0
+if [ "$1" = "-v" ]; then
+    checkMode=1
+fi
+
+# on robot, we have a small partition for Linux (mount point /)
+# over time, old kernel headers/images can quickly fill the disk
+pct=`df | grep '/$' | nawk '{print $5}' | sed 's/%//'`
+limit=85
+if [ $pct -gt $limit ]; then
+    if [ $checkMode = 1 ]; then
+        echo "disk usage ($pct%) of system partition exceeds threshold ($limit%)"
+        exit 1
+    else
+        sudo apt-get autoremove -y
+    fi    
+fi
+
+# there is a bigger special partition for /var on robot where logging is stored
+# https://stackoverflow.com/questions/12062236/linux-clean-directory-script
+pct=`/home/robocup/falcons/code/scripts/getDiskUsage`
+limit=70
+numKeepNewest=30
+ageLimit=60
+maxNumObjectsPerIteration=10
+maxIterations=5
+if [ $pct -gt $limit ]; then
+    if [ $checkMode = 1 ]; then
+        echo "disk usage ($pct%) of log partition exceeds threshold ($limit%)"
+        exit 1
+    else
+        # iterative
+        iter=0
+        while [ $pct -gt $limit ]; do
+            # perform a cleanup iteration
+            let "iter = iter + 1"
+            if [ $iter -gt $maxIterations ]; then # failsafe exit after a number of iterations
+                echo "maximum number of iterations exceeded"
+                exit 1
+            fi
+            # find objects to be removed (some of them might be owned by root!)
+            # * sort objects on timestamp, newest first
+            # * whitelist newest objects (numKeepNewest)
+            # * iterate from bottom of the list upwards (maxNumObjectsPerIteration)
+            # * only objects older than ageLimit
+            objects=`find /var/tmp -mindepth 1 -maxdepth 1 -printf "%T@ %p\n" | \
+            sort -nrk1,1 | sed "1,${numKeepNewest}d" | cut -d' ' -f2 | tail -"$maxNumObjectsPerIteration" | \
+            xargs -n1 -I fname \
+            find fname -maxdepth 0 -mtime +$ageLimit -exec echo {} \;`
+            # nothing found -> exit
+            if [ -z "$objects" ]; then
+                break
+            fi
+            # remove
+            echo removing $objects
+            rm -rf $objects
+            # recalculate
+            pct=`/home/robocup/falcons/code/scripts/getDiskUsage`
+        done
+    fi
+fi
+
+
+

@@ -1,0 +1,12 @@
+.cproject
+.project
+.pydevproject
+build/
+bin/
+lib/
+.cproject
+.project
+.pydevproject
+include/generated_enum2str.hpp
+src/sharedTypes.py
+

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -27,6 +27,8 @@ namespace falconsMsgsInterface
 {
 
 const static string g_robotspeed = "g_robotspeed";
+const static string g_motorspeed = "g_motorspeed";
+const static string g_motorspeed_feedback = "g_motorspeed_feedback";
 }
 
 #endif /* FALCONSMSGSNAMES_H_ */

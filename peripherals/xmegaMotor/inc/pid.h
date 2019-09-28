@@ -1,4 +1,4 @@
-// Copyright 2015 Erik Kouters & Andre Pool
+// Copyright 2015, 2016 Erik Kouters & Wouter Geelen & Andre Pool
 // Licensed under the Apache License version 2.0
 // You may not use this file except in compliance with this License
 // You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -13,7 +13,8 @@ typedef struct
 	uint16_t p;
 	uint16_t i;
 	uint16_t d;
-	uint16_t iTh;
+	int16_t iTh; // only positive used, but use signed to prevent compile cast issues
+	int32_t iMax; // only positive used, but use signed to prevent compile cast issues
 } pidPropT;
 
 typedef struct {
@@ -47,8 +48,8 @@ int16_t getPidAngleError();
 int16_t getPidPrimaryError();
 int32_t getPidAngleIntegral();
 int32_t getPidPrimaryIntegral();
-int16_t getPidPrimaryResult16();
-int32_t getPidPrimaryResult32(); // only used for diagnostics (send to linux pc)
+// int16_t getPidPrimaryResult16();
+int32_t getPidPrimaryResult32();
 
 uint16_t getPidError();
 void clearPidError(uint16_t value);

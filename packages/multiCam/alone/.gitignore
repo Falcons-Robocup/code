@@ -1,0 +1,7 @@
+*.csv
+*.o
+*.jpg
+201*
+multiCamAlone
+log*
+floorSize.yaml

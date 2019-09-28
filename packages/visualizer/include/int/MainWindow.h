@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,6 +21,9 @@
 
 // Internal:
 #include "int/GameSignalAdapter.h"
+#include "int/RefboxConfigAdapter.h"
+#include "int/PlaybackControl.h"
+
 
 using namespace std;
 
@@ -31,14 +34,16 @@ namespace Visualizer
         Q_OBJECT
 
     public:
-        MainWindow();
+        MainWindow(PlaybackControl *pb);
         ~MainWindow();
         
     private:
         GameSignalAdapter *_gameSignalAdapter;
+        RefboxConfigAdapter * refboxConfig;
 
         std::vector<QAction*> _robotViewActions;
         std::vector<WidgetBase *> _widgets;
+        PlaybackControl *_pbControl;
 
     protected:
         bool eventFilter(QObject *obj, QEvent *event); // handle Qt events from parent window
@@ -46,6 +51,8 @@ namespace Visualizer
 
     public Q_SLOTS:
         void switchViewToWorld(void);
+        void switchViewToGaussianWorld(void);
+        void switchViewToGaussianMeasurements(void);
         void switchViewToVision(void);
         void switchViewToPathPlanning(void);
         void switchViewToTeamplay(void);
@@ -53,7 +60,7 @@ namespace Visualizer
         void switchViewToRobot(int robotId);
 
     private Q_SLOTS:
-        //
+        void showSettingsDialog(void);
 
     };
 }

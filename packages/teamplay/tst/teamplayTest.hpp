@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,6 +26,8 @@
 /* Include trace utility */
 #include "int/utilities/trace.hpp"
 
+namespace teamplay {};
+
 using namespace ::testing;
 using namespace teamplay;
 
@@ -34,7 +36,8 @@ class TeamplayTest : public Test
 public:
     TeamplayTest()
     {
-        traceRedirect::getInstance().setAllTracesToStdout();
+        //traceRedirect::getInstance().setAllTracesToStdout();
+        // does not exist anymore, teamplay specific TRACE was removed in favour of Falcons common TRACE
     };
 };
 

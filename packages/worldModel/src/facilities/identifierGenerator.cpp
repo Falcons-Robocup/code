@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -33,9 +33,9 @@ identifierGenerator::~identifierGenerator()
 
 }
 
-uniqueWorldModelID identifierGenerator::getUniqueID()
+uniqueObjectID identifierGenerator::getUniqueID()
 {
-	uniqueWorldModelID uID;
+	uniqueObjectID uID;
 
 	uID.robotID = _robotID;
 	uID.uniqueID = _uniqueID++;

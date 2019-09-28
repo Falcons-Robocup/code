@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,33 +18,24 @@
 
 #include "int/adapters/ROS/heartBeatAdapterROS.hpp"
 
-#define EXPECTED_FREQUENCY (30.0) // TODO store somewhere common, provide by heartBeat? simulator uses 10Hz, real robot 30Hz
-#define WARNING_THRESHOLD (0.6)
-
 heartBeatAdapterROS::heartBeatAdapterROS()
-: 
-    _dutyCycle("worldModel", EXPECTED_FREQUENCY, WARNING_THRESHOLD) 
 {
 }
 
 heartBeatAdapterROS::~heartBeatAdapterROS()
-/*
- * Chuck Norris is the reason Waldo is hiding
- */
+// Chuck Norris is the reason Waldo is hiding
 {
 
 }
 
 void heartBeatAdapterROS::InitializeROS()
 {
-	_hROS.reset(new ros::NodeHandle());
-	_subHeartBeat = _hROS->subscribe(heartBeatInterface::t_beat, 1, &heartBeatAdapterROS::heartBeat_cb, this);
+    _hROS.reset(new ros::NodeHandle());
+    _subHeartBeat = _hROS->subscribe(heartBeatInterface::t_beat, 1, &heartBeatAdapterROS::heartBeat_cb, this);
 }
 
 void heartBeatAdapterROS::heartBeat_cb(const heartBeat::beat::ConstPtr& msg)
 {
-    _dutyCycle.pokeStart();
-	notify(true);
-    _dutyCycle.pokeEnd();
+    notify(true);
 }
 

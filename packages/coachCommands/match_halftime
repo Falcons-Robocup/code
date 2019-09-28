@@ -22,7 +22,7 @@ echo "About to deploy git working area to robots, hit Ctrl-C to abort..."
 sleep 10
 
 # sync to robots
-deploy_wip.sh $robots
+deploy_wip $robots
 
 # warn for build skip
 echo "NOT BUILDING ON ROBOTS"

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -13,15 +13,15 @@
  * PeripheralsInterfaceBallHandlers.cpp
  *
  *  Created on: Mar 1, 2016
- *      Author: Prabhu Mani
+ *      Author: Robocup
  */
 
 #define _USE_MATH_DEFINES
 
-#include <chrono>
 #include <cmath>
 
-#include "cDiagnosticsEvents.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 #include "int/Ballhandlers.hpp"
 
@@ -29,225 +29,106 @@
 
 // TODO:calculate correct value
 static const float velocityToEncoderValue = 50;
-static const float hasBallTimeout = 0; // JFEI/EKPC what was the idea behind 500ms here? this spoils responsiveness when getting ball; we already have camera check; so we disable.
-
-//TODO: REMOVE REMOVE REMOVE: Somehow the encoder to velocity value for the motion motors is used here :S?
-static const float velocityToMotionEncoderValue = 155.053664073;
 
 Ballhandlers::Ballhandlers(
-		PeripheralsInterfaceData &piData, BallhandlerBoard& leftBallhandlerBoard, BallhandlerBoard& rightBallhandlerBoard) :
-				_piData(piData), _leftBallhandlerBoard(leftBallhandlerBoard), _rightBallhandlerBoard(rightBallhandlerBoard) {
-	bothBallhandlersDownTime = std::chrono::steady_clock::now();
+        PeripheralsInterfaceData &piData, BallhandlerBoard& leftBallhandlerBoard, BallhandlerBoard& rightBallhandlerBoard) :
+        		_piData(piData), _leftBallhandlerBoard(leftBallhandlerBoard), _rightBallhandlerBoard(rightBallhandlerBoard) {
 
-	// Set online status of ballhandlers initially to true. An error will be logged when these are not available.
-	_leftBallhandler.online = true;
-	_rightBallhandler.online = true;
+    // Set online status of ballhandlers initially to true. An error will be logged when these are not available.
+    _leftBallhandler.online = true;
+    _rightBallhandler.online = true;
+    _leftEnabled = false;
+    _rightEnabled = false;
 }
 
 Ballhandlers::~Ballhandlers() {
 
 }
 
-void Ballhandlers::start() {
-	_updateThread = thread(&Ballhandlers::update, this);
-}
-
 void Ballhandlers::update() {
+    updateBoardSettings();
 
-	while (true) {
-		// Calculate the time when the next iteration should be started.
-		chrono::system_clock::time_point end_time = chrono::system_clock::now() + chrono::milliseconds(100);
+    updateControlMode();
 
-		updateBoardData();
+    updateBoardSetpoints();
 
-		determineRobotHasBall();
+    updateBoardData();
 
-		setVelocityInput();
+    updateBoardStatus();
 
-		updateBoardSetpoints();
-
-		updateBoardStatus();
-
-		this_thread::sleep_until(end_time);
-	}
+    traceData();
 }
 
-void Ballhandlers::updateBoardStatus() {
-	_piData.getLeftBallhandlerBoard().setOnline(_leftBallhandlerBoard.isConnected());
-	_piData.getRightBallhandlerBoard().setOnline(_rightBallhandlerBoard.isConnected());
+void Ballhandlers::updateBoardSettings() {
+    if (_piData.getLeftBallhandlerBoard().isSettingsChanged()) {
+        _leftBallhandlerBoard.setSettings(_piData.getLeftBallhandlerBoard().getSettings());
+    }
+    if (_piData.getRightBallhandlerBoard().isSettingsChanged()) {
+        _rightBallhandlerBoard.setSettings(_piData.getRightBallhandlerBoard().getSettings());
+    }
+}
+
+void Ballhandlers::updateControlMode() {
+    // update disabled/enabled state of both BallhandlerBoard objects
+    BallhandlerBoardControlMode controlModeSetpoint = _piData.getBallhandlerSettings().controlMode;
+    BallhandlerBoardControlMode controlModeCurrentLeft = _leftBallhandlerBoard.getControlMode();
+    BallhandlerBoardControlMode controlModeCurrentRight = _rightBallhandlerBoard.getControlMode();
+
+    // TODO: either make sure this does not cause one ballHandler to disable before the other, or schedule parallel
+    if (controlModeCurrentLeft != controlModeSetpoint)
+    {
+        TRACE("left set: current=%d setpoint=%d", (int)controlModeCurrentLeft, (int)controlModeSetpoint);
+        _leftBallhandlerBoard.setControlMode(controlModeSetpoint);
+    }
+    _leftEnabled = (controlModeCurrentLeft == BALLHANDLER_CONTROL_MODE_ON);
+
+    if (controlModeCurrentRight != controlModeSetpoint)
+    {
+        TRACE("right set: current=%d setpoint=%d", (int)controlModeCurrentRight, (int)controlModeSetpoint);
+        _rightBallhandlerBoard.setControlMode(controlModeSetpoint);
+    }
+    _rightEnabled = (controlModeCurrentRight == BALLHANDLER_CONTROL_MODE_ON);
 }
 
 void Ballhandlers::updateBoardData() {
+    _leftBallhandler.data = _leftBallhandlerBoard.getBoardData();
+    _rightBallhandler.data = _rightBallhandlerBoard.getBoardData();
 
-	if (_piData.getLeftBallhandlerBoard().isSettingsChanged()) {
-		_leftBallhandlerBoard.setSettings(_piData.getLeftBallhandlerBoard().getSettings());
-	}
-	if (_piData.getRightBallhandlerBoard().isSettingsChanged()) {
-		_rightBallhandlerBoard.setSettings(_piData.getRightBallhandlerBoard().getSettings());
-	}
+    _piData.getLeftBallhandlerBoard().setDataOutput(_leftBallhandler.data);
+    _piData.getRightBallhandlerBoard().setDataOutput(_rightBallhandler.data);
 
-	if (_piData.isBallhandlerSettingsChanged()) {
-		_leftBallhandlerBoard.setControlMode(_piData.getBallhandlerSettings().controlMode);
-		_rightBallhandlerBoard.setControlMode(_piData.getBallhandlerSettings().controlMode);
-	}
-
-	_leftBallhandler.data = _leftBallhandlerBoard.getBoardData();
-	_rightBallhandler.data = _rightBallhandlerBoard.getBoardData();
-
-	_piData.getLeftBallhandlerBoard().setDataOutput(_leftBallhandler.data);
-	_piData.getRightBallhandlerBoard().setDataOutput(_rightBallhandler.data);
+    BallhandlerFeedback feedback;
+    feedback.angleLeft = _leftBallhandler.data.ballhandler.angle;
+    feedback.angleRight = _rightBallhandler.data.ballhandler.angle;
+    feedback.velocityLeft = _leftBallhandler.data.ballhandler.tacho / velocityToEncoderValue;
+    feedback.velocityRight = _rightBallhandler.data.ballhandler.tacho / velocityToEncoderValue;
+    _piData.setBallhandlerFeedback(feedback);
 }
 
 void Ballhandlers::updateBoardSetpoints() {
+    BallhandlerSetpoints setpoints = _piData.getBallhandlerSetpoints();
+    _leftBallhandler.setpoint = setpoints.velocityLeft * velocityToEncoderValue;
+    _rightBallhandler.setpoint = setpoints.velocityRight * velocityToEncoderValue;
 
-	float angle = _piData.getBallhandlerAngle();
-	_leftBallhandlerBoard.setSetpoint(angle, _leftBallhandler.setpoint);
-	_rightBallhandlerBoard.setSetpoint(angle, _rightBallhandler.setpoint);
+    _leftBallhandlerBoard.setSetpoint(setpoints.angleLeft, _leftBallhandler.setpoint);
+    _rightBallhandlerBoard.setSetpoint(setpoints.angleRight, _rightBallhandler.setpoint);
 }
 
-/* TODO: CRUFT starts here, cleanup is needed and new feed-forward algorithm. */
-void Ballhandlers::calculatePassBallVelocity(
-		double &leftBhVelocity, double &rightBhVelocity,
-		passBall passBallParams) {
-	//spins the BH motors such that the ball is pushed away with a given speed
-
-	//for a push pass
-	//passBallParams speed is * -1 as the ball has to spin in reverse direction to push
-	leftBhVelocity = leftBhVelocity + (-1 * passBallParams.bhLeftSpeed);
-	rightBhVelocity = rightBhVelocity + (-1 * passBallParams.bhRightSpeed);
-
-	//for left spinned pass. passBallParams.mode == LEFT_SPIN_PASS?
-	//leftBhVelocity = 0;
-	//rightBhVelocity = rightBhVelocity + passBallParams.bhSpeedRight;
-
+void Ballhandlers::updateBoardStatus() {
+    _piData.getLeftBallhandlerBoard().setOnline(_leftBallhandlerBoard.isConnected());
+    _piData.getRightBallhandlerBoard().setOnline(_rightBallhandlerBoard.isConnected());
 }
 
-void Ballhandlers::setVelocityInput() {
-//	piVelAcc velocity = _piData.getVelocityInput();
-	piVelAcc velocity = _piData.getVelocityOutput();
-
-	double leftBhVelocity = 0;
-	double rightBhVelocity = 0;
-
-	double xVelocity = velocity.vel.x;
-	double yVelocity = velocity.vel.y;
-	double thetaVelocity = velocity.vel.phi;
-
-	//STEP to calculate feedforward velocity
-//	calculateFeedForwardVelocity(xVelocity, yVelocity, thetaVelocity,
-//			leftBhVelocity, rightBhVelocity);
-
-	BallhandlerBoardSettings ballhandlerBoardSettingsLeft = _piData.getLeftBallhandlerBoard().getSettings();
-	BallhandlerBoardSettings ballhandlerBoardSettingsRight = _piData.getRightBallhandlerBoard().getSettings();
-
-	bool leftArmLifted = calculateArmLifted(_leftBallhandler.data, ballhandlerBoardSettingsLeft);
-	bool rightArmLifted = calculateArmLifted(_rightBallhandler.data, ballhandlerBoardSettingsRight);
-	TRACE("leftArmLifted=%d rightArmLifted=%d", leftArmLifted, rightArmLifted);
-
-	// STEP to override the bh velocity in case when any one of the handle is engaged with the ballls
-	// do not enable ki parameter for angle since the angle error will pile up over time until BH has balls!
-	// if ki of BH angle is enabled the following if else conditions will not work properly
-
-	if (leftArmLifted && !rightArmLifted) {
-		leftBhVelocity = 300;
-	} else if (!leftArmLifted && rightArmLifted) {
-		rightBhVelocity = 300;
-	}
-
-	_leftBallhandler.setpoint = leftBhVelocity * velocityToEncoderValue;
-	_rightBallhandler.setpoint = rightBhVelocity * velocityToEncoderValue;
-}
-
-bool Ballhandlers::calculateArmLifted(const BallhandlerBoardDataOutput &data,
-		const BallhandlerBoardSettings &settings) {
-	bool armLifted;
-
-	int ballPossAngleVal = data.ballhandler.angleZero +
-			(((settings.maxAngle - data.ballhandler.angleZero) / 100) * settings.ballPossessionTreshold);
-
-	armLifted = (data.ballhandler.angle > ballPossAngleVal) ? true : false;
-
-	return armLifted;
-}
-
-void Ballhandlers::addAngleDiffToFeedForwardVelocity(
-		double &leftBhVelocity, double &rightBhVelocity) {
-
-	float leftAngle = _leftBallhandler.data.ballhandler.angle;
-	float rightAngle = _rightBallhandler.data.ballhandler.angle;
-
-	if (leftAngle > rightAngle) {
-		rightBhVelocity += (leftAngle - rightAngle);
-	} else if (rightAngle > leftAngle) {
-		leftBhVelocity += (rightAngle - leftAngle);
-	}
-}
-
-void Ballhandlers::determineRobotHasBall() {
-	// Determine if the robot has the ball
-
-	BallhandlerBoardSettings ballhandlerBoardSettingsLeft = _piData.getLeftBallhandlerBoard().getSettings();
-	BallhandlerBoardSettings ballhandlerBoardSettingsRight = _piData.getRightBallhandlerBoard().getSettings();
-
-	bool leftArmLifted = calculateArmLifted(_leftBallhandler.data, ballhandlerBoardSettingsLeft);
-	bool rightArmLifted = calculateArmLifted(_rightBallhandler.data, ballhandlerBoardSettingsRight);
-
-	// Time the instance that both ballhandlers are up. Only assume we have a good
-	// grip on the ball if the ballhandlers stay up for > 1 second.
-	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-
-	// Always release ball is none of the ball handlers have the ball
-	if ((!leftArmLifted) && (!rightArmLifted)) {
-		bothBallhandlersDownTime = now;
-		_piData.setHasBall(false);
-	}
-	// It happens occasionally that only one ballhandler has the ball
-	// in which case robot may decide to shoot...
-	// Discussed with Stan Mertens -> we currently cannot shoot accurately if not engaged by both
-	// ballhandlers. For now, we take this as a requirement.
-//	if (!(leftArmLifted && rightArmLifted))
-//	{
-//		bothBallhandlersDownTime = now;
-//		_piData.setHasBall(false);
-//	}
-
-	// Always ball if both ball handlers have the ball
-	if (leftArmLifted && rightArmLifted) {
-		if (std::chrono::duration_cast<std::chrono::milliseconds>(now - bothBallhandlersDownTime).count() > hasBallTimeout) {
-		    TRACE("we have the ball");
-			_piData.setHasBall(true);
-		}
-	}
-}
-//
-void Ballhandlers::calculateFeedForwardVelocity(
-		double xVelocityEnc, double yVelocityEnc, double thetaVelocityEnc,
-		double &leftBhVelocity, double &rightBhVelocity) {
-
-	float dist_ball2robot = 0.26;
-	float distn_ball2wheel_x = 0.06;
-	float distn_ball2wheel_y = 0.058;
-	float r_ball = 0.11;
-	float r_wheel = 0.028;
-	float angle_bh = 0.52;
-
-	float ball_dx = -xVelocityEnc + dist_ball2robot * thetaVelocityEnc;
-	float ball_dy = yVelocityEnc;
-	float ball_M = std::sqrt(pow(ball_dx, 2.0) + pow(ball_dy, 2.0));
-	//# dy can be zero ! divide by zero. -> atan2( , )
-	float ball_theta = std::atan2(ball_dx, ball_dy);
-	float ball2wheel_M = std::sqrt(
-			pow(distn_ball2wheel_x, 2.0) + pow(distn_ball2wheel_y, 2.0));
-	float ball2wheel_theta = std::atan(distn_ball2wheel_x / distn_ball2wheel_y);
-
-	// Velocity wheel Left:
-	float Wheel_vel_left = (ball_M / (r_ball * r_wheel))
-			* std::sqrt(pow(r_ball, 2.0) - pow(ball2wheel_M, 2.0) * pow(std::sin(ball2wheel_theta - ball_theta), 2.0))
-			* std::cos(angle_bh - ball_theta);
-	leftBhVelocity = -(Wheel_vel_left * r_wheel);
-	//# Feedforward BH speed [m/s]
-	float Wheel_vel_right = (ball_M / (r_ball * r_wheel))
-			* std::sqrt(pow(r_ball, 2.0) - pow(ball2wheel_M, 2) * pow(std::cos(M_PI_2 - (ball2wheel_theta - ball_theta)), 2.0))
-					* std::cos(angle_bh + ball_theta);
-	rightBhVelocity = -(Wheel_vel_right * r_wheel);
+void Ballhandlers::traceData()
+{
+    // Use PTRACE to plot the raw values sent and received from/to the ballhandler motors.
+    //PTRACE("KSTB %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f",
+    //    	_leftBallhandler.setpoint, _rightBallhandler.setpoint,
+    //    	_leftBallhandler.data.ballhandler.angle, _rightBallhandler.data.ballhandler.angle,
+    //    	_leftBallhandler.data.ballhandler.tacho, _rightBallhandler.data.ballhandler.tacho,
+    //    	_leftBallhandler.data.motorController.error, _rightBallhandler.data.motorController.error,
+    //    	_leftBallhandler.data.motorController.integral, _rightBallhandler.data.motorController.integral,
+    //    	_leftBallhandler.data.motorController.pidOutput, _rightBallhandler.data.motorController.pidOutput,
+    //    	_leftBallhandler.data.motorController.setpoint, _rightBallhandler.data.motorController.setpoint,
+    //    	_leftBallhandler.data.motorController.pwm, _rightBallhandler.data.motorController.pwm);
 }

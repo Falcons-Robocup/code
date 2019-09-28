@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #include "int/algorithms/objectCoreFit.hpp"
 #include "FalconsCommon.h" // from package common
 #include "linalgcv.hpp" // from package geometry
-#include "cDiagnosticsEvents.hpp" // from package diagnostics
+#include "cDiagnostics.hpp" // from package diagnostics
 
 
 
@@ -37,12 +37,12 @@ void designMatrixTriang(
     {
         cv::Mat row, age, D;
         // construct time-independent part of the matrix
-        objectMeasurementType bm = measurements[imeas].getObjectMeasurement();
+        objectMeasurement bm = measurements[imeas].getObjectMeasurement();
         D = measurements[imeas].getCvMatrix();
         // add first order terms
         if (withSpeed)
         {
-            age = cv::Mat::eye(4, 4, CVFLOAT) * (bm.getTimestamp() - t);
+            age = cv::Mat::eye(4, 4, CVFLOAT) * (bm.timestamp - t);
             // TODO: maybe add 2nd order term for z... ? it is needed for precision of vertical bounce 
             // detection because it matches directly with gravity and without that term, we get
             // significant systematic latency. however we do not want to get more noise
@@ -84,7 +84,7 @@ void dataVectorTriang(
         b.at<float>(imeas*4 + 0, 0) = 0.0;
         b.at<float>(imeas*4 + 2, 0) = 0.0;
         // in RCS, y is the distance, which is the second component
-        b.at<float>(imeas*4 + 1, 0) = measurements[imeas].getObjectMeasurement().getRadius();
+        b.at<float>(imeas*4 + 1, 0) = measurements[imeas].getObjectMeasurement().radius;
         // add fourth dummy data point with value 1
         b.at<float>(imeas*4 + 3, 0) = 1.0;
     }
@@ -133,14 +133,14 @@ void objectCoreFitTriang(
     // fill output
     objectResult.setTimestamp(t);
     objectResult.setCoordinates(p.at<float>(0, 0),
-                              p.at<float>(1, 0),
-                              p.at<float>(2, 0));
+                                p.at<float>(1, 0),
+                                p.at<float>(2, 0));
     if (withSpeed)
     {
-    	objectResult.setVelocities(
-    			p.at<float>(4, 0),
-    			p.at<float>(5, 0),
-    			p.at<float>(6, 0));
+        objectResult.setVelocities(
+                p.at<float>(4, 0),
+                p.at<float>(5, 0),
+                p.at<float>(6, 0));
     }
     
     // calculate residual vector
@@ -222,7 +222,8 @@ void objectCoreFitTrajectoryIterative(
     // outputs
     objectResultType &objectResult,
     float &residual,
-    int &numRemovedTotal
+    int &numRemovedTotal,
+    std::vector<bool> &removedMask
     )
 {
     // sanity checks
@@ -235,7 +236,7 @@ void objectCoreFitTrajectoryIterative(
     // construct linear system of equations A * p = b with p as parameters to be fitted
 
     // initialization
-    int n = timeStamps.size();
+    size_t n = timeStamps.size();
     //TRACE("n=%d", n);
     cv::Mat A, b, p, res;
     cv::Mat mask1 = cv::Mat::eye(3*n, 3*n, CVFLOAT);
@@ -249,6 +250,7 @@ void objectCoreFitTrajectoryIterative(
     
     // iterate
     numRemovedTotal = 0;
+    int numRemaining = n;
     float stddevf = 0.0;
     int iter = 0;
     for (iter = 1; iter <= maxIter; ++iter)
@@ -260,8 +262,8 @@ void objectCoreFitTrajectoryIterative(
         
         // calculate and fold residual vector
         res = b - A * p;
-        cv::Mat res2 = cv::Mat::zeros(positions.size(), 1, CVFLOAT);
-        for (size_t imeas = 0; imeas < positions.size(); ++imeas)
+        cv::Mat res2 = cv::Mat::zeros(n, 1, CVFLOAT);
+        for (size_t imeas = 0; imeas < n; ++imeas)
         {
             // each position yields a signed error (dx,dy,dz)
             // outlier removal kicks out points, not components within points
@@ -290,15 +292,15 @@ void objectCoreFitTrajectoryIterative(
         
         // identify outliers in residuals
         // sort by size, remove only X% largest ones, prevent removing good data
-        std::map<float, size_t> removeCandidates;
-        for (size_t imeas = 0; imeas < positions.size(); ++imeas)
+        std::multimap<float, size_t> removeCandidates;
+        for (size_t imeas = 0; imeas < n; ++imeas)
         {
             if (mask2.at<unsigned char>(imeas, 0))
             {
                 float ratio = fabs(res2.at<float>(imeas, 0)) / (nSigma * stddev2);
                 if (ratio > 1.0)
                 {
-                    removeCandidates[ratio] = imeas;
+                    removeCandidates.insert(std::make_pair(ratio, imeas));
                 }
             }
         }
@@ -306,7 +308,7 @@ void objectCoreFitTrajectoryIterative(
         // now remove the outliers, but only the largest ones
         // make use of map sorting, iterate backwards
         int numRemovedIter = 0;
-        for (auto it = removeCandidates.rend(); it != removeCandidates.rbegin(); ++it)
+        for (auto it = removeCandidates.rbegin(); it != removeCandidates.rend(); ++it)
         {
             size_t imeas = it->second;
             //TRACE("imeas=%3d  ratio=%6.2f", (int)imeas, it->first);
@@ -314,7 +316,9 @@ void objectCoreFitTrajectoryIterative(
             mask1.at<float>(imeas*3 + 1, imeas) = 0;
             mask1.at<float>(imeas*3 + 2, imeas) = 0;
             mask2.at<unsigned char>(imeas, 0) = 0;
+            
             numRemovedIter++;
+            numRemaining--;
             if (numRemovedIter > n * iterFraction)
             {
                 break; // enough removed, continue with next iteration
@@ -329,7 +333,7 @@ void objectCoreFitTrajectoryIterative(
         }
         
         // outlier removal may not leave less than 2 measurements
-        if (n - numRemovedTotal <= 2)
+        if (numRemaining <= 2)
         {
             break;
         }
@@ -337,23 +341,30 @@ void objectCoreFitTrajectoryIterative(
     }
     
     // debugging
-    if (numRemovedTotal)
-    {
-        float removedPercentage = float(100.0 * (n - (int)(cv::sum(mask2).val[0])) / n);
-        TRACE("removed %d out of %d measurements (%.1f%%) in %d iterations, resulting stddev=%.3f", numRemovedTotal, n, removedPercentage, iter, stddevf);
-    }
+    //if (numRemovedTotal)
+    //{
+    //    float removedPercentage = float(100.0 * (n - (int)(cv::sum(mask2).val[0])) / n);
+    //    //TRACE("removed %d out of %d measurements (%.1f%%) in %d iterations, resulting stddev=%.3f", numRemovedTotal, n, removedPercentage, iter, stddevf);
+    //}
         
     // fill output
     objectResult.setTimestamp(t);
     objectResult.setCoordinates(p.at<float>(0, 0),
-                              p.at<float>(1, 0),
-                              p.at<float>(2, 0));
+                                p.at<float>(1, 0),
+                                p.at<float>(2, 0));
     if (fitOrder > 0)
     {
-    	objectResult.setVelocities(
-    			p.at<float>(3, 0),
-    			p.at<float>(4, 0),
-    			p.at<float>(5, 0));
+        objectResult.setVelocities(
+                p.at<float>(3, 0),
+                p.at<float>(4, 0),
+                p.at<float>(5, 0));
+    }
+    
+    // convert and return outlier mask
+    removedMask.clear();
+    for (size_t imeas = 0; imeas < n; ++imeas)
+    {
+        removedMask.push_back(mask2.at<unsigned char>(imeas, 0));
     }
     
     // return float residual, use stddevf to take out sensitivity to n

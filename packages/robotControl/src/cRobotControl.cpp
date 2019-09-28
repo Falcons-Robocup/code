@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,11 +25,11 @@
 #include "int/adapters/cProcessAdapter.hpp"
 #include "int/adapters/cCommandAdapter.hpp"
 #include "int/adapters/cConfigAdapter.hpp"
-#include "int/adapters/cDiagnosticsAdapter.hpp"
 // TODO better separate ROS adapters, like in main -- look at Eriks design pattern?
 
 #include "FalconsCommon.h"
-#include <cDiagnosticsEvents.hpp>
+#include "tracing.hpp"
+#include <cDiagnostics.hpp>
 
 using namespace std;
 

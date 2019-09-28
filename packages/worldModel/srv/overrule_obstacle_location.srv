@@ -1,8 +1,0 @@
-# Coordinates are in Field Coordinate (FCS)
-uint32 nrObstacles
-float32[] positionX
-float32[] positionY
-float32[] velocityX
-float32[] velocityY
-float32 overruleTimeInSeconds
----

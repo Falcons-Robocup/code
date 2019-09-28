@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,6 +26,7 @@
 #include "position2d.hpp"
 
 #include "int/types/robot/robotDisplacementType.hpp"
+#include "int/types/robot/robotVelocityType.hpp"
 #include "int/types/robot/robotMeasurementType.hpp"
 #include "int/types/robot/robotType.hpp"
 #include "int/types/robot/localizationDiagnosticsType.hpp"
@@ -45,8 +46,9 @@ class robotLocalization
         // inputs and calculates explicitly get timestamp, for testability
         void addVisionMeasurement(robotMeasurementClass_t const &measurement);
         void addDisplacement(robotDisplacementClass_t const &displacement);
+        void addVelocity(robotVelocityClass_t const &velocity);
         void calculatePositionAndVelocity(double timestampNow);
-        robotClass_t getRobotPositionAndVelocity() const;
+        robotClass_t getRobotPositionAndVelocity(double timestamp = 0.0) const;
         localizationDiagnostics_t getDiagnostics() const; // details
         
         // inplay button state changes
@@ -59,7 +61,7 @@ class robotLocalization
         
         // process the buffer of encoder displacement samples
         // return accumulated delta in FCS; also store velocity
-        Position2D processMotorDisplacements(); 
+        Position2D processMotorDisplacementsAndVelocities();
         
         // update all vision trackers with encoder displacement
         void updateVisionTrackersDisplacement(Position2D const &deltaDisplacementPos); 
@@ -69,7 +71,7 @@ class robotLocalization
         void distributeVisionMeasurements();
         
         // choose best tracker
-        int getBestTrackerId(double timestampNow);
+        int getBestTrackerId();
 
         // apply the camera measurement with some weight factor
         // generate a warning when switching from one tracker to another
@@ -77,10 +79,10 @@ class robotLocalization
 
         // determine isValid, log state change
         // when switching from invalid to valid, re-orient 
-        void determineIsValidAndOrient(double timestampNow);
+        void determineIsValidAndOrient();
 
         // cleanup buffers
-        void cleanup(double timestampNow);
+        void cleanup();
         
         /*** end calculate sequence functions ***/
 
@@ -88,16 +90,19 @@ class robotLocalization
             
         /*** begin other helper functions ***/
         
-        bool gotVision(double timestampNow); // did we receive good vision data already?
-        double timeSinceLastVision(double timestampNow);
-        bool timerSinceFirstVisionExpired(double timestampNow);
+        bool gotVision(); // did we receive good vision data already?
+        double timeSinceLastVision();
+        double timeStandingStill();
+        bool timerSinceFirstVisionExpired();
+        float calculateWeightFactor();
+        void checkIfMoving(Position2D const &deltaDisplacementPos);
 
         void orientTowardsOpponentGoal(); // Ensures that robot faces +y in FCS
         void flipOrientation();
 
-        Position2D getEncoderUpdateSince(double timestamp);
-        void cleanupVisionTrackers(double timestampNow);
-        void cleanupDisplacementHistory(double timestampNow);
+        Position2D getEncoderUpdateSince(double timestamp) const;
+        void cleanupVisionTrackers();
+        void cleanupDisplacementHistory();
         
         /*** end other helper functions ***/
 
@@ -106,6 +111,8 @@ class robotLocalization
         /*** begin data members ***/
         
         double _firstVisionTimestamp;
+        double _currentTimestamp;
+        double _lastMovingTimestamp;
         localizationDiagnostics_t _diagData;
         robotClass_t _currentPosVel;
         bool _isValid;
@@ -114,6 +121,7 @@ class robotLocalization
         // buffers are flushed each heartbeat calculation
         std::vector<robotMeasurementClass_t> _cameraMeasurementsBuffer;
         std::vector<robotDisplacementClass_t> _motorDisplacementsBuffer;
+        std::vector<robotVelocityClass_t> _motorVelocitiesBuffer;
 
         // history is needed for vision camera latency correction
         std::vector<robotDisplacementClass_t> _motorDisplacementsHistory;
@@ -129,7 +137,8 @@ class robotLocalization
 
         void traceVisionMeasurement(const robotMeasurementClass_t measurement);
         void traceDisplacement(const robotDisplacementClass_t displacement);
-        void traceCalculatePositionAndVelocity(double timestampNow);
+        void traceVelocity(const robotVelocityClass_t velocity);
+        void traceCalculatePositionAndVelocity();
 
         void determineVisionStability();
         void gatherDiagnostics(int bestTrackerId);

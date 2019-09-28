@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,6 +16,7 @@
  *      Author: Tim Kouters
  */
 
+#include "tracing.hpp"
 #include "int/cAbstractPathPlanning.hpp"
 #include <boost/thread/thread.hpp>
 
@@ -24,7 +25,7 @@ cAbstractPathPlanning::cAbstractPathPlanning(cPathPlanningMain* main)
     TRACE(">");
     _main = main;
     _dt = 0.0; // Recalculated every iteration due to event-based pathPlanning.
-    gettimeofday(& _prevTimestamp, NULL);
+    _prevTimestamp = rtime::now();
     _prev_vel = Velocity2D();
     TRACE("<");
 }
@@ -35,6 +36,7 @@ cAbstractPathPlanning::~cAbstractPathPlanning()
 
 void cAbstractPathPlanning::execute()
 {
+    TRACE_FUNCTION("");
     //TRACE(">");
 
 
@@ -46,6 +48,7 @@ void cAbstractPathPlanning::execute()
     std::list<cAbstractPathPlanning*>::iterator it;
     for (it = _ppBlocks.begin(); it != _ppBlocks.end(); ++it)
     {
+        TRACE_SCOPE("cAbstractPathPlanning#iterateBlock", "");
         // Compute new _dt for each algorithm
         (*it)->computeDt();
 
@@ -81,12 +84,23 @@ pp_data_struct_t cAbstractPathPlanning::getData()
 
 void cAbstractPathPlanning::computeDt()
 {
+    TRACE_FUNCTION("");
     // Compute new _dt
 
-    timeval time_now;
-    gettimeofday(&time_now, NULL);
+    rtime time_now = rtime::now(); // TODO this is not simulator- and test-friendly, better to move timestamping outside
 
-    _dt = diff_seconds(time_now, _prevTimestamp);
+    _dt = double(time_now - _prevTimestamp);
+
+    // If pathplanning is not used (e.g., robot is stopped), _dt is not recomputed
+    // The next time pathplanning is triggered, _dt will be very large (seconds).
+    // If this happens, set _dt to 1/30.
+    if (_dt > 0.2)
+    {
+        _dt = 1.0/30.0;
+
+        // Also update previous velocity used to limit velocity
+        _main->_prev_vel = Velocity2D();
+    }
 
     _prevTimestamp = time_now;
 }

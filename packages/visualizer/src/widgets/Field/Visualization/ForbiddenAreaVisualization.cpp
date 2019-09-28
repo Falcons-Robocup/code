@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -32,7 +32,7 @@
 #include "int/ConfigurationManager.h"
 
 // Falcons shared code:
-#include "tracer.hpp"
+#include "tracing.hpp"
 #include "vector2d.hpp"
 
 ForbiddenAreaVisualization::ForbiddenAreaVisualization()
@@ -112,7 +112,7 @@ void ForbiddenAreaVisualization::setPosition(polygon2D& area)
 	// Create a PolyData
 	_polySource->SetPoints(_points);
 	_polySource->SetPolys(_polygons);
-	_mapper->SetInput(_polySource);
+	_mapper->SetInputData(_polySource);
 	_actor->SetMapper(_mapper);
 	this->AddPart(_actor);
 	_points->Modified();
@@ -121,7 +121,7 @@ void ForbiddenAreaVisualization::setPosition(polygon2D& area)
 	_polySource->Modified();
 	_mapper->Modified();
 	_actor->Modified();
-	_actor->GetMapper()->GetInput()->Update();
+	_actor->GetMapper()->GetInput()->Modified();
 	this->VisibilityOn();
 	_arrow->VisibilityOff();
 

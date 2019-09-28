@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,10 +18,12 @@
 
 #include "int/transceivers/receiverWorldModel.hpp"
 
+#include <iostream>
+
 #include "int/configurators/configuratorWorldModelPacket.hpp"
 
-#include "cDiagnosticsEvents.hpp"
-#include "tracer.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 receiverWorldModel::receiverWorldModel()
 {
@@ -64,7 +66,7 @@ void receiverWorldModel::reconnect()
 	}
 }
 
-void receiverWorldModel::notifyNewPacket(Facilities::Network::cByteArray &data)
+void receiverWorldModel::notifyNewPacket(Facilities::cByteArray &data)
 {
 	try
 	{

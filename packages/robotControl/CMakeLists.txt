@@ -8,6 +8,7 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE RelWithDebInfo)
+set(ROS_BUILD_TYPE Release)
 
 rosbuild_init()
 rosbuild_add_boost_directories()
@@ -28,15 +29,12 @@ set(SRCS
     src/adapters/cProcessAdapter.cpp
     src/adapters/cCommandAdapter.cpp
     src/adapters/cConfigAdapter.cpp
-    src/adapters/cDiagnosticsAdapter.cpp
     src/cRobotControl.cpp
-    src/cRobotHealth.cpp
     src/cRobotControlProcesses.cpp
     src/cRobotControlConfig.cpp
     src/cRobotControlClaiming.cpp
 )
 
-# TODO: consider moving robotHealth to a dedicated package. It is completely separated with robotControl, has much less dependencies.
 rosbuild_add_executable(robotControlDaemon src/mainRobotControl.cpp ${SRCS})
-rosbuild_add_executable(robotHealth src/mainRobotHealth.cpp ${SRCS})
-rosbuild_link_boost(robotControlDaemon program_options)
+rosbuild_link_boost(robotControlDaemon program_options system thread)
+

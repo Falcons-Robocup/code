@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# one liner to build the multiCam standalone
+
+set -e
+
+rosrun raspiSync raspiSync

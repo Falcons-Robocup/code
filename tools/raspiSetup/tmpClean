@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Copyright 2018 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to clean the tmp directory of the raspi boards
+
+sshOptions="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no"
+scpCommand="sshpass -p raspberry scp $sshOptions"
+sshCommand="sshpass -p raspberry ssh $sshOptions"
+
+$sshCommand pi@10.0.0.70 -t "rm -rf ~/tmp/*"
+$sshCommand pi@10.0.0.71 -t "rm -rf ~/tmp/*"
+$sshCommand pi@10.0.0.72 -t "rm -rf ~/tmp/*"
+$sshCommand pi@10.0.0.73 -t "rm -rf ~/tmp/*"
+
+echo "INFO      : all done"
+
+exit 1

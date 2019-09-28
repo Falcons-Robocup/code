@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -31,32 +31,33 @@
 #include "int/ConfigurationManager.h"
 
 // Falcons shared code:
-#include "tracer.hpp"
+#include "tracing.hpp"
 
 void RobotVisualization::initialize(int robotID, vtkRenderer *renderer)
 {
-/*
-    QFile file("../rc/robot.stl"); // TODO extract the .stl resource from the application instead of reading it from the source location
+    std::string stlFile = "/home/robocup/falcons/code/packages/visualizer/rc/robot.stl";
+    QFile file(stlFile.c_str()); // TODO extract the .stl resource from the application instead of reading it from the source location
     if (file.exists())
     {
         // Load STL
         vtkSmartPointer<vtkSTLReader> reader = vtkSmartPointer<vtkSTLReader>::New();
-        reader->SetFileName("../rc/robot.stl"); 
+        reader->SetFileName(stlFile.c_str()); 
         reader->Update();
         _actor = addAsActor(reader);
+        _actor->GetProperty()->SetColor(0.1, 0.1, 1.0);
     }
     else
-*/
     {
         // Fall back on sphere shape if the STL file could not be copied
         vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
         sphereSource->SetCenter(0.0, 0.0, _BALL_DIAMETER / 2.0);
         sphereSource->SetRadius(_BALL_DIAMETER / 2.0);
         _actor = addAsActor(sphereSource);
+        _actor->GetProperty()->SetColor(0.0, 1.0, 0.0);
     }
-
-    _arrow->GetProperty()->SetColor(0.0, 1.0, 0.0); // uniform coloring for now
-    _actor->GetProperty()->SetColor(0.0, 1.0, 0.0); // uniform coloring for now
+    
+    // no arrow anymore
+    _arrow->VisibilityOff();
 
     // Create annotation for path planning and add to renderer
     vtkSmartPointer<PlannedPath> path = vtkSmartPointer<PlannedPath>::New();
@@ -80,14 +81,6 @@ void RobotVisualization::initialize(int robotID, vtkRenderer *renderer)
 
 void RobotVisualization::setPosition(PositionVelocity& posvel)
 {
-    // use arrow to visualizer orientation, until it is clear enough from the robot actor (pacman or STL) 
-    _arrow->SetOrientation(0, 0, 0); // radians to degrees
-    double length = 0.5;
-    double scale[3] = { length, 1, 1 };
-    _arrow->SetScale(scale);
-    _arrowSource->SetTipLength(0.3 / length);
-    _arrow->VisibilityOn();
-
     // call base implementation
     Visualization::setPosition(posvel);
 }
@@ -109,6 +102,26 @@ void RobotVisualization::setPathPlanningEnabled(bool enabled) // Allows enabling
         setPath(empty);
     }
     _pathPlanningEnabled = enabled;
+}
+
+void RobotVisualization::setStatus(int color)
+{
+    // TODO: when NOK, enable blinking mode
+
+    if (color == 0 )
+    {
+        _actor->GetProperty()->SetColor(0, 0, 1); // blue
+    }
+    else if (color == 1 )
+    {
+        _actor->GetProperty()->SetColor(1, 0.75, 0); // yellow
+    }
+    else if (color == 2)
+    {
+        _actor->GetProperty()->SetColor(1, 0, 0); // red
+    }
+    else
+    {}
 }
 
 void RobotVisualization::blinkOn()

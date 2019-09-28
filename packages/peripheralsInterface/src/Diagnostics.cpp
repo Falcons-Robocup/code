@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,16 +21,19 @@
 #include <iostream>
 #include <thread>
 
-#include <cDiagnostics.hpp>
-#include <cDiagnosticsEvents.hpp>
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 using namespace std;
 
-Diagnostics::Diagnostics(PeripheralsInterfaceData& piData, bool ballhandlersAvailable) :
-	piData(piData), diagSender(diagnostics::DIAG_HALMW, 0) {
+Diagnostics::Diagnostics(PeripheralsInterfaceData& piData, bool ballhandlersAvailable)
+    : piData(piData)
+{
 	TRACE(">");
 
 	started = false;
+    _rtdb = RtDB2Store::getInstance().getRtDB2(getRobotNumber());
+
 
 	if (ballhandlersAvailable) {
 		desiredNumberOfDevices = 5;
@@ -85,33 +88,31 @@ void Diagnostics::timer() {
 }
 
 void Diagnostics::addSensorData() {
-	rosMsgs::t_diag_halmw msg;
+	T_DIAG_PERIPHERALSINTERFACE msg;
 
 	piVelAcc v = piData.getVelocityInput();
-	msg.speed_vx = v.vel.x;
-	msg.speed_vy = v.vel.y;
-	msg.speed_vphi = v.vel.phi;
+	msg.speed_vel[0] = v.m1_vel;
+	msg.speed_vel[1] = v.m2_vel;
+	msg.speed_vel[2] = v.m3_vel;
 
 	v = piData.getVelocityOutput();
-	msg.feedback_vx = v.vel.x;
-	msg.feedback_vy = v.vel.y;
-	msg.feedback_vphi = v.vel.phi;
+	msg.feedback_vel[0] = v.m1_vel;
+	msg.feedback_vel[1] = v.m2_vel;
+	msg.feedback_vel[2] = v.m3_vel;
 	
 	// check if driving
 	bool isDriving = false;
-	if (fabs(v.vel.x) > 0.1) isDriving = true;
-	if (fabs(v.vel.y) > 0.1) isDriving = true;
-	if (fabs(v.vel.phi) > 0.1) isDriving = true;
-
-	msg.hasball = piData.getHasBall();
+	if (fabs(v.m1_vel) > 0.1) isDriving = true;
+	if (fabs(v.m2_vel) > 0.1) isDriving = true;
+	if (fabs(v.m3_vel) > 0.1) isDriving = true;
 
 	MotionBoardDataOutput rearMotionBoardData = piData.getRearMotionBoard().getDataOutput();
 	MotionBoardDataOutput rightMotionBoardData = piData.getRightMotionBoard().getDataOutput();
 	MotionBoardDataOutput leftMotionBoardData = piData.getLeftMotionBoard().getDataOutput();
 
-	msg.motion_rear_temperature = rearMotionBoardData.motion.motorTemperature;
-	msg.motion_left_temperature = leftMotionBoardData.motion.motorTemperature;
-	msg.motion_right_temperature = rightMotionBoardData.motion.motorTemperature;
+	msg.motion_temperature[0] = rightMotionBoardData.motion.motorTemperature;
+	msg.motion_temperature[1] = rearMotionBoardData.motion.motorTemperature;
+	msg.motion_temperature[2] = leftMotionBoardData.motion.motorTemperature;
 
 	// voltage 
 	voltageMonitor.feed(rearMotionBoardData.motorController.voltage);
@@ -129,7 +130,10 @@ void Diagnostics::addSensorData() {
 	msg.bh_left_angle = piData.getLeftBallhandlerBoard().getDataOutput().ballhandler.angle * 0.01;
 	msg.bh_right_angle = piData.getRightBallhandlerBoard().getDataOutput().ballhandler.angle * 0.01;
 
-	diagSender.set(msg);
+    if (_rtdb != NULL)
+    {
+        _rtdb->put(DIAG_PERIPHERALSINTERFACE, &msg);
+    }
 }
 
 void Diagnostics::addStatus() {

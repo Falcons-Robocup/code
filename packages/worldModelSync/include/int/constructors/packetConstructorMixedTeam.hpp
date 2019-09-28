@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -40,9 +40,9 @@ class packetConstructorMixedTeam
 		void setBallCandidates(std::vector<ballCandidateStructure> candidates);
 		void setObstacleCandidates(std::vector<obstacleCandidateStructure> candidates);
 		void setRobotLocation(const robotLocationMixedTeamStructure location);
-		void setByteArray(Facilities::Network::cByteArray byteArray);
+		void setByteArray(Facilities::cByteArray byteArray);
 
-		Facilities::Network::cByteArray getByteArray();
+		Facilities::cByteArray getByteArray();
 		packetStructureMixedTeam getMixedTeamStructure() const;
 
 	private:

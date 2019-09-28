@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,12 +19,12 @@
 #include "int/actions/cActionInterceptBall.hpp"
 #include "yaml-cpp/yaml.h"
 
+#include "FalconsCommon.h"
 #include "pose2d.hpp"
 
 #include "int/stores/ballStore.hpp"
 #include "int/stores/configurationStore.hpp"
-#include "int/cTeamplayCommon.hpp"
-#include "int/cWorldModelInterface.hpp"
+#include "int/stores/robotStore.hpp"
 #include "int/cWorldStateFunctions.hpp"
 #include "int/utilities/trace.hpp"
 
@@ -37,7 +37,7 @@ cActionInterceptBall::cActionInterceptBall()
         ("captureRadius", std::make_pair(std::vector<std::string>{"float"}, true))
         ;
 
-    intention.actionType = actionEnum::INTERCEPT_BALL;
+    _intention.action = actionTypeEnum::MOVE;
 }
 
 cActionInterceptBall::~cActionInterceptBall()
@@ -75,25 +75,21 @@ behTreeReturnEnum cActionInterceptBall::execute(const std::map<std::string, std:
         TRACE("captureRadius = ") << std::to_string(captureRadius);
 
         // If we have ball, PASSED.
-		ballPossession_struct_t ball_possession;
-		cWorldModelInterface::getInstance().getBallPossession(ball_possession);
-		if ((ball_possession.possessionType == ballPossessionEnum::TEAMMEMBER)
-				&& (ball_possession.robotID == cWorldStateFunctions::getInstance().getRobotID()))
-		{
+        if (teamplay::robotStore::getInstance().getOwnRobot().hasBall())
+        {
             TRACE("PASSED");
             return behTreeReturnEnum::PASSED; // success!
         }
 
-		// The position where the robot intersects with the ball trajectory.
-		// So basically the position where to intercept.
-		Position2D intersectPos;
+        // The position where the robot intersects with the ball trajectory.
+        // So basically the position where to intercept.
+        Position2D intersectPos;
 
-		// Get current position
-        Position2D currentPos;
-        cWorldModelInterface::getInstance().getOwnLocation(currentPos);
+        // Get current position
+        Position2D currentPos = robotStore::getInstance().getOwnRobot().getPosition();
         geometry::Pose2D currentPose(currentPos.x, currentPos.y, currentPos.phi); // TODO do something about duplicity in basic geometry types (Position2D versus Pose2D)
 
-		// Get ball data
+        // Get ball data
         ball ball = ballStore::getBall();
         geometry::Pose2D ballPosition(ball.getPosition().x, ball.getPosition().y, 0);
         Vector2D ballPositionVec2D(ball.getPosition().x, ball.getPosition().y);
@@ -108,6 +104,12 @@ behTreeReturnEnum cActionInterceptBall::execute(const std::map<std::string, std:
         // Compute flags: ballIsMovingTowardsUs, ballMovingFastEnough
         bool ballIsMovingTowardsUs = (ballVelocityRCS.y < 0);
         bool ballMovingFastEnough = (ballSpeed > minimumSpeed);
+
+        // workaround: if other robot is dribbling with the ball, intercepting robot should not respond
+        if (doesTeamHaveBall(parameters)) // TODO: is this the right function and the right way to determine this?
+        {
+            ballMovingFastEnough = false;
+        }
         
         //// Compute flag: ballIntersectsCaptureRadius
         bool ballIntersectsCaptureRadius = false;
@@ -144,15 +146,15 @@ behTreeReturnEnum cActionInterceptBall::execute(const std::map<std::string, std:
         // If all conditions are true, intersect ball and return RUNNING
         if (ballIsMovingTowardsUs && ballMovingFastEnough && ballIntersectsCaptureRadius)
         {
-        	intention.x = intersectPos.x;
-        	intention.y = intersectPos.y;
-        	sendIntention();
+            _intention.position.x = intersectPos.x;
+            _intention.position.y = intersectPos.y;
+            sendIntention();
 
             // ensure that we move according to the rules
             if (!isCurrentPosValid())
             {
                 // Move towards the center, while maintaining angle
-                moveTo(0.0, 0.0, intersectPos.phi);
+                moveTo(0.0, 0.0);
                 return behTreeReturnEnum::RUNNING;
             }
 
@@ -162,7 +164,7 @@ behTreeReturnEnum cActionInterceptBall::execute(const std::map<std::string, std:
             }
 
             // Move is allowed.
-            moveTo(intersectPos.x, intersectPos.y, intersectPos.phi);
+            moveTo(intersectPos.x, intersectPos.y);
             return behTreeReturnEnum::RUNNING;
         }
         else
@@ -173,8 +175,8 @@ behTreeReturnEnum cActionInterceptBall::execute(const std::map<std::string, std:
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+        throw std::runtime_error(std::string("cActionInterceptBall::execute Linked to: ") + e.what());
     }
 
     return behTreeReturnEnum::FAILED;

@@ -1,0 +1,12 @@
+.cproject
+.project
+.pydevproject
+bin/
+build/
+docs/
+lib/
+srv_gen/
+cfg/cpp/
+cfg/*.cfgc
+src/ballHandling/
+

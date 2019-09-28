@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,8 +22,8 @@
 
 #include <iostream>
 #include <unistd.h> // sleep
-#include "cDiagnosticsEvents.hpp"
-#include "tracer.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 transmitterWorldModel::transmitterWorldModel()
 {
@@ -69,7 +69,7 @@ void transmitterWorldModel::reconnect()
 	}
 }
 
-void transmitterWorldModel::sendPacket(Facilities::Network::cByteArray wmPacket)
+void transmitterWorldModel::sendPacket(Facilities::cByteArray wmPacket)
 {
 	try
 	{

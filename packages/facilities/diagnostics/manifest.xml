@@ -8,12 +8,9 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/notavailable</url>
-  <depend package="rospy"/>
-  <depend package="roscpp"/>
-  <depend package="rostest"/>
   <depend package="common"/>
-  <depend package="rosMsgs"/>
-  <depend package="networkUDP"/>
+  <depend package="tracing"/>
+  <depend package="sharedTypes"/>
     
   <export>
   	<cpp cflags="-I${prefix}/include/ext -I${prefix}/include"

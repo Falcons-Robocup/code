@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,21 +20,14 @@
 #define CONFIGURATION_HPP_
 
 #include <map>
+#include <vector>
+
+#include "tpActionEnum.hpp" // sharedTypes
+#include "int/types/heightmapEnumTypes.hpp"
 
 
 namespace teamplay
 {
-
-enum class passDistance {
-    SHORT,
-    SHORT_TO_MEDIUM,
-    MEDIUM,
-    MEDIUM_TO_LONG,
-    LONG
-};
-
-typedef std::map<passDistance, float> passPowers;
-typedef std::map<passDistance, float> passRanges;
 
 class configuration {
 public:
@@ -59,26 +52,17 @@ public:
     virtual void setRuleStimulatePassing(const bool enabled);
     virtual bool isRuleStimulatePassingEnabled() const;
 
-    virtual void setShootAtGoalPower(const float power);
-    virtual float getShootAtGoalPower() const;
-
-    virtual void setPassPowers(const passPowers& powers);
-    virtual passPowers getPassPowers() const;
-
-    virtual void setPassRanges(const passRanges& ranges);
-    virtual passRanges getPassRanges() const;
-
-    virtual void setShootTimer (const float timeoutInSeconds);
-    virtual float getShootTimer() const;
-
-    virtual void setShootTimerAngleThreshold (const float thresholdInRadians);
-    virtual float getShootTimerAngleThreshold() const;
-
     virtual void setShootPathWidth (const float widthInMeters);
     virtual float getShootPathWidth() const;
 
-    virtual void setSettleTimeAfterShooting (const float timeoutInSeconds);
-    virtual float getSettleTimeAfterShooting() const;
+    virtual void setStraightShotThreshold (const float distanceInMeters);
+    virtual float getStraightShotThreshold() const;
+
+    virtual void setAimForCornerThreshold (const float distanceInMeters);
+    virtual float getAimForCornerThreshold() const;
+
+    virtual void setShotThreshold (const float distanceInMeters);
+    virtual float getShotThreshold() const;
 
     virtual void setInterceptBallCaptureRadius (const float captureRadiusInMeters);
     virtual float getInterceptBallCaptureRadius() const;
@@ -89,6 +73,15 @@ public:
     virtual void setDefendingStrategy (const bool defendingStrategy);
     virtual bool getDefendingStrategy();
 
+    virtual void setDribbleStrategy (const bool dribbleStrategy);
+    virtual bool getDribbleStrategy();
+
+    virtual void setHeightMapsGeneratePictures (const bool heightMapsGeneratePictures);
+    virtual bool getHeightMapsGeneratePictures();
+
+    virtual void setHeightMapFactorForAction (const tpActionEnum& action, const heightmapEnum& heightmap, const float factor);
+    virtual float getHeightMapFactorForAction (const tpActionEnum& action, const heightmapEnum& heightmap) const;
+
 private:
     float _setpieceExecuteTimeoutSeconds;
     float _penaltyExecuteTimeoutSeconds;
@@ -96,16 +89,16 @@ private:
     float _minPenaltyDistanceKickedMeters;
     float _minOwnKickoffDistanceKickedMeters;
     bool  _ruleStimulatePassingEnabled;
-    float _shootAtGoalPower;
-    passPowers _passPowers;
-    passRanges _passRanges;
-    float _shootTimer;
-    float _shootTimerAngleThreshold;
     float _shootPathWidth;
-    float _settleTimeAfterShooting;
+    float _straightShotThreshold;
+    float _aimForCornerThreshold;
+    float _shotThreshold;
     float _interceptBallCaptureRadius;
     float _interceptBallMinimumSpeed;
     bool _defendingStrategy;
+    bool _dribbleStrategy;
+    bool _heightMapsGeneratePictures;
+    std::map<tpActionEnum, std::map<heightmapEnum, float> > _heightMapContributionFactors;
 };
 
 

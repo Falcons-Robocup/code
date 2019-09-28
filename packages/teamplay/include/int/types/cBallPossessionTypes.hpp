@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,6 +20,7 @@
 #define CBALLPOSSESSIONTYPES_HPP_
 
 #include <stdint.h>
+#include "vector2d.hpp"
 #include "int/types/cRobotLocationTypes.hpp"
 
 enum class ballPossessionEnum
@@ -33,6 +34,7 @@ typedef struct
 {
 	ballPossessionEnum possessionType;
 	robotNumber robotID;
+	Point2D ballClaimedLocation;
 } ballPossession_struct_t;
 
 

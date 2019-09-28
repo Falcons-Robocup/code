@@ -20,7 +20,7 @@ if [ ${TURTLE5K_TEAMNAME} != "teamA" -a ${TURTLE5K_TEAMNAME} != "teamB" ]; then
     echo "ERROR: invalid teamname '${TURTLE5K_TEAMNAME}'" >&2
     exit 1
 fi
-output=`echo "0123456" | grep -o "${TURTLE5K_ROBOTNUMBER}"`
+output=`echo "0123456789" | grep -o "${TURTLE5K_ROBOTNUMBER}"`
 if [ -z "$output" ]; then
     echo "ERROR: invalid robotnumber '${TURTLE5K_ROBOTNUMBER}'" >&2
     exit 1

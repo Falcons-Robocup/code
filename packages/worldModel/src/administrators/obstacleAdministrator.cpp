@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,9 +21,10 @@
 
 #include "int/configurators/administrationConfigurator.hpp"
 #include "int/configurators/obstacleTrackerConfigurator.hpp"
+#include "int/administrators/obstacleDiscriminator.hpp"
 
-#include "cDiagnosticsEvents.hpp"
-#include "timeConvert.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 obstacleAdministrator::obstacleAdministrator()
 /*!
@@ -35,312 +36,242 @@ obstacleAdministrator::obstacleAdministrator()
  *
  */
 {
-	_ownRobotID = getRobotNumber();
-	_obstacleMeasurements.clear();
-    _diagSender = NULL;
-    enableDiagnostics();
+    _ownRobotID = getRobotNumber();
+    _obstacleMeasurements.clear();
+    _obstacleDiscriminator = new obstacleDiscriminator();
 }
 
 obstacleAdministrator::~obstacleAdministrator()
-/*
- * When Chuck Norris was born he drove his mom home from the hospital.
- */
+// When Chuck Norris was born he drove his mom home from the hospital.
 {
-
+    delete _obstacleDiscriminator;
 }
 
-void obstacleAdministrator::appendObstacleMeasurements(const std::vector<obstacleMeasurementType> measurements)
+void obstacleAdministrator::appendObstacleMeasurements(const std::vector<obstacleMeasurement> measurements)
 {
-    //TRACE("> #meas=%d", (int)measurements.size());
-	try
-	{
-		for(auto itCandidate = measurements.begin(); itCandidate != measurements.end(); itCandidate++)
-		{
-			auto it = _obstacleMeasurements.find(itCandidate->getID());
-
-			/*
-			 * If not found, add it and feed to object discriminator
-			 */
-			if(it == _obstacleMeasurements.end())
-			{
-				_obstacleMeasurements[itCandidate->getID()] = (*itCandidate);
-				_obstacleDiscriminator.addMeasurement(*itCandidate);
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("<");
-}
-
-void obstacleAdministrator::overruleObstacles(const std::vector<obstacleClass_t> obstacles)
-{
-    TRACE("> #overruled=%d  #obstacles=%d", (int)_overruledObstacles.size(), (int)obstacles.size());
-	try
-	{
-		if(!obstacles.empty())
-		{
-			_overruledObstacles[obstacles.at(0).getId()] = obstacles;
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    TRACE("< #overruled=%d", (int)_overruledObstacles.size());
-}
-
-void obstacleAdministrator::getLocalObstacleMeasurements(std::vector<obstacleMeasurementType> &measurements)
-{
-    //TRACE(">");
-	try
-	{
-		measurements.clear();
-
-		for(auto it = _obstacleMeasurements.begin(); it != _obstacleMeasurements.end(); it++)
-		{
-			if(it->first.robotID == _ownRobotID)
-			{
-				measurements.push_back(it->second);
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //TRACE("< #meas=%d", (int)measurements.size());
-}
-
-void obstacleAdministrator::notifyOwnLocation(robotClass_t const &ownLocation)
-{
-    // store so it can be used in filterOutTeamMembers
-    _ownPos.x = ownLocation.getX();
-    _ownPos.y = ownLocation.getY();
-}
-
-void obstacleAdministrator::notifyTeamMembers(std::vector<robotClass_t> const &teamMembers)
-{
-    // store so it can be used in filterOutTeamMembers
-    _teamMembers.clear();
-    for (auto it = teamMembers.begin(); it != teamMembers.end(); ++it)
-    {
-        _teamMembers.push_back(Point2D(it->getX(), it->getY()));
-    }
-}
-
-void obstacleAdministrator::filterOutTeamMembers(std::vector<obstacleClass_t> &obstacles)
-{   
-    // this filter function was moved and adapted from worldModelInfoUpdater, to solve #482 a.o.
-
+    TRACE("> #meas=%d", (int)measurements.size());
     try
     {
-        // NOTE: we do not anymore reuse (abuse) trackerXY tolerance
-        // because tracking is a fundamentally different thing than filtering
-        // filtering is merely post-processing tracker results
-        float filterXYownTolerance = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorFloats::
-filterXYownTolerance);
-        float filterXYmemberTolerance = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorFloats::filterXYmemberTolerance);
-
-        for (auto itObst = obstacles.begin(); itObst != obstacles.end(); )
+        // hack: keeper should never respond to nor sync out obstacles, especially now it has a fancy new keeper frame
+        // we saw in testmatch 20180221 that several fake obstacles were projected in the penalty area
+        // teammembers should not be scared of them
+        // proper solution would include one or more configuration parameters, then make R1 specific yaml
+        if (_ownRobotID == 1)
         {
-            bool found = false;
-            Point2D obstaclePos = Point2D(itObst->getX(), itObst->getY());
-            
-            // check against own position
-            if (vectorsize(_ownPos - obstaclePos) < filterXYownTolerance)
-            {
-                found = true;
-            }
+            return;
+        }
 
-            // check against team member positions
-            for (auto itMember = _teamMembers.begin(); ((itMember != _teamMembers.end()) && (!found)); itMember++)
-            {
-                if (vectorsize(*itMember - obstaclePos) < filterXYmemberTolerance)
-                {
-                    found = true;
-                }
-            }
+        for(auto itCandidate = measurements.begin(); itCandidate != measurements.end(); itCandidate++)
+        {
+            auto it = _obstacleMeasurements.find(itCandidate->identifier);
 
-            if (found)
+            // If not found, add it and feed to object discriminator
+            if(it == _obstacleMeasurements.end())
             {
-                itObst = obstacles.erase(itObst);
-            }
-            else
-            {
-                itObst++;
+                _obstacleMeasurements[itCandidate->identifier] = (*itCandidate);
+                _obstacleDiscriminator->addMeasurement(*itCandidate);
             }
         }
     }
-    catch (std::exception &e)
+    catch(std::exception &e)
     {
         TRACE_ERROR("Caught exception: %s", e.what());
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
+    TRACE("<");
 }
 
-void obstacleAdministrator::performCalculation(const double timeNow)
+void obstacleAdministrator::overruleObstacles(const std::vector<obstacleClass_t> obstacles)
 {
-    TRACE("> t=%16.6f  #overrule=%d", timeNow, (int)_overruledObstacles.size());
-	try
-	{
-		cleanUpTimedOutObstacleMeasurements(timeNow);
+    TRACE("> #overruled=%d  #obstacles=%d", (int)_overruledObstacles.size(), (int)obstacles.size());
+    try
+    {
+        if(!obstacles.empty())
+        {
+            _overruledObstacles[obstacles.at(0).getId()] = obstacles;
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+    TRACE("< #overruled=%d", (int)_overruledObstacles.size());
+}
+
+void obstacleAdministrator::getLocalObstacleMeasurements(std::vector<obstacleMeasurement> &measurements)
+{
+    //TRACE(">");
+    try
+    {
+        measurements.clear();
+
+        for(auto it = _obstacleMeasurements.begin(); it != _obstacleMeasurements.end(); it++)
+        {
+            if(it->first.robotID == _ownRobotID)
+            {
+                measurements.push_back(it->second);
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+    //TRACE("< #meas=%d", (int)measurements.size());
+}
+
+void obstacleAdministrator::notifyOwnLocation(robotClass_t const &ownLocation)
+{
+    // store so it can be used to filter out fake obstacles (shadows of ourselves)
+    _ownPos = ownLocation;
+}
+
+void obstacleAdministrator::notifyTeamMembers(std::vector<robotClass_t> const &teamMembers)
+{
+    // store so it can be used to filter out fake obstacles (shadows of ourselves)
+    _teamMembers = teamMembers;
+}
+
+void obstacleAdministrator::performCalculation(rtime const timeNow)
+{
+    std::ostringstream ss;
+    ss << "#overrule=" << _overruledObstacles.size();
+    TRACE_FUNCTION(ss.str().c_str());
+    try
+    {
+        cleanUpTimedOutObstacleMeasurements(timeNow);
 
         // in case of simulation, _overruledObstacles is used instead of _obstacleDiscriminator
-	    if (_overruledObstacles.size() == 0)
-	    {
-	        // real mode, not simulation - calculate
-		    _obstacleDiscriminator.performCalculation(timeNow);
-		    // get result, filter teammembers and own position, cache for getObstacles()
-		    _resultObstacles = _obstacleDiscriminator.getObstacles();
-		    filterOutTeamMembers(_resultObstacles);
-		    // diagnostics
-		    sendDiagnostics(_resultObstacles);
-	    }
-	    else
-	    {
-	        // send the simulated obstacles(s) to visualizer
-	        std::vector<obstacleClass_t> obstacles;
-			for(auto it = _overruledObstacles.begin(); it != _overruledObstacles.end(); it++)
-			{
-    			for(auto it2 = it->second.begin(); it2 != it->second.end(); it2++)
-			    {
-			        TRACE("obst=[%6.2f %6.2f]", it2->getX(), it2->getY());
-    				obstacles.push_back(*it2);
-				}
-			}
-			sendDiagnostics(obstacles);
-	    }
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+        if (_overruledObstacles.size() == 0)
+        {
+            // real mode, not simulation - calculate
+            std::vector<robotClass_t> teamMembersInclSelf = _teamMembers;
+            teamMembersInclSelf.push_back(_ownPos);
+            _obstacleDiscriminator->performCalculation(timeNow, teamMembersInclSelf);
+            // get result, cache for getObstacles()
+            _resultObstacles = _obstacleDiscriminator->getObstacles();
+        }
+        else
+        {
+            // send the simulated obstacles(s) to visualizer
+            std::vector<obstacleClass_t> obstacles;
+            for(auto it = _overruledObstacles.begin(); it != _overruledObstacles.end(); it++)
+            {
+                for(auto it2 = it->second.begin(); it2 != it->second.end(); it2++)
+                {
+                    obstacles.push_back(*it2);
+                }
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     TRACE("<");
 }
 
 void obstacleAdministrator::getObstacles(std::vector<obstacleClass_t> &obstacles)
 {
     //TRACE(">");
-	try
-	{
-		// in case of simulation, _overruledObstacles is used instead of _obstacleDiscriminator
-		if(_overruledObstacles.empty())
-		{
-			obstacles = _resultObstacles;
-		}
-		else
-		{
-			for(auto it = _overruledObstacles.begin(); it != _overruledObstacles.end(); it++)
-			{
-				std::vector<obstacleClass_t> obstacleVector = it->second;
+    try
+    {
+        // in case of simulation, _overruledObstacles is used instead of _obstacleDiscriminator
+        if(_overruledObstacles.empty())
+        {
+            obstacles = _resultObstacles;
+        }
+        else
+        {
+            for(auto it = _overruledObstacles.begin(); it != _overruledObstacles.end(); it++)
+            {
+                std::vector<obstacleClass_t> obstacleVector = it->second;
 
-				for(auto itObstacle = obstacleVector.begin(); itObstacle != obstacleVector.end(); itObstacle++)
-				{
-					obstacles.push_back(*itObstacle);
-				}
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
+                for(auto itObstacle = obstacleVector.begin(); itObstacle != obstacleVector.end(); itObstacle++)
+                {
+                    obstacles.push_back(*itObstacle);
+                }
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
     //TRACE("< numobstacles=%d", (int)obstacles.size());
 }
 
-void obstacleAdministrator::cleanUpTimedOutObstacleMeasurements(const double timeNow)
+void obstacleAdministrator::cleanUpTimedOutObstacleMeasurements(rtime const timeNow)
 {
-    //TRACE("> size=%d", (int)_obstacleMeasurements.size());
-	try
-	{
-		double maxTimeToLive = administrationConfigurator::getInstance().getObstacleTimeToLive();
+    TRACE_FUNCTION("");
+    size_t origSize = _obstacleMeasurements.size();
+    try
+    {
+        double maxTimeToLive = administrationConfigurator::getInstance().getObstacleTimeToLive();
 
-		for(auto i = _obstacleMeasurements.begin(); i != _obstacleMeasurements.end();)
-		{
-			double time_diff = timeNow - i->second.getTimestamp();
-			if(time_diff > maxTimeToLive)
+        for(auto i = _obstacleMeasurements.begin(); i != _obstacleMeasurements.end();)
+        {
+            double time_diff = double(timeNow - i->second.timestamp);
+            if(time_diff > maxTimeToLive)
             {
                 // Delete obstacle candidate
-				i = _obstacleMeasurements.erase(i);
+                i = _obstacleMeasurements.erase(i);
             }
-			else
-			{
-				i++;
-			}
-		}
-
-		for(auto it = _overruledObstacles.begin(); it != _overruledObstacles.end();)
-		{
-
-			if(it->second.empty())
-			{
-				it = _overruledObstacles.erase(it);
-			}
-			else
-			{
-				double time_diff = timeNow - it->second.at(0).getTimestamp();
-				if(time_diff > maxTimeToLive)
-				{
-					// Delete obstacle candidate
-					it = _overruledObstacles.erase(it);
-				}
-				else
-				{
-					it++;
-				}
-
-			}
-		}
-
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-    //int removed = origSize - (int)_obstacleMeasurements.size();
-    //TRACE("< removed=%d", removed);
-}
-
-void obstacleAdministrator::enableDiagnostics()
-{
-    _diagSender = new diagnostics::cDiagnosticsSender<rosMsgs::t_diag_wm_obstacles>(diagnostics::DIAG_WM_OBST, 10, false);
-}
-
-void obstacleAdministrator::sendDiagnostics(std::vector<obstacleClass_t> const &obstacles)
-{
-    if (_diagSender)
-    {
-		rosMsgs::t_diag_wm_obstacles diagMsg;
-		diagMsg.numTrackers = (int)obstacles.size();
-		for(auto it = obstacles.begin(); it != obstacles.end(); it++)
-		{
-            rosMsgs::t_obstacle obstMsg;
-            obstacleClass_t obstacle = *it;
-            obstMsg.id = obstacle.getId();
-            obstMsg.x = obstacle.getX();
-            obstMsg.y = obstacle.getY();
-            obstMsg.vx = obstacle.getVX();
-            obstMsg.vy = obstacle.getVY();
-            obstMsg.confidence = obstacle.getConfidence();
-            diagMsg.obstacles.push_back(obstMsg);
+            else
+            {
+                i++;
+            }
         }
-        _diagSender->set(diagMsg);
+
+        for(auto it = _overruledObstacles.begin(); it != _overruledObstacles.end();)
+        {
+
+            if(it->second.empty())
+            {
+                it = _overruledObstacles.erase(it);
+            }
+            else
+            {
+                double time_diff = double(timeNow - it->second.at(0).getTimestamp());
+                if(time_diff > maxTimeToLive)
+                {
+                    // Delete obstacle candidate
+                    it = _overruledObstacles.erase(it);
+                }
+                else
+                {
+                    it++;
+                }
+
+            }
+        }
+
     }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+    std::ostringstream ss;
+    ss << "origSize=" << origSize << "; newSize=" << _obstacleMeasurements.size();
+    TRACE(ss.str().c_str());
+}
+
+void obstacleAdministrator::fillDiagnostics(diagWorldModel &diagnostics)
+{
+    TRACE_FUNCTION("");
+    diagnostics.shared.numObstacleTrackers = _obstacleDiscriminator->numTrackers();
+
+    _obstacleDiscriminator->fillDiagnostics(diagnostics);
 }
 

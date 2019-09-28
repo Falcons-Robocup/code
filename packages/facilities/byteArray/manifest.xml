@@ -1,0 +1,21 @@
+<package>
+  <description brief="byteArray">
+
+     byteArray
+
+  </description>
+  <author>robocup</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/byteArray</url>
+  
+  <depend package="common"/>
+  
+  <export>
+    <cpp cflags="-I${prefix}/include/ext"
+             lflags="-L${prefix}/lib -Wl,-rpath,${prefix}/lib -lbyteArray"/>
+  </export>
+
+</package>
+
+

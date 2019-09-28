@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,10 +21,11 @@
 #include <exception>
 #include <functional>
 
-#include <cDiagnosticsEvents.hpp>
+#include <cDiagnostics.hpp>
 #include <FalconsCommon.h>
+#include "tracing.hpp"
 
-#include "ext/peripheralInterfaceNames.hpp"
+#include "../../include/ext/peripheralsInterfaceNames.hpp"
 
 using std::bind;
 using std::exception;
@@ -46,13 +47,6 @@ cRosAdapterKicker::~cRosAdapterKicker() {
 void cRosAdapterKicker::initialize() {
 	TRACE(">");
 
-	setKickPositionService = nodeHandle.advertiseService(
-			peripheralInterfaceServiceNames::setKickPosition, &cRosAdapterKicker::cbSetKickPosition, this);
-	setKickSpeedService = nodeHandle.advertiseService(
-			peripheralInterfaceServiceNames::setKickSpeed, &cRosAdapterKicker::cbSetKickSpeed, this);
-	homeKickerService = nodeHandle.advertiseService(
-			peripheralInterfaceServiceNames::homeKicker, &cRosAdapterKicker::cbHomeKicker, this);
-
 	/* Bind the reconfiguration function */
 	auto callback = bind(&cRosAdapterKicker::cbConfig, this, _1, _2);
 
@@ -61,56 +55,6 @@ void cRosAdapterKicker::initialize() {
 
 
 	TRACE("<");
-}
-
-bool cRosAdapterKicker::cbSetKickPosition(peripheralsInterface::s_peripheralsInterface_setKickPosition::Request& request, peripheralsInterface::s_peripheralsInterface_setKickPosition::Response& response) {
-	TRACE("> kick position: %f", request.kick_position);
-
-	try {
-		cout << "Setting height." << endl;
-		kicker.setHeight(request.kick_position);
-
-		cout << "Issuing move." << endl;
-		kicker.move();
-	}
-	catch(exception &e) {
-		cout << e.what() << endl;
-		throw(e);
-	}
-
-	TRACE("<");
-
-	return true;
-}
-
-bool cRosAdapterKicker::cbSetKickSpeed(peripheralsInterface::s_peripheralsInterface_setKickSpeed::Request& request, peripheralsInterface::s_peripheralsInterface_setKickSpeed::Response& response) {
-	TRACE("> kick speed: %f", request.kick_speed);
-
-	try {
-		cout << "Setting shoot power." << endl;
-		kicker.setShootPower(request.kick_speed);
-
-		cout << "Issuing shoot." << endl;
-		kicker.shoot();
-	}
-	catch(exception &e) {
-		cout << e.what() << endl;
-		throw(e);
-	}
-
-	TRACE("<");
-
-	return true;
-}
-
-bool cRosAdapterKicker::cbHomeKicker(peripheralsInterface::s_homeKicker::Request& request, peripheralsInterface::s_homeKicker::Response& response) {
-	TRACE(">");
-
-	kicker.home();
-
-	TRACE("<");
-
-	return true;
 }
 
 void cRosAdapterKicker::cbConfig(peripheralsInterface::kickerConfig &config, uint32_t level)

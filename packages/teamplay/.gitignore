@@ -17,3 +17,5 @@ src/teamplay/
 srv_gen/
 typescript
 teamplayData
+*jpg
+*svg

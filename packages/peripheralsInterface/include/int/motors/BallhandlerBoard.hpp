@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -38,9 +38,10 @@ public:
 	BallhandlerBoard(BallhandlerBoardType type, DeviceManager &deviceManager);
 
 	BallhandlerBoardDataOutput getBoardData();
-	void setSetpoint(float angle, float setpoint);
+	void setSetpoint(int angle, int setpoint);
 	void setSettings(BallhandlerBoardSettings settings);
 	void setControlMode(BallhandlerBoardControlMode controlMode);
+    BallhandlerBoardControlMode getControlMode();
 
 protected:
 	virtual void configure();
@@ -49,14 +50,14 @@ protected:
 	virtual void handleAngleTachoZeroResponse(ReceivePackage &package);
 	virtual void handleDefaultResponse(ReceivePackage &package);
 
-	void calibrateAngle();
+	void finishCalibration();
 	void updateControlMode();
 
 	BallhandlerBoardData ballhandlerData;
 	BallhandlerBoardSettings ballhandlerSettings;
 	BallhandlerBoardControlMode ballhandlerControlMode;
 
-	bool angleCalibrated;
+	bool calibrated;
 };
 
 #endif /* INCLUDE_INT_MOTORS_BALLHANDLERBOARD_HPP_ */

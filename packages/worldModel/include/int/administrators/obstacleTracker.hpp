@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,6 +24,7 @@
 #include "int/algorithms/objectMeasurementCache.hpp"
 #include "int/algorithms/objectTracking.hpp"
 #include "int/types/obstacle/obstacleType.hpp"
+#include "int/types/robot/robotType.hpp"
 #include "int/types/object/objectFitConfig.hpp"
 
 struct obstacleTrackerConfig
@@ -43,27 +44,30 @@ struct obstacleTrackerConfig
 
 class obstacleTracker
 {
-	public:
-		obstacleTracker(const objectMeasurementCache &measurement);
-		~obstacleTracker();
+public:
+    obstacleTracker(const objectMeasurementCache &measurement);
+    ~obstacleTracker();
 
-		void addObstacleMeasurement(const objectMeasurementCache &measurement, bool &measurementIsAdded);
-		void performCalculation(const double timeNow);
-		bool isTimedOut(const double timeNow);
+    void addObstacleMeasurement(const objectMeasurementCache &measurement, bool &measurementIsAdded);
+    void performCalculation(rtime const timeNow);
+    bool isTimedOut(rtime const timeNow);
+    void checkFake(std::vector<robotClass_t> const &teamMembers);
+    bool isFake() const { return _fake; };
 
-		obstacleClass_t getObstacle() const;
-        std::string toStr(double tcurr);
+    obstacleClass_t getObstacle() const;
+    std::string toStr(rtime const tcurr);
 
-	private:
-		std::vector<objectMeasurementCache> _obstacleMeasurements;
-		objectTracker _tracker;
-		obstacleClass_t _lastObstacleResult;
-		static size_t _staticTrackerID;
-		size_t _trackerID;
-		obstacleTrackerConfig _config;
+private:
+    std::vector<objectMeasurementCache> _obstacleMeasurements;
+    objectTracker _tracker;
+    obstacleClass_t _lastObstacleResult;
+    bool _fake;
+    static size_t _staticTrackerID;
+    size_t _trackerID;
+    obstacleTrackerConfig _config;
 
-        void setConfidence(double t);
-		void cleanUpTimedOutObstacleMeasurements(const double timeNow);
+    void setConfidence(rtime const t);
+    void cleanUpTimedOutObstacleMeasurements(rtime const timeNow);
 };
 
 #endif /* OBSTACLETRACKER_HPP_ */

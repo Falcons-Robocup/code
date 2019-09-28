@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,14 +18,15 @@
 
 #include "int/actions/cActionShoot.hpp"
 
+#include "FalconsCommon.h"
 #include "int/stores/configurationStore.hpp"
 #include "int/stores/diagnosticsStore.hpp"
-#include "int/cTeamplayCommon.hpp"
-#include "int/cWorldModelInterface.hpp"
 #include "int/cWorldStateFunctions.hpp"
 #include "int/utilities/trace.hpp"
 #include "int/types/cActionTypes.hpp"
 #include "int/stores/fieldDimensionsStore.hpp"
+#include "int/stores/robotStore.hpp"
+
 
 cActionShoot::cActionShoot()
 {
@@ -33,7 +34,7 @@ cActionShoot::cActionShoot()
         ("shootType", std::make_pair(defaultShootTypes, false))
         ;
 
-    intention.actionType = actionEnum::SHOOT;
+    _intention.action = actionTypeEnum::SHOOT;
 }
 
 cActionShoot::~cActionShoot()
@@ -46,6 +47,7 @@ cActionShoot::~cActionShoot()
 //          FAILED    if something went wrong
 behTreeReturnEnum cActionShoot::execute(const std::map<std::string, std::string> &parameters)
 {
+    behTreeReturnEnum result = behTreeReturnEnum::RUNNING;
     try
     {
         //TRACE("INFO: cActionShoot: Entered function");
@@ -53,162 +55,71 @@ behTreeReturnEnum cActionShoot::execute(const std::map<std::string, std::string>
         std::string paramStr("shootType");
 
         auto paramValPair = parameters.find(paramStr);
-        // before shooting check if we have the ball to avoid damaging the shooterbox
-
-        ballPossession_struct_t ballPossession;
-        cWorldModelInterface::getInstance().getBallPossession(ballPossession);
-        if(ballPossession.possessionType == ballPossessionEnum::TEAMMEMBER && ballPossession.robotID == cWorldStateFunctions::getInstance().getRobotID())
+        if (paramValPair != parameters.end())
         {
-            if (paramValPair != parameters.end())
+            std::string paramVal = paramValPair->second;
+            shootEnum shootType = shootMapping[paramVal];
+
+            // store diagnostics data
+            auto shootTarget = getPreferredPartOfGoal();
+            _intention.position.x = shootTarget.x;
+            _intention.position.y = shootTarget.y;
+
+            switch(shootType)
             {
-                Position2D closestTeammember;
-                Position2D myPos;
-
-                std::string paramVal = paramValPair->second;
-                shootEnum shootType = shootMapping[paramVal];
-
-                switch(shootType)
+            case shootEnum::SHOOT_TOWARDS_GOAL:
                 {
-                case shootEnum::PASS_TOWARDS_NEAREST_TEAMMEMBER:
+                    // store diagnostics data
+                    teamplay::diagnosticsStore::getDiagnostics().setAiming(true);
+                    teamplay::diagnosticsStore::getDiagnostics().setShootTarget(shootTarget);
+
+                    // Code to override a straight shot with lobshot due to limited vision range resulting in missing obstacles in front of opp goal
+                    Position2D myPos = teamplay::robotStore::getInstance().getOwnRobot().getPosition();
+                    Point2D oppGoalCenter = teamplay::fieldDimensionsStore::getFieldDimensions().getLocation(teamplay::fieldPOI::OPP_GOALLINE_CENTER);
+                    float lobShotThreshold = teamplay::configurationStore::getConfiguration().getStraightShotThreshold();
+
+                    if (calc_distance( oppGoalCenter.x, oppGoalCenter.y, myPos.x, myPos.y) > lobShotThreshold)
                     {
-                        cWorldModelInterface::getInstance().getOwnLocation(myPos);
-                        cWorldStateFunctions::getInstance().getClosestTeammember(closestTeammember.x, closestTeammember.y, false);
-
-                        TRACE("INFO: cActionShoot: PASS_TOWARDS_NEAREST_TEAMMEMBER");
-                        shoot(getPassPower(calc_distance(myPos, closestTeammember)));
-                        break;
-                    }
-
-                    case shootEnum::PASS_TOWARDS_NEAREST_ATTACKER:
-                    {
-                        cWorldModelInterface::getInstance().getOwnLocation(myPos);
-                        cWorldStateFunctions::getInstance().getClosestAttacker(A_FIELD, closestTeammember.x, closestTeammember.y);
-
-                        TRACE("INFO: cActionShoot: PASS_TOWARDS_NEAREST_ATTACKER");
-                        shoot(getPassPower(calc_distance(myPos, closestTeammember)));
-                        break;
-                    }
-
-                    case shootEnum::PASS_TOWARDS_FURTHEST_ATTACKER:
-                    {
-                        cWorldModelInterface::getInstance().getOwnLocation(myPos);
-                        cWorldStateFunctions::getInstance().getClosestAttackerToOpponentGoal(closestTeammember.x, closestTeammember.y);
-
-                        TRACE("INFO: cActionShoot: PASS_TOWARDS_FURTHEST_ATTACKER");
-                        shoot(getPassPower(calc_distance(myPos, closestTeammember)));
-                        break;
-                    }
-
-                    case shootEnum::PASS_TOWARDS_NEAREST_ATTACKER_ON_OPP_HALF:
-                    {
-                        cWorldModelInterface::getInstance().getOwnLocation(myPos);
-                        cWorldStateFunctions::getInstance().getClosestAttacker(A_OPP_SIDE, closestTeammember.x, closestTeammember.y);
-
-                        TRACE("INFO: cActionShoot: PASS_TOWARDS_NEAREST_ATTACKER_ON_OPP_HALF");
-                        shoot(getPassPower(calc_distance(myPos, closestTeammember)));
-                        break;
-                    }
-
-                    case shootEnum::PASS_TOWARDS_TIP_IN_POSITION:
-                    {
-                        cWorldModelInterface::getInstance().getOwnLocation(myPos);
-                        Point2D tipInPOI = teamplay::fieldDimensionsStore::getFieldDimensions().getLocation(teamplay::fieldPOI::TIP_IN);
-                        Position2D tipInPOI_Pos2D;
-                        tipInPOI_Pos2D.x = tipInPOI.x;
-                        tipInPOI_Pos2D.y = tipInPOI.y;
-
-                        TRACE("INFO: cActionShoot: PASS_TOWARDS_TIP_IN_POSITION");
-                        shoot(getPassPower(calc_distance(myPos, tipInPOI_Pos2D)));
-                        break;
-                    }
-
-                    case shootEnum::SHOOT_TOWARDS_GOAL:
-                    {
-                        // store diagnostics data
-                        teamplay::diagnosticsStore::getDiagnostics().setAiming(true);
-                        teamplay::diagnosticsStore::getDiagnostics().setShootTarget(getPreferredPartOfGoal());
-
-                        TRACE("INFO: cActionShoot: SHOOT_TOWARDS_GOAL");
-                        shoot(teamplay::configurationStore::getConfiguration().getShootAtGoalPower());
-                        break;
-                    }
-                    case shootEnum::LOB_TOWARDS_GOAL:
-                    {
-                        // store diagnostics data
-                        teamplay::diagnosticsStore::getDiagnostics().setAiming(true);
-                        teamplay::diagnosticsStore::getDiagnostics().setShootTarget(getPreferredPartOfGoal());
-
                         TRACE("INFO: cActionShoot: LOB_TOWARDS_GOAL");
-                        lobShot(getPreferredPartOfGoal());
-                        break;
+                        result = lobShot(shootTarget);
                     }
-                    case shootEnum::PASS_TOWARDS_GOALIE:
+                    else
                     {
-                        cWorldModelInterface::getInstance().getOwnLocation(myPos);
-                        boost::optional<robotNumber> goalie = cWorldStateFunctions::getInstance().getRobotWithRole(treeEnum::R_GOALKEEPER);
-                        if (goalie)
-                        {
-                            Position2D goalieLocation = cWorldStateFunctions::getInstance().getLocationOfRobot(*goalie);
-                            TRACE("INFO: cActionShoot: PASS_TOWARDS_GOALIE");
-                            shoot(getPassPower(calc_distance(myPos, goalieLocation)));
-                        }
-                        else
-                        {
-                            TRACE("WARNING: cActionShoot: PASS_TOWARDS_GOALIE while robot is goalie. No action.");
-                            return behTreeReturnEnum::FAILED;
-                        }
-                        break;
+                        float shootHeight = 0.7; // TODO make configurable
+                        TRACE("INFO: cActionShoot: SHOOT_TOWARDS_GOAL");
+                        result = shoot(shootTarget.x, shootTarget.y, shootHeight);
                     }
-                    default:
-                    {
-                        TRACE("Unknown shoot type encountered");
-                        break;
-                    }
+                    break;
                 }
-            }
-            else
-            {
-            	TRACE("WARNING: cActionShoot: no parameters given");
+                case shootEnum::LOB_TOWARDS_GOAL:
+                {
+                    // store diagnostics data
+                    teamplay::diagnosticsStore::getDiagnostics().setAiming(true);
+                    teamplay::diagnosticsStore::getDiagnostics().setShootTarget(shootTarget);
+
+                    TRACE("INFO: cActionShoot: LOB_TOWARDS_GOAL");
+                    result = lobShot(shootTarget);
+                    break;
+                }
+                default:
+                {
+                    TRACE("Unknown shoot type encountered");
+                    result = behTreeReturnEnum::FAILED;
+                    break;
+                }
             }
         }
         else
         {
-            TRACE("WARNING: cActionShoot: tried to shoot without ball");
+            TRACE("WARNING: cActionShoot: no parameters given");
         }
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+        throw std::runtime_error(std::string("cActionShoot::execute Linked to: ") + e.what());
     }
 
     sendIntention();
-    return behTreeReturnEnum::PASSED;
-}
-
-
-float cActionShoot::getPassPower (teamplay::passDistance distance)
-{
-    auto pass_powers = teamplay::configurationStore::getConfiguration().getPassPowers();
-    return pass_powers.find(distance)->second;
-}
-
-float cActionShoot::getPassPower (float distance)
-{
-    if (distance < 0.0)
-    {
-        TRACE("Minor violation: attempt to pass a negative distance.");
-        distance = -distance;
-    }
-
-    auto pass_ranges = teamplay::configurationStore::getConfiguration().getPassRanges();
-    for (auto it = pass_ranges.begin(); it != pass_ranges.end(); it++)
-    {
-        if (distance < it->second)
-        {
-            return getPassPower(it->first);
-        }
-    }
-
-    return getPassPower(teamplay::passDistance::LONG);
+    return result;
 }

@@ -10,6 +10,7 @@
   <url>http://falcons-robocup.nl/</url>
 
   <depend package="common"/>
+  <depend package="byteArray"/>
   
   <export>
   	<cpp cflags="-I${prefix}/include/ext"

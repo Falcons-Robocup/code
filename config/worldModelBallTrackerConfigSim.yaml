@@ -1,8 +1,9 @@
 worldModelNode/ballTracker: {
   confidenceOmniPref            : True,
   solverCoreSpeed               : True,
-  useFrontVision                : False,
-  useFriendlyMeas               : True,
+  useOwnHighVision              : True, # frontVision does not run in sim mode
+  shareHighVision               : True,
+  useFriendlyHighVision         : True,
   friendlyMeasurementsDistance  : 3.0, # if ball is closer than this distance, only use own measurements
   numberOfBallsWarningThreshold : 10,
   solverCoreMinVmeas            : 3,
@@ -15,8 +16,13 @@ worldModelNode/ballTracker: {
   confidenceNumCams             : 1,
   confidenceMeasLim             : 5,
   maxMaybeBalls                 : 1,
-  solverTrackerXYTolerance      : 2.5,
-  solverTrackerTimeout          : 0.8,
+  blackListThresholdZ           : 0.4,
+  blackListFloatingDuration     : 1.0,
+  blackListGroundDuration       : 1.0,
+  blackListDefault              : False, # True = cauteous; False = aggressive / jumpy
+  solverTrackerConeTolerance    : 0.1,
+  solverTrackerTimeout          : 0.5,
+  solverTrackerBuffer           : 0.8,
   solverCoreMinVdt              : 0.05,
   solverCoreWeight              : 0.1,
   solverBounceDt                : 0.1,

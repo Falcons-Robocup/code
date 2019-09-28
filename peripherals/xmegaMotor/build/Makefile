@@ -28,7 +28,7 @@ INC += -I../asf/xmega/utils
 INC += -I../asf/xmega/utils/preprocessor
 # INC += -I/opt/avr_v3.4.5/avr/include
 
-CFLAGS0 = -g -Wall -Os -ffreestanding -fshort-enums --std=gnu99 -DBOARD=USER_BOARD -DIOPORT_XMEGA_COMPAT -DCONFIG_NVM_IGNORE_XMEGA_A3_D3_REVB_ERRATA
+CFLAGS0 = -g -Wall -O3 -ffreestanding -fshort-enums --std=gnu99 -DBOARD=USER_BOARD -DIOPORT_XMEGA_COMPAT -DCONFIG_NVM_IGNORE_XMEGA_A3_D3_REVB_ERRATA
 CFLAGS = $(CFLAGS0) -pedantic
 LDFLAGS = -Wl,-Map,$(PRG).map
 #PRG = motorFirmware

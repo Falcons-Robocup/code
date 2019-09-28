@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Falcons-lint helper
+# Check that there is no tab indentation present in given file
+
+f=$1
+
+# file does not have to exist, it might have been deleted
+if [ ! -f $f ]
+then 
+    exit 0
+fi
+
+# whitelist (this script, possibly others?)
+if [ `basename $f` = `basename $0` ]
+then
+    exit 0
+fi
+if [ `basename $f` = Makefile ]
+then
+    exit 0
+fi
+
+# check for tabs at start of line, only check staged changes, output only first offending line number
+lineNr=`git cat-file -p :./$f | grep -n '^	' | awk -F: '{print $1}' | head -1`
+if [ -n "$lineNr" ]
+then
+    echo $lineNr
+    exit 1
+fi
+exit 0
+

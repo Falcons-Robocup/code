@@ -13,6 +13,7 @@
   <depend package="networkUDP"/>
   <depend package="worldModel"/>
   <depend package="common"/>
+  <depend package="sharedTypes"/>
 
 </package>
 

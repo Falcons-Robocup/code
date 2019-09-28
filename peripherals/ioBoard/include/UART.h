@@ -16,7 +16,7 @@
 
 #include <stdbool.h>
 
-void UART_initalize(void);
+void UART_initialize(void);
 void UART_terminate(void);
 void UART_putchar(char character);
 char UART_getchar(void);

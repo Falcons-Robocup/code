@@ -6,5 +6,5 @@
 # 
 
 
-ifconfig -a | grep -A 7 wlan | tail -1 | awk '{print $6}' | sed 's/.*://'
+ifconfig -a | grep -A 7 wlp2s0 | tail -1 | awk '{print $6}' | sed 's/.*://'
 

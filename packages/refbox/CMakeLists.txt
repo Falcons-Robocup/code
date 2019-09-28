@@ -8,22 +8,8 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE RelWithDebInfo)
+set(ROS_BUILD_TYPE Release)
 
-################################################################################
-# BEGIN Override the buildin gtest stuff with our gmock/gtest package
-# see also /opt/ros/jade/share/catkin/cmake/test/gtest.cmake
-################################################################################
-rosbuild_find_ros_package(gmock)
-set(GTEST_LIBRARIES gmock)
-include_directories(BEFORE ${gmock_PACKAGE_PATH}/include)
-set(GTEST_INCLUDE_DIR ${gmock_PACKAGE_PATH}/include CACHE PATH rosoverride FORCE)
-set(_CATKIN_GTEST_INCLUDE ${gmock_PACKAGE_PATH}/src/gtest/include/gtest/gtest.h CACHE FILEPATH rosoverride FORCE)
-set(_CATKIN_GTEST_SRC ${gmock_PACKAGE_PATH}/src/gtest/src/gtest.cc CACHE FILEPATH rosoverride FORCE)
-set(gtest_SOURCE_DIR ${gmock_PACKAGE_PATH}/src/gtest/src CACHE STATIC rosoverride FORCE)
-set(GTEST_FROM_SOURCE_INCLUDE_DIRS ${gmock_PACKAGE_PATH}/src/gtest/include CACHE INTERNAL rosoverride FORCE)
-################################################################################
-# END Override the buildin gtest stuff with our gmock/gtest package
-################################################################################
 rosbuild_init()
 
 #set the default path for built executables to the "bin" directory
@@ -46,8 +32,9 @@ set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++11")
 rosbuild_add_library(refboxFeedback src/logger/cPacketRefboxLogger.cpp)
 target_link_libraries(refboxFeedback json-c)
 
-rosbuild_add_executable(refboxRelay src/refboxRelay.cpp src/cRosAdapterLogging.cpp src/TCPIP_client.cpp)
+rosbuild_add_executable(refboxRelay src/main.cpp src/cRefboxRelay.cpp src/RTDBAdapterLogging.cpp src/TCPIP_client.cpp)
 target_link_libraries(refboxRelay refboxFeedback)
+rosbuild_link_boost(refboxRelay system thread)
 
 
 #############################

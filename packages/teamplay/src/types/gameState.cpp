@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -131,6 +131,11 @@ bool gameState::isPrepareSetPiece() const
     return (_governingGameState == governingGameState::SETPIECE_PREPARING);
 }
 
+bool gameState::isExecuteSetPiece() const
+{
+    return (_governingGameState == governingGameState::SETPIECE_EXECUTING);
+}
+
 bool gameState::isDroppedBallSetPiece() const
 {
     return (_setpieceType == setpieceType::DROPPED_BALL);
@@ -144,12 +149,6 @@ bool gameState::isKickoffSetPiece() const
 bool gameState::isPenaltySetPiece() const
 {
     return (_setpieceType == setpieceType::PENALTY);
-}
-
-bool gameState::isSidelineSetPiece() const
-{
-    return (  (_setpieceType == setpieceType::CORNER)
-           || (_setpieceType == setpieceType::THROWIN)  );
 }
 
 bool gameState::isGoalkickSetPiece() const
@@ -686,5 +685,7 @@ treeEnum gameState::toTreeEnum() const
     default:
         return treeEnum::INVALID;
         break;
+
     }
+return treeEnum::INVALID;
 }

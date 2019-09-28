@@ -1,0 +1,15 @@
+SmokeTest.robot
+
+ Created on: Aug 29, 2019
+     Author: Coen Tempelaars
+
+
+*** Settings ***
+Resource        ../resources/Simulator.robot
+Test Teardown   Stop simulator
+
+*** Test Cases ***
+Smoke1
+    Given Falcons simulator is started
+    When "10" minutes have passed
+    Then Team "A" has scored at least once

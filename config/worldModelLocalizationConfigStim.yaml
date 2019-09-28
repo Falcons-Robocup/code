@@ -1,0 +1,17 @@
+worldModelNode/localization: {
+  errorRatioRadianToMeter       :  0.5,
+  visionOwnWeightFactor         :  1.0, # stimulation overrule: as a consequence of getAndClear, log contains 'bad' encoder data
+  trackerScoreAcceptanceThreshold : 0.5,
+  trackerTimeout                : 10.0,
+  scoreActivityScale            :  5.0,
+  scoreAgeScale                 : 20.0,
+  scoreFreshScale               :  0.5,
+  settlingTime                  :  0.1, # stimulation overrule: force immediate lock (which happens to be in consistent playing direction)
+  minimumConfidence             :  0.8,
+  speedLimitXY                  :  5.0,
+  speedLimitPhi                 :  6.0,
+  positionLimitX                :  7.5, # not used anymore, overridden by cEnvironmentField, TODO cleanup
+  positionLimitY                : 10.5, # not used anymore, overridden by cEnvironmentField, TODO cleanup
+  visionStabilityLength         : 30}
+rosdistro: 'groovy'
+

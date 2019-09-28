@@ -41,7 +41,10 @@ rosbuild_add_library(heartBeatAdapters src/adapters/cHeartBeatConfigRosAdapter.c
 rosbuild_add_executable(heartBeatNode src/main.cpp)
 target_link_libraries(heartBeatNode heartBeatConfig)
 target_link_libraries(heartBeatNode heartBeatAdapters)
+rosbuild_link_boost(heartBeatNode system)
 
+rosbuild_add_executable(mainMatchMode src/mainMatchMode.cpp)
+ 
 #############################
 # Testers
 ##############################

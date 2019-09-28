@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,7 +29,7 @@ class transmitterMixedTeam
 		~transmitterMixedTeam();
 
 		void reconnect();
-		void sendPacket(Facilities::Network::cByteArray wmPacket);
+		void sendPacket(Facilities::cByteArray wmPacket);
 	private:
 		Facilities::Network::cTransmitterUDP *_udpTransmitter;
 

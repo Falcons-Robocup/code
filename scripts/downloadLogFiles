@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+
+# Coen Tempelaars, April 2018
+
+# For description and usage hints, execute with '-h'
+
+
+import argparse
+import exceptions
+import os
+import time
+
+
+pack_log_files = "/home/robocup/falcons/code/scripts/packLogFiles"
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+           description="Packs, downloads and unpacks a selection of logfiles from all robots")
+    parser.add_argument("-n", "--dryrun",   action="store_true",
+           help="print to-be-executed commands, but do not execute")
+    parser.add_argument("-c", "--contains", type=str, default="",
+           help="only download filenames that contain this substring")
+    parser.add_argument("-s", "--since",    type=int, default=1,
+           help="only download files modified since this number of hours ago (default: 1)")
+    parser.add_argument("-z", "--compress", action="store_true",
+           help="compress before transmission (saves bandwidth but costs time)")
+    parser.add_argument("-r", "--robots",   type=str, default="r1,r2,r3,r4,r5,r6,r7",
+           help="only download from comma separated list of robots, for example: r1,r6,r3")
+    return parser.parse_args()
+
+
+def is_alive(hostname, dryrun):
+    command = "ping -W 1 -c 1 %s >/dev/null 2>/dev/null" % hostname
+
+    if dryrun:
+        print "Would have executed: %s" % command
+        return True
+    else:
+        print "Executing: %s" % command
+        return (os.system(command) == 0)
+
+
+class Robot:
+    def __init__(self, hostname, config):
+        self.config = config
+        self.hostname = hostname
+        extension = "tgz" if config.compress else "tar"
+        self.filename = "%s_%s.%s" % (hostname, time.strftime("%Y%m%d_%H%M%S"), extension)
+        self.filepath = "/var/tmp/%s" % (self.filename)
+
+    def safe_execute(self, command):
+        if self.config.dryrun:
+            print "Would have executed: %s" % command
+        else:
+            print "Executing: %s" % command
+            result = os.system(command)
+            if result != 0:
+                raise RuntimeError("Failed to execute command: %s" % command)
+
+    def pack_logfiles(self, compress):
+        compress_flag = "-z" if compress else ""
+        command = "ssh %s %s -c %s -s %s %s %s" % \
+        (self.hostname, pack_log_files, self.config.contains, self.config.since, compress_flag, self.filepath)
+        self.safe_execute(command)
+
+    def download_packed_logfiles(self):
+        command = "scp %s:%s ." % (self.hostname, self.filepath)
+        self.safe_execute(command)
+
+    def cleanup_packed_logfiles(self):
+        command = "ssh %s rm -r %s" % (self.hostname, self.filepath)
+        self.safe_execute(command)
+
+
+if __name__ == '__main__':
+    config = parse_arguments()
+    robots = list()
+    files = list()
+
+    for hostname in config.robots.split(','):
+        if is_alive(hostname, config.dryrun):
+            robots.append(Robot(hostname, config))
+
+    for robot in robots:
+        robot.pack_logfiles(config.compress)
+        try:
+            robot.download_packed_logfiles()
+            files.append(robot.filename)
+        finally:
+            robot.cleanup_packed_logfiles()
+
+    if not config.dryrun:
+        print "Downloading complete. Got files:"
+        for f in files:
+            print "", f

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,24 +16,26 @@
  *      Author: Tim Kouters
  */
 
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <string>
 #include <iostream>
 #include <boost/filesystem.hpp>
-#include <yaml-cpp/yaml.h>
+#include <boost/thread/thread.hpp>
+#include <signal.h>
 
 #include <ros/ros.h>
 
 #include "ext/cPathPlanningNames.hpp"
 
-#include "int/adapters/cWorldModelAdapter.hpp"
-#include "int/adapters/cTeamplayAdapter.hpp"
-#include "int/adapters/cSetSpeedAdapter.hpp"
+#include "int/adapters/cRTDBInputAdapter.hpp"
+#include "int/adapters/cRTDBOutputAdapter.hpp"
+
 #include "int/adapters/cDiagnosticsAdapter.hpp"
-#include "int/adapters/cReconfigureAdapter.hpp"
-#include "cDiagnosticsEvents.hpp"
+#include "int/adapters/ConfigAdapter.hpp"
+#include "cDiagnostics.hpp"
 #include "cEnvironmentField.hpp"
 
 #include "int/cPathPlanningData.hpp"
@@ -51,48 +53,20 @@ using std::endl;
 cPathPlanningData _ppData;
 cPathPlanningMain _ppMain;
 
-cWorldModelAdapter _wmAdapter;
-cTeamplayAdapter _tpAdapter;
-cSetSpeedAdapter _setSpeedAdapter;
-cReconfigureAdapter _reconfigAdapter;
+cRTDBInputAdapter _rtdbInputAdapter;
+cRTDBOutputAdapter _rtdbOutputAdapter;
+
+ConfigAdapter *_configAdapter;
 
 
 boost::thread _workerThread;
 
-void getYAMLEntries(const std::string& yamlFile, std::set<std::string>& yamlEntries)
-{
-    // Load the YAML and get all entries from "PathPlanningNode".
-    YAML::Node yamlNode = YAML::LoadFile(yamlFile);
-    YAML::Node ppNode = yamlNode[PathPlanningNodeNames::pathplanning_nodename];
-
-    YAML::const_iterator it;
-    for(it = ppNode.begin(); it != ppNode.end(); ++it)
-    {
-        yamlEntries.insert( it->first.as<std::string>() );
-    }
-}
-
-void getROSEntries(std::set<std::string>& rosEntries)
-{
-    std::map<std::string, double> rosEntriesMap;
-    bool found = ros::param::get(PathPlanningNodeNames::pathplanning_nodename, rosEntriesMap);
-    if (!found)
-    {
-        throw std::runtime_error("Unable to load ROS parameters.");
-    }
-
-    // Add ROS params to std::set
-    std::map<std::string, double>::const_iterator it;
-    for (it = rosEntriesMap.begin(); it != rosEntriesMap.end(); ++it)
-    {
-        rosEntries.insert(it->first);
-    }
-}
 
 void iteratePP()
 {
+    TRACE_FUNCTION("");
     TRACE(">");
-
+            
     // Convert field coordinates target to robot coordinates
     Position2D target, curPos;
     _ppData.getTarget(target);
@@ -113,7 +87,26 @@ void publishSpeed(const Velocity2D& vel_rcs)
 {
     Velocity2D tmp = Velocity2D(vel_rcs);
     TRACE("> %s", tmp.tostr());
-    _setSpeedAdapter.setSpeed(vel_rcs);
+
+    bool robotStop;
+    _ppData.getRobotStop(robotStop);
+
+    T_ROBOT_VELOCITY_SETPOINT targetVel;
+    if (robotStop)
+    {
+        targetVel.x = 0.0;
+        targetVel.y = 0.0;
+        targetVel.Rz = 0.0;
+    }
+    else
+    {
+        targetVel.x = vel_rcs.x;
+        targetVel.y = vel_rcs.y;
+        targetVel.Rz = vel_rcs.phi;
+    }
+
+    _rtdbOutputAdapter.setRobotVelocitySetpoint(targetVel);
+
     TRACE("<");
 }
 
@@ -130,10 +123,10 @@ void publishSubtarget(const double& x, const double& y)
 /*!
  * Used by the PathPlanning algorithm to set the subtarget for diagnostics purposes over ROS.
  */
-void publishObstacles(const std::vector<pp_obstacle_struct_t>& obstacles, const std::vector<polygon2D>& areas, std::vector<linepoint2D>& projectedSpeedVectors)
+void publishObstacles(const std::vector<polygon2D>& areas, std::vector<linepoint2D>& projectedSpeedVectors)
 {
     TRACE(">");
-    cDiagnosticsAdapter::getInstance().setObstacles(obstacles, areas, projectedSpeedVectors);
+    cDiagnosticsAdapter::getInstance().setObstacles(areas, projectedSpeedVectors);
     TRACE("<");
 }
 /*!
@@ -146,8 +139,19 @@ void publishPlotData(const pp_plot_data_struct_t& plotData)
     TRACE("<");
 }
 
+void mySigintHandler(int sig)
+{
+    // Do some custom action.
+    // For example, publish a stop message to some other nodes.
+
+    // All the default sigint handler does is call shutdown()
+    ros::shutdown();
+}
+
 int main(int argc, char **argv)
 {
+    INIT_TRACE;
+
     // Determine YAML to load.
     std::string configFileAbs = determineConfig("PathPlanning");
 
@@ -165,7 +169,7 @@ int main(int argc, char **argv)
 
     // Bind publishObstacles function to ppData
     publishObstaclesFunctionType publishObstaclesFunc;
-    publishObstaclesFunc = boost::bind(&publishObstacles, _1, _2, _3);
+    publishObstaclesFunc = boost::bind(&publishObstacles, _1, _2);
     _ppData.publishObstacles = publishObstaclesFunc;
 
     // Bind publishPlotData function to ppData
@@ -177,60 +181,14 @@ int main(int argc, char **argv)
     iterateFunctionType iterateFunc;
     iterateFunc = boost::bind(&iteratePP);
 
-    _wmAdapter = cWorldModelAdapter(_ppData, iterateFunc);
-    _tpAdapter = cTeamplayAdapter(_ppData, iterateFunc);
-    _setSpeedAdapter = cSetSpeedAdapter(_ppData, iterateFunc);
-    _reconfigAdapter = cReconfigureAdapter(_ppData, iterateFunc);
+    _rtdbInputAdapter = cRTDBInputAdapter(_ppData, iterateFunc);
+    _rtdbOutputAdapter = cRTDBOutputAdapter();
+    
+    // Setup ConfigAdapter
+    _configAdapter = new ConfigAdapter(_ppData);
+    _configAdapter->loadYAML(configFileAbs);
 
-    _wmAdapter.initializeWM();
-    _tpAdapter.initializeTP();
-    _setSpeedAdapter.initializeSetSpeed();
-    _reconfigAdapter.initializeRC();
     cDiagnosticsAdapter::getInstance().initializePlotData();
-
-    // All ROS initialization done.
-    // Get YAML params.
-    std::set<std::string> yamlEntries;
-    getYAMLEntries(configFileAbs, yamlEntries);
-
-    // Get ROS params.
-    std::set<std::string> rosEntries;
-    getROSEntries(rosEntries);
-
-    // Compare all ROS entries with the YAML entries
-    if (rosEntries != yamlEntries)
-    {
-        // Consistency check between YAML entries and ROS entries failed.
-        // Print both sets.
-        std::cout << "YAML and ROS config not consistent!" << std::endl;
-
-        std::cout << "ROS entries: " << std::endl;
-        std::set<std::string>::const_iterator itSet;
-        for (itSet = rosEntries.begin(); itSet != rosEntries.end(); ++itSet)
-        {
-            std::cout << *itSet << ", ";
-        }
-        std::cout << std::endl;
-
-        std::cout << "YAML entries: " << std::endl;
-        for (itSet = yamlEntries.begin(); itSet != yamlEntries.end(); ++itSet)
-        {
-            std::cout << *itSet << ", ";
-        }
-        std::cout << std::endl;
-
-        throw std::runtime_error("YAML and ROS config not consistent! See stdout for details.");
-    }
-
-    // Performed parameter consistency check. Load YAML.
-    std::string configFileCmd("rosparam load ");
-    configFileCmd.append(configFileAbs);
-    TRACE("system call: %s", configFileCmd.c_str());
-    int retval = system(configFileCmd.c_str());
-    TRACE("system call returned code %d", retval);
-
-    // Trigger ReconfigureAdapter to reload all values from YAML and push into dynamic_reconfigure.
-    _reconfigAdapter.reloadParams();
 
     /* Cold start: Set target to self. */
     Position2D pos;
@@ -275,12 +233,18 @@ int main(int argc, char **argv)
     //areas.push_back(rightBorder);
     //areas.push_back(topBorder);
     //areas.push_back(bottomBorder);
-    _ppData.setStaticForbiddenAreas(areas);
+    //_ppData.setStaticForbiddenAreas(areas); // this is controlled by teamplay, taking into account robot role and (if applicable) rules
 
 
     _workerThread = boost::thread(boost::bind(&cPathPlanningMain::iterate, &_ppMain));
 
-    ros::MultiThreadedSpinner spinner(3);
-    spinner.spin(); // spin() will not return until the node has been shutdown
+    signal(SIGINT, mySigintHandler);
+
+    _rtdbInputAdapter.waitForMotionSetpoint();
+
+    TRACE("Spinner stopped, waiting for thread.");
+    _workerThread.join();
+    TRACE("Done. Terminating.");
+    return 0;
 }
 

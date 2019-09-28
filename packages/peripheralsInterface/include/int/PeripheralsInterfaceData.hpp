@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -102,31 +102,20 @@ public:
 	piDisplacement getDisplacementOutput();
 	void setDisplacementOutput(const piDisplacement& displacement);
 
-	passBall getPassBallParams();
-	void setPassBallParams(const passBall& passBallParams);
-
-	// Data whether the robot has the ball
-	bool getHasBall();
-	void setHasBall(bool hasBall);
-
 	// Robot is active with in/out of play
 	bool isRobotActive();
 	void setRobotActive(bool robotActive);
 
-	// Angle of the ballhandlers
-	float getBallhandlerAngle();
-	void setBallhandlerAngle(float angle);
-
-	// Motion settings
-	MotionSettings getMotionSettings();
-	void setMotionSettings(const MotionSettings& settings);
-	bool isMotionSettingsChanged();
-
 	// Ballhandler settings
 	BallhandlerSettings getBallhandlerSettings();
 	void setBallhandlerSettings(const BallhandlerSettings& settings);
-	bool isBallhandlerSettingsChanged();
 
+    // Ballhandler input and output
+    BallhandlerFeedback getBallhandlerFeedback();
+    BallhandlerSetpoints getBallhandlerSetpoints();
+    void setBallhandlerFeedback(BallhandlerFeedback const &feedback);
+    void setBallhandlerSetpoints(BallhandlerSetpoints const &setpoints);
+    
 	// Number of connected devices
 	size_t getNumberOfConnectedDevices();
 	void setNumberOfConnectedDevices(size_t numberOfConnectedDevices);
@@ -152,20 +141,8 @@ private:
 	piDisplacement _displacementOutput;
 	mutex _displacementOutputLock;
 
-	// pass ball speed mutex
-	passBall _passBallParams;
-	mutex _passBallParamsLock;
-
-	// Data whether the robot has the ball
-	atomic<bool> _hasBall;
-
-	atomic<float> _compassValue;
-
 	// Data whether robot is active or not
 	atomic<bool> _robotActive;
-
-	// Angle of the ballhandlers
-	atomic<float> _ballhandlerAngle;
 
 	// Motion settings
 	MotionSettings _motionSettings;
@@ -174,8 +151,14 @@ private:
 
 	// Ballhandler Settings
 	BallhandlerSettings _ballhandlerSettings;
-	bool _ballhandlerSettingsChanged;
 	mutex _ballhandlerSettingsLock;
+	
+    // Ballhandler input and output
+    BallhandlerSetpoints _ballhandlerSetpoints;
+    mutex _ballhandlerSetpointsLock;
+
+    BallhandlerFeedback _ballhandlerFeedback;
+    mutex _ballhandlerFeedbackLock;
 
 	// Number of connected devices
 	atomic<size_t> _numberOfConnectedDevices;

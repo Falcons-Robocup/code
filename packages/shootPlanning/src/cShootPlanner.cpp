@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,24 +17,29 @@
  */
 
 #include "int/cShootPlanner.hpp"
-#include <cDiagnosticsEvents.hpp>
+#include "int/cLinearInterpolator.hpp"
+#include "cDiagnostics.hpp"
 #include "FalconsCommon.h"
+#include "tracing.hpp"
 
 using std::runtime_error;
 using std::exception;
 
-cShootPlanner::cShootPlanner(shootPlanningParams_t spParams , lobshotPowers_t lsPowers, lobshotFuncParams_t lsFuncParams,
-								passPowers_t pPowers, passFuncParams_t pFuncParams)
+cShootPlanner::cShootPlanner(shootPlanningParams_t spParams)
 {
-	_spParams = spParams;
-	_lsPowers = lsPowers;
-	_lsFuncParams = lsFuncParams;
-	_pPowers = pPowers;
-	_pFuncParams = pFuncParams;
-	_isShootPlanningActive = true;
+    _spParams = spParams;
+    _lastSetHeightTimestamp = 0.0;
+    _kickerAngle = 30;
+    _kickerStrength = 180;
 
-    TRACE("cShootPlanner constructed with alwaysLobshot=%d disableBH=%d _disableBHDelay=%6.2f setheightDelayDelay=%6.2f",
-    		_spParams.alwaysLobshot, _spParams.disableBHBeforeShot, _spParams.setHeightDelay ,_spParams.disableBHDelay);
+    _passInterpolator = new cLinearInterpolator();
+    _passInterpolator->load(determineConfig("shootPlanningPassCalibration", ".txt"));
+    
+    TRACE("constructing lookup table");
+    _shotSolver = new cShotSolver();
+    _shotSolver->load(determineConfig("shootPlanningShotCalibration", ".txt"));
+    
+    TRACE("cShootPlanner constructed with alwaysLobshot=%d", _spParams.alwaysLobshot);
 
 }
 
@@ -43,298 +48,109 @@ cShootPlanner::~cShootPlanner()
 
 }
 
-void cShootPlanner::activateShootPlanning()
+void cShootPlanner::prepareForShot(float distance, float z, shootTypeEnum shootType)
 {
-    _isShootPlanningActive = true;
-    TRACE("shootplanning activated");
-}
-
-void cShootPlanner::deactivateShootPlanning()
-{
-    _isShootPlanningActive = false;
-    TRACE("shootplanning de-activated");
-}
-
-bool cShootPlanner::isShootPlanningActive()
-{
-    return (_isShootPlanningActive && _wmAdapter.isRobotActive());
-}
-
-void cShootPlanner::passBall(const passBall_t passParams)
-{
-    bool heightSuccessful = false;
-    bool shootSuccessful = false;
-    bool bhSuccessful = false;
-
-    try
+    std::ostringstream ss;
+    ss << "dist=" << distance << " z=" << z << " shootType=" << (int) shootType;
+    TRACE_FUNCTION(ss.str().c_str());
+    // calculate kicker settings
+    if (canPrepare())
     {
-        if (isShootPlanningActive())
+        if (shootType == shootTypeEnum::PASS)
         {
-            TRACE("pass (x=%.1f, y=%.1f, strength=%.1f, disableBH=%d)",
-            		passParams.x, passParams.y, passParams.strength,_spParams.disableBHBeforeShot);
-            
-            /* Adjust the height of the kick solenoid */
-            _kickAdapter.setHeightKicker(0.0, heightSuccessful);
-
-            /* Shoot */
-            if (_spParams.disableBHBeforeShot)
-            {
-            	_bhAdapter.disableBH(bhSuccessful);
-            	delay(_spParams.disableBHDelay);
-            	_kickAdapter.kickBall(passParams.strength, shootSuccessful);
-            	_bhAdapter.enableBH(bhSuccessful);            }
-            else
-            {
-            	_kickAdapter.kickBall(passParams.strength, shootSuccessful);
-            }
+            _kickerAngle = 0.0;  
+        }
+        else if ( _spParams.alwaysLobshot || 
+            ( shootType == shootTypeEnum::LOB && 
+                (distance <= _spParams.maxLobDistance) && 
+                (distance >= _spParams.minLobDistance) && 
+                !_spParams.alwaysStraightshot))
+        {
+            calculateLob(distance, z);
         }
         else
         {
-            TRACE_ERROR("Ignored passBall since we are not active");
+            calculateStraightShot(distance, z);
         }
+        TRACE("setHeightKicker %.2f", _kickerAngle);
+        tprintf("setHeightKicker %.2f", _kickerAngle);
+        _rtdbOutputAdapter.setKickerSetpoint(kickerSetpointTypeEnum::SET_HEIGHT, _kickerAngle, 0.0);
+        _lastSetHeightTimestamp = rtime::now();
+    }
+}
+
+void cShootPlanner::executeShot()
+{
+    TRACE_FUNCTION("");
+    // shoot with power which was prepared
+    _rtdbOutputAdapter.setKickerSetpoint(kickerSetpointTypeEnum::SHOOT, _kickerAngle, _kickerStrength);
+}
+
+void cShootPlanner::executePass(float distance)
+{
+    TRACE_FUNCTION("");
+    try
+    {
+        // calculate pass power based on given distance
+        calculatePassPower(distance);
+        
+        // assume kicker was reset after last lobshot
+        // otherwise we might be too late here (kicker still at nonzer), perhaps need preparePass?
+
+        _rtdbOutputAdapter.setKickerSetpoint(kickerSetpointTypeEnum::SHOOT, 0.0, _kickerStrength);
+
     } catch (exception &e)
     {
         throw e;
     }
 }
 
-void cShootPlanner::selfPass(const selfPass_t selfPassParams)
+bool cShootPlanner::canPrepare()
 {
-    bool heightSuccessful = false;
-    bool shootSuccessful = false;
-
-    try
+    // use a brief timer here to prevent 30Hz spam of slightly changing consecutive height setpoints
+    // during rotation preparation for shot
+    // which has seen to cause ioBoard reconnecting and even high-pitch noises
+    double t = rtime::now();
+    if ((t - _lastSetHeightTimestamp) > 0.5)
     {
-        if (isShootPlanningActive())
-        {
-            TRACE("selfpass (strength=%.1f, disableBH=%d)", selfPassParams.strength,_spParams.disableBHBeforeShot);
+        return true;
+    }
+    return false;
+}
 
-            /* Adjust the height of the kick solenoid */
-            _kickAdapter.setHeightKicker(0.0, heightSuccessful);
-            /* Shoot */
-           	_kickAdapter.kickBall(selfPassParams.strength, shootSuccessful);
-        }
-        else
-        {
-            TRACE_ERROR("Ignored selfPass since we are not active");
-        }
-    } catch (exception &e)
+void cShootPlanner::calculatePassPower(float distance)
+{
+    _kickerStrength = _spParams.passScaling * _passInterpolator->interpolate(distance);
+}
+
+void cShootPlanner::calculateLob(float distance, float z)
+{
+    float tmpStrength = 0.0;
+    float tmpAngle = 0.0;
+
+    bool r = _shotSolver->query(distance, z, true, tmpStrength, tmpAngle);
+
+    _kickerAngle = tmpAngle * _spParams.lobAngleScaling;
+    _kickerStrength = tmpStrength * _spParams.shotStrengthScaling;
+    
+    if (!r)
     {
-        throw e;
+        TRACE_WARNING("failed to determine lob shot settings (distance=%.6f z=%.6f), fallback to defaults", distance, z);
     }
 }
 
-void cShootPlanner::shootAtTarget(const shootAtTarget_t shootParams)
+void cShootPlanner::calculateStraightShot(float distance, float z)
 {
-    double kick_angle = 0.0;
-    bool heightSuccessful = false;
-    bool shootSuccessful = false;
-    bool bhSuccessful = false;
-
-    try
+    /* Even if z = 0, set the right Angle to avoid friction */
+    float tmpStrength = 0.0;
+    float tmpAngle = 0.0;
+    bool r = _shotSolver->query(distance, z, false, tmpStrength, tmpAngle);
+    
+    _kickerAngle = tmpAngle * _spParams.shotAngleScaling;
+    _kickerStrength = tmpStrength * _spParams.shotStrengthScaling;
+    
+    if (!r)
     {
-    	if (_spParams.alwaysLobshot && (shootParams.strength > 150)) //Also check for shootstrength untill teamplay uses the pass service for a pass
-    	{
-    		TRACE_INFO("Always Lobshot enabled");
-    		lobshotTarget_t lobshotParams;
-    		lobshotParams.strength = shootParams.strength;
-    		lobshotParams.x = shootParams.x;
-    		lobshotParams.y = shootParams.y;
-    		lobshotParams.z = shootParams.z;
-
-    		lobShot(lobshotParams);
-    	}else if (isShootPlanningActive())
-        {
-            TRACE_INFO("shootAtTarget (x=%.1f, y=%.1f, z=%.1f, strength=%.1f, disableBH=%d)",
-            		shootParams.x, shootParams.y, shootParams.z, shootParams.strength, _spParams.disableBHBeforeShot);
-
-            if (shootParams.z <= 0.1) //if the target height is 10cm or lower
-            {
-                kick_angle = 0.0; //shoot straight over the floor
-            }
-            else
-            {
-                // determine angles to shoot straight in the crossing for example. Not implemented yet, so 0
-                kick_angle = 0.0;
-            }
-
-            /* Adjust the height of the kick solenoid */
-            _kickAdapter.setHeightKicker(kick_angle, heightSuccessful);
-
-            /* Shoot */
-            if (_spParams.disableBHBeforeShot)
-            {
-            	_bhAdapter.disableBH(bhSuccessful);
-            	delay(_spParams.disableBHDelay);
-            	_kickAdapter.kickBall(shootParams.strength, shootSuccessful);
-            	_bhAdapter.enableBH(bhSuccessful);
-            }
-            else
-            {
-            	_kickAdapter.kickBall(shootParams.strength, shootSuccessful);
-            }
-        }
-        else
-        {
-            TRACE_ERROR("Ignored shootAtTarget since we are not active");
-        }
-    } catch (exception &e)
-    {
-        throw e;
+        TRACE_WARNING("failed to determine straight shot settings (distance=%.6f z=%.6f), fallback to defaults", distance, z);
     }
-}
-
-void cShootPlanner::lobShot(const lobshotTarget_t shootParams)
-{
-	//Lob shot: Basic function:
-	//Check if we are not too close to the goal or too far away, then determine angle and strength. Checks can be removed when implemented in teamplay.
-    Position2D currPos = Position2D();
-    double kick_distance = 0.0;
-    double delta_x = 0.0;
-    double delta_y = 0.0;
-    bool heightSuccessful = false;
-    bool shootSuccessful = false;
-    bool bhSuccessful = false;
-
-    double kick_angle = _spParams.max_lever_angle;
-    //Default Kick power
-    double kick_strength = _spParams.max_shot_power;
-
-    //Override Opponent Goal for now. Only used for distance, not for aiming
-    //Can be removed if target is received from teamplay
-    double target_x = 0;
-    double target_y = 9;
-
-    try
-    {
-        if (isShootPlanningActive())
-        {
-            TRACE("lobShot (x=%.1f, y=%.1f, z=%.1f, strength=%.1f, disableBH=%d)",
-            		shootParams.x, shootParams.y, shootParams.z, shootParams.strength,_spParams.disableBHBeforeShot);
-
-            /* Fetch current position to calculate wanted angle of the robot */
-            _wmAdapter.getPosition(currPos);
-
-            ///* Calculate the kick distance */
-            delta_x = target_x - currPos.x;
-            delta_y = target_y - currPos.y;
-            kick_distance = sqrt(pow(delta_x, 2.0) + pow(delta_y, 2.0));
-
-            if ((kick_distance < _spParams.min_lob_distance) || (kick_distance > _spParams.max_lob_distance))
-            {
-                kick_angle = 0.0;
-                TRACE_INFO("Lobshot not possible, shooting straight");
-            }
-            else
-            {
-            	if (!_spParams.calibrationMode){//Use the function to determine the strength
-            		lobCalculatorFunction(kick_distance,kick_angle, kick_strength);
-            	}else {//Use the calibration function
-            		lobCalculatorPoints(kick_distance,kick_angle, kick_strength);
-            	}
-            	TRACE_INFO("Lobshot: dist:%6.2f, pwr:%6.2f, angle:%6.2f", kick_distance, kick_strength, kick_angle);
-            }
-
-
-            /* Shoot */
-            if (_spParams.disableBHBeforeShot)
-            {
-            	_kickAdapter.setHeightKicker(kick_angle, heightSuccessful);
-            	delay(_spParams.setHeightDelay); //extra delay if the lever is not fast enough. Can be 0 for a fast lever adjustment
-            	_bhAdapter.disableBH(bhSuccessful);
-            	delay(_spParams.disableBHDelay);
-            	_kickAdapter.kickBall(kick_strength, shootSuccessful);
-            	delay(_spParams.disableBHDelay); // if the delay was too short the enable was unsuccessfull (typically < 0.2s)
-            	_bhAdapter.enableBH(bhSuccessful);
-            }
-
-            else
-            {
-            	_kickAdapter.setHeightKicker(kick_angle, heightSuccessful);
-                TRACE("Sleep for SetHeight");
-            	delay(_spParams.setHeightDelay);
-            	_kickAdapter.kickBall(kick_strength, shootSuccessful);
-            }
-            //reset height to 0
-            _kickAdapter.setHeightKicker(0.0, heightSuccessful);
-        }
-        else
-        {
-            TRACE_ERROR("Ignored lobshot since we are not active");
-        }
-    } catch (exception &e)
-    {
-        throw e;
-    }
-}
-
-void cShootPlanner::delay(double seconds)
-{
-	int delayus = int(seconds*1000000.0);
-    usleep(delayus);
-}
-
-void cShootPlanner::lobCalculatorPoints (double kick_distance, double &kick_angle, double &kick_strength)
-{
-	//This function is used for calibration purposes.
-	//For longer distances the lever is lifted abit (TODO: not yet variable)
-		double dist4 = 4.0;
-	    double dist5 = 5.0;
-	    double dist6 = 6.0;
-	    double dist7 = 7.0;
-	    double dist8 = 8.0;
-	    double dist9 = 9.0;
-	    double dist10 = 10.0;
-
-	    double pwr4 = _lsPowers.ls_pwr4m;//87
-	    double pwr5 = _lsPowers.ls_pwr5m;//100
-	    double pwr6 = _lsPowers.ls_pwr6m;//117
-	    double pwr7 = _lsPowers.ls_pwr7m;//140
-	    double pwr8 = _lsPowers.ls_pwr8m;//170
-	    double pwr9 = _lsPowers.ls_pwr9m;//180
-	    double pwr10 = _lsPowers.ls_pwr10m;//180
-
-	    if (kick_distance <= dist4){
-			kick_strength = pwr4;
-		}else if (kick_distance <= dist5){
-			kick_strength = pwr5;
-		}else if (kick_distance <= dist6){
-			kick_strength = pwr6;
-		}else if (kick_distance <= dist7){
-			kick_strength = pwr7;
-		}else if (kick_distance <= dist8){
-			kick_strength = pwr8;
-		}else if (kick_distance <= dist9){
-			kick_strength = pwr9;
-			kick_angle= kick_angle*0.8;//TODO: Make variable and smart, now limited to not bounce over the goal
-		}else if (kick_distance <= dist10){
-			kick_strength = pwr10;
-			kick_angle=kick_angle*0.7;//TODO: Make variable and smart, now limited to not bounce over the goal
-		}
-		kick_strength = kick_strength * _spParams.lobshotScaling;
-
-}
-
-void cShootPlanner::lobCalculatorFunction ( double x,  double &kick_angle,  double &kick_strength)
-{
-    //5th order poly gave the best fit for these calibration constants
-	//If the calibration points change, you first need to visiualize the function to see the fit.
-    // function coefficients (Calculated online for dist/pwr points)
-	//y = c1*x^5 + c2*x^4 + c3*x^3 + c4*x^2 + c5*x + c6
-
-	kick_strength = (_lsFuncParams.ls_c1 * pow(x,5) +
-					_lsFuncParams.ls_c2 * pow(x,4)+
-					_lsFuncParams.ls_c3 * pow(x,3)+
-					_lsFuncParams.ls_c4 * pow(x,2)+
-					_lsFuncParams.ls_c5 * pow(x,1)+
-					_lsFuncParams.ls_c6);
-
-	kick_strength = kick_strength * _spParams.lobshotScaling;
-
-	//To prevent the ball from bouncing over the goal the lever has to be lifted a bit for larger distances
-	if (x >= 9){
-		kick_angle= kick_angle*0.8; //TODO: Make variable and smart, now limited to not bounce over the goal
-	}else if (x >= 10){
-		kick_angle= kick_angle*0.7;//TODO: Make variable and smart, now limited to not bounce over the goal
-	}
 }

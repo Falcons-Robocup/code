@@ -1,10 +1,10 @@
 #!/bin/bash
-#
-# General purpose dummy-proof checks.
-# 
-# JFEI 2016-03-23 creation with MBRC
-# 
 
+
+# General purpose dummy-proof checks.
+#
+# JFEI 2016-03-23 creation with MBRC
+#
 
 
 function errorExit
@@ -20,8 +20,13 @@ function errorExit
 }
 
 
+onRobot=1
+if [ -z "$TURTLE5K_ROBOTNUMBER" ]; then
+    onRobot=0
+fi
 
-echo -n "checking GIT repositories..."
+
+echo -n "checking GIT repositories... "
 d=/home/robocup/falcons/code
 if [ ! -d $d ]; then
     errorExit "did not find code repository at $d"
@@ -30,50 +35,177 @@ d=/home/robocup/falcons/data
 if [ ! -d $d ]; then
     errorExit "did not find data repository at $d"
 fi
-echo " OK"
-
-
-echo "checking installed ubuntu packages..."
-MISSING_PACKAGES=""
-for p in $(cat /home/robocup/falcons/code/config/apt_packages) ; do
-    o=$(apt-cache policy $p | grep Installed)
-    if [ "$o" = "  Installed: (none)" -o -z "$o" ]; then
-        MISSING_PACKAGES="$MISSING_PACKAGES $p"
+d=/home/robocup/falcons/teamplayData
+if [ ! -d $d ]; then
+    errorExit "did not find teamplayData repository at $d"
+fi
+# Check for branch consistency between code and teamplayData
+if [ -f $TURTLEROOT/scripts/checkGitBranchConsistency.sh ]; then
+    . $TURTLEROOT/scripts/checkGitBranchConsistency.sh
+    check_git_branches
+    if [ $? != 0 ]; then
+        errorExit "the code.git branch and the teamplayData.git branch are not compatible"
+    fi
+fi
+# Check git config url
+for repo in code data teamplayData ; do
+    git_config=/home/robocup/falcons/$repo/.git/config
+    git_url="ssh://git@git.falcons-robocup.nl:2222/falcons/$repo.git"
+    grep $git_url $git_config > /dev/null 2>&1
+    if [ $? = 1 ]; then
+        errorExit "git config url is wrong" "change the 'url' in '$git_config' to:\n$git_url"
     fi
 done
-if [ ! -z "$MISSING_PACKAGES" ]; then
-    errorExit "found some missing packages" "run the following command to fix:\nsudo apt-get update ; sudo apt-get install -y$MISSING_PACKAGES"
-fi
-echo " OK"
+echo "OK"
 
-
-echo -n "checking wifi..."
-WLAN_ADAPTERS=$(/sbin/ifconfig -a | grep HWaddr | awk '{print $1}' | grep wlan)
-if [ -z "$WLAN_ADAPTERS" ]; then
+echo -n "checking wifi... "
+# note: with Ubuntu 16.04 upgrade, we typically get 'wlo1' as adapter name on devlaptop, but something like 'wl2ps0' on robot
+( /sbin/iwconfig | grep ^wl | grep -q ESSID:off/any ) > /dev/null 2>&1
+if [ $? = 0 ]; then
+    echo "wifi is OFFLINE"
     WIFI_ONLINE=0
-    echo " no wifi found!"
 else
+    echo "wifi is ONLINE"
     WIFI_ONLINE=1
-    echo
-    iwconfig
 fi
 
-
-if [ "$WIFI_ONLINE" = 1 ]; then
-    echo -n "checking wifi power management workaround..."
-    f=/etc/pm/power.d/wireless
-    if [ ! -L $f ]; then
-        errorExit "power management workaround not installed: $f" "run the following command to fix:\ncd /etc/pm/power.d ; sudo ln -s /home/robocup/falcons/code/scripts/wireless ; cd -"
+if [ $WIFI_ONLINE = 1 ]; then
+    echo -n "checking if data repo is in sync with remote/upstream... "
+    d=/home/robocup/falcons/data
+    cd $d
+    GIT_LOCAL_REVISION_ID="$(git rev-parse HEAD)"
+    GIT_REMOTE_REVISION_ID="$(git ls-remote $(git rev-parse --abbrev-ref '@{u}' | tr '/' ' ') | cut --fields=1)"
+    if [ "$GIT_LOCAL_REVISION_ID" != "${GIT_REMOTE_REVISION_ID}" ]; then
+        errorExit 'not in sync, maybe behind, maybe ahead of remote' "try the following command to fix:\ncd ~/falcons/data ; git pull ; cd -"
     fi
-    echo " OK"
-    echo -n "checking wifi power management status..."
-    if iwconfig $WLAN_ADAPTERS | grep -q "Power Management:on" ; then
-        errorExit "power management seems to be enabled, workaround is bad! inform Mathijs/Jan"
-    fi
-    echo " OK"
+    echo "OK"
 fi
 
+if [ $WIFI_ONLINE = 1 ]; then
+    echo -n "checking if external submodule catapult in data repo is updated... "
+    if [ ! -f /home/robocup/falcons/data/external/catapult/README.md ]; then
+        errorExit 'not updated' "try the following command to fix:\ncd ~/falcons/data ; git submodule update --init ; cd -"
+    fi
+    echo "OK"
+fi
 
+if [ "$onRobot" = 0 ]; then
+    echo -n "checking GIT hooks... "
+    d=/home/robocup/falcons/code
+    if [ ! -L "$d/.git/hooks/pre-commit" ]; then
+        errorExit "missing hook" "run the following command to fix:\ncd ~/falcons/code/.git/hooks ; ln -s ../../scripts/pre-commit ; cd -"
+    fi
+    if [ ! -L "$d/.git/hooks/commit-msg" ]; then
+        errorExit "missing hook" "run the following command to fix:\ncd ~/falcons/code/.git/hooks ; ln -s ../../scripts/commit-msg ; cd -"
+    fi
+    echo "OK"
+fi
+
+if [ $WIFI_ONLINE = 1 ]; then
+    echo -n "checking installed ubuntu packages... "
+    MISSING_PACKAGES=""
+    for p in $(cat /home/robocup/falcons/code/config/apt_packages) ; do
+        o=$(apt-cache policy $p | grep Installed)
+        if [ "$o" = "  Installed: (none)" -o -z "$o" ]; then
+            MISSING_PACKAGES="$MISSING_PACKAGES $p"
+        fi
+    done
+    if [ ! -z "$MISSING_PACKAGES" ]; then
+        errorExit "found some missing packages" "run the following command to fix:\nsudo apt-get update ; sudo apt-get install -y$MISSING_PACKAGES"
+    fi
+    echo "OK"
+    echo -n "checking installed pip packages... "
+    current_pip_packages=$(pip list 2>/dev/null | awk '{print $1}')
+    MISSING_PACKAGES=""
+    for p in $(cat /home/robocup/falcons/code/config/pip_packages) ; do
+        echo "$current_pip_packages" | grep -qi "^$p$"
+        if [ $? != 0 ]; then
+            MISSING_PACKAGES="$MISSING_PACKAGES $p"
+        fi
+    done
+    if [ ! -z "$MISSING_PACKAGES" ]; then
+        errorExit "found some missing packages" "run the following command to fix:\nsudo pip install$MISSING_PACKAGES"
+    fi
+    echo "OK"
+fi
+
+echo -n "checking ripgrep (rg)... "
+if [ ! -L /usr/local/bin/rg ]; then
+    errorExit "ripgrep (rg) not installed" "run the following command to fix:\nsudo ln -s /home/robocup/falcons/data/external/ripgrep/rg2017 /usr/local/bin/rg"
+fi
+echo "OK"
+
+if [ "$onRobot" = 1 ]; then
+    echo -n "checking routing tables... "
+    expectedRouting=/home/robocup/falcons/code/config/expectedRoutingWireless
+    if [ $WIFI_ONLINE = 0 ]; then
+        expectedRouting=/home/robocup/falcons/code/config/expectedRoutingWired
+    fi
+    route -n > /var/tmp/currentRouting
+    if ! diff -B /var/tmp/currentRouting $expectedRouting > /dev/null ; then
+        # show the diff
+        echo "DIFF:"
+        diff /var/tmp/currentRouting $expectedRouting
+        errorExit "unexpected content in routing table" "contact JFEI/APOX (or see wiki?)"
+    fi
+    echo "OK"
+fi
+
+echo -n "checking nm config... "
+if [ ! -f /etc/NetworkManager/system-connections/Falcons_A_a ]; then
+    errorExit "Falcons_A_a not configured in NetworkManager"
+    # TODO check that Falcons_A_a is not configured with automatic DHCP
+fi
+echo "OK"
+
+echo -n "checking rtdb-related requirements... "
+/home/robocup/falcons/code/packages/facilities/rtdb3/setup.sh -v || errorExit "something wrong with rtdb installation" "run the following command to fix:\nroscd rtdb3 ; ./setup.sh"
+# TODO merge these python dependencies into rtdb3/setup.sh, once logging is merged in
+if [ ! -f /usr/local/lib/python2.7/dist-packages/shm-1.2.2.egg-info ]; then
+    errorExit "Python package shm not installed" "run the following command to fix:\ncd /home/robocup/falcons/data/external/shm-python/shm-1.2.2 ; sudo python setup.py install"
+fi
+echo "OK"
+
+echo -n "checking tracing-related requirements... "
+/home/robocup/falcons/code/packages/facilities/tracing/setup.sh -v || errorExit "something wrong with tracing installation" "run the following command to fix:\nroscd tracing ; ./setup.sh"
+echo "OK"
+
+if [ "$onRobot" = 1 ]; then
+    echo -n "checking disk usage... "
+    /home/robocup/falcons/code/scripts/diskCleanup -v || errorExit "disk too full" "run the following command to fix:\nsudo -E /home/robocup/falcons/code/scripts/diskCleanup"
+    echo "OK"
+fi
+
+if [ "$onRobot" = 1 ]; then
+    echo -n "checking wifi disable trigger... "
+    src=/home/robocup/falcons/code/scripts/triggerOnEthernetChange
+    tgt=/etc/NetworkManager/dispatcher.d/99-disable-wireless-when-wired
+    needCopy=0
+    if [ ! -f $tgt ]; then # clean robot install: no hook registered yet
+        needCopy=1
+    else
+        if ! diff -q $src $tgt &>/dev/null; then
+            needCopy=1
+        fi
+    fi
+    if [ -L $tgt ]; then # somebody tried a symlink, not supported apparently
+        needCopy=1
+    fi
+    if [ $needCopy -eq 1 ]; then
+        errorExit "wifi disable trigger missing" "run the following command to fix:\nsudo cp $src $tgt"
+    fi
+    echo "OK"
+fi
+
+echo -n "checking rosunit path in ros config... "
+# grep config file and look for error generating line, evaluate outcome
+rosunit_ok="$(grep "bin/rosunit" /opt/ros/kinetic/share/rosunit/cmake/rosunit-extras.cmake | grep -v "^#" | grep "PYTHON_EXECUTABLE" | wc -l)"
+if [[ $rosunit_ok -gt 0 ]]; then
+    errorExit "Please open /opt/ros/kinetic/share/rosunit/cmake/rosunit-extras.cmake file and remove PYTHON_EXECUTABLE from line containing bin/rosunit"
+fi
+echo "OK"
+
+echo "Restart terminal if any error still exists..."
 
 # TODO check symlink for hosts
 
@@ -81,5 +213,5 @@ fi
 # TODO check .bashrc
 
 
-# 
-
+# TODO check if all hosts are represented exactly once in authorized_keys
+# TODO check if authorized_keys is a symlink

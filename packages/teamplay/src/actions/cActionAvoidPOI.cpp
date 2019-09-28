@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,8 +17,6 @@
  */
 
 #include "int/actions/cActionAvoidPOI.hpp"
-#include "int/cWorldModelInterface.hpp"
-#include "int/cRosAdapterWorldModel.hpp"
 #include "int/stores/ballStore.hpp"
 #include "int/utilities/trace.hpp"
 
@@ -28,7 +26,7 @@ cActionAvoidPOI::cActionAvoidPOI()
     boost::assign::insert( _actionParameters )
     ("target", std::make_pair(defaultPOI, false) )
         ;
-    intention.actionType = actionEnum::AVOID_POI;
+    _intention.action = actionTypeEnum::UNKNOWN;
 }
 
 cActionAvoidPOI::~cActionAvoidPOI()
@@ -51,8 +49,8 @@ behTreeReturnEnum cActionAvoidPOI::execute(const std::map<std::string, std::stri
         {
             Position2D targetPos = *target;
 
-            intention.x = targetPos.x;
-            intention.y = targetPos.y;
+            _intention.position.x = targetPos.x;
+            _intention.position.y = targetPos.y;
             sendIntention();
 
             teamplay::ballStore::getBall().avoid();
@@ -68,8 +66,8 @@ behTreeReturnEnum cActionAvoidPOI::execute(const std::map<std::string, std::stri
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Caught exception: ") << e.what();
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+        throw std::runtime_error(std::string("cActionAvoidPOI::execute Linked to: ") + e.what());
     }
 
     return behTreeReturnEnum::FAILED;

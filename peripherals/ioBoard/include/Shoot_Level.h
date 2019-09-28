@@ -17,5 +17,6 @@
 void Shoot_Level_initialize();
 void Shoot_Level_home();
 void Shoot_Level_set_height(uint8_t height);
+void Shoot_Level_set_speed(unsigned char shootSpeed);
 
 #endif /* SHOOT_LEVEL_H_ */

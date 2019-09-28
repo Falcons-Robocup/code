@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -31,6 +31,7 @@
 #include <vtkTransform.h>
 #include <vtkArrowSource.h>
 #include <vtkCubeSource.h>
+#include <vtkLineSource.h>
 
 // Internal:
 #include "int/types/PositionVelocity.h"
@@ -81,7 +82,7 @@ protected:
     vtkSmartPointer<vtkActor> addAsPolyActor(T const &o)
     {
         _mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-        _mapper->SetInput(o);
+        _mapper->SetInputData(o);
         vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
         actor->SetMapper(_mapper);
         this->AddPart(actor);
@@ -96,6 +97,7 @@ protected:
     vtkSmartPointer<vtkCellArray> _polygons;
     vtkSmartPointer<vtkActor> _actor;
     vtkSmartPointer<vtkPolyDataMapper> _mapper;
+    vtkSmartPointer<vtkLineSource> _lineSource;
 
 protected:
     PositionVelocity _posvel;

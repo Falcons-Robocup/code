@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Copyright 2018 Andre Pool
+# SPDX-License-Identifier: Apache-2.0
+
+# Script to call the script that copy, build and run the raspi grabber and analyzer on the raspi boards
+
+killall copyBuildRaspiSingle 2>/dev/null || true
+killall -9 copyBuildRaspiSingle 2>/dev/null || true
+killall -15 copyBuildRaspiSingle 2>/dev/null || true
+
+if [ $# = 1 ]; then
+   ./copyBuildRaspiSingle $1
+else
+   echo "INFO      : update all raspi boards"
+   ./copyBuildRaspiSingle cam0 &
+   ./copyBuildRaspiSingle cam1 &
+   ./copyBuildRaspiSingle cam2 &
+   ./copyBuildRaspiSingle cam3 &
+fi
+
+   echo "INFO      : all done"
+
+exit 1

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,12 +20,11 @@
  */
 
 #include "int/actions/cActionSuccess.hpp"
-#include "int/cWorldModelInterface.hpp"
 
 
 cActionSuccess::cActionSuccess()
 {
-	intention.actionType = actionEnum::SUCCESS;
+    _intention.action = actionTypeEnum::UNKNOWN;
 }
 
 cActionSuccess::~cActionSuccess()
@@ -35,6 +34,6 @@ cActionSuccess::~cActionSuccess()
 
 behTreeReturnEnum cActionSuccess::execute(const std::map<std::string, std::string> &parameters)
 {
-	sendIntention();
+    sendIntention();
     return behTreeReturnEnum::PASSED;
 }

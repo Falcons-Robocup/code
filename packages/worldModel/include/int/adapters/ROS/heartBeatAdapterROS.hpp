@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,8 +29,6 @@
 
 #include "int/facilities/templatedSubject.hpp"
 
-#include "cDiagnosticsDutyCycle.hpp"
-
 class heartBeatAdapterROS : public templatedSubject<bool>
 {
 	public:
@@ -42,7 +40,6 @@ class heartBeatAdapterROS : public templatedSubject<bool>
 	private:
 		boost::shared_ptr<ros::NodeHandle> _hROS;
         ros::Subscriber _subHeartBeat;
-        diagnostics::cDiagnosticsDutyCycle _dutyCycle;
 
         void heartBeat_cb(const heartBeat::beat::ConstPtr& msg);
 };

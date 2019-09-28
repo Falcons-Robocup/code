@@ -9,19 +9,20 @@
 #include "pid.h"
 #include "pwm.h"
 #include "tc.h"
+#include "encoder.h"
 
-static int16_t pwmValue = 0; // current pwm value
-static int16_t pwmValuePrevious = 0; // previous pwm value
+static int16_t pwmValue16 = 0; // current pwm value
+static int32_t pwmValuePrevious = 0; // previous pwm value
 static uint16_t pwmLimit = 0; // set from PC to limit the power to the motor
-static int16_t pwmDelta = 0; // set from PC to maximal power increase (PWM) per 2.5ms, use signed to reduce the casting
+static int32_t pwmDelta = 0; // set from PC to maximal power increase (PWM) per 2.5ms, use signed to reduce the casting
 static uint16_t error = PWM_ERROR_INIT_NOT_PERFORMED;
 
 void initPwm() {
 	error = 0;
-	pwmValue = 0;
+	pwmValue16 = 0;
 	pwmValuePrevious = 0;
 	pwmLimit = 0;
-	pwmDelta = 20;
+	pwmDelta = 1<<15; // 0.5/648 = 0.077% per 2.5ms = 30% per second, full speed (100% = 648) in 3.3 seconds
 
 	// setup pwm timer TCD0 for pwm a and pwm b (checkout AVR1306 Xmega Timer/Counter)
 	// from http://asf.atmel.com/docs/3.0.1/xmega.services.pwm.example2.xmega-a1_xplained/html/xmega_tc_quickstart.html#xmega_tc_qs_pwm
@@ -54,45 +55,56 @@ void taskPwm() {
 	// the value pwm functional range is from -648 to +648, which can be achieved by a pid value of -648*256 to +648*256
 	// -648 and +648 result in 100% PWM
 
+   int32_t velocity = getEncoderData().velocity; // read out #encTicks/2ms
+   //pidExportT pidPrimaryExport = getPidPrimaryExport();
+
 	// for testing the setpoint can be directly set to the pwm (without pid)
 	if( getMode() == MODE_PWM_ONLY ) {
-		pwmValue = getPrimarySetPoint(); // only used for testing
+		pwmValue16 = getPrimarySetPoint(); // only used for testing
 	} else {
-		pwmValue = getPidPrimaryResult16(); // default use the pid value
+		int32_t pwmValue32 = getPidPrimaryResult32(); // default use the pid value
+
+		// limit the max PWM as function of the motor's velocity
+		int32_t pwmValuePosMax = velocity*41822 + 8406586;
+		int32_t pwmValueNegMax = velocity*41822 - 8406586;
+		if( pwmValue32 > pwmValuePosMax ) {
+			pwmValue32 = pwmValuePosMax;
+		}
+		if( pwmValue32 < pwmValueNegMax ) {
+			pwmValue32 = pwmValueNegMax;
+		}
+
+		// limit the maximal increase or decrease for the pwm per 2.5ms
+		//int32_t pwmValuePosMaxSafe = pwmValuePrevious + pwmDelta;
+		//int32_t pwmValueNegMaxSafe = pwmValuePrevious - pwmDelta;
+		//if( pwmValue32 > pwmValuePosMaxSafe ) {
+		//	pwmValue32 = pwmValuePosMaxSafe;
+		//}
+		//if( pwmValue32 < pwmValueNegMaxSafe ) {
+		//	pwmValue32 = pwmValueNegMaxSafe;
+		//}
+
+		pwmValuePrevious = pwmValue32; // store current pwm value for the next cycle
+
+		pwmValue16 = pwmValue32>>16;
 	}
 
 	// limit the pwm within the available range (time)
-	if( pwmValue > PWM_COUNTS ) {
-		pwmValue = PWM_COUNTS;
-	} else if( pwmValue < -PWM_COUNTS ) {
-		pwmValue = -PWM_COUNTS;
+	if( pwmValue16 > PWM_COUNTS ) {
+		pwmValue16 = PWM_COUNTS;
+	} else if( pwmValue16 < -PWM_COUNTS ) {
+		pwmValue16 = -PWM_COUNTS;
 	}
 
 	// limit the maximal amount of power to the motor (set from PC)
 	int16_t pwmLimitNeg = - (int16_t)pwmLimit; // force the type cast
-	if( pwmValue > (int16_t)pwmLimit ) {
+	if( pwmValue16 > (int16_t)pwmLimit ) {
 		error |= PWM_ERROR_POSITIVE_LIMIT;
-		pwmValue = pwmLimit;
-	} else  if( pwmValue < pwmLimitNeg ) {
+		pwmValue16 = pwmLimit;
+	} else  if( pwmValue16 < pwmLimitNeg ) {
 		error |= PWM_ERROR_NEGATIVE_LIMIT;
-		pwmValue = pwmLimitNeg;
+		pwmValue16 = pwmLimitNeg;
 	}
-
-	// limit the maximal increase for the pwm per 2.5ms
-	if( pwmValue > 0 ) {
-		int16_t pwmValuePosMax = pwmValuePrevious + pwmDelta;
-		if( pwmValue > pwmValuePosMax ) {
-			error |= PWM_ERROR_POSITIVE_DELTA;
-			pwmValue = pwmValuePosMax;
-		}
-	} else if( pwmValue < 0 ) {
-		int16_t pwmValueNegMax = pwmValuePrevious - pwmDelta;
-		if( pwmValue < pwmValueNegMax ) {
-			error |= PWM_ERROR_NEGATIVE_DELTA;
-			pwmValue = pwmValueNegMax;
-		}
-	}
-	pwmValuePrevious = pwmValue; // store current pwm value for the next cycle
 
 	uint16_t timerPWM_A = 0; // default disable, overwrite when motor enabled and valid value
 	uint16_t timerPWM_B = 0;
@@ -101,12 +113,12 @@ void taskPwm() {
 		timerPWM_A = 0; // default already 0, but make explicit with this statement
 		timerPWM_B = 0;
 	} else {
-		if( pwmValue > 0 ) {
-			timerPWM_A = pwmValue;
+		if( pwmValue16 > 0 ) {
+			timerPWM_A = pwmValue16;
 			timerPWM_B = 0;
-		} else if( pwmValue < 0 ) {
+		} else if( pwmValue16 < 0 ) {
 			timerPWM_A = 0;
-			timerPWM_B = -pwmValue;
+			timerPWM_B = -pwmValue16;
 		}
 	}
 
@@ -121,7 +133,7 @@ void taskPwm() {
 }
 
 int16_t getPwmValue() {
-	return pwmValue;
+	return pwmValue16;
 }
 
 void setPwmLimit(uint16_t value) {
@@ -132,12 +144,12 @@ uint16_t getPwmLimit() {
 	return pwmLimit;
 }
 
-void setPwmDelta(uint16_t value) {
-	pwmDelta = (int16_t)value;
+void setPwmDelta(uint32_t value) {
+	pwmDelta = (int32_t)value;
 }
 
-uint16_t getPwmDelta() {
-	return (uint16_t)pwmDelta;
+uint32_t getPwmDelta() {
+	return (uint32_t)pwmDelta;
 }
 
 uint16_t getPwmError() {
@@ -146,7 +158,8 @@ uint16_t getPwmError() {
 
 void clearPwmError(uint16_t value) {
 	if( ( value & PWM_ERROR_REQUEST_CLEAR_STATE ) != 0 ) { // for a full clear, also clear the state of pwm
-		pwmValue = 0;
+		pwmValue16 = 0;
+		pwmValuePrevious = 0;
 	}
 	error &= ~value; // clear only the bits set in value
 }

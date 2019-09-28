@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,15 +26,15 @@
 
 class obstacleAdministratorMock : public obstacleAdministrator
 {
-	public:
-		MOCK_METHOD1(appendObstacleMeasurements, void(const std::vector<obstacleMeasurementType> measurements));
-		MOCK_METHOD1(overruleObstacles, void(const std::vector<obstacleClass_t> obstacles));
-		MOCK_METHOD1(getLocalObstacleMeasurements, void(std::vector<obstacleMeasurementType> &measurements));
-		MOCK_METHOD1(performCalculation, void(const double timeNow));
-		MOCK_METHOD1(getObstacles, void(std::vector<obstacleClass_t> &balls));
+    public:
+    	MOCK_METHOD1(appendObstacleMeasurements, void(const T_OBSTACLE_CANDIDATES measurements));
+    	MOCK_METHOD1(overruleObstacles, void(const std::vector<obstacleClass_t> obstacles));
+    	MOCK_METHOD1(getLocalObstacleMeasurements, void(T_OBSTACLE_CANDIDATES &measurements));
+    	MOCK_METHOD1(performCalculation, void(rtime const timeNow));
+    	MOCK_METHOD1(getObstacles, void(std::vector<obstacleClass_t> &balls));
 
-	private:
-		MOCK_METHOD1(cleanUpTimedOutObstacleMeasurements, void(const double timeNow));
+    private:
+    	MOCK_METHOD1(cleanUpTimedOutObstacleMeasurements, void(rtime const timeNow));
 };
 
 

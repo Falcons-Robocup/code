@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -32,43 +32,37 @@
 #include "int/ConfigurationManager.h"
 
 // Falcons shared code:
-#include "tracer.hpp"
+#include "tracing.hpp"
 #include "linepoint2D.hpp"
 
 projectSpeedVisualization::projectSpeedVisualization() : Visualization()
 {
+	// Hide
 	this->VisibilityOff();
-
-	// Setup arrow
-	_arrow->GetProperty()->SetColor(0.3, 0.0, 1.0); //Rainbow purple
-
     _arrow->VisibilityOff();
-    this->VisibilityOff();
+
+    _lineSource = vtkSmartPointer<vtkLineSource>::New();
+	_lineSource->SetPoint1(0.0, 0.0, 0.1);
+	_lineSource->SetPoint2(0.0, 0.0, 0.1);
+	_lineSource->Update();
+
+    _actor = addAsActor(_lineSource);
+    _actor->GetProperty()->SetColor(0.3, 0.0, 1.0);
+    _actor->GetProperty()->SetLineWidth(6);
+    _actor->SetPosition(0.0, 0.0, 0.0);
+    _actor->Modified();
+    _actor->VisibilityOff();
 }
 
 
 void projectSpeedVisualization::setPosition(linepoint2D& line)
 {
-	this->VisibilityOff();
-	_arrow->VisibilityOff();
+	_actor->SetOrigin(line.getSourcePoint2D().x, line.getSourcePoint2D().y, 0.1);
+	Vector2D dst = line.getDestinationVector2D() - line.getSourceVector2D();
+	_lineSource->SetPoint1(dst.x, dst.y, 0.1);
 
-	Vector2D speed = line.getSourceVector2D() - line.getDestinationVector2D();
-    double length = speed.size();
-    double orientation = atan2(speed.y, speed.x);
-    _arrow->SetOrientation(0, 0, 180.0 * (orientation + M_PI) / M_PI); // radians to degrees
-    if (length > 0.1)
-    {
-        double scale[3] = {length, 1, 1 };
-        _arrow->SetScale(scale);
-        _arrowSource->SetTipLength(length);
-        _arrow->VisibilityOn();
-        this->VisibilityOn();
-    }
-    else
-    {
-        _arrow->VisibilityOff();
-        this->VisibilityOff();
-    }
+	this->VisibilityOn();
+	_actor->VisibilityOn();
 
     // call base implementation
     Visualization::setPosition(line);

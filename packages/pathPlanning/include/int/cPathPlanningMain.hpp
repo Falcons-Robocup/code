@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -34,7 +34,7 @@
 //#include "int/cTeamplayAdapter.hpp"
 //#include "int/cSetSpeedAdapter.hpp"
 //#include "int/cReconfigureAdapter.hpp"
-//#include "int/cDiagnosticsAdapter.hpp"
+#include "int/adapters/cDiagnosticsAdapter.hpp"
 
 // Forward declarations > include in include
 class cAbstractPathPlanning;
@@ -141,12 +141,16 @@ class cPathPlanningMain
 
         bool _obstacleAvoidanceCurrentlyEnabled;
 
-    protected:
 
         /*! \brief The velocity of the previous interval. Used by limitVelocities(). */
         Velocity2D        _prev_vel;
 
+    protected:
+
+
+
     private:
+
 
 };
 

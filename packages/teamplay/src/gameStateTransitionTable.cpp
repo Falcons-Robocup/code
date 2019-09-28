@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -133,7 +133,7 @@ gameStateTransitionTable::gameStateTransitionTable()
     }
     catch(std::exception &e)
     {
-        TRACE_ERROR("Failure while reading gameStateTransitionTable from disk: ") << e.what();
+        TRACE_ERROR("Failure while reading gameStateTransitionTable from disk: %s", e.what());
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
 }

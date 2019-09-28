@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,21 +25,21 @@
 #include "cAbstractObserverByteArray.hpp"
 #include "cByteArray.hpp"
 
-class receiverMixedTeam : public Facilities::Network::cAbstractObserverByteArray
+class receiverMixedTeam : public Facilities::cAbstractObserverByteArray
 {
 	public:
 		receiverMixedTeam();
 		~receiverMixedTeam();
 
 		void reconnect();
-		virtual void notifyNewPacket(Facilities::Network::cByteArray &data);
+		virtual void notifyNewPacket(Facilities::cByteArray &data);
 
-		void setNotifyNewPacket(boost::function<void(Facilities::Network::cByteArray)> func)
+		void setNotifyNewPacket(boost::function<void(Facilities::cByteArray)> func)
 		{
 		  _fncNotifyNewPacket = func;
 		}
 	private:
-		boost::function<void(Facilities::Network::cByteArray)> _fncNotifyNewPacket;
+		boost::function<void(Facilities::cByteArray)> _fncNotifyNewPacket;
 		Facilities::Network::cReceiverUDP *_udpReceiver;
 
 		void cleanUpReceiver();

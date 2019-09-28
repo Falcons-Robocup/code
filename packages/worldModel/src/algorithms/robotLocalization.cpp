@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,9 +20,10 @@
 #include "int/configurators/localizationConfigurator.hpp"
 
 #include "FalconsCommon.h"
-#include "cDiagnosticsEvents.hpp"
+#include "cEnvironmentField.hpp" // field dimensions
+#include "cDiagnostics.hpp"
 #include "position2d.hpp"
-#include "timeConvert.hpp"
+#include "tracing.hpp"
 
 #define TIMESTAMP_UNINITIALIZED (-1)
 #define NO_TRACKER_ID (-1)
@@ -48,12 +49,13 @@
  *  * determine bestTrackerId
  *    * use qualitative / time-depending criteria to evaluate which tracker 'wins'
  *  * applyBestCameraMeasurement
- *    * match it with current position (lowest penalty)
- *    * if switching between trackers
- *      * take over position unweighted from the tracker
- *    * else
- *      * camera latency correction
- *      * weighted position update (10%)
+ *    * only if the best tracker was stimulated at this tick:
+ *      * match it with current position (lowest penalty)
+ *      * if switching between trackers (rare instances)
+ *        * take over position unweighted from the tracker
+ *      * else (regular update)
+ *        * camera latency correction (~ 100ms)
+ *        * weighted position update (~ 10%)
  *  * determineIsValidAndOrient
  *    * invalid until 10 seconds (settling time), after which we orient forwards
  *    * stay valid even if all vision trackers die (trackerTimeout), to allow positioning for throw-in
@@ -68,6 +70,7 @@
  *    that a good vision match at high speed leads to a new tracker
  *  * coding: merge tracker getPosition & matchPosition - consider moving outside of tracker?
  *  * make errorRadianToMeter position-dependent, to reduce flip sensitivity at center of the field
+ *  * reconsider core coding concept of the update sequence: always drive on encoders, vision acts as an interrupt?
  *
  **/
 
@@ -76,14 +79,17 @@
 robotLocalization::robotLocalization()
 {
     TRACE("creating robotLocalization");
-    _cameraMeasurementsBuffer.clear();
-    _motorDisplacementsBuffer.clear();
-    _trackers.clear();
-    _isValid = 0;
     _lastTrackerId = NO_TRACKER_ID;
     _firstVisionTimestamp = TIMESTAMP_UNINITIALIZED;
+    _currentTimestamp = TIMESTAMP_UNINITIALIZED;
+    _cameraMeasurementsBuffer.clear();
+    _motorDisplacementsBuffer.clear();
+    _motorVelocitiesBuffer.clear();
+    _trackers.clear();
+    _isValid = 0;
     _currentPosVel.setCoordinateType(coordinateType::FIELD_COORDS); 
     _currentPosVel.setRobotID(getRobotNumber());
+    _lastMovingTimestamp = 0.0;
     // trace configuration parameters
     localizationConfigurator::getInstance().traceAll();
     TRACE("robotLocalization created");
@@ -91,8 +97,8 @@ robotLocalization::robotLocalization()
 
 robotLocalization::~robotLocalization()
 /*
- *	If it looks like chicken, tastes like chicken,
- *	and feels like chicken but Chuck Norris says its beef, then it's beef.
+ *    If it looks like chicken, tastes like chicken,
+ *    and feels like chicken but Chuck Norris says its beef, then it's beef.
  */
 {
 
@@ -108,7 +114,7 @@ void robotLocalization::addVisionMeasurement(robotMeasurementClass_t const &meas
         if (_firstVisionTimestamp == TIMESTAMP_UNINITIALIZED)
         {
             TRACE_INFO("received first vision measurement");
-            _firstVisionTimestamp = measurement.getTimestamp();
+            _firstVisionTimestamp = double(measurement.getTimestamp());
             // since we do not know better (0,0,0 initial position is arbitrary),
             // this measurement is stored directly in currentPosition
             _currentPosVel.setCoordinates(measurement.getX(), measurement.getY(), measurement.getTheta());
@@ -119,72 +125,29 @@ void robotLocalization::addVisionMeasurement(robotMeasurementClass_t const &meas
 
 void robotLocalization::addDisplacement(robotDisplacementClass_t const &displacement)
 {
-	try
-	{
-        traceDisplacement(displacement);
-		switch(displacement.getDisplacementSource())
-		{
-			case displacementType::MOTORS:
-			{
-				_motorDisplacementsBuffer.push_back(displacement);
-				break;
-			}
-
-			case displacementType::IMU:
-			{
-                                // Not processed at the moment
-				break;
-			}
-
-			default:
-			{
-				TRACE_ERROR("Received displacement with INVALID displacement source");
-				break;
-			}
-		}
-	}
-	catch(std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: %s", e.what());
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		throw std::runtime_error(std::string("Linked to: ") + e.what());
-	}
-}
-
-void robotLocalization::calculatePositionAndVelocity(double timestampNow)
-{
     try
     {
-        // explicitly store timestamp in tracing
-        traceCalculatePositionAndVelocity(timestampNow);
+        traceDisplacement(displacement);
+        switch(displacement.getDisplacementSource())
+        {
+        	case displacementType::MOTORS:
+        	{
+        		_motorDisplacementsBuffer.push_back(displacement);
+        		break;
+        	}
 
-        // process the buffer of encoder displacement samples
-        // return accumulated delta in FCS; also store velocity
-        Position2D deltaDisplacementPos = processMotorDisplacements();
-        
-        // update all vision trackers with encoder displacement
-        //TODO fix this filter . // updateVisionTrackersDisplacement(deltaDisplacementPos);
-        
-        // process the buffer of vision localization measurements
-        // assign each to a tracker
-        distributeVisionMeasurements();
-        
-        // choose best tracker
-        int bestTrackerId = getBestTrackerId(timestampNow);
-        
-        // apply the camera measurement with some weight factor
-        // generate a warning when switching from one tracker to another
-        applyBestCameraMeasurement(bestTrackerId);
+        	case displacementType::IMU:
+        	{
+                                // Not processed at the moment
+        		break;
+        	}
 
-        // determine isValid, log state change
-        // when switching from invalid to valid, re-orient 
-        determineIsValidAndOrient(timestampNow);
-
-        // diagnostics
-        gatherDiagnostics(bestTrackerId);
-        
-        // cleanup (dead trackers etc)
-        cleanup(timestampNow);
+        	default:
+        	{
+        		TRACE_ERROR("Received displacement with INVALID displacement source");
+        		break;
+        	}
+        }
     }
     catch(std::exception &e)
     {
@@ -194,9 +157,106 @@ void robotLocalization::calculatePositionAndVelocity(double timestampNow)
     }
 }
 
-robotClass_t robotLocalization::getRobotPositionAndVelocity() const
+
+void robotLocalization::addVelocity(robotVelocityClass_t const &velocity)
 {
-    return _currentPosVel;
+    try
+    {
+        traceVelocity(velocity);
+        switch(velocity.getDisplacementSource())
+        {
+            case displacementType::MOTORS:
+            {
+                _motorVelocitiesBuffer.push_back(velocity);
+                break;
+            }
+
+            case displacementType::IMU:
+            {
+                                // Not processed at the moment
+                break;
+            }
+
+            default:
+            {
+                TRACE_ERROR("Received displacement with INVALID displacement source");
+                break;
+            }
+        }
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+}
+
+void robotLocalization::calculatePositionAndVelocity(double timestampNow)
+{
+    TRACE_FUNCTION("");
+    try
+    {
+        //TRACE(">");
+
+        // explicitly store timestamp in tracing
+        _currentTimestamp = timestampNow;
+        _currentPosVel.setTimestamp(_currentTimestamp);
+        traceCalculatePositionAndVelocity();
+
+        // process the buffer of encoder displacement samples
+        // return accumulated delta in FCS; also store velocity
+        Position2D deltaDisplacementPos = processMotorDisplacementsAndVelocities();
+        checkIfMoving(deltaDisplacementPos);
+        
+        // update all vision trackers with encoder displacement
+        //TODO fix this filter . // updateVisionTrackersDisplacement(deltaDisplacementPos);
+        
+        // process the buffer of vision localization measurements
+        // assign each to a tracker
+        distributeVisionMeasurements();
+        
+        // choose best tracker
+        int bestTrackerId = getBestTrackerId();
+        
+        // apply the camera measurement with some weight factor
+        // generate a warning when switching from one tracker to another
+        applyBestCameraMeasurement(bestTrackerId);
+
+        // determine isValid, log state change
+        // when switching from invalid to valid, re-orient 
+        determineIsValidAndOrient();
+
+        // diagnostics
+        gatherDiagnostics(bestTrackerId);
+        
+        // cleanup (dead trackers etc)
+        cleanup();
+
+        //TRACE("<");
+    }
+    catch(std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+}
+
+robotClass_t robotLocalization::getRobotPositionAndVelocity(double timestamp) const
+{
+    TRACE_FUNCTION("");
+    robotClass_t result = _currentPosVel;
+    if (timestamp > 0.01) // abuse zero as regression case
+    {
+        // latency correction, used to tag ball- and obstacle measurements with camera position
+        Position2D offset = getEncoderUpdateSince(timestamp);
+        Position2D uncorrected(result.getX(), result.getY(), result.getTheta());
+        Position2D corrected = uncorrected - offset;
+        //TRACE("LATENCY corrected phi from %6.2f to %6.2f", uncorrected.phi, corrected.phi);
+        result.setCoordinates(corrected.x, corrected.y, corrected.phi);
+    }
+    return result;
 }
 
 localizationDiagnostics_t robotLocalization::getDiagnostics() const
@@ -213,7 +273,7 @@ void robotLocalization::triggerInitialization(double timestampNow)
     TRACE_INFO("triggering localization init");
     // IO tracing for analysis, debugging and development
     // see also trace2testIO.sh in testsuite
-    TRACE("INITIALIZE      %16.6f", timestampNow);
+    //TRACE("INITIALIZE      %16.6f", timestampNow); // TODO PTRACE
 }
 
 bool robotLocalization::isValid()
@@ -225,13 +285,13 @@ bool robotLocalization::isValid()
 
 /*** begin calculate sequence functions ***/
 
-Position2D robotLocalization::processMotorDisplacements()
+Position2D robotLocalization::processMotorDisplacementsAndVelocities()
 /*!
  * \brief Apply the motor displacement values to current position.
  * Do the transformation per tick instead of lumping them first, 
  * otherwise we would accumulate errors while moving.
  *
- * Note: we assume garbage- and slip filtering is done at the source (peripheralInterface/motorBoards).
+ * Note: we assume garbage- and slip filtering is done at the source (peripheralsInterface/motorBoards).
  */
 {
     // get current position as Position2D struct
@@ -244,7 +304,7 @@ Position2D robotLocalization::processMotorDisplacements()
     // work through the vector of displacement values
     for (auto it = _motorDisplacementsBuffer.begin(); it != _motorDisplacementsBuffer.end(); ++it)
     {
-        if (it->getCoordindateType() == coordinateType::ROBOT_COORDS)
+        if (it->getCoordinateType() == coordinateType::ROBOT_COORDS)
         {
             // (ab)use velocity transformations
             Velocity2D displacementRcs(it->getdX(), it->getdY(), it->getdTheta());
@@ -256,7 +316,7 @@ Position2D robotLocalization::processMotorDisplacements()
             // back to position
             currentPos += Position2D(displacementFcs.x, displacementFcs.y, displacementFcs.phi);
         }
-        else if (it->getCoordindateType() == coordinateType::FIELD_COORDS)
+        else if (it->getCoordinateType() == coordinateType::FIELD_COORDS)
         {
             Position2D displacementFcs(it->getdX(), it->getdY(), it->getdTheta());
             currentPos += displacementFcs;
@@ -266,11 +326,14 @@ Position2D robotLocalization::processMotorDisplacements()
             TRACE_ERROR("got a displacement with invalid coordinate type");
             return Position2D();
         }
+    }
 
+    for (auto it = _motorVelocitiesBuffer.begin(); it != _motorVelocitiesBuffer.end(); ++it)
+    {
         // take the average of last couple of encoder measurements (TODO: better to take the last, or are they noisy?)
-        vX += it->getvX() / (float) _motorDisplacementsBuffer.size();
-        vY += it->getvY() / (float) _motorDisplacementsBuffer.size();
-        vPhi += it->getvTheta() / (float) _motorDisplacementsBuffer.size();
+        vX += it->getvX() / (float) _motorVelocitiesBuffer.size();
+        vY += it->getvY() / (float) _motorVelocitiesBuffer.size();
+        vPhi += it->getvTheta() / (float) _motorVelocitiesBuffer.size();
     }
 
     // transform speed
@@ -310,7 +373,7 @@ void robotLocalization::distributeVisionMeasurements()
     float trackerScoreAcceptanceThreshold = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::trackerScoreAcceptanceThreshold);
 
     // work through buffer
-    TRACE("#measurements=%d #trackers=%d", (int)_cameraMeasurementsBuffer.size(), (int)_trackers.size());
+    //TRACE("#measurements=%d #trackers=%d", (int)_cameraMeasurementsBuffer.size(), (int)_trackers.size());
     // TODO: if multiple candidates are assigned to the same tracker, then the latest one 'wins' in terms of timestamp & position result. I don't think this is a problem in practice, but still, it could be improved. See testVisionSelect
     for (auto itMeas = _cameraMeasurementsBuffer.begin(); itMeas != _cameraMeasurementsBuffer.end(); ++itMeas)
     {
@@ -334,7 +397,7 @@ void robotLocalization::distributeVisionMeasurements()
             if (bestScore < trackerScoreAcceptanceThreshold)
             {
                 TRACE("stimulated tracker id=%d, score=%6.2f", bestTrackerId, bestScore);
-                _trackers[bestTrackerId].feedMeasurement(*itMeas);
+                _trackers[bestTrackerId].feedMeasurement(*itMeas, _currentTimestamp);
             }
             else
             {
@@ -344,13 +407,13 @@ void robotLocalization::distributeVisionMeasurements()
 
                 // create and feed
                 _trackers[newTrackerId].setId(newTrackerId);
-                _trackers[newTrackerId].feedMeasurement(*itMeas);
+                _trackers[newTrackerId].feedMeasurement(*itMeas, _currentTimestamp);
             }
         }
     }
 }
         
-int robotLocalization::getBestTrackerId(double timestampNow)
+int robotLocalization::getBestTrackerId()
 /*!
  * \brief Choose best tracker.
  * Tracker score is the product of several sub scores. Values range in [0.0, 1.0], higher is better.
@@ -363,7 +426,7 @@ int robotLocalization::getBestTrackerId(double timestampNow)
     {
         //TRACE("n=%d  it->first=%d  it->second.getId()=%d", _trackers.size(), it->first, it->second.getId());
         assert(it->first == it->second.getId());
-        float score = it->second.getTrackerScore(timestampNow);
+        float score = it->second.getTrackerScore(_currentTimestamp);
         if (score > bestScore)
         {
             bestScore = score;
@@ -371,6 +434,39 @@ int robotLocalization::getBestTrackerId(double timestampNow)
         }
     }
     return result;
+}
+
+void robotLocalization::checkIfMoving(Position2D const &deltaDisplacementPos)
+{
+    float xyTolerance = 1e-3;
+    float phiTolerance = 1e-4;
+    if ((std::max(fabs(deltaDisplacementPos.x), fabs(deltaDisplacementPos.y)) < xyTolerance)
+        && (fabs(deltaDisplacementPos.phi) < phiTolerance))
+    {
+        ;// robot stands still
+    }
+    else
+    {
+        // robot is moving
+        _lastMovingTimestamp = _currentTimestamp;
+    }
+}
+
+float robotLocalization::calculateWeightFactor()
+{
+    float w = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::visionOwnWeightFactor);
+    return w; // disable for now, vision phi noise is quite good already, this only adds complexity in tuning & analysis
+    
+    // reduce the influence of vision over time, but only if robot is standing still
+    float t = timeStandingStill();
+    float settleTimeStart = 1.0; // when to start reducing the weight factor
+    float settleTimeEnd = 3.0; // when to arrive at zero 
+    // TODO make both parameters configurable 
+    if (t > settleTimeStart)
+    {
+        return w * std::max(0.0, 1.0 - ((t - settleTimeStart) / (settleTimeEnd - settleTimeStart)));
+    }
+    return w;
 }
 
 void robotLocalization::applyBestCameraMeasurement(int bestTrackerId)
@@ -385,6 +481,11 @@ void robotLocalization::applyBestCameraMeasurement(int bestTrackerId)
     {
         return;
     }
+    // it needs to have been stimulated at this tick
+    if (fabs(_trackers[bestTrackerId].getLastPokeTimestamp() - _currentTimestamp) > 0.001)
+    {
+        return;
+    }
     // get current position, initialize result and get configurables
     Position2D currentPosition(_currentPosVel.getX(), _currentPosVel.getY(), _currentPosVel.getTheta());
     //TRACE("currentPosition = (%6.2f,%6.2f,%6.2f)", currentPosition.x, currentPosition.y, currentPosition.phi);
@@ -396,7 +497,7 @@ void robotLocalization::applyBestCameraMeasurement(int bestTrackerId)
     // check if tracker was switched
     if (bestTrackerId != _lastTrackerId)
     {
-        TRACE("switching from tracker %d to tracker %d", _lastTrackerId, bestTrackerId);
+        //TRACE("switching from tracker %d to tracker %d", _lastTrackerId, bestTrackerId);
         if (_lastTrackerId != NO_TRACKER_ID)
         {
             TRACE_WARNING("switching from tracker %d to tracker %d", _lastTrackerId, bestTrackerId);
@@ -410,7 +511,7 @@ void robotLocalization::applyBestCameraMeasurement(int bestTrackerId)
     else // weighted update
     {
         // determine encoder update since vision timestamp
-        Position2D encoderUpdate = getEncoderUpdateSince(_trackers[bestTrackerId].getLastUpdateTimestamp());
+        Position2D encoderUpdate = getEncoderUpdateSince(_trackers[bestTrackerId].getLastVisionTimestamp());
         //TRACE("  encoderUpdate = (%6.2f,%6.2f,%6.2f)", encoderUpdate.x, encoderUpdate.y, encoderUpdate.phi);
         // determine the most accurate position at the moment of the vision measurement
         Position2D playbackPosition = currentPosition - encoderUpdate;
@@ -419,9 +520,9 @@ void robotLocalization::applyBestCameraMeasurement(int bestTrackerId)
         Position2D deltaPosition = visionPosition - playbackPosition;
         deltaPosition.phi = project_angle_mpi_pi(visionPosition.phi - playbackPosition.phi);
         // apply delta with weight factor
-        float visionOwnWeightFactor = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::visionOwnWeightFactor);
+        float weightFactor = calculateWeightFactor();
         //TRACE("  deltaPosition = (%6.2f,%6.2f,%6.2f)", deltaPosition.x, deltaPosition.y, deltaPosition.phi);
-        newPosition = deltaPosition * visionOwnWeightFactor + currentPosition;
+        newPosition = deltaPosition * weightFactor + currentPosition;
     }
     //TRACE("    newPosition = (%6.2f,%6.2f,%6.2f)", newPosition.x, newPosition.y, newPosition.phi);
     // store new position
@@ -429,7 +530,7 @@ void robotLocalization::applyBestCameraMeasurement(int bestTrackerId)
     _visStabList.push_front(newPosition);
 }
 
-void robotLocalization::determineIsValidAndOrient(double timestampNow)
+void robotLocalization::determineIsValidAndOrient()
 /*!
  * \brief Determine isValid boolean. Log state change as INFO event.
  * Additionally, when switching from invalid to valid, re-orient playing forwards.
@@ -446,8 +547,9 @@ void robotLocalization::determineIsValidAndOrient(double timestampNow)
  * This is to allow robot to take a throwin while being deprived of vision localization.
  */
 {
+    //TRACE(">");
     // check timers
-    bool currentIsValid = (gotVision(timestampNow) && timerSinceFirstVisionExpired(timestampNow));
+    bool currentIsValid = (gotVision() && timerSinceFirstVisionExpired());
     if (!_isValid)
     {
         // only if not already have a lock
@@ -463,51 +565,67 @@ void robotLocalization::determineIsValidAndOrient(double timestampNow)
     }
     // IO tracing for analysis, debugging and development
     // see also trace2testIO.sh in testsuite
-    TRACE("RESULT          %16.6f %2d %9.6f %9.6f %9.6f %9.6f %9.6f %9.6f", timestampNow, _isValid,
-          _currentPosVel.getX(), _currentPosVel.getY(), _currentPosVel.getTheta(),
-          _currentPosVel.getVX(), _currentPosVel.getVY(), _currentPosVel.getVTheta());
+    //TRACE("RESULT          %16.6f %2d %9.6f %9.6f %9.6f %9.6f %9.6f %9.6f", _currentTimestamp, _isValid,
+    //      _currentPosVel.getX(), _currentPosVel.getY(), _currentPosVel.getTheta(),
+    //      _currentPosVel.getVX(), _currentPosVel.getVY(), _currentPosVel.getVTheta());
+    //PTRACE("LOC %2d %9.6f %9.6f %9.6f %9.6f %9.6f %9.6f", _isValid,
+    //      _currentPosVel.getX(), _currentPosVel.getY(), _currentPosVel.getTheta(),
+    //      _currentPosVel.getVX(), _currentPosVel.getVY(), _currentPosVel.getVTheta());
+    //TRACE("<");
 }
 
 
-void robotLocalization::cleanup(double timestampNow)
+void robotLocalization::cleanup()
 /*!
  * \brief Cleanup buffers and such at the end of an iteration.
  */
 {
-    cleanupVisionTrackers(timestampNow);
+    //TRACE(">");
+    cleanupVisionTrackers();
     _cameraMeasurementsBuffer.clear();
     _motorDisplacementsBuffer.clear();
-    cleanupDisplacementHistory(timestampNow);
+    _motorVelocitiesBuffer.clear();
+    cleanupDisplacementHistory();
+    //TRACE("<");
 }
 
 /*** end calculate sequence functions ***/
 
 /*** begin other helper functions ***/
 
-bool robotLocalization::gotVision(double timestampNow)
+bool robotLocalization::gotVision()
 {
-    return timeSinceLastVision(timestampNow) < localizationConfigurator::getInstance().get(localizationConfiguratorFloats::trackerTimeout);
+    return timeSinceLastVision() < localizationConfigurator::getInstance().get(localizationConfiguratorFloats::trackerTimeout);
 }
 
-double robotLocalization::timeSinceLastVision(double timestampNow)
+double robotLocalization::timeSinceLastVision()
 {
     double result = 999;
     for (auto it = _trackers.begin(); it != _trackers.end(); ++it)
     {
-        double elapsed = timestampNow - it->second.getLastUpdateTimestamp();
+        double elapsed = _currentTimestamp - it->second.getLastVisionTimestamp();
         result = fmin(result, elapsed);
     }
     return result;
 }
 
-bool robotLocalization::timerSinceFirstVisionExpired(double timestampNow)
+double robotLocalization::timeStandingStill()
+{
+    if (_lastMovingTimestamp == TIMESTAMP_UNINITIALIZED)
+    {
+        return 0.0;
+    }
+    return _currentTimestamp - _lastMovingTimestamp;
+}
+
+bool robotLocalization::timerSinceFirstVisionExpired()
 {
     if (_trackers.size() == 0)
     {
         return false;
     }
     // compare timestamp of first vision measurement since calibration with current timestamp
-    double dt = timestampNow - _firstVisionTimestamp;
+    double dt = _currentTimestamp - _firstVisionTimestamp;
     bool result = (dt >= localizationConfigurator::getInstance().get(localizationConfiguratorFloats::settlingTime));
     return result;
 }
@@ -552,7 +670,7 @@ void robotLocalization::flipOrientation()
     _currentPosVel.setCoordinates(x, y, theta);
 }
 
-Position2D robotLocalization::getEncoderUpdateSince(double timestamp)
+Position2D robotLocalization::getEncoderUpdateSince(double timestamp) const
 /*!
  * \brief Get the most recent total encoder update. Used in camera latency correction.
  */
@@ -561,7 +679,7 @@ Position2D robotLocalization::getEncoderUpdateSince(double timestamp)
     // TODO: we make a marginal error, by ignoring cumulative position update due to rcs2fcs transformation
     for (auto it = _motorDisplacementsHistory.begin(); it != _motorDisplacementsHistory.end(); ++it)
     {
-        if (it->getTimestamp() > timestamp)
+        if (double(it->getTimestamp()) > timestamp)
         {
             result += Position2D(it->getdX(), it->getdY(), it->getdTheta());
         }
@@ -569,14 +687,14 @@ Position2D robotLocalization::getEncoderUpdateSince(double timestamp)
     return result;
 }
 
-void robotLocalization::cleanupVisionTrackers(double timestampNow)
+void robotLocalization::cleanupVisionTrackers()
 /*!
  * \brief Cleanup trackers which have not been poked for a while.
  */
 {
     for (auto it = _trackers.begin(); it != _trackers.end(); )
     {
-        if (it->second.isTimedOut(timestampNow))
+        if (it->second.isTimedOut(_currentTimestamp))
         {
             it = _trackers.erase(it);
         }
@@ -587,7 +705,7 @@ void robotLocalization::cleanupVisionTrackers(double timestampNow)
     }
 }
         
-void robotLocalization::cleanupDisplacementHistory(double timestampNow)
+void robotLocalization::cleanupDisplacementHistory()
 /*!
  * \brief Cleanup motor displacement history.
  */
@@ -595,7 +713,7 @@ void robotLocalization::cleanupDisplacementHistory(double timestampNow)
     float timeout = 1.0;
     _motorDisplacementsHistory.erase(std::remove_if(_motorDisplacementsHistory.begin(),
                                                     _motorDisplacementsHistory.end(),
-                            [=](robotDisplacementClass_t& m) { return (timestampNow - m.getTimestamp()) > timeout; }),
+                            [=](robotDisplacementClass_t& m) { return (_currentTimestamp - double(m.getTimestamp())) > timeout; }),
                             _motorDisplacementsHistory.end());    
 }
 
@@ -607,9 +725,9 @@ void robotLocalization::traceVisionMeasurement(const robotMeasurementClass_t mea
 {
     // IO tracing for analysis, debugging and development
     // see also trace2testIO.sh in testsuite
-    TRACE("VISION          %16.6f %9.5f %9.5f %9.5f %9.5f %d", 
-        measurement.getTimestamp(), measurement.getX(), measurement.getY(), measurement.getTheta(), 
-        measurement.getConfidence(), measurement.getCoordindateType());
+    //PTRACE("VISION %16.6f %9.6f %9.6f %9.6f %6.3f %d", 
+    //    double(measurement.getTimestamp()), measurement.getX(), measurement.getY(), measurement.getTheta(), 
+    //    measurement.getConfidence(), measurement.getCoordindateType());
 }
 
 void robotLocalization::traceDisplacement(const robotDisplacementClass_t displacement)
@@ -617,20 +735,37 @@ void robotLocalization::traceDisplacement(const robotDisplacementClass_t displac
     // IO tracing for analysis, debugging and development
     // see also trace2testIO.sh in testsuite
     std::string coordinateTypeString = "ENCODER_RCS";
-    if (displacement.getCoordindateType() == coordinateType::FIELD_COORDS)
+    if (displacement.getCoordinateType() == coordinateType::FIELD_COORDS)
     {
         coordinateTypeString = "ENCODER_FCS";
     }
-    TRACE("%s     %16.6f %9.5f %9.5f %9.5f %9.5f %9.5f %9.5f %d %d", 
-        coordinateTypeString.c_str(),
-        displacement.getTimestamp(), displacement.getdX(), displacement.getdY(), displacement.getdTheta(), 
-        displacement.getvX(), displacement.getvY(), displacement.getvTheta(), displacement.getCoordindateType(), displacement.getDisplacementSource());
+    // TODO PTRACE
+    //TRACE("%s     %16.6f %9.5f %9.5f %9.5f %d %d",
+    //    coordinateTypeString.c_str(),
+    //    double(displacement.getTimestamp()), displacement.getdX(), displacement.getdY(), displacement.getdTheta(), 
+    //    displacement.getCoordinateType(), displacement.getDisplacementSource());
 }
 
-void robotLocalization::traceCalculatePositionAndVelocity(double timestampNow)
+void robotLocalization::traceVelocity(const robotVelocityClass_t velocity)
+{
+    // IO tracing for analysis, debugging and development
+    // see also trace2testIO.sh in testsuite
+    std::string coordinateTypeString = "ENCODER_RCS";
+    if (velocity.getCoordinateType() == coordinateType::FIELD_COORDS)
+    {
+        coordinateTypeString = "ENCODER_FCS";
+    }
+    // TODO PTRACE
+    //TRACE("%s     %16.6f %9.5f %9.5f %9.5f %d %d",
+    //    coordinateTypeString.c_str(),
+    //    double(displacement.getTimestamp()), displacement.getvX(), displacement.getvY(), displacement.getvTheta(),
+    //    displacement.getCoordinateType(), displacement.getDisplacementSource());
+}
+
+void robotLocalization::traceCalculatePositionAndVelocity()
 {
     // trace timestamp at which calculate was called, for playback/analysis afterwards
-    TRACE("CALCULATE       %16.6f", timestampNow);
+    TRACE("CALCULATE       %16.6f", _currentTimestamp);
 }
 
 float stddev(std::vector<float> const &v)
@@ -649,6 +784,7 @@ void robotLocalization::determineVisionStability()
  * \brief Calculate vision stability KPI's
  */
 {
+    //TRACE(">");
     // initialize
     _diagData.visionNoiseXY = 0.0;
     _diagData.visionNoisePhi = 0.0;
@@ -673,20 +809,21 @@ void robotLocalization::determineVisionStability()
     // 3sigma values
     _diagData.visionNoiseXY = 3.0 * std::max(stddev(values_x), stddev(values_y));
     _diagData.visionNoisePhi = 3.0 * stddev(values_phi);
+    //TRACE("<");
 }
 
 void robotLocalization::gatherDiagnostics(int bestTrackerId)
 {
+    //TRACE(">");
     determineVisionStability();
     _diagData.numVisionCandidates = _cameraMeasurementsBuffer.size();
     _diagData.numMotorDisplacementSamples = _motorDisplacementsBuffer.size();
-    robotClass_t posVel = getRobotPositionAndVelocity();
-    _diagData.ownpos.x = posVel.getX();
-    _diagData.ownpos.y = posVel.getY();
-    _diagData.ownpos.phi = posVel.getTheta();
-    _diagData.ownpos.vx = posVel.getVX();
-    _diagData.ownpos.vy = posVel.getVY();
-    _diagData.ownpos.vphi = posVel.getVTheta();
+    _diagData.visionLocAge = _trackers[bestTrackerId].getLocAge(_currentTimestamp);
+    // current position and velocity are logged on worldState level
+    Position2D visionPosition = _trackers[bestTrackerId].getPosition();
+    _diagData.bestVisionCandidate.x = visionPosition.x;
+    _diagData.bestVisionCandidate.y = visionPosition.y;
+    _diagData.bestVisionCandidate.Rz = visionPosition.phi;
     // _diagData.bestVisionCandidate not used anymore
     if (bestTrackerId != NO_TRACKER_ID)
     {
@@ -698,10 +835,12 @@ void robotLocalization::gatherDiagnostics(int bestTrackerId)
     }
     _diagData.isValid = _isValid;
     // extra sanity checks
+    robotClass_t posVel = getRobotPositionAndVelocity();
     float speedLimitXY = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::speedLimitXY);
     float speedLimitPhi = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::speedLimitPhi);
-    float positionLimitX = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::positionLimitX);
-    float positionLimitY = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::positionLimitY);
+    float margin = 0.5;
+    float positionLimitX = margin + 0.5 * cEnvironmentField::getInstance().getWidth();
+    float positionLimitY = margin + 0.5 * cEnvironmentField::getInstance().getLength();
     if ((fabs(posVel.getX()) > positionLimitX) || (fabs(posVel.getY()) > positionLimitY))
     {
         TRACE_INFO_TIMEOUT(10.0, "position (%6.1f, %6.1f) out of bounds", posVel.getX(), posVel.getY());
@@ -711,6 +850,7 @@ void robotLocalization::gatherDiagnostics(int bestTrackerId)
     {
         TRACE_INFO_TIMEOUT(2.0, "speed is too large (vx=%6.1fm/s, vx=%6.1fm/s, vphi=%6.1frad/s)", vel.x, vel.y, posVel.getVTheta());
     }
+    //TRACE("<");
 }
 
 /*** end diagnostics functions ***/

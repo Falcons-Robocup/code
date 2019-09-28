@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2017 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,19 +23,18 @@
 #include "ros/ros.h"
 
 /* Other packages includes */
-#include "rosMsgs/t_worldmodel_calculated.h"
-#include "cDiagnosticsEvents.hpp"
-#include "cDiagnosticsDutyCycle.hpp"
-#include "tracer.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 /* Teamplay includes: input adapters */
+#include "int/adapters/configuration/cConfigHeightmaps.hpp"
 #include "int/adapters/configuration/cConfigInterceptBall.hpp"
 #include "int/adapters/configuration/cConfigRules.hpp"
 #include "int/adapters/configuration/cConfigShooting.hpp"
 #include "int/adapters/configuration/cConfigStrategy.hpp"
-#include "int/cRosAdapterWorldModel.hpp"
-#include "ext/cUdpAdapterRefboxSignals.hpp"
-#include "int/adapters/cControlInterfaceROS.hpp"
+#include "int/adapters/cRTDBInputAdapter.hpp"
+#include "ext/cRtdbAdapterRefboxSignals.hpp"
+#include "int/cTeamplayControlInterface.hpp"
 
 /* Teamplay includes: functionality */
 #include "int/cWorldStateFunctions.hpp"
@@ -43,252 +42,321 @@
 #include "int/cDecisionTree.hpp"
 #include "int/gameStateManager.hpp"
 #include "int/stores/gameStateStore.hpp"
-#include "int/stores/ownRobotStore.hpp"
-#include "int/stores/teamMatesStore.hpp"
-#include "int/types/intentionSync.hpp"
+#include "int/stores/heightMapStore.hpp"
+#include "int/stores/robotStore.hpp"
+#include "int/stores/ballStore.hpp"
 #include "int/utilities/trace.hpp"
 
 namespace {
 // The memory stack.
 std::map<robotNumber,memoryStackType> robotMemoryStack;
 std::map<robotNumber,memoryStackNodes> robotNodes;
-int memoryStackIdx = -1; // Nothing on the stack. If an element is added, it is raised to 0, which points to the first element.
 
-void trace_error (const std::string& file, const int line, const std::string& func, const std::string& msg)
-    {
-        falcons::eventType event(file, line, func);
-        event.message = msg;
-        diagnostics::diag_error(event);
-    }
+// The map containing the parameters.
+// Since some behaviors expect the 'role' parameter, and the role is not re-evaluated every time, store the parameters.
+std::map<std::string, std::string> myMapParams;
 
-void trace_info (const std::string& file, const int line, const std::string& func, const std::string& msg)
-    {
-        falcons::eventType event(file, line, func);
-        event.message = msg;
-        diagnostics::diag_info(event);
-    }
-
-void trace (const std::string& file, const int line, const std::string& func, const std::string& msg)
-    {
-        falcons::eventType event(file, line, func);
-        event.message = msg;
-        trace_write_event(event);
-    }
-    
-    
-#define EXPECTED_FREQUENCY (30.0) // TODO store somewhere common, provide by heartBeat? simulator uses 10Hz, real robot 30Hz
-#define WARNING_THRESHOLD (0.4)
-diagnostics::cDiagnosticsDutyCycle dutyCycleObserver("teamplay", EXPECTED_FREQUENCY, WARNING_THRESHOLD);
+// remember previous gamestate for the role re-evaluation on gamestate change
+treeEnum previousGameState = treeEnum::INVALID;
+// remember ball possession for the role re-evaluation on ball location known change
+bool previousBallLocationKnown = false;
+treeEnum ownRobotRole = treeEnum::INVALID;
+std::map<robotNumber, treeEnum> teammateRoles;
 
 } // unnamed namespace
 
+// forward declaration
+void iterateTeamplay();
 
 int main(int argc, char **argv)
 {
-    /* Install the Falcons specific trace handlers */
-    teamplay::traceRedirect::getInstance().setTraceFunction(&trace);
-    teamplay::traceRedirect::getInstance().setTraceErrorFunction(&trace_error);
-    teamplay::traceRedirect::getInstance().setTraceInfoFunction(&trace_info);
 
-	try
-	{
-		// ROS initialization
-		ros::init(argc, argv, TEAMPLAY_NODENAME);
-		ros::Time::init();
-    	//TRACE_INFO("teamplay starting"); // must be after ros::init
+    try
+    {
+        // ROS initialization
+        ros::init(argc, argv, TEAMPLAY_NODENAME);
+        ros::Time::init();
+        //TRACE_INFO("teamplay starting"); // must be after ros::init
+        
+        INIT_TRACE;
 
-		// setup the refbox signal listener by creating the object once (singleton)
-		// (note that this is done via callback, so no periodical update in the loop below)
-		cUdpAdapterRefboxSignals::getInstance();
+        // setup the refbox signal listener by creating the object once (singleton)
+        // (note that this is done via callback, so no periodical update in the loop below)
+        cRtdbAdapterRefboxSignals::getInstance();
 
-		// Create sockets for the intention syncing
-		intentionSync::getInstance();
+        // setup the teamplay interface (e.g. for robot control)
+        //TODO cControlInterfaceROS controlInterfaceROS;
 
-		// setup the teamplay interface (e.g. for robot control)
-		cControlInterfaceROS controlInterfaceROS;
-
-		// Load the (dynamically reconfigurable) configuration parameters
+        // Load the (dynamically reconfigurable) configuration parameters
+        cConfigHeightmaps::getInstance();
         cConfigInterceptBall::getInstance();
-		cConfigRules::getInstance();
-		cConfigShooting::getInstance();
-		cConfigStrategy::getInstance();
+        cConfigRules::getInstance();
+        cConfigShooting::getInstance();
+        cConfigStrategy::getInstance();
 
-		// Load decision trees into memory
-		cDecisionTree::getInstance();
+        // Load decision trees into memory
+        cDecisionTree::getInstance().loadDecisionTrees("");
 
-		// Initialize the gamestate (to neutral stopped)
-		teamplay::gameStateStore::getInstance();
+        // Initialize the gamestate (to neutral stopped)
+        teamplay::gameStateStore::getInstance();
 
-        // Initialize ROS adapter including subscription on worldmodel heartbeat  (the heartbeat will call the  main loop function
-        cRosAdapterWorldModel::getInstance();
+        // Initialize the heightmap store
+        teamplay::heightMapStore::getInstance();
 
-		/* Loop forever */
-		ros::spin();
-	}
-	catch (std::exception &e)
-	{
-        TRACE_ERROR("Caught exception: ") << e.what();
-	}
-	catch (...)
+        /* Loop forever */
+        cRTDBInputAdapter::getInstance().waitForRobotState(&iterateTeamplay);
+    }
+    catch (std::exception &e)
+    {
+        TRACE_ERROR("Caught exception: %s", e.what());
+    }
+    catch (...)
     {
         TRACE_ERROR("Caught unknown exception!");
     }
 }
 
 
-void cb_worldModelUpdated(const worldModel::t_wmInfo::ConstPtr& msg)
+void iterateTeamplay()
 {
-	try
-	{
-        dutyCycleObserver.pokeStart();
-        
-	    cRosAdapterWorldModel::getInstance().update(msg); // call update functions to retrieve latest worldmodel datafeed
+    try
+    {
+        TRACE_SCOPE("iterateTeamplay", "");
+
+        cRtdbAdapterRefboxSignals::getInstance().update(); // check for new refbox command
+        cRTDBInputAdapter::getInstance().getWorldModelData(); // call update functions to retrieve latest worldmodel datafeed
 
         // Refresh gamestate: check whether a transition from "setpiece execute" to neutral playing is allowed
         teamplay::gameStateManager::getInstance().refreshGameState();
 
-		treeEnum gameState = teamplay::gameStateStore::getInstance().getGameState_treeEnum();
+        treeEnum gameState = teamplay::gameStateStore::getInstance().getGameState_treeEnum();
 
-		// Get override state
-		cOverrideState overrideState;
-		cTeamplayControlInterface::getInstance().getOverrideState(overrideState);
+        bool ballLocationKnown = teamplay::ballStore::getInstance().getBall().isLocationKnown();
 
-		// Stimulate gamestate?
-		if (overrideState.active && (overrideState.level == overrideLevelEnum::GAMESTATE))
-		{
-			TRACE_ERROR("trying to override gamestate -- NOT IMPLEMENTED");
-		}
+        // Get override state
+        tpOverrideState overrideState;
+        cTeamplayControlInterface::getInstance().getOverrideState(overrideState);
+        tpOverrideResult overrideResult;
+        overrideResult.status = behTreeReturnEnum::INVALID;
+        overrideResult.id = overrideState.id;
 
-		robotNumber myRobotNr = getRobotNumber();
-
-		// Make sure my robot number exists in the memory stack (before dereferencing)
-		if (robotMemoryStack.find(myRobotNr) == robotMemoryStack.end())
-		{
-		    // Add memory of this robot
-		    robotMemoryStack.insert( std::make_pair(myRobotNr, memoryStackType()) );
-		}
-		if (robotNodes.find(myRobotNr) == robotNodes.end())
-		{
-		    // Add nodes of this robot
-		    robotNodes.insert( std::make_pair(myRobotNr, memoryStackNodes()) );
-		}
-
-		// Determine the role for my teammembers.
-		// My decisions depend on whether some teammembers are present. (e.g., attacker assist)
-
-		// TODO - should we clear this memory before recomputing? Or at the end of an iteration? If a robot drops out, his role will remain in memory.
-		// However, all functions that use "getRobotRole" iterate on active_robots, so that should always be fine.
-
-        // Stash own robot, new style:
-        teamplay::teamMatesStore::getTeamMatesIncludingGoalie().add(teamplay::ownRobotStore::getOwnRobot());
-        teamplay::ownRobotStore::getInstance().stashOwnRobot();
-
-        // Old style:
-        std::vector<robotNumber> active_robots;
-        cWorldModelInterface::getInstance().getActiveRobots(active_robots);
-        std::vector<robotNumber>::const_iterator it;
-        for (it = active_robots.begin(); it != active_robots.end(); ++it)
+        if (overrideState.active)
         {
-            if (*it != myRobotNr)
+            tprintf("override id=%d", overrideState.id);
+        }
+        
+        // Stimulate gamestate?
+        if (overrideState.active && (overrideState.level == tpOverrideLevelEnum::GAMESTATE))
+        {
+            TRACE_ERROR("trying to override gamestate -- NOT IMPLEMENTED");
+            // continue anyway?!
+        }
+
+        robotNumber myRobotNr = getRobotNumber();
+
+        // Make sure my robot number exists in the memory stack (before dereferencing)
+        if (robotMemoryStack.find(myRobotNr) == robotMemoryStack.end())
+        {
+            // Add memory of this robot
+            robotMemoryStack.insert( std::make_pair(myRobotNr, memoryStackType()) );
+        }
+        if (robotNodes.find(myRobotNr) == robotNodes.end())
+        {
+            // Add nodes of this robot
+            robotNodes.insert( std::make_pair(myRobotNr, memoryStackNodes()) );
+        }
+
+        bool ownRobotRoleIsDuplicate = false;
+        if (ownRobotRole != treeEnum::INVALID)
+        {
+            if (!teamplay::role(ownRobotRole).isSafeOnMultipleRobots())
             {
-                std::map<std::string, std::string> params;
-
-                if (robotMemoryStack.find(*it) == robotMemoryStack.end())
+                auto teammates = teamplay::robotStore::getInstance().getAllRobotsExclOwnRobot();
+                for (auto it = teammates.begin(); it != teammates.end(); ++it)
                 {
-                    // Add memory of this robot
-                    robotMemoryStack.insert( std::make_pair(*it, memoryStackType()) );
+                    std::string teammatesRole = cRTDBInputAdapter::getInstance().getRole(it->getNumber());
+                    if (teamplay::role(ownRobotRole).str() == teammatesRole)
+                    {
+                        tprintf("Duplicate role (%s) detected with robot %d", teammatesRole.c_str(), it->getNumber());
+                        ownRobotRoleIsDuplicate = true;
+                    }
                 }
-                if (robotNodes.find(*it) == robotNodes.end())
-                {
-                    // Add nodes of this robot
-                    robotNodes.insert( std::make_pair(*it, memoryStackNodes()) );
-                }
-
-                // Set robot ID at WSF so that any questions asked towards WSF are as if it was this robot asking it, old style:
-                cWorldStateFunctions::getInstance().setRobotID(*it);
-
-                // New style:
-                teamplay::ownRobotStore::getInstance().replaceOwnRobot(teamplay::robot(*it));
-
-                // Stash the "new own robot" in the list of teammates
-                teamplay::teamMatesStore::getInstance().stashRobot(*it);
-
-                // Run teamplay up to determining role of this teammember.
-                cDecisionTree::getInstance().executeTree(gameState, params, robotMemoryStack.at(*it), 0, robotNodes.at(*it));
-
-                // Restore the stashed teammate
-                auto determinedRole = teamplay::ownRobotStore::getOwnRobot().getRole();
-                teamplay::teamMatesStore::getInstance().restoreStashedRobot(determinedRole);
             }
         }
 
-        std::map<std::string, std::string> myMapParams;
+        // Determine the role for my teammembers.
+        // My decisions depend on whether some teammembers are present. (e.g., attacker assist)
+
+        // TODO - should we clear this memory before recomputing? Or at the end of an iteration? If a robot drops out, his role will remain in memory.
+        // However, all functions that use "getRobotRole" iterate on active_robots, so that should always be fine.
+
+        auto teammates = teamplay::robotStore::getInstance().getAllRobotsExclOwnRobot();
+        for (auto it = teammates.begin(); it != teammates.end(); ++it)
+        {
+            std::map<std::string, std::string> params;
+            auto teammate_number = it->getNumber();
+
+            if (robotMemoryStack.find(teammate_number) == robotMemoryStack.end())
+            {
+                // Add memory of this robot
+                robotMemoryStack.insert( std::make_pair(teammate_number, memoryStackType()) );
+            }
+            if (robotNodes.find(teammate_number) == robotNodes.end())
+            {
+                // Add nodes of this robot
+                robotNodes.insert( std::make_pair(teammate_number, memoryStackNodes()) );
+            }
+
+            // Set robot ID at WSF so that any questions asked towards WSF are as if it was this robot asking it, old style:
+            cWorldStateFunctions::getInstance().setRobotID(teammate_number);
+
+            // New style:
+            teamplay::robotStore::getInstance().exchangeOwnRobotWith(teammate_number);
+
+            // Cold start -- make sure the current teammate is in the teammateRoles
+            if (teammateRoles.find(teammate_number) == teammateRoles.end())
+            {
+                teammateRoles.insert( std::make_pair(teammate_number, treeEnum::R_ROBOT_STOP) );
+            }
+
+            // Only re-evaluate the role of this robot when:
+            // - gamestate changes, but not to setpiece execute or:
+            // - ball_location_known changes (find ball or lose sight of ball) during setpiece prepare
+            if (  (gameState != previousGameState && !teamplay::gameStateStore::getInstance().getGameState().isExecuteSetPiece())
+                    || (ballLocationKnown != previousBallLocationKnown && teamplay::gameStateStore::getInstance().getGameState().isPrepareSetPiece())
+                    || ownRobotRoleIsDuplicate
+                )
+            {
+                TRACE("Re-evaluating role for team member r") << std::to_string(teammate_number);
+                // Run teamplay up to determining role of this teammember.
+                cDecisionTree::getInstance().executeTree(gameState, params, robotMemoryStack.at(teammate_number), 0, robotNodes.at(teammate_number));
+
+                teammateRoles[teammate_number] = teamplay::robotStore::getInstance().getOwnRobot().getRole();
+            }
+            else
+            {
+                teamplay::robotStore::getInstance().setOwnRobotRole(teammateRoles[teammate_number]);
+            }
+
+            // Restore the own robot, new style:
+            teamplay::robotStore::getInstance().undoExchange();
+        }
 
         // Restore own robot, old style:
         cWorldStateFunctions::getInstance().setRobotID(myRobotNr);
-
-        // New style:
-        teamplay::ownRobotStore::getInstance().restoreOwnRobot();
-        teamplay::teamMatesStore::getTeamMatesIncludingGoalie().remove(teamplay::ownRobotStore::getOwnRobot().getNumber());
 
         if (overrideState.active)
         {
             // We want to start not on the current gameState, but on the given overrideState tree.
             switch (overrideState.level)
             {
-                case overrideLevelEnum::GAMESTATE:
-                {
-                    gameState = overrideState.gameState;
-                    break;
-                }
-                case overrideLevelEnum::ROLE:
-                {
-                    gameState = overrideState.role;
-                    break;
-                }
-                case overrideLevelEnum::BEHAVIOR:
-                {
-                    gameState = overrideState.behavior;
-                    myMapParams = overrideState.params;
-                    break;
-                }
+                case tpOverrideLevelEnum::GAMESTATE:
+                    {
+                        gameState = overrideState.treeValue;
+                        break;
+                    }
+                case tpOverrideLevelEnum::ROLE:
+                    {
+                        gameState = overrideState.treeValue;
+                        break;
+                    }
+                case tpOverrideLevelEnum::BEHAVIOR:
+                    {
+                        gameState = overrideState.treeValue;
+                        myMapParams = overrideState.params;
+                        break;
+                    }
                 default:
-                {
-                    // Do nothing.
-                    break;
-                }
+                    {
+                        // Do nothing.
+                        break;
+                    }
             }
         }
 
+        // Calculate all heightmaps
+        tprintf("start heightmap precalculation");  // temporary diagnostics
+        teamplay::heightMapStore::getInstance().precalculateAll();
+        tprintf("finish heightmap precalculation");  // temporary diagnostics
+
         // Clear the diagnostics message before executing this iteration of teamplay (remove diag pollution from computing the roles of teammembers)
+        // Add the gamestate to the diagnostics message -- used to check consistency between robots.
         cDecisionTree::getInstance().clearDiagMsg();
 
-        if (overrideState.active && (overrideState.level == overrideLevelEnum::ACTION))
+        if (overrideState.active && (overrideState.level == tpOverrideLevelEnum::ACTION))
         {
+            TRACE_ERROR("trying to override action -- NOT SUPPORTED");
+            /*
             // override action, do not traverse any tree.
-            actionEnum action = overrideState.action;
+            tpActionEnum action = overrideState.action;
             boost::shared_ptr<cAbstractAction> actionObjectPtr = enumToActionMapping.at(action);
             actionObjectPtr->execute(overrideState.params); // ignore output
+            */
         }
-        else if (overrideState.active && (overrideState.level == overrideLevelEnum::DISABLED))
+        else if (overrideState.active && (overrideState.level == tpOverrideLevelEnum::BEHAVIOR))
+        {
+            // execute tree of behavior
+            overrideResult.status = cDecisionTree::getInstance().executeTree(overrideState.treeValue, overrideState.params, robotMemoryStack.at(myRobotNr), 0, robotNodes.at(myRobotNr));
+            tprintf("behavior override result=%s", enum2str(overrideResult.status));
+        }
+        else if (overrideState.active && (overrideState.level == tpOverrideLevelEnum::DISABLED))
         {
             // Do nothing. Teamplay is disabled. :-)
         }
         else
         {
-            // Execute the tree (which will recursively call consecutive trees until an action is reached).
-            cDecisionTree::getInstance().executeTree(gameState, myMapParams, robotMemoryStack.at(myRobotNr), 0, robotNodes.at(myRobotNr));
-        }
+            // Only re-evaluate the role of this robot when:
+            // - gamestate changes, but not to setpiece execute or:
+            // - ball_location_known changes (find ball or lose sight of ball) during setpiece prepare
+            if (  (gameState != previousGameState && !teamplay::gameStateStore::getInstance().getGameState().isExecuteSetPiece())
+                    || (ballLocationKnown != previousBallLocationKnown && teamplay::gameStateStore::getInstance().getGameState().isPrepareSetPiece())
+                    || ownRobotRoleIsDuplicate
+                )
+            {
+                TRACE("Re-evaluating role for robot ") << std::to_string(myRobotNr);
+                TRACE_SCOPE("RE-EVALUATE ROLE", "");
 
-        dutyCycleObserver.pokeEnd();
-	}
-	catch (std::exception &e)
-	{
-		TRACE_ERROR("Caught exception: ") << e.what();
-	}
-	catch (...)
-	{
-	    TRACE_ERROR("Caught unknown exception!");
-	}
+                // Execute the tree (which will recursively call consecutive trees until a role is reached).
+                myMapParams.clear();
+                cDecisionTree::getInstance().executeTree(gameState, myMapParams, robotMemoryStack.at(myRobotNr), 0, robotNodes.at(myRobotNr));
+
+                robotMemoryStack.at(myRobotNr).clear();
+                robotNodes.at(myRobotNr).clear();
+
+                ownRobotRole = teamplay::robotStore::getInstance().getOwnRobot().getRole();
+
+                previousGameState = gameState;
+                previousBallLocationKnown = ballLocationKnown;
+            }
+            else
+            {
+                teamplay::robotStore::getInstance().setOwnRobotRole(ownRobotRole);
+            }
+
+            cDecisionTree::getInstance().diagMsg.trees.push_back( treeEnumToStr(gameState) );
+
+            // Having the role of this robot, execute the role.
+            cDecisionTree::getInstance().executeTree(teamplay::robotStore::getInstance().getOwnRobot().getRole(), myMapParams, robotMemoryStack.at(myRobotNr), 0, robotNodes.at(myRobotNr));
+        }
+        
+        // if applicable, write result back into RTDB for test interfacing
+        if (overrideState.active)
+        {
+            tprintf("writing override result=%s for id=%d", enum2str(overrideResult.status), overrideResult.id);
+            cTeamplayControlInterface::getInstance().setOverrideResult(overrideResult);
+        }
+    }
+    catch (std::exception &e)
+    {
+        tprintf("exception catch 1 %s", e.what());
+        TRACE_ERROR("Caught exception: %s", e.what());
+    }
+    catch (...)
+    {
+        tprintf("exception catch 2");
+        TRACE_ERROR("Caught unknown exception!");
+    }
+
+    WRITE_TRACE;
 }
 
