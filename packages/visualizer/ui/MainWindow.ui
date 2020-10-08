@@ -620,10 +620,30 @@
      </property>
      <addaction name="actionViewTeam"/>
     </widget>
+    <widget class="QMenu" name="menuHeightmap">
+     <property name="title">
+      <string>Heightmap</string>
+     </property>
+     <addaction name="actionHeightmapNone"/>
+     <addaction name="actionHeightmapDefendAttackingOpponent"/>
+     <addaction name="actionHeightmapDribble"/>
+     <addaction name="actionHeightmapMoveToFreeSpot"/>
+     <addaction name="actionHeightmapPositionForOppSetpiece"/>
+     <addaction name="actionHeightmapPositionForOwnSetpiece"/>
+     <addaction name="menuHeightmapRobot"/>
+    </widget>
+    <widget class="QMenu" name="menuHeightmapRobot">
+     <property name="title">
+      <string>Robot</string>
+     </property>
+     <actiongroup name="actionHeightmapRobotGroup">
+     </actiongroup>
+    </widget>
     <addaction name="actionFlip"/>
     <addaction name="actionResetZoomPanRotate"/>
     <addaction name="menuMode"/>
     <addaction name="menuViewTeamRobot"/>
+    <addaction name="menuHeightmap"/>
    </widget>
    <widget class="QMenu" name="menuWindows">
     <property name="title">
@@ -872,6 +892,9 @@
     </property>
    </action>
    <action name="actionViewTeamplayView">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="checkable">
      <bool>true</bool>
     </property>
@@ -895,6 +918,56 @@
      <string>Gaussian Measurements</string>
     </property>
    </action>
+   <actiongroup name="actionHeightmapGroup">
+    <action name="actionHeightmapNone">
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>None</string>
+     </property>
+    </action>
+    <action name="actionHeightmapDefendAttackingOpponent">
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Defend attacking opponent</string>
+     </property>
+    </action>
+    <action name="actionHeightmapDribble">
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Dribble</string>
+     </property>
+    </action>
+    <action name="actionHeightmapMoveToFreeSpot">
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Move to free spot</string>
+     </property>
+    </action>
+    <action name="actionHeightmapPositionForOppSetpiece">
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Position for opponent setpiece</string>
+     </property>
+    </action>
+    <action name="actionHeightmapPositionForOwnSetpiece">
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Position for own setpiece</string>
+     </property>
+    </action>
+   </actiongroup>
   </actiongroup>
   <actiongroup name="actionViewTeamGroup">
    <action name="actionViewTeam">

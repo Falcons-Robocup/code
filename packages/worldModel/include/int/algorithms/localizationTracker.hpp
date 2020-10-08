@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,13 +23,14 @@
 #include <deque>
 #include "position2d.hpp"
 
+#include "int/adapters/configurators/WorldModelConfig.hpp"
 #include "int/types/robot/robotDisplacementType.hpp"
 #include "int/types/robot/robotMeasurementType.hpp"
 
 class localizationTracker
 {
 public:
-    localizationTracker();
+    localizationTracker(const WorldModelConfig* wmConfig);
     ~localizationTracker();
     
     // setters
@@ -68,6 +69,8 @@ private:
     double _lastVisionTimestamp;
     double _lastPokeTimestamp;
     std::deque<double> _recentTimestamps;
+
+    const WorldModelConfig* _wmConfig;
     
 };
 

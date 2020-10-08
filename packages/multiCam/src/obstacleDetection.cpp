@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,334 +9,591 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  ***/ 
- // Copyright 2014-2018 Andre Pool
-// SPDX-License-Identifier: Apache-2.0
+ // Jan Feitsma, december 2019
 
 #include "obstacleDetection.hpp"
-#include <algorithm>
-#ifndef NOROS
-#include "FalconsCommon.h"
-#endif
+
+#include <math.h>
 
 using namespace std;
 using namespace cv;
 
-bool sortObstacleOnRadius(obstacleSt i, obstacleSt j) { return i.radiusLin > j.radiusLin; }
+obstacleDetection::obstacleDetection(cameraReceive *camRecv, configurator *conf, Dewarper *dewarp, preprocessor *prep,
+        size_t type, size_t camIndex) {
+    this->camRecv = camRecv;
+    this->conf = conf;
+    this->dewarp = dewarp;
+    this->prep = prep;
+    this->type = type;
+    this->camIndex = camIndex;
 
-obstacleDetection::obstacleDetection(configurator *conf, preprocessor *prep) {
-	this->conf = conf;
-	this->prep = prep;
+    height = conf->getCameraHeight();
+    width = conf->getCameraWidth();
 
-	exportMutex.lock();
-	// initialize frames so even without running the update method the frames can be used by the viewer
-	obstacleFrame = Mat::zeros(conf->getCameraViewerHeight(), conf->getCameraViewerWidth(), CV_8UC1);
-	obstacleErodeFrame = Mat::zeros(conf->getCameraViewerHeight(), conf->getCameraViewerWidth(), CV_8UC1);
-	obstacleDilateFrame = Mat::zeros(conf->getCameraViewerHeight(), conf->getCameraViewerWidth(), CV_8UC1);
-	obstacleMask = Mat::ones(conf->getCameraViewerHeight(), conf->getCameraViewerWidth(), CV_8UC1);
-	blackFloor = Mat::zeros(conf->getCameraViewerHeight(), conf->getCameraViewerWidth(), CV_8UC1);
+    exportMutex.lock();
+    // initialize frames so even without running the update method the frames can be used by the viewer
+    erodeFrame = Mat::zeros(height, width, CV_8UC1);
+    dilateFrame = Mat::zeros(height, width, CV_8UC1);
+    inRangeFrame = Mat::zeros(height, width, CV_8UC1);
 
-	// make the result list empty so the first request does not get bogus data
-	positions.clear();
-	positionsExport.clear();
-	exportMutex.unlock();
-
-	cameraRadiusObstacleMinPrevious = -1; // be sure the mask is initialized during the first update
-	cameraRadiusObstacleMaxPrevious = -1;
-	centerPointPrevios = Point(-1,-1);
-	busy = false;
+    // make the result list empty so the first request does not get bogus data
+    positions.clear();
+    positionsRemoteViewerExportMutex.unlock();
+    obstaclePointListExportMutex.unlock();
+    exportMutex.unlock();
+    busy = false;
+    printCount = 0;
+    exportMutex.lock();
+    for (size_t ii = 0; ii < height; ii++) { // create vector for the closest obstacle pixels
+        closestPixels.push_back(-1);
+        closestGroups.push_back(-1);
+    }
+    exportMutex.unlock();
 }
 
-// search the frame for obstacles
-// regarding the MSL rules the obstacles should be black
-// first we perform color filtering in the HSV image to search for black objects
-// but we have to filter out some sections:
-// - the robot itself is black, which is visible in the center of the image
-// - furthermore near the edge and outside the mirror some black spots can occur
-// - and last the keeper frame for robot 1 has to filtered out
-// after the filtering the interesting black pixels are now available
-// use the erode and dilate functions to remove noise and group sections (probably one obstacle)
-// The openCv findContours function is used to find the contour points around these groups.
-// Contour points are all points around the object where the angle of the line around the object changes
-// a square has 4 contour points, but the dilate objects in the frame will have a weird figure, so the
-// contain a lot more contour points e.g. 20
-// to determine the angle of the objects, the center of a bounding box is used
-// to determine the distance of the object, the closest contour point is used
-// the size is calculated for the width and height of the bounding box and is used to remove noise (small objects)
-// because the erode and dilate do not work perfectly it is possible that one obstacle is represented
-// by multiple objects
-// those will be merged by merging objects with more or less the same angle
-// the angle of the merged object will be calculated from the merged x and y values
-// the distance to the merged object will be shortest distance of the merged distances
-void obstacleDetection::update( ) {
+void obstacleDetection::keepGoing() {
+    while (1) {
+        update();
+    }
+}
 
+typedef enum closestState {
+    CLOSEST_INIT = 0, CLOSEST_NOTHING, CLOSEST_FOUND, CLOSEST_PENDING, CLOSEST_STORE,
+} closestStateT;
+
+// try to find the closest line for obstacles
+// first get all closest obstacle points
+// then group them together
+// use these groups to split the dilated obstacle image, so the borders are separated
+// and even robot close to each other (but at a different distance)
+// NOTE: the camera is rotated, so the nearby axis the y axis (x = 0)
+void obstacleDetection::findClosestLineGroups() {
+    // run through all lines
+    for (size_t yy = 0; yy < height; yy++) {
+        // get the closest pixel of this particular line
+        // Note: the lock mutex is already set by the caller of this function
+        closestPixels[yy] = -1; // default closest obstacle pixel not found
+        for (size_t xx = 0; xx < width; xx++) {
+            uchar pixelVal = inRangeFrame.at<uchar>(yy, xx);
+            if (pixelVal != 0) {
+                // found the obstacle pixel, store and goto next line
+                closestPixels[yy] = xx;
+                xx = width; // found it, go to next line
+            }
+        }
+    }
+
+    // now group the pixels, each group represents one obstacle
+
+    // initialize the closestGroup vector, meaning the closest pixels are not related to any group
+    for (size_t yy = 0; yy < height; yy++) {
+        closestGroups[yy] = -1; // not assigned to any group
+    }
+
+    ssize_t groupIndex = 0;
+
+    for (ssize_t yy0 = 0; yy0 < height - 1; yy0++) {
+        ssize_t xx0 = closestPixels[yy0];
+        if (xx0 >= 0) {
+            if (closestGroups[yy0] < 0) {
+                // this pixel was not yet related to a group, assign to new group
+                closestGroups[yy0] = groupIndex;
+                groupIndex++; // prepare for next group
+            }
+
+            // determine distance to all of the remaining pixels
+            for (ssize_t yy1 = yy0 + 1; yy1 < height; yy1++) {
+                ssize_t xx1 = closestPixels[yy1];
+                if (xx1 >= 0) {
+                    double delta = sqrt(pow(xx0 - xx1, 2) + pow(yy0 - yy1, 2));
+                    double threshold = (xx1 - 470.0) / -16.0;
+                    if (threshold > 15.0) {
+                        threshold = 15.0;
+                    }
+                    if (threshold < 3.0) {
+                        threshold = 3.0;
+                    }
+                    if (delta < threshold) {
+                        // this obstacle pixels is close to the yy0 obstacle pixels, assign to same group
+                        closestGroups[yy1] = closestGroups[yy0];
+                    }
+                }
+            }
+        }
+    }
+    // now we know for each closest pixel if it belongs to a group and if so to which group
+}
+
+// Search for obstacles in the related camera
+// Pixels are filtered by the Erode, Dilate and the minimum size
+// The dewarp function is used to convert the obstacle (bottom) camera pixels to x,y offset in mm
+// The x,y position is relative to the robot (and camera on that robot)
+// The camera is 90 degrees rotated, so the x mainly represents the distance between the
+// robot and the obstacle, while the y mainly represents the angle
+// An y of 0 means the obstacle is straight for the camera, and negative y means the obstacle
+// is at the left side of the camera and a positive y, the obstacle is at the right
+// side of the robot
+// The x,y Cartesian coordinate converted to Polar coordinates, to make them
+// easier to use as relative to the Robot
+// Note: The radius is measured from the closest yellow pixel, but because of the camera position, this
+// is roughly the same as the center of the obstacle.
+void obstacleDetection::update() {
+// get the pixels of the camera
+    vector<linePointSt> cartesian;
+
+// wait for points, delivered by the receiver
+// Note: one point is actually a line (xBegin,y) and (xEnd,y)
+    if (type == ballType) {
+        printf("ERROR     : obstacleDetection is not intended for ball detection\n");
+        exit(EXIT_FAILURE);
+    } else if (type == ballFarType) {
+        printf("ERROR     : obstacleDetection is not intended for FAR ball detection\n");
+        exit(EXIT_FAILURE);
+    } else if (type == obstacleType) {
+        cartesian = camRecv->getObstaclePointsWait(camIndex);
+    } else {
+        printf("ERROR     : type %zu unknown\n", type);
+        exit( EXIT_FAILURE);
+    }
+
+    obstaclePointListExportMutex.lock();
+    obstaclePointList = cartesian;
+    obstaclePointListExportMutex.unlock();
+
+// construct "image" from received points
+    exportMutex.lock();
+    inRangeFrame = Mat::zeros(height, width, CV_8UC1);
+    for (size_t ii = 0; ii < cartesian.size(); ii++) {
+        int xBegin = cartesian[ii].xBegin;
+        if (xBegin < conf->getBall(type).distanceOffset) {
+            xBegin = conf->getBall(type).distanceOffset;
+        }
+        int xEnd = cartesian[ii].xEnd;
+        int y = cartesian[ii].yBegin;
+        // TODO: use yEnd to create a rectangle instead of line
+        // TODO: set line width back to 1 if all lines are scanned in grabber (now only half the lines used)
+        if (xEnd >= xBegin) {
+            // xEnd can be lower the xBegin because of using the distance offset (mainly required for obstacles because of the camera cover)
+            line(inRangeFrame, Point(xBegin, y), Point(xEnd, y), 255, 2, 0);
+        }
+    }
+
+// mask camera cover to prevent false obstacles (and fake balls)
+// create two triangles that block the fake obstacles
+// left triangle
+    int blockColor = 0;
+    Point blockTriangle[1][3];
+    blockTriangle[0][0] = Point(0, 0);
+    blockTriangle[0][1] = Point(0, conf->getMask().leftCloseby);
+    blockTriangle[0][2] = Point(conf->getMask().leftFarAway, 0);
+
+    const Point* pptLeft[1] = { blockTriangle[0] };
+    int npt[] = { 3 };
+    fillPoly(inRangeFrame, pptLeft, npt, 1, blockColor, 0);
+
+// right triangle
+    blockTriangle[0][0] = Point(0, ROI_HEIGHT - 1);
+    blockTriangle[0][1] = Point(0, conf->getMask().rightCloseby);
+    blockTriangle[0][2] = Point(conf->getMask().rightFarAway, ROI_HEIGHT - 1);
+
+    const Point* pptRight[1] = { blockTriangle[0] };
+    fillPoly(inRangeFrame, pptRight, npt, 1, blockColor, 0);
+
+    // determine obstacle groups from the closest by obstacle pixels
+    if (type == obstacleType) {
+        findClosestLineGroups();
+    }
+
+// typically there are points of 1 pixel wide, likely caused by the demosaicing in the FPGA
+    erode(inRangeFrame, erodeFrame, conf->getBall(type).erode);            // reduce
+// now cluster together what is left
+    dilate(erodeFrame, dilateFrame, conf->getBall(type).dilate);            // expand
+
+    // use the closest by obstacle groups to separate the dilated frame, so the contours will not stretch
+    // over multiple obstacles (e.g. black border)
+    ssize_t groupIndexPrev = closestGroups[0];
+    for (ssize_t yy = 1; yy < height; yy++) {
+        ssize_t groupIndex = closestGroups[yy];
+        // add a blocking line when the group is changing or no obstacle pixel found on line
+        if ((groupIndexPrev != groupIndex) || (groupIndex == -1)) {
+            groupIndexPrev = groupIndex;
+            // make the blocking line wider if the dilate is wider to remove dilated pixels on the other side of the blocking line
+            int lineWidth = conf->getBall(type).dilateSlider;
+            line(dilateFrame, Point(0, yy), Point(width - 1, yy), 0, lineWidth);
+        }
+    }
+
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+
+// determine contours that will encapsulate the clusters
+    Mat tmp;
+    dilateFrame.copyTo(tmp);            // copy dilateFrame otherwise it will be modified by findContours
+    findContours(tmp, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+    positions.clear();            // start with empty list
+    for (size_t ii = 0; ii < contours.size(); ii++) {
+        // make a bounding rectangle around each contour to calculate the distance, center and amount of obstacle pixels
+        Rect rect = boundingRect(contours.at(ii));
+
+        // determine the pixel closest by to the obstacle (radius)
+        int xClosestBy = rect.x;
+
+        // determine the center of the obstacle (azimuth)
+        int yCenter = rect.y + rect.height / 2;
+
+        // determine the amount of obstacle pixels inside the bounding rectangle
+        int pixels = countNonZero(inRangeFrame(rect));
+
+        // convert from Cartesian to Polar
+        int16_t xField = 0;
+        int16_t yField = 0;
+        obstacleSt polar;
+
+        // diagnostics
+        bool attemptedDewarp = false;
+        bool usedDewarp = false;
+        bool enoughPixels = pixels > conf->getBall(type).pixels;
+
+        // the height of an obstacle (robot) is larger then the width
+        // however there are cases when 2 robots are next to each other
+        // so only reject when obstacle is really low
+        // this reject the black border lines
+        if (rect.height > (2 * rect.width)) { // note: camera is rotated
+            enoughPixels = 0;
+        }
+
+        // close by obstacles should have a significant size
+        // TODO: make use of (configurable) curve instead of fixed values
+        if (xClosestBy < 25) {
+            if (pixels < 6000) { // verify with falcons/data/internal/vision/multiCam/r2/cam0_20190705_084029.jpg
+                enoughPixels = 0;
+            } else {
+                // printf("INFO   : cam %zu obstacle x closest %d pixels %d\n", camIndex, xClosestBy, pixels);
+            }
+        } else if (xClosestBy < 50) {
+            if (pixels < 4000) {
+                enoughPixels = 0;
+            } else {
+                // printf("INFO   : cam %zu obstacle x closest %d pixels %d\n", camIndex, xClosestBy, pixels);
+            }
+        } else if (xClosestBy < 100) {
+            if (pixels < 3000) {
+                enoughPixels = 0;
+            }
+        } else if (xClosestBy < 150) {
+            if (pixels < 2000) {
+                enoughPixels = 0;
+            }
+        } else if (xClosestBy < 200) {
+            if (pixels < 1000) {
+                enoughPixels = 0;
+            }
+        }
+        // for farther away the configuration slider is used
+
+        // check if there are enough pixels to qualify for a obstacle
+        if (enoughPixels) {
+            bool valid = false;
+            polar.size = pixels;
+            polar.xClosestBy = xClosestBy;
+            polar.yCenter = yCenter;
+            polar.rect = rect;
+
+            // convert from camera dimensions (pixels) to field dimensions (meters)
+
+            // obstacles are by definition ALWAYS on the floor (z == 0)
+            // so we use dewarp (also used for line points) to determine the relative location of the ball
+            float azimuthDewarp = 0.0;
+            float elevationDewarp = 0.0;
+            float radiusDewarpMm = FLT_MAX;
+            if ((xClosestBy >= 0) && (xClosestBy < (ROI_WIDTH / 2)) && (yCenter < ROI_HEIGHT)) {
+                // TODO: move the dewarp to he camRecv
+                // the correct dewarp already selected on the multiCam level
+                bool ok = dewarp->transformFloor(xClosestBy, yCenter, yField, xField);                // xField and yField result in mm
+
+                if (ok) {
+                    // dewarp is calibrated for the pixel input at center of the line, while the ball and obstacle detection
+                    // provide the first dilate pixel, compensate to provide the center of the ball or obstacle
+                    double xFieldRadiusCorrected = xField + conf->getBall(type).xCenter;                        // in mm
+                    radiusDewarpMm = sqrt(xFieldRadiusCorrected * xFieldRadiusCorrected + yField * yField);        // in mm
+
+                    // the dewarp is calibrated for the lines, the xField is closest by
+                    // TODO: checkout why angle needs to be set negative over here
+                    // would expect the x and y would have the correct polarity and atan2 should then also be correct
+                    azimuthDewarp = -atan2(yField, xFieldRadiusCorrected);
+                    // polar.azimuth = -polar.azimuth - CV_PI/2.0; // new calibration uses inverted angles - 90 degrees
+                    // Note: the obstacleDetection is relative to it's own camera, so adding the 90 degrees per camera's will be performed
+                    // on the higher level
+                    elevationDewarp = atan2(-CAMERA_HEIGHT, 1e-3 * radiusDewarpMm);    // yikes, careful with MM scaling ...
+                    valid = true;
+                } // if xField
+                attemptedDewarp = true;
+            } // if xClosestBy
+
+            // obstacle on the floor
+            polar.azimuth = azimuthDewarp;
+            polar.elevation = elevationDewarp;
+            polar.radius = radiusDewarpMm;
+            usedDewarp = true;
+
+            if (valid) {
+
+                char typeStr[32];
+                sprintf(typeStr, "obstacle");
+
+// azimuth range: horizontal view angle is around -60 to 60 = 120 degrees (of which 90 is used)
+                // however the camera cover of robot 4 generates obstacles with a azimuth of 77 degrees
+#define AZIMUTH 90.0
+                // elevation range: down -80 degrees to 80 degrees = 160 degree, robot 3 is -81 degrees, add some more headroor
+#define ELEVATION 85.0
+
+                if ((polar.azimuth < -(M_PI * AZIMUTH / 180.0)) || (polar.azimuth > (M_PI * AZIMUTH / 180.0))) {
+                    printf(
+                            "ERROR     : cam %zu %s azimuth %5.1f out of range, elevation %5.1f radius %6.0f size %6d x closest by %4d y center %4d y width %4d\n",
+                            camIndex, typeStr, 180.0 * polar.azimuth / M_PI, 180.0 * polar.elevation / M_PI,
+                            polar.radius, polar.size, polar.xClosestBy, polar.yCenter, polar.rect.height);
+                } else if ((polar.elevation < (-M_PI * ELEVATION / 180.0))
+                        || (polar.elevation > ( M_PI * ELEVATION / 180.0))) {
+                    printf(
+                            "ERROR     : cam %zu %s elevation %5.1f out of range, azimuth %5.1f radius %6.0f size %6d x closest by %4d y center %4d y width %4d\n",
+                            camIndex, typeStr, 180.0 * polar.elevation / M_PI, 180.0 * polar.azimuth / M_PI,
+                            polar.radius, polar.size, polar.xClosestBy, polar.yCenter, polar.rect.height);
+                } else if ((polar.xClosestBy < 0) || (polar.xClosestBy >= ROI_WIDTH)) {
+                    printf(
+                            "ERROR     : cam %zu %s x out of range azimuth %5.1f elevation %5.1f radius %6.0f size %6d x closest by %4d y center %4d y width %4d\n",
+                            camIndex, typeStr, 180.0 * polar.azimuth / M_PI, 180.0 * polar.elevation / M_PI,
+                            polar.radius, polar.size, polar.xClosestBy, polar.yCenter, polar.rect.height);
+                } else if ((polar.yCenter < 0) || (polar.yCenter >= ROI_HEIGHT)) {
+                    printf(
+                            "ERROR     : cam %zu %s y out of range azimuth %5.1f elevation %5.1f radius %6.0f size %6d x closest by %4d y center %4d y width %4d\n",
+                            camIndex, typeStr, 180.0 * polar.azimuth / M_PI, 180.0 * polar.elevation / M_PI,
+                            polar.radius, polar.size, polar.xClosestBy, polar.yCenter, polar.rect.height);
+                } else if ((polar.rect.height < 0) || (polar.rect.height > ROI_HEIGHT)) {
+                    printf(
+                            "ERROR     : cam %zu %s rect out of range azimuth %5.1f elevation %5.1f radius %6.0f size %6d x closest by %4d y center %4d y width %4d\n",
+                            camIndex, typeStr, 180.0 * polar.azimuth / M_PI, 180.0 * polar.elevation / M_PI,
+                            polar.radius, polar.size, polar.xClosestBy, polar.yCenter, polar.rect.height);
+                } else if ((polar.size < 0) || (polar.size > (ROI_WIDTH * ROI_HEIGHT))) {
+                    printf(
+                            "ERROR     : cam %zu %s size out of range azimuth %5.1f elevation %5.1f radius %6.0f size %6d x closest by %4d y center %4d y width %4d\n",
+                            camIndex, typeStr, 180.0 * polar.azimuth / M_PI, 180.0 * polar.elevation / M_PI,
+                            polar.radius, polar.size, polar.xClosestBy, polar.yCenter, polar.rect.height);
+                } else if ((polar.radius < 0) || (polar.radius > 20000)) {
+                    printf(
+                            "ERROR     : cam %zu %s radius out of range azimuth %5.1f elevation %5.1f radius %6.0f size %6d x closest by %4d y center %4d y width %4d\n",
+                            camIndex, typeStr, 180.0 * polar.azimuth / M_PI, 180.0 * polar.elevation / M_PI,
+                            polar.radius, polar.size, polar.xClosestBy, polar.yCenter, polar.rect.height);
+                } else {
+                    // each camera should be able to detect 90 degrees (=> -45 degrees to 45 degrees)
+                    // because of tolerances a ball on the 45 degree line might be missed
+                    // with a range of 46 degrees a ball might be reported by 2 camera's
+                    // TODO: add function that removes double balls (or let world model deal with it)
+                    float azimuth = conf->getBall(type).azimuth;
+                    if ((polar.azimuth >= -azimuth) && (polar.azimuth <= azimuth)) {
+                        positions.push_back(polar);
 #ifdef NONO
-	// check if the slider of the center point has been changed
-	if( centerPointPrevios != conf->getCenterPoint() ||
-			cameraRadiusObstacleMaxPrevious != conf->getCameraRadiusObstacleMin() ||
-			cameraRadiusObstacleMinPrevious != conf->getCameraRadiusObstacleMax() ) {
-		centerPointPrevios = conf->getCenterPoint();
-		cameraRadiusObstacleMinPrevious = conf->getCameraRadiusObstacleMin();
-		cameraRadiusObstacleMaxPrevious = conf->getCameraRadiusObstacleMax();
-
-		// the edge of the mirror and outside the mirror dark objects might appear, update mask to update these areas
-		obstacleMask = Mat::ones( conf->getViewPixels(), conf->getViewPixels(), CV_8UC1 ); // add all pixels to the mask (all pixels invalid)
-		// remove all pixels within the edge of the mirror from the mask (make all these pixels valid again)
-		circle( obstacleMask, conf->getCenterPoint(), conf->getCameraRadiusObstacleMax(), 0, -1, 8 , 0 );
-
-		// the robot itself is black, so also seen as obstacle, add it to the exclude area for the obstacles
-		circle( obstacleMask, conf->getCenterPoint(), conf->getCameraRadiusObstacleMin(), 1, -1, 8 , 0 ); // add inner pixel to the mask (invalidate)
-
-		// the frame of the keeper is black, so also seen as obstacle, add these pixels to the mask (invalidate)
-		if( robotId == 1 ) { // only for keeper
-			int x = conf->getCenterPoint().x;
-			int y = conf->getCenterPoint().y;
-			rectangle( obstacleMask, Point(x-120,y-30), Point(x+120,y+20), 1, -1, 8 , 0); // mask mounting bracket keeper frame
-			rectangle( obstacleMask, Point(0,y-20), Point(conf->getViewPixels(),y+15), 1, -1, 8 , 0); // keeper frame
-			rectangle( obstacleMask, Point(conf->getViewPixels()-100,y-35), Point(conf->getViewPixels(),y-20), 1, -1, 8 , 0); // frame at right side (not 100% x-axis)
-			rectangle( obstacleMask, Point(0,y-25), Point(50,y-20), 1, -1, 8 , 0); // frame at left side (not 100% x-axis)
-		}
-		// now we have a complete mask for objects that has ones for pixels that should be used and zeros for pixels that should be ignored
-	}
-
-	Point center = conf->getCenterPoint();
-	Rect objectBoundingRectangle = Rect(0, 0, 0, 0);
-	vector<vector<Point> > contours;
-	vector<Vec4i> hierarchy;
-	vector<obstacleSt> allObst;
-
-	// start with magic, first filter out the black pixels
-	Scalar obstacleMin(conf->getObstacle().hue.min, conf->getObstacle().sat.min, conf->getObstacle().val.min);
-	Scalar obstacleMax(conf->getObstacle().hue.max, conf->getObstacle().sat.max, conf->getObstacle().val.max);
-	exportMutex.lock();
-	inRange(prep->getHsv(), obstacleMin, obstacleMax, obstacleFrame); // keep only the black pixels
-
-	// now apply the mask to invalidate all pixels that are not relevant
-	blackFloor.copyTo( obstacleFrame, obstacleMask );
-
-	// remove the noise and group the black pixels
-	erode(obstacleFrame, obstacleErodeFrame, conf->getObstacle().erode);
-	dilate(obstacleErodeFrame, obstacleDilateFrame, conf->getObstacle().dilate);
-	exportMutex.unlock();
-
-	// search for the contours in the grouped black pixels
-	Mat contourFrame = obstacleDilateFrame.clone(); // findCountours function modifies input frame !
-	findContours(contourFrame, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE); // retrieves external contours
-
-	// search:
-	// get for each object the angle, distance and x,y values
-	for (uint ii = 0; ii < contours.size(); ii++) {
-		// make new obstacle to gather all information
-		obstacleSt obst;
-
-		// make a bounding rectangle around each contour to calculate the angle
-		objectBoundingRectangle = boundingRect( contours.at(ii) );
-
-		// get x and y values related to robot center
-		obst.xLeft = objectBoundingRectangle.x - center.x;
-		obst.xRight = objectBoundingRectangle.x + objectBoundingRectangle.width - center.x;
-		obst.yTop = objectBoundingRectangle.y - center.y;
-		obst.yBottom = objectBoundingRectangle.y + objectBoundingRectangle.height - center.y;
-		obst.size =  contourArea(contours.at(ii));
-
-		// the obstacle can be large, for best distance indication, use the nearest point to the obstacle
-		// get this nearest point from the contours
-		double radiusTan = conf->getViewPixels(); // initialize with number that will be out of range
-		for (uint kk = 0; kk < contours.at(ii).size(); kk++) {
-			int xRadius = contours.at(ii).at(kk).x - center.x;
-			int yRadius = contours.at(ii).at(kk).y - center.y;
-			double radius = sqrt( pow(xRadius,2) + pow(yRadius,2) );
-			if( radius < radiusTan ) { radiusTan = radius; }
-		}
-		obst.radiusTan = radiusTan; // distance in round viewer pixels from center robot to nearest edge obstacle
-		obst.radiusLin = conf->calcDeWarp( obst.radiusTan ); // distance in rectangular field pixels (1 pixel = 2cm) from center robot to neareset edge obstacle
-
-		// calculate angle of this object
-		// this angle is only used for merging, the final angle is calculated from the merged x and y values
-		double x = ( obst.xLeft + obst.xRight ) / 2; // get center x of this object
-		double y = ( obst.yTop + obst.yBottom) / 2; // get center y of this object
-
-		// start at y-axis (= 0 degrees = shooter) instead of x-axis in distorted image
-		double angle = ( 360.0f / (2.0f * CV_PI) ) * atan(-x/-y); // upper part floor is lower y
-		if( y >= 0.0f ) { angle = angle + 180.0f; } // atan has range of -90 to 90 degrees
-		if( angle < 0.0f ) { angle = 360.0f + angle; } // correct the -90 to 0 degrees to 270 to 360 degrees
-		obst.angle = angle;
-
-		allObst.push_back(obst);
-	}
-
-	// merge:
-	// the optical system causes an obstacle to be stretched, generating a very high obstacle
-	// when the obstacle is not fully black or there are reflections, the erode dilate functions
-	// might not stitch all pixels together, so the findContours will create multiple objects
-	// of this single obstacle
-	// however we know if these objects are more or less at the same angle, they will be of the
-	// same obstacle
-	// try to combine objects that are roughly on the same angle
-	for (uint ii = 0; ii < allObst.size(); ii++)
-	{
-		for (uint jj = 0; jj < allObst.size(); jj++)
-		{
-			if( ii != jj && allObst[ii].size > 0 && allObst[jj].size > 0 ) {
-				float angleIi = allObst[ii].angle;
-				float angleJj = allObst[jj].angle;
-				float angleDiff = (abs)(angleJj - angleIi);
-				// APOX todo: check if 8 degrees is a good value to decide if the objects belong to the same obstacle
-				if( angleDiff < 8.0f ) {
-					// merge ii and jj
-					allObst[ii].xLeft = min(allObst[ii].xLeft, allObst[jj].xLeft);
-					allObst[ii].xRight = max(allObst[ii].xRight, allObst[jj].xRight);
-					allObst[ii].yTop = min(allObst[ii].yTop, allObst[jj].yTop);
-					allObst[ii].yBottom = max(allObst[ii].yBottom, allObst[jj].yBottom);
-					// we want to keep the closest radius to obstacle
-					allObst[ii].radiusTan = min(allObst[ii].radiusTan, allObst[jj].radiusTan);
-					allObst[ii].radiusLin = min(allObst[ii].radiusLin, allObst[jj].radiusLin);
-					allObst[ii].size = allObst[ii].size + allObst[jj].size;
-					allObst[ii].angle = (allObst[ii].angle + allObst[jj].angle)/2.0f;
-
-					// jj should not be used anymore because it's data has been merged with ii
-					allObst[jj].size = 0;
-				}
-			}
-		}
-	}
-
-	// cleanup list of obstacles:
-	positions.clear(); // start with empty list
-	bool notify = false;
-	// store all values that are good enough for usage by Ros or Viewer
-	// the obstacle might have been merged from multiple objects, for accuracy recalculate the angle from the merged x,y values
-	for (uint ii = 0; ii < allObst.size(); ii++)
-	{
-		if( allObst[ii].size > 0 )
-		{
-			// re-calculate angle of this obstacle
-			double x = (allObst[ii].xLeft + allObst[ii].xRight)/2; // get center x of this obstacle
-			double y = (allObst[ii].yTop + allObst[ii].yBottom)/2; // get center y of this obstacle
-
-			// start at y-axis (= 0 degrees = shooter) instead of x-axis in distorted image
-			double angle = ( 360.0f / (2.0f * CV_PI) ) * atan(-x/-y); // upper part floor is lower y
-			if( y >= 0.0f ) { angle = angle + 180.0f; } // atan has range of -90 to 90 degrees
-			if( angle < 0.0f ) { angle = 360.0f + angle; } // correct the -90 to 0 degrees to 270 to 360 degrees
-
-			allObst[ii].angle = angle; // store the new angle
-			positions.push_back(allObst[ii]);
-
-			// Sort the obstacles on radius
-			std::sort(positions.begin(), positions.end(), sortObstacleOnRadius);
-
-			// only if one or more obstacles are large enough send information to ros
-			if( allObst[ii].size > conf->getObstacle().size )
-			{
-				notify = true;
-			}
-#ifndef NOROS
-			else
-			{
-				TRACE("Found obstacle with insufficient size %d", allObst[ii].size);
-			}
+                    } else {
+                        printf("WARNING : cam %zu obstacle angle of %.0f degrees should be covered by other camera\n",
+                                    camIndex, 180.0 * polar.azimuth / M_PI);
 #endif
-		}
-	}
-	exportMutex.lock();
-	positionsExport = positions;
-	exportMutex.unlock();
+                    } // if polar.
+                } // valid
+            } // if enoughPixels
+        } // for contours.size()
 
-	if( notify ) {
-		// Notify new ball position
-		notifyNewPos();
-	}
-#endif
-	busy = false;
+        // containment for compile warnings about not used diagnostics variables
+        (void) attemptedDewarp;
+        (void) usedDewarp;
+
+    }
+
+// sort on size
+    sort(positions.begin(), positions.end());
+    positionsRemoteViewerExportMutex.lock();
+    positionsRemoteViewer = positions;
+    positionsRemoteViewerExportMutex.unlock();
+    exportMutex.unlock();
+
+    if (positions.size() > 0) {
+// Notify new ball position
+        notifyNewPos();
+    }
+    busy = false;
+
 }
 
 vector<obstacleSt> obstacleDetection::getPositions() {
-	exportMutex.lock();
-	vector<obstacleSt> retVal = positionsExport;
-	exportMutex.unlock();
-	return retVal;
+    exportMutex.lock();
+    std::vector<obstacleSt> retVal = positions;
+    exportMutex.unlock();
+    return retVal;
+}
+
+vector<ssize_t> obstacleDetection::getClosestPixels() {
+    exportMutex.lock();
+    std::vector<ssize_t> retVal = closestPixels;
+    exportMutex.unlock();
+    return retVal;
+}
+
+vector<ssize_t> obstacleDetection::getClosestGroups() {
+    exportMutex.lock();
+    std::vector<ssize_t> retVal = closestGroups;
+    exportMutex.unlock();
+    return retVal;
+}
+
+vector<obstacleSt> obstacleDetection::getAndClearPositionsRemoteViewer() {
+    positionsRemoteViewerExportMutex.lock();
+    std::vector<obstacleSt> retVal = positionsRemoteViewer;
+    positionsRemoteViewer.clear();
+    positionsRemoteViewerExportMutex.unlock();
+    return retVal;
 }
 
 vector<obstacleSt> obstacleDetection::getPositionsExport() {
-	vector<obstacleSt> retVal = getPositions();
-	for( size_t ii = 0; ii < retVal.size(); ii++ ) {
-		double tmpAngle = retVal[ii].angle + conf->getExportOffset().rzObstacle;
-		// normalize to prevent issues when running of range for remote viewer export
-		retVal[ii].angle = fmod(360.0 + tmpAngle, 360.0);
-	}
-	return retVal;
+    vector<obstacleSt> retVal = getPositions();
+    for (size_t ii = 0; ii < retVal.size(); ii++) {
+        double tmpAzimuth = retVal[ii].azimuth; // TODO: checkout if this is still needed, and if, convert to radians + conf->getExportOffset().rzBall;
+// normalize to prevent issues when running of range for remote viewer export
+        retVal[ii].azimuth = fmod(2 * CV_PI + tmpAzimuth, 2 * CV_PI);
+        retVal[ii].elevation = retVal[ii].elevation; // no fmod, kthxbye
+    }
+    return retVal;
 }
 
-cv::Mat obstacleDetection::getObstacle() {
-	exportMutex.lock();
-	cv::Mat retVal = obstacleFrame.clone();
-	exportMutex.unlock();
-	return retVal;
+cv::Mat obstacleDetection::getDilateFrame() {
+    exportMutex.lock();
+    cv::Mat retVal = dilateFrame.clone();
+    exportMutex.unlock();
+    return retVal;
 }
 
-cv::Mat obstacleDetection::getObstacleErode() {
-	exportMutex.lock();
-	cv::Mat retVal = obstacleErodeFrame.clone();
-	exportMutex.unlock();
-	return retVal;
-}
-cv::Mat obstacleDetection::getObstacleDilate() {
-	exportMutex.lock();
-	cv::Mat retVal = obstacleDilateFrame.clone();
-	exportMutex.unlock();
-	return retVal;
+cv::Mat obstacleDetection::getErodeFrame() {
+    exportMutex.lock();
+    cv::Mat retVal = erodeFrame.clone();
+    exportMutex.unlock();
+    return retVal;
 }
 
-// below only for interfacing with Ros, no obstacle detection functionality
+cv::Mat obstacleDetection::getInRangeFrame() {
+    exportMutex.lock();
+    cv::Mat retVal = inRangeFrame.clone();
+    exportMutex.unlock();
+    return retVal;
+}
 
-void obstacleDetection::notifyNewPos()
-{
+size_t obstacleDetection::getAmount() {
+    size_t amount = 0;
+    exportMutex.lock();
+    for (size_t ii = 0; ii < positions.size(); ii++) {
+        if (positions[ii].size >= conf->getBall(type).pixels) {
+            amount++;
+        }
+    }
+    exportMutex.unlock();
+    return amount;
+}
+
+void obstacleDetection::notifyNewPos() {
+    vector<obstacleSt> exportPos = getPositionsExport();
+
 #ifndef NOROS
-	std::vector<obstaclePositionType> obstacles;
+    if (type != obstacleType) {
+        std::vector<ballPositionType> balls;
 
-	vector<obstacleSt> exportPos = getPositionsExport( );
+        for (uint ii = 0; ii < exportPos.size(); ii++) {
+            double size = exportPos[ii].size;
+            if (size > conf->getBall(type).pixels) {
+                // Note: the world model needs to discard balls that are outside the field e.g. yellow something around the field
+                // this is depending on the final position, which is determined by the world model instead of the localization on this robot
+                double angleRad = exportPos[ii].azimuth;// counter clockwise angle between this robot shooter and the obstacle
 
-	for (uint ii = 0; ii < exportPos.size(); ii++)
-	{
-		double size = exportPos[ii].size;
-		// Note: the world model needs to discard obstacles that are outside the field e.g. the black borders around the floor
-		// this is depending on the final position, which is determined by the world model instead of the localization on this robot
-		if( size > conf->getBall(obstacleType).pixels )  {
-			double angleDeg =  fmod(exportPos[ii].angle, 360.0);
-			double angleRad = (2.0f * M_PI / 360.0f) * angleDeg; // counter clockwise angle between this robot shooter and the obstacle
-			double radiusLin = 0.02f * exportPos[ii].radiusLin; // from center of this robot to closest edge of obstacle, to get the center of the obstacle add obstacle radius e.g. 0.25 meter (TODO!)
-			double score = size/15000.0f;
-			// APOX todo: set to magenta or cyan when detected
-			int color = 0; // 0 is black
-			if( score > 1.0 ) { score = 1.0; }
-			// cout << "obstacle index " << ii << " size " << size << " score " << score << " angle degrees " << angleDeg << " angle radians " << angleRad << " radiusLin " << radiusLin << endl;
+                // cam 1 is left of cam 0 = counterclockwise
+                angleRad += camIndex * CV_PI / 2.0;            // camIndex * 90 degrees, every camera is 90 degrees rotated
 
-			obstaclePositionType obstacle;
+                // from center of this robot to closest edge of ball, there is no need to add a ballRadius to radius\ (ball edge) because in field view the radius is very close to the center
+                // exportPos[ii].radius is in mm, while Ros expects meters
+                double radius = 0.001f * exportPos[ii].radius;
+                double score = size / 100.0f;
+                if (score > 1.0) {
+                    score = 1.0;
+                }
+                // cout << "ball index " << ii << " size " << size << " score " << score << " << " angle radians " << angleRad << " radius " << radius << endl;
 
-			obstacle.setAngle(angleRad);
-			obstacle.setRadius(radiusLin);
-			obstacle.setConfidence(score);
-			obstacle.setColor(color);
+                ballPositionType ball;
 
-			obstacles.push_back(obstacle);
-		}
-	}
+                ball.setAngle(angleRad);
+                ball.setRadius(radius);
+                ball.setConfidence(score);
+                ball.setElevation(exportPos[ii].elevation);
+                ball.setBallType(type);
 
-	for (vector<observer*>::const_iterator iter = vecObservers.begin(); iter != vecObservers.end(); ++iter)
-	{
-		if (*iter != NULL)
-		{
-			(*iter)->update_own_obstacle_position(obstacles, conf->getObstacleLatencyOffset());
-		}
-	}
+                balls.push_back(ball);
+            }
+        }
+
+        for (vector<observer*>::const_iterator iter = vecObservers.begin(); iter != vecObservers.end(); ++iter) {
+            if (*iter != NULL) {
+                (*iter)->update_own_ball_position(balls, conf->getBallLatencyOffset());
+            }
+        }
+    } else {
+        std::vector<obstaclePositionType> obstacles;
+
+        for (uint ii = 0; ii < exportPos.size(); ii++) {
+            double size = exportPos[ii].size;
+            if (size > conf->getBall(type).pixels) { // type is in this case obstacle
+                // Note: the world model needs to discard balls that are outside the field e.g. yellow something around the field
+                // this is depending on the final position, which is determined by the world model instead of the localization on this robot
+                double angleRad = exportPos[ii].azimuth;// counter clockwise angle between this robot shooter and the obstacle
+
+                // cam 1 is left of cam 0 = counterclockwise
+                angleRad += camIndex * CV_PI / 2.0;            // camIndex * 90 degrees, every camera is 90 degrees rotated
+
+                // from center of this robot to closest edge of ball, there is no need to add a ballRadius to radius (ball edge) because in field view the radius is very close to the center
+                // exportPos[ii].radius is in mm, while Ros expects meters
+                double radius = 0.001f * exportPos[ii].radius;
+                double score = size / 1000.0f;
+                if (score > 1.0) {
+                    score = 1.0;
+                }
+                // cout << "ball index " << ii << " size " << size << " score " << score << " << " angle radians " << angleRad << " radius " << radius << endl;
+
+                obstaclePositionType obstacle;
+
+                obstacle.setAngle(angleRad);
+                obstacle.setRadius(radius);
+                obstacle.setConfidence(score);
+                int color = 0;                    // 0 is black
+                obstacle.setColor(color);
+
+                obstacles.push_back(obstacle);
+            }
+        }
+
+        for (vector<observer*>::const_iterator iter = vecObservers.begin(); iter != vecObservers.end(); ++iter) {
+            if (*iter != NULL) {
+                (*iter)->update_own_obstacle_position(obstacles, conf->getObstacleLatencyOffset());
+            }
+        }
+    }
+
 #endif
 }
 
-void obstacleDetection::attach(observer *observer)
-{
+void obstacleDetection::attach(observer *observer) {
     vecObservers.push_back(observer);
 }
 
-void obstacleDetection::detach(observer *observer)
-{
+void obstacleDetection::detach(observer *observer) {
     vecObservers.erase(std::remove(vecObservers.begin(), vecObservers.end(), observer), vecObservers.end());
+}
+
+std::vector<linePointSt> obstacleDetection::getObstaclePoints() {
+    obstaclePointListExportMutex.lock();
+    std::vector<linePointSt> retVal = obstaclePointList;
+    obstaclePointListExportMutex.unlock();
+    return retVal;
 }

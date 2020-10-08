@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -55,8 +55,9 @@
 #include "robotFloor.hpp"
 #include "fieldLut.hpp"
 
+#include "falconsCommonDirs.hpp" // pathToCodeRepo()
+
 #include <unistd.h>
-#include <pwd.h>
 
 using namespace std;
 using namespace cv;
@@ -66,10 +67,7 @@ robotFloor::robotFloor(	configurator *conf ) {
 	calibrateMode = false;
 	blurPixels = 0;
 
-	struct passwd *pw = getpwuid(getuid());
-	std::string configFile("");
-	configFile.append(pw->pw_dir);
-	configFile.append("/falcons/code/packages/multiCam/multiCam.yaml");
+	std::string configFile = pathToConfig() + "/multiCam.yaml";
 	printf("INFO      : robot floor uses config file: %s\n", configFile.c_str());
 	FileStorage fs(configFile, FileStorage::READ);
 
@@ -128,12 +126,6 @@ robotFloor::robotFloor(	configurator *conf ) {
 	cout << "robotFloor: A " << A << " B " << B << " C " << C << " D " << D << " E " << E << " F " << F << " G " << G << " H " << H << " I " << I << " J " << J << " K " << K << endl;
 	cout << "robotFloor: goal line border " << goalLineBorder << " touch line border " << touchLineBorder << " line thickness " << lineThickness << " meters to pixels " << metersToPixels << endl;
 
-	floorSizeFile.open("floorSize.yaml");
-	floorSizeFile << "%YAML:1.0" << endl;
-	floorSizeFile << "# This file is created/overwritten each time multiCam is started." << endl;
-	floorSizeFile << "# It is mainly for debugging." << endl;
-	floorSizeFile << "# The information is calculated from: multiCam.yaml:dimensions" << endl;
-
 	floorSize.xLeft = 0;
 	floorSize.xRight = A + 2 * goalLineBorder;
 	floorSize.yTop = 0;
@@ -168,6 +160,13 @@ robotFloor::robotFloor(	configurator *conf ) {
 	cornerSize.arcLineThickness = round(lineThickness); // APOX todo: checkout why this variable is required
 
 	centerArcRadius = H/2;
+
+    /*
+	floorSizeFile.open("floorSize.yaml");
+	floorSizeFile << "%YAML:1.0" << endl;
+	floorSizeFile << "# This file is created/overwritten each time multiCam is started." << endl;
+	floorSizeFile << "# It is mainly for debugging." << endl;
+	floorSizeFile << "# The information is calculated from: multiCam.yaml:dimensions" << endl;
 
 	floorSizeFile << endl << "floor:" << endl;
 	floorSizeFile << "   xFloorLeft : " << floorSize.xLeft << endl;
@@ -208,6 +207,7 @@ robotFloor::robotFloor(	configurator *conf ) {
 	floorSizeFile << "   cornerArcLineThickness : " << cornerSize.arcLineThickness << endl;
 	floorSizeFile << "   centerArcRadius : " << centerArcRadius << endl; // APOX todo: this one is not part of the corner data
 	floorSizeFile.close();
+	*/
 
 	createNormal(); // use the just collected dimensions to create floor
 

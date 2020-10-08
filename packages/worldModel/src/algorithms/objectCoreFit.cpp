@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,7 +17,7 @@
  */
 
 #include "int/algorithms/objectCoreFit.hpp"
-#include "FalconsCommon.h" // from package common
+#include "falconsCommon.hpp" // from package common
 #include "linalgcv.hpp" // from package geometry
 #include "cDiagnostics.hpp" // from package diagnostics
 
@@ -94,7 +94,7 @@ void objectCoreFitTriang(
     // inputs
     std::vector<objectMeasurementCache> const &measurements,
     double t, 
-    objectFitConfig config,
+    ConfigWorldModelObjectFit config,
     // outputs
     objectResultType &objectResult,
     float &residual

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -37,6 +37,7 @@ void SettingsDialog::accept()
     settings.setValue(showPathPlanningSetting, showPathPlanning->isChecked());
     settings.setValue(teamColorSetting, teamColorComboBox->currentText());
     settings.setValue(playingFieldSetting, playingFieldComboBox->currentText());
+    settings.setValue(ttaConfigSetting, ttaConfigComboBox->currentText());
 
     // Persist settings
     settings.sync();

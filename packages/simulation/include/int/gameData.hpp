@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,9 +20,11 @@
 #define GAMEDATA_HPP_
 
 #include <map>
+#include <vector>
 #include "boost/optional.hpp"
 
 #include "ball.hpp"
+#include "obstacle.hpp"
 #include "teamData.hpp"
 #include "teamID.hpp"
 
@@ -40,6 +42,7 @@ public:
     typedef std::map<TeamID, TeamData> Team;
     Team team;
     Ball ball;
+    std::vector<Obstacle> nonRobotObstacles; // extra/artificial (handy for testing), visible to both teams
 };
 
 #endif /* GAMEDATA_HPP_ */

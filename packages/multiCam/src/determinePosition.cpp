@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -263,8 +263,8 @@ void determinePosition::pointsToPosition() {
         // start the searches in different threads
         for (uint ii = 0; ii < locSize; ii++) {
             threads[ii].start = locList[ii];
-            if (pthread_create(&(threads[ii].thread), NULL, processOneLocation, &(threads[ii].thread))) {
-                cout << "WolrdSensing Determine Position Error creating threads" << endl;
+            if (pthread_create(&(threads[ii].thread), NULL, processOneLocation, &(threads[ii]))) {
+                cout << "WorldSensing Determine Position Error creating threads" << endl;
                 exit(0);
             }
         }

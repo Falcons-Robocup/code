@@ -1,0 +1,808 @@
+<xml xmlns="https://developers.google.com/blockly/xml"><block type="factory_base" id="W/6JFoBoLZc]`5o9ZOTr" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="LEFT"/>
+    <field name="NAME">field position</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">LEFT</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="jMs.@QnLF=;|q@PzZ?zt">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="W_gxzLNKu(~uG;t.SkdS">
+            <field name="TEXT">field position</field>
+            <next>
+              <block type="field_dropdown" id="F]pKs(x9:fLW%n9(o$}9">
+                <mutation options="[&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;]"/>
+                <field name="FIELDNAME">poi</field>
+                <field name="USER0">Field Center</field>
+                <field name="CPU0">P_CENTER</field>
+                <field name="USER1">Field Center Left</field>
+                <field name="CPU1">P_CENTER_LEFT</field>
+                <field name="USER2">Field Center Right</field>
+                <field name="CPU2">P_CENTER_RIGHT</field>
+                <field name="USER3">Field Circle Left</field>
+                <field name="CPU3">P_CIRCLE_INTERSECT_LINE_LEFT</field>
+                <field name="USER4">Field Circle Right</field>
+                <field name="CPU4">P_CIRCLE_INTERSECT_LINE_RIGHT</field>
+                <field name="USER5">Own Half Safety Border Corner Left</field>
+                <field name="CPU5">P_OWN_SB_CORNER_LEFT</field>
+                <field name="USER6">Own Half Safety Border Corner Right</field>
+                <field name="CPU6">P_OWN_SB_CORNER_RIGHT</field>
+                <field name="USER7">Opponent Half Safety Border Corner Left</field>
+                <field name="CPU7">P_OPP_SB_CORNER_LEFT</field>
+                <field name="USER8">Opponent Half Safety Border Corner Right</field>
+                <field name="CPU8">P_OPP_SB_CORNER_RIGHT</field>
+                <field name="USER9">Own Half Corner Left</field>
+                <field name="CPU9">P_OWN_CORNER_LEFT</field>
+                <field name="USER10">Own Half Corner Right</field>
+                <field name="CPU10">P_OWN_CORNER_RIGHT</field>
+                <field name="USER11">Opponent Half Corner Left</field>
+                <field name="CPU11">P_OPP_CORNER_LEFT</field>
+                <field name="USER12">Opponent Half Corner Right</field>
+                <field name="CPU12">P_OPP_CORNER_RIGHT</field>
+                <field name="USER13">Own Half Penalty Spot</field>
+                <field name="CPU13">P_OWN_PENALTY_SPOT</field>
+                <field name="USER14">Opponent Half Penalty Spot</field>
+                <field name="CPU14">P_OPP_PENALTY_SPOT</field>
+                <field name="USER15">Own Goalpost Left</field>
+                <field name="CPU15">P_OWN_GOALPOST_LEFT</field>
+                <field name="USER16">Own Goalpost Right</field>
+                <field name="CPU16">P_OWN_GOALPOST_RIGHT</field>
+                <field name="USER17">Own Goal Backside Left</field>
+                <field name="CPU17">P_OWN_GOALPOST_LEFTBACK</field>
+                <field name="USER18">Own Goal Backside Right</field>
+                <field name="CPU18">P_OWN_GOALPOST_RIGHTBACK</field>
+                <field name="USER19">Own Goalline Center</field>
+                <field name="CPU19">P_OWN_GOALLINE_CENTER</field>
+                <field name="USER20">Opponent Goalpost Left</field>
+                <field name="CPU20">P_OPP_GOALPOST_LEFT</field>
+                <field name="USER21">Opponent Goalpost Right</field>
+                <field name="CPU21">P_OPP_GOALPOST_RIGHT</field>
+                <field name="USER22">Opponent Goal Backside Left</field>
+                <field name="CPU22">P_OPP_GOALPOST_LEFTBACK</field>
+                <field name="USER23">Opponent Goal Backside Right</field>
+                <field name="CPU23">P_OPP_GOALPOST_RIGHTBACK</field>
+                <field name="USER24">Opponent Goalline Center</field>
+                <field name="CPU24">P_OPP_GOALLINE_CENTER</field>
+                <field name="USER25">Own Half, Sideline Left, Middle</field>
+                <field name="CPU25">P_OWN_MID_LEFT</field>
+                <field name="USER26">Own Half, Sideline Right, Middle</field>
+                <field name="CPU26">P_OWN_MID_RIGHT</field>
+                <field name="USER27">Own Half, Center</field>
+                <field name="CPU27">P_OWN_MID_CENTER</field>
+                <field name="USER28">Own Half, Goal Area, Inner Left Corner</field>
+                <field name="CPU28">P_OWN_GOALAREA_CORNER_LEFT</field>
+                <field name="USER29">Own Half, Goal Area, Inner Right Corner</field>
+                <field name="CPU29">P_OWN_GOALAREA_CORNER_RIGHT</field>
+                <field name="USER30">Own Half, Goal Area, Outer Left Corner</field>
+                <field name="CPU30">P_OWN_GOALAREA_GOALLINE_LEFT</field>
+                <field name="USER31">Own Half, Goal Area, Outer Right Corner</field>
+                <field name="CPU31">P_OWN_GOALAREA_GOALLINE_RIGHT</field>
+                <field name="USER32">Own Half, Penalty Area, Inner Left Corner</field>
+                <field name="CPU32">P_OWN_PENALTYAREA_CORNER_LEFT</field>
+                <field name="USER33">Own Half, Penalty Area, Inner Right Corner</field>
+                <field name="CPU33">P_OWN_PENALTYAREA_CORNER_RIGHT</field>
+                <field name="USER34">Own Half, Penalty Area, Outer Left Corner</field>
+                <field name="CPU34">P_OWN_PENALTYAREA_GOALLINE_LEFT</field>
+                <field name="USER35">Own Half, Penalty Area, Outer Right Corner</field>
+                <field name="CPU35">P_OWN_PENALTYAREA_GOALLINE_RIGHT</field>
+                <field name="USER36">Opponent Half, Sideline Left, Middle</field>
+                <field name="CPU36">P_OPP_MID_LEFT</field>
+                <field name="USER37">Opponent Half, Sideline Right, Middle</field>
+                <field name="CPU37">P_OPP_MID_RIGHT</field>
+                <field name="USER38">Opponent Half, Center</field>
+                <field name="CPU38">P_OPP_MID_CENTER</field>
+                <field name="USER39">Opponent Half, Goal Area, Inner Left Corner</field>
+                <field name="CPU39">P_OPP_GOALAREA_CORNER_LEFT</field>
+                <field name="USER40">Opponent Half, Goal Area, Inner Right Corner</field>
+                <field name="CPU40">P_OPP_GOALAREA_CORNER_RIGHT</field>
+                <field name="USER41">Opponent Half, Goal Area, Outer Left Corner</field>
+                <field name="CPU41">P_OPP_GOALAREA_GOALLINE_LEFT</field>
+                <field name="USER42">Opponent Half, Goal Area, Outer Right Corner</field>
+                <field name="CPU42">P_OPP_GOALAREA_GOALLINE_RIGHT</field>
+                <field name="USER43">Opponent Half, Penalty Area, Inner Left Corner</field>
+                <field name="CPU43">P_OPP_PENALTYAREA_CORNER_LEFT</field>
+                <field name="USER44">Opponent Half, Penalty Area, Inner Right Corner</field>
+                <field name="CPU44">P_OPP_PENALTYAREA_CORNER_RIGHT</field>
+                <field name="USER45">Opponent Half, Penalty Area, Outer Left Corner</field>
+                <field name="CPU45">P_OPP_PENALTYAREA_GOALLINE_LEFT</field>
+                <field name="USER46">Opponent Half, Penalty Area, Outer Right Corner</field>
+                <field name="CPU46">P_OPP_PENALTYAREA_GOALLINE_RIGHT</field>
+                <field name="USER47">Tip-in Position</field>
+                <field name="CPU47">P_TIP_IN</field>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="gLU5-Az[TW[~,o1m|shu" deletable="false" movable="false">
+        <field name="TEXT">returns a Position on the field</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="]O6Vku4cot.L[8X)kn+k" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="OUTPUTTYPE">
+      <shadow type="type_null" id="#vq(g28n:05At,blbRi~"/>
+      <block type="type_other" id="n;.1@7,bRxc#lwe$pdrZ">
+        <field name="TYPE">Position</field>
+      </block>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="5M!{R7(SnEzadCwdveDe">
+        <mutation colour="#a55b5b"/>
+        <field name="HUE">0</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="bxVs]R{Di@flHi/;Qv!v" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="LEFT"/>
+    <field name="NAME">field area</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">LEFT</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="=Im~pJG-`YpN5Dj;dakz">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="A3BDqDI.E/GP:C1:Lg!M">
+            <field name="TEXT">field area</field>
+            <next>
+              <block type="field_dropdown" id="a?q:.0V+cF3gW}!!#[^_">
+                <mutation options="[&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;]"/>
+                <field name="FIELDNAME">area</field>
+                <field name="USER0">Field</field>
+                <field name="CPU0">A_FIELD</field>
+                <field name="USER1">Left Half Field</field>
+                <field name="CPU1">A_FIELD_LEFT</field>
+                <field name="USER2">Right Half Field</field>
+                <field name="CPU2">A_FIELD_RIGHT</field>
+                <field name="USER3">Center Circle</field>
+                <field name="CPU3">A_CENTER_CIRCLE</field>
+                <field name="USER4">Field Safety Borders</field>
+                <field name="CPU4">A_FIELD_SAFETY_BOUNDARIES</field>
+                <field name="USER5">Own Half</field>
+                <field name="CPU5">A_OWN_SIDE</field>
+                <field name="USER6">Opponent Half</field>
+                <field name="CPU6">A_OPP_SIDE</field>
+                <field name="USER7">Own Half, Left Quarter</field>
+                <field name="CPU7">A_OWN_LEFT_SIDE</field>
+                <field name="USER8">Own Half, Right Quarter</field>
+                <field name="CPU8">A_OWN_RIGHT_SIDE</field>
+                <field name="USER9">Opponent Half, Left Quarter</field>
+                <field name="CPU9">A_OPP_LEFT_SIDE</field>
+                <field name="USER10">Opponent Half, Right Quarter</field>
+                <field name="CPU10">A_OPP_RIGHT_SIDE</field>
+                <field name="USER11">Own GoalArea</field>
+                <field name="CPU11">A_OWN_GOALAREA</field>
+                <field name="USER12">Own Goal</field>
+                <field name="CPU12">A_OWN_GOAL</field>
+                <field name="USER13">Own PenaltyArea</field>
+                <field name="CPU13">A_OWN_PENALTYAREA</field>
+                <field name="USER14">Opponent GoalArea</field>
+                <field name="CPU14">A_OPP_GOALAREA</field>
+                <field name="USER15">Opponent Goal</field>
+                <field name="CPU15">A_OPP_GOAL</field>
+                <field name="USER16">Opponent PenaltyArea</field>
+                <field name="CPU16">A_OPP_PENALTYAREA</field>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="dDUX$ODYt-${tnWS,~(-" deletable="false" movable="false">
+        <field name="TEXT">returns an Area on the field</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="EEF{riK3wmUm{^p+)n=:" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="OUTPUTTYPE">
+      <shadow type="type_null" id="zMaFR,G0WFgzGy%7nWT3"/>
+      <block type="type_other" id="]ITmJbHTTc_Z-P78W?(.">
+        <field name="TYPE">Area</field>
+      </block>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="87cC9mEI.EO.D6Be9S]F">
+        <mutation colour="#a55b5b"/>
+        <field name="HUE">0</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="jVB!$$EXO`(2r]4CR)JL" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="LEFT"/>
+    <field name="NAME">position in area</field>
+    <field name="INLINE">INT</field>
+    <field name="CONNECTIONS">LEFT</field>
+    <statement name="INPUTS">
+      <block type="input_value" id="ON]zaR:Ho/Ja^BBNDQqy">
+        <field name="INPUTNAME">pos</field>
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="ajxs9I0AUMQLvISp90kE">
+            <field name="TEXT">position</field>
+          </block>
+        </statement>
+        <value name="TYPE">
+          <shadow type="type_null" id="e!+{ENJx8dR)fSK0H4|#"/>
+          <block type="type_other" id="{I]@v9szJi:LPf:HceeK">
+            <field name="TYPE">Position</field>
+          </block>
+        </value>
+        <next>
+          <block type="input_value" id="uRZ|3*2z^Y*=S52hazSZ">
+            <field name="INPUTNAME">area</field>
+            <field name="ALIGN">LEFT</field>
+            <statement name="FIELDS">
+              <block type="field_static" id="C4/4W/eU/Z.c_Z%iNbA:">
+                <field name="TEXT">is in area</field>
+              </block>
+            </statement>
+            <value name="TYPE">
+              <shadow type="type_null" id="HOx1bQA_Q~VgmkRaIg[{"/>
+              <block type="type_other" id="pLM)RbG6BJCsht,n$Utz">
+                <field name="TYPE">Area</field>
+              </block>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="SR~1#-}8r[xyMneA6u]3" deletable="false" movable="false">
+        <field name="TEXT">returns whether the Position is in the Area</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="?WwB.w+n8j^ZD2pL#6f?" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="OUTPUTTYPE">
+      <shadow type="type_null" id="Q=3m9Y~l`u}M#z9j4k|?"/>
+      <block type="type_boolean" id="B|Nb[q@B/4/hdFNCouI$"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="3Kb*X(fI_ChW3*3[Cc`G">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="fqh#D|Dx_cbqeIdT(wfj" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="LEFT"/>
+    <field name="NAME">ball position</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">LEFT</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="T]s}BjFVD.}oCWxuZ3e8">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="`@~7i/D31N5jER:]z3:w">
+            <field name="TEXT">ball position</field>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="};uHyI(+L|PHGv4n37gW" deletable="false" movable="false">
+        <field name="TEXT">returns the position of the Ball on the field</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="1NX]Y#Qp5ikVP8bbm=C?" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="OUTPUTTYPE">
+      <shadow type="type_null" id="5wtu)ZNT-K0cek{N|ctQ"/>
+      <block type="type_other" id="rcQ}YZXi[t3%[bW%DgKu">
+        <field name="TYPE">Position</field>
+      </block>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="+-FX7%=Do}El[+fehl)|">
+        <mutation colour="#a55b5b"/>
+        <field name="HUE">0</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="A9uQg-)wlXPS[`(%]LhG" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="LEFT"/>
+    <field name="NAME">robot has ball</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">LEFT</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="F-9e)m!7NIzxP.gPHBZB">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="G-{tm9WAq$@7)Q8cHt#1">
+            <field name="TEXT">robot has ball</field>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="Y?/vND7z9-qK9Ec_gdew" deletable="false" movable="false">
+        <field name="TEXT">returns whether the Robot has the Ball in its possession</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="VJzc%P@85gLp;kc+@*qZ" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="OUTPUTTYPE">
+      <shadow type="type_null" id="[NAAXDaI4EA*v2MHKH@V"/>
+      <block type="type_boolean" id="pZw=OPxK_-X7oFc!!c(!"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="1R{o;b0%beSL`%!j_=Eo">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="UG,H08h%DN8|WtVIA!8D" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="LEFT"/>
+    <field name="NAME">robot sees ball</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">LEFT</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="HzYOdcm/uzy5]vZ-5z-X">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="a5W`z_;Z;I@}~AzUf:n,">
+            <field name="TEXT">robot sees ball</field>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="!~=6a-^JLC/tF#wo9m44" deletable="false" movable="false">
+        <field name="TEXT">returns whether the Robot sees the Ball on the field</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="3wk{g[k3n~%ME0TflVY/" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="OUTPUTTYPE">
+      <shadow type="type_null" id="4aSWXLW%B~*AT,{9gu8d"/>
+      <block type="type_boolean" id="G$59)^Z=j3IfGnnV]nHn"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="Cqrm;!shs81K2TImBb/)">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="{nwQoB9U@f+K.Z]_k,_G" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="BOTH"/>
+    <field name="NAME">get ball</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="2.49gZ?e@B4zs_YE%v:h">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="zM+E}7e)wPyyRv+NOc9?">
+            <field name="TEXT">robot: get ball</field>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="R(!~1wBLW6p~D;AjpSNm" deletable="false" movable="false">
+        <field name="TEXT">instructs the Robot to get the Ball</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="_RM$-@[:AwHX:-b07V6)" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="oyEqbe-r~{|H$ow61|@]"/>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id="?.Kpx50:YG]ykEkyp{1M"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="O^HiX3^Gv;Icr-1X!p~|">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="A`qosG9*l0KmcpwwQ|T^" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="BOTH"/>
+    <field name="NAME">intercept ball</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="_6T:Zggx@tp@t)a;WX%*">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="oB40NkRrXU{ObwN|Pi-X">
+            <field name="TEXT">robot: intercept ball</field>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="kT__jY?g_d+-;VXp]w4U" deletable="false" movable="false">
+        <field name="TEXT">instructs the Robot to intercept the Ball</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="at:cCxko:+5Xn}l)yuKj" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="k6x07CxNR_qyKqPYL|gL"/>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id="kw/=,BYzj{B{1B1~OC0r"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="2I@0nqY0:BR!RUrhU9}5">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="`U3Bne8MTy*|j`A4n~V@" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="LEFT"/>
+    <field name="NAME">robot position</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">LEFT</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="P2)Gy[~4KWDo?~h{shO-">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_dropdown" id="Hh$iWlfqYr,6pl]S{L{[">
+            <mutation options="[&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;]"/>
+            <field name="FIELDNAME">NAME</field>
+            <field name="USER0">my</field>
+            <field name="CPU0">myRobotId</field>
+            <field name="USER1">r1</field>
+            <field name="CPU1">1</field>
+            <field name="USER2">r2</field>
+            <field name="CPU2">2</field>
+            <field name="USER3">r3</field>
+            <field name="CPU3">3</field>
+            <field name="USER4">r4</field>
+            <field name="CPU4">4</field>
+            <field name="USER5">r5</field>
+            <field name="CPU5">5</field>
+            <field name="USER6">r6</field>
+            <field name="CPU6">6</field>
+            <field name="USER7">r7</field>
+            <field name="CPU7">7</field>
+            <next>
+              <block type="field_static" id="G1:A:x?QoYpIB,%SL6q1">
+                <field name="TEXT">robot position</field>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="mcFnsqSj.b7{m5mRsdeW" deletable="false" movable="false">
+        <field name="TEXT">returns the position of the Robot on the field</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="WCLF]g/,yJ[waPsVs/.@" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="OUTPUTTYPE">
+      <shadow type="type_null" id="L9o.6Am:f5#mlRc@Tu)]"/>
+      <block type="type_other" id="OA)0{S~@MzT!$QM$0h$q">
+        <field name="TYPE">Position</field>
+      </block>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id=":vUv;VZ_6^NUm/`bSs+k">
+        <mutation colour="#a55b5b"/>
+        <field name="HUE">0</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="Bzw2*cdaCLm#OR(5z~zE" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="BOTH"/>
+    <field name="NAME">move</field>
+    <field name="INLINE">INT</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_value" id="@9PSMzY__!;_w;r[}Cz_">
+        <field name="INPUTNAME">pos</field>
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="6Rc_+pf=Zm2k6e6]}Fm.">
+            <field name="TEXT">robot: move to position</field>
+          </block>
+        </statement>
+        <value name="TYPE">
+          <shadow type="type_null" id="JsZZ7;s9VdyqV(2=t#{p"/>
+          <block type="type_other" id=")z8k.L:/%$IGc9](I+_o">
+            <field name="TYPE">Position</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="7IKD_66~@CAOKpkCK8*P" deletable="false" movable="false">
+        <field name="TEXT">instructs the Robot to move to the position on the field</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="z%#capz/f0z|g@wS%wCB" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="BK$N!Z:7!-@9Y]J+xHi8"/>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id="cd~O`GA`x,-[hdv-Ss#r"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="T)Kijxg~^1^K$}XJ+B/Z">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="K;vRF7];#`{fDfn@DF#|" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="BOTH"/>
+    <field name="NAME">shoot</field>
+    <field name="INLINE">INT</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="M]2WdvrMP+v$cEAVs^$M">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="[7(`hhjbbQ;5_oI)4u+}">
+            <field name="TEXT">robot:</field>
+            <next>
+              <block type="field_dropdown" id="iVRaH,M|.*Qy7148{}^a">
+                <mutation options="[&quot;text&quot;,&quot;text&quot;,&quot;text&quot;]"/>
+                <field name="FIELDNAME">shootType</field>
+                <field name="USER0">shoot</field>
+                <field name="CPU0">SHOOT</field>
+                <field name="USER1">pass</field>
+                <field name="CPU1">PASS</field>
+                <field name="USER2">lob</field>
+                <field name="CPU2">LOB</field>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <next>
+          <block type="input_value" id="uo?$B`)xN$,mrnYtEh2~">
+            <field name="INPUTNAME">pos</field>
+            <field name="ALIGN">LEFT</field>
+            <statement name="FIELDS">
+              <block type="field_static" id="`X:a47inXjQe;*E;yBWB">
+                <field name="TEXT">towards position</field>
+              </block>
+            </statement>
+            <value name="TYPE">
+              <shadow type="type_null" id="Jc_MXb+?,CR2[5o`)8IP"/>
+              <block type="type_other" id="%MU@]1Au7rUv1p}K]c!B">
+                <field name="TYPE">Position</field>
+              </block>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="o6w;D0H`v1w)q3)8559-" deletable="false" movable="false">
+        <field name="TEXT">instructs the Robot to shoot/pass/lob towards a position on the field</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id=":E@l=/EZw4G^0I+,;6w+" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id=",0Oog#mDSs@wy?)x4R^f"/>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id="=S]y|[C0Y6c?}-l4CCpN"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="5pG1nl@m5jp@RQ}-+JL:">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="[1%_vM4qP--_G;t(.PO(" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="BOTH"/>
+    <field name="NAME">moveXYRz</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="kgfvzlJEahf9*tg{f!se">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="Nx!{D4e%e+.auCpy?;;!">
+            <field name="TEXT">robot: move to x=</field>
+            <next>
+              <block type="field_number" id="[1T3/NaWYPQhT%I[GU+m">
+                <field name="VALUE">0</field>
+                <field name="FIELDNAME">x</field>
+                <field name="MIN">-6</field>
+                <field name="MAX">6</field>
+                <field name="PRECISION">0.01</field>
+                <next>
+                  <block type="field_static" id="[Dg2XuTFk280#1wm=VV?">
+                    <field name="TEXT">, y=</field>
+                    <next>
+                      <block type="field_number" id="0H~yV75^A)]dDcWm~J}5">
+                        <field name="VALUE">0</field>
+                        <field name="FIELDNAME">y</field>
+                        <field name="MIN">-9</field>
+                        <field name="MAX">9</field>
+                        <field name="PRECISION">0.01</field>
+                        <next>
+                          <block type="field_static" id="nodiWN/Gqyn,Q[)^{zyg">
+                            <field name="TEXT">, Rz=</field>
+                            <next>
+                              <block type="field_angle" id="RAzG(~tP_BphlD`F]@j^">
+                                <field name="ANGLE">90</field>
+                                <field name="FIELDNAME">Rz</field>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="EAygXdX9-J/9R~n{f$:`" deletable="false" movable="false">
+        <field name="TEXT">instructs the Robot to move to the (x,y) position on the field with orientation Rz</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="WsLA*v@jHS$=~;gWB*|." deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="y:TP{5]([CH8d2PgYw,?"/>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id=")2j_4mfv6dss{h(I]7cq"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="iW.YwLI+qG%1KkXk08h$">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="D;WTfr@N.*5st3YbjNkL" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="BOTH"/>
+    <field name="NAME">sleep</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="Ht3~crHf_29Z4[`?l8u8">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="$4_w$^myM:[|_jHe3huP">
+            <field name="TEXT">sleep: duration=</field>
+            <next>
+              <block type="field_number" id="j9QuNe7-7ZL=OCy@F$XA">
+                <field name="VALUE">1</field>
+                <field name="FIELDNAME">duration</field>
+                <field name="MIN">0</field>
+                <field name="MAX">999</field>
+                <field name="PRECISION">0.01</field>
+                <next>
+                  <block type="field_static" id="2eR8KL`r`W#IgI5IXL.7">
+                    <field name="TEXT">seconds</field>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="?2z{r,(bmxrh~ZeMTWdr" deletable="false" movable="false">
+        <field name="TEXT">will make Robot do nothing for a while</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="1[j_F:Y=OgVMn7._+kYB" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="%T(uHI*FbtS*M*o?Jb@2"/>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id="MUPMYu3Wb3Ew~8b%e]co"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="bTmM`dQ|/Y3no[UK%a4C">
+        <mutation colour="#9fa55b"/>
+        <field name="HUE">65</field>
+      </block>
+    </value>
+  </block><block type="factory_base" id="LRM9:);pR0i(di.9kd=`" deletable="false" movable="false" x="10" y="10">
+    <mutation connections="BOTH"/>
+    <field name="NAME">kick</field>
+    <field name="INLINE">INT</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="H?#pe12M|so(RL@uCC6%">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="?U5OsMud7v~K#LFpVSbA">
+            <field name="TEXT">robot: kick with power</field>
+            <next>
+              <block type="field_number" id=";(HRxpczXO`W]Q}uFhZI">
+                <field name="VALUE">20</field>
+                <field name="FIELDNAME">power</field>
+                <field name="MIN">0</field>
+                <field name="MAX">180</field>
+                <field name="PRECISION">0.1</field>
+                <next>
+                  <block type="field_static" id="f|=4px*~?V#xQdjCT(^5">
+                    <field name="TEXT">and height</field>
+                    <next>
+                      <block type="field_number" id="mCOAT{0^w6UD!r*lgc2g">
+                        <field name="VALUE">0</field>
+                        <field name="FIELDNAME">height</field>
+                        <field name="MIN">0</field>
+                        <field name="MAX">180</field>
+                        <field name="PRECISION">0.1</field>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="sD-crPXQ}N32?+_6/]u[" deletable="false" movable="false">
+        <field name="TEXT">instructs the Robot to kick</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="wBQg7y[_.G??L(/Nr%M(" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="gjO4?@AJ.]{;iJ_-`W8q"/>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id="5him*.PU(6XwsmiW.,RW"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="jV}x3uhkAX4e0LRTym[c">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block></xml>

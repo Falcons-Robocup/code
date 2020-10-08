@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -49,6 +49,7 @@ enum class worldStateFunctionEnum
 	IS_FREEKICK_SETPIECE,
 	IS_CORNER_SETPIECE,
 	IS_THROWIN_SETPIECE,
+	IS_PARKING_SETPIECE,
 
 	WITHIN_1M_OF_BALL,
 	DOES_TEAM_HAVE_BALL,
@@ -81,6 +82,7 @@ enum class worldStateFunctionEnum
 	IS_PASS_APPROACHING_ROBOT,
 	IS_OPPONENT_HALF_REACHABLE,
 
+	IS_IN_SCORING_POSITION,
 	IS_SHOT_ON_GOAL_BLOCKED,
 	IS_LOB_SHOT_ON_GOAL_BLOCKED,
 	IS_PASS_TO_CLOSEST_TEAMMEMBER_BLOCKED,
@@ -94,12 +96,9 @@ enum class worldStateFunctionEnum
 	ALL_ROBOTS_ACTIVE,
 
 	DEFENDING_STRATEGY_ON,
-	DRIBBLE_STRATEGY_ON,
 
 	MULTIPLE_OPPONENTS_ON_OWN_HALF,
 	IS_AN_ATTACKER_ON_OPP_HALF,
-	SHOT_THRESHOLD_REACHED,
-	SHOT_THRESHOLD_REACHABLE,
 
 	SIZE_OF_ENUM
 };
@@ -122,6 +121,7 @@ static std::map<std::string, worldStateFunctionEnum> worldStateFunctionMappingSt
 		("IS_FREEKICK_SETPIECE", worldStateFunctionEnum::IS_FREEKICK_SETPIECE)
 		("IS_CORNER_SETPIECE", worldStateFunctionEnum::IS_CORNER_SETPIECE)
 		("IS_THROWIN_SETPIECE", worldStateFunctionEnum::IS_THROWIN_SETPIECE)
+		("IS_PARKING_SETPIECE", worldStateFunctionEnum::IS_PARKING_SETPIECE)
 		("WITHIN_1M_OF_BALL", worldStateFunctionEnum::WITHIN_1M_OF_BALL)
 		("DOES_TEAM_HAVE_BALL", worldStateFunctionEnum::DOES_TEAM_HAVE_BALL)
 		("DOES_OWN_ROBOT_HAVE_BALL", worldStateFunctionEnum::DOES_OWN_ROBOT_HAVE_BALL)
@@ -147,6 +147,7 @@ static std::map<std::string, worldStateFunctionEnum> worldStateFunctionMappingSt
 		("IS_BALL_APPROACHING_ROBOT", worldStateFunctionEnum::IS_BALL_APPROACHING_ROBOT)
 		("IS_PASS_APPROACHING_ROBOT", worldStateFunctionEnum::IS_PASS_APPROACHING_ROBOT)
 		("IS_OPPONENT_HALF_REACHABLE", worldStateFunctionEnum::IS_OPPONENT_HALF_REACHABLE)
+		("IS_IN_SCORING_POSITION", worldStateFunctionEnum::IS_IN_SCORING_POSITION)
 		("IS_SHOT_ON_GOAL_BLOCKED", worldStateFunctionEnum::IS_SHOT_ON_GOAL_BLOCKED)
 		("IS_LOB_SHOT_ON_GOAL_BLOCKED", worldStateFunctionEnum::IS_LOB_SHOT_ON_GOAL_BLOCKED)
 		("IS_PASS_TO_CLOSEST_TEAMMEMBER_BLOCKED", worldStateFunctionEnum::IS_PASS_TO_CLOSEST_TEAMMEMBER_BLOCKED)
@@ -158,11 +159,8 @@ static std::map<std::string, worldStateFunctionEnum> worldStateFunctionMappingSt
 		("DOES_ASSISTANT_HAVE_BALL", worldStateFunctionEnum::DOES_ASSISTANT_HAVE_BALL)
 		("ALL_ROBOTS_ACTIVE", worldStateFunctionEnum::ALL_ROBOTS_ACTIVE)
 		("DEFENDING_STRATEGY_ON", worldStateFunctionEnum::DEFENDING_STRATEGY_ON)
-		("DRIBBLE_STRATEGY_ON", worldStateFunctionEnum::DRIBBLE_STRATEGY_ON)
 		("MULTIPLE_OPPONENTS_ON_OWN_HALF", worldStateFunctionEnum::MULTIPLE_OPPONENTS_ON_OWN_HALF)
 		("IS_AN_ATTACKER_ON_OPP_HALF", worldStateFunctionEnum::IS_AN_ATTACKER_ON_OPP_HALF)
-		("SHOT_THRESHOLD_REACHED", worldStateFunctionEnum::SHOT_THRESHOLD_REACHED)
-		("SHOT_THRESHOLD_REACHABLE", worldStateFunctionEnum::SHOT_THRESHOLD_REACHABLE)
 		;
 
 typedef boost::function<bool(const std::map<std::string, std::string>&)> worldstateFunctionType;

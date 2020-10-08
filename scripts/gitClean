@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# JFEI 2016-05-04 creation
+#
+# Reset GIT state. 
+
+
+cd $FALCONS_CODE_PATH
+git reset --hard
+git clean -dfx
+git status
+cd ../teamplayData
+git reset --hard
+git clean -dfx
+git status
+

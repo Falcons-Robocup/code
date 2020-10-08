@@ -12,7 +12,11 @@
 #include <thread>
 #include <mutex>
 #include <string>
-#include "FalconsCommon.h"
+
+#define WITHOUT_RTDB // workaround for an undesired dependency from vector3d.hpp to RTDB ...
+#include "falconsCommon.hpp"
+#undef WITHOUT_RTDB
+
 #include "multiCamVideoFeed.hpp"
 
 #define FISHEYE_WAIT 5
@@ -38,16 +42,17 @@ struct calData
 class opticalCalibrator
 {
 
-  public:
+public:
     opticalCalibrator();
     ~opticalCalibrator();
     void load(std::string filename);
     void save(std::string filename = "");
+    void upgrade();
     void selectCamera(int cameraId);
     void connectVideo(multiCamVideoFeed *videoFeed);
     void run();
     
-  private:
+private:
     multiCamVideoFeed *_videoFeed = NULL;
     std::string  _guiText;
     std::string  _windowName;
@@ -57,27 +62,32 @@ class opticalCalibrator
     calData      _calData;
     cv::Mat      _rmapx;
     cv::Mat      _rmapy;
-    cv::Mat      _fmapx;
-    cv::Mat      _fmapy;
-    cv::Mat      _Hv; // homography matrix to make the forward maps viewable in GUI
+    cv::Mat      _floorMapX;
+    cv::Mat      _floorMapY;
+    cv::Mat      _frontMapAz;
+    cv::Mat      _frontMapEl;
+    cv::Mat      _Hv; // homography matrix to make the floor map viewable in GUI
     int          _view = 0;
     bool         _zoom = false;
-    bool         _fmapsValid = false;
+    bool         _floorMapsValid = false;
+    bool         _frontMapsValid = false;
     int          _cameraId = 0; // 0, 1, 2 or 3
     std::vector<cv::Point2f> _clicks;
     std::vector<Position2D>  _landmarksFcs; // phi unused
     std::vector<cv::Point2f> _landmarksRcsMM;
     int          _selectedLandmark = 0;
     std::vector<cv::Point2f> _boundariesRcsMM; // for grid drawing
-    
+
     // main functionality: implementations in optiCal.cpp
     void calibrateFisheye();
     void calibratePerspectiveClicks();
     void calibratePerspectiveCalculate();
-    void calcForwardMaps();
+    void calcFloorMaps();
+    void calcFrontMaps();
     cv::Mat transformVerification(cv::Mat const &frame);
     cv::Mat getHV();
-       
+    std::vector<cv::Point2f> landmarksFront();
+
     // secondary functionality: implementations in optiCalGUI.cpp
     std::string getGuiText();
     cv::Mat getCamFrame();
@@ -96,7 +106,8 @@ class opticalCalibrator
     void toggleZoom();
     void toggleCamera();
     void calcLandMarks();
-    void ensureForwardMaps();
+    void ensureFloorMaps();
+    void ensureFrontMaps();
     cv::Mat addBorder(cv::Mat const &frame);
     cv::Mat removeBorder(cv::Mat const &frame);
     void drawGrid(cv::Mat &frame);

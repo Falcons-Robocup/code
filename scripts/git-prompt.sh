@@ -8,7 +8,7 @@
 # To enable:
 #
 #    1) Add the following line to your .bashrc/.zshrc:
-#        source $TURTLEROOT/scripts/git-prompt.sh
+#        source $FALCONS_CODE_PATH/scripts/git-prompt.sh
 #    2a) Change your PS1 to call __git_ps1 as
 #        command-substitution:
 #        Bash: PS1='[\u@\h \W$(__git_ps1 " (%s)")]\$ '
@@ -394,9 +394,9 @@ __git_ps1 ()
 	local total=""
 
 	# Check for branch consistency between code and teamplayData
-	if [ -f $TURTLEROOT/scripts/checkGitBranchConsistency.sh ]
+	if [ -f $FALCONS_SCRIPTS_PATH/checkGitBranchConsistency.sh ]
 	then
-		. $TURTLEROOT/scripts/checkGitBranchConsistency.sh
+		. $FALCONS_SCRIPTS_PATH/checkGitBranchConsistency.sh
 		check_git_branches
 		if [ $? != 0 ]; then r="|WARNING"; fi
 	fi

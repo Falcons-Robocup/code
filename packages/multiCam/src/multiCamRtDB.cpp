@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,21 +9,15 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  ***/ 
- // Copyright 2014-2018 Andre Pool
-// SPDX-License-Identifier: Apache-2.0
-
-// TKOV: i added the multiCam.hpp over here, but i am not sure if an additinal path is required
-// include for the multiCam class
+ 
 #include "multiCam.hpp"
 
-/* ROS global includes */
 #include <boost/lexical_cast.hpp>
 
-/* ROS node-specific includes */
-
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "cDiagnostics.hpp"
 #include "observerRtDB.hpp"
+#include "tracing.hpp"
 
 using namespace cv;
 using std::cout;
@@ -31,11 +25,14 @@ using std::endl;
 
 int main(int argc, char** argv)
 {
+    INIT_TRACE;
+
     int opt = 0;
     bool guiEnabled = true;
 
     int robotIdArg = 0;
-    while( (opt = getopt(argc, argv, "ci:") ) != -1 )
+    float frequency = 40.0;
+    while( (opt = getopt(argc, argv, "ci:f:") ) != -1 )
     {
         switch(opt)
         {
@@ -47,27 +44,23 @@ int main(int argc, char** argv)
         		robotIdArg = atoi(optarg);
         		printf("INFO      : using command argument to set robot id to %d\n", robotIdArg);
         		break;
+            case 'f':
+                frequency = atof(optarg);
+                printf("INFO      : using command argument to set frequency to %.1f\n", frequency);
+                break;
         }
     }
 
     multiCamLibrary *multCam = new multiCamLibrary( robotIdArg, guiEnabled );
 
-    /* Take care of ROS initialization */
-    ros::init(argc, argv, "multiCam");
-
     // attach the observer
-    bool cameraCorrectlyMounted = false; // but for balls and obstacles it needs to be true?!?! TODO Andre please help, workaround for now in observerRos.cpp
-    observerRtDB *observerObj = new observerRtDB(robotIdArg, cameraCorrectlyMounted, 5.0);
+    bool cameraCorrectlyMounted = false; // TODO remove, obsolete
+    observerRtDB *observerObj = new observerRtDB(robotIdArg, cameraCorrectlyMounted, 2.5, frequency);
     multCam->attach(observerObj);
 
-    // TKOV: can you please check the section below?
-    // i am not sure if these things are still required, or
-    // otherwise maybe i deleted to much.
-    // From multiCam point of view only multCam->update() is required.
-    // If needed check multiCamAlone.cpp as reference
+    // run forever and without any sleep / timed loop, because library
+    // will wait for and directly operate on new cam data
+    while (multCam->update()) {}
 
-    float frequency = 30.0;
-    rtime::loop(frequency, boost::bind(&multiCamLibrary::update, multCam));
-    
     return 0;
 }

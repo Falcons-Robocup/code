@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,11 +18,5 @@
 
 #ifndef SIMULATION_CAPABILITIES_HPP_
 #define SIMULATION_CAPABILITIES_HPP_
-
-const static float SIMULATION_FREQUENCY = 20.0;
-const static float SIMULATION_PERIOD = 1.0 / SIMULATION_FREQUENCY;
-
-const static int MAXIMUM_CYCLES_STALE_DATA = 5;
-const static int MAXIMUM_AGE_MS = SIMULATION_PERIOD * MAXIMUM_CYCLES_STALE_DATA * 1000;
 
 #endif /* SIMULATION_CAPABILITIES_HPP_ */

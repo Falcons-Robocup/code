@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -30,7 +30,7 @@
 class ballDiscriminator
 {
     public:
-    	ballDiscriminator();
+    	ballDiscriminator(const WorldModelConfig& wmConfig);
     	~ballDiscriminator();
 
     	void addMeasurement(const ballMeasurement &measurement);
@@ -42,12 +42,16 @@ class ballDiscriminator
 
     private:
         const float MAX_BALL_HEIGHT = 5.0;
+        int _ownRobotId = 0;
 
     	std::vector<ballTracker> _ballTrackers;
         std::vector<ballClass_t> _balls;
+
+        const WorldModelConfig& _wmConfig;
         
     	void removeTimedOutTrackers(rtime const timeNow);
         void ownBallsFirst(rtime const timeNow, Vector2D const &pos);
+        bool ignoreHighVision(const ballMeasurement &measurement);
     	void selectGoodBalls(rtime const timeNow);
     	void traceTrackers(rtime const timeNow, bool all = false);
 

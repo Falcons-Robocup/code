@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,6 +19,7 @@
 #include "int/RTDBaccess.hpp"
 
 #include <map>
+#include "falconsCommon.hpp"
 
 static const std::map<RobotID, int> ROBOT_NUMBERS =
 {
@@ -37,13 +38,13 @@ static const std::map<TeamID, std::string> PATHS =
 
 RtDB2* getRTDBConnection()
 {
-    return RtDB2Store::getInstance().getRtDB2(0);
+    return RtDB2Store::getInstance().getRtDB2(COACH_AGENTID);
 }
 
 RtDB2* getRTDBConnection (const TeamID& teamID)
 {
     auto path = PATHS.at(teamID);
-    return RtDB2Store::getInstance().getRtDB2(0, path);
+    return RtDB2Store::getInstance().getRtDB2(COACH_AGENTID, path);
 }
 
 RtDB2* getRTDBConnection (const TeamID& teamID, const RobotID& robotID)

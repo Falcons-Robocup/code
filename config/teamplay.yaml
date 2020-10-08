@@ -1,0 +1,93 @@
+heightmaps:
+    factors:
+        DEFEND_ATTACKING_OPPONENT:
+            AVOID_BALL                          : 0.0
+            AVOID_OBSTACLES                     : 0.3
+            AVOID_TEAM_MATES                    : 0.2
+            BETWEEN_POI_AND_CLOSEST_OBSTACLE    : 0.3
+            CLOSE_TO_BALL_CLAIMED_LOCATION      : 0.0
+            CLOSE_TO_OWN_POS                    : 0.0
+            IN_FRONT_OF_OPP_GOAL                : 0.0
+            NEAR_OBSTACLES                      : 0.3
+            NEAR_OWN_GOAL                       : 0.4
+            OBS_BLOCKING_BALL                   : 0.0
+            OBS_BLOCKING_OPP_GOAL               : 0.0
+            OBS_BLOCKING_TEAMMATES              : 0.0
+        MOVE_TO_FREE_SPOT:
+            AVOID_BALL                          : 0.0
+            AVOID_OBSTACLES                     : 0.8
+            AVOID_TEAM_MATES                    : 0.5
+            BETWEEN_POI_AND_CLOSEST_OBSTACLE    : 0.0
+            CLOSE_TO_BALL_CLAIMED_LOCATION      : 0.0
+            CLOSE_TO_OWN_POS                    : 0.0
+            IN_FRONT_OF_OPP_GOAL                : 0.8
+            NEAR_OBSTACLES                      : 0.0
+            NEAR_OWN_GOAL                       : 0.0
+            OBS_BLOCKING_BALL                   : 0.5
+            OBS_BLOCKING_OPP_GOAL               : 0.5
+            OBS_BLOCKING_TEAMMATES              : 0.0
+        DRIBBLE:
+            AVOID_BALL                          : 0.0
+            AVOID_OBSTACLES                     : 0.8
+            AVOID_TEAM_MATES                    : 0.0
+            BETWEEN_POI_AND_CLOSEST_OBSTACLE    : 0.0
+            CLOSE_TO_BALL_CLAIMED_LOCATION      : 1.0
+            CLOSE_TO_OWN_POS                    : 0.0
+            IN_FRONT_OF_OPP_GOAL                : 0.8
+            NEAR_OBSTACLES                      : 0.0
+            NEAR_OWN_GOAL                       : 0.0
+            OBS_BLOCKING_BALL                   : 0.0
+            OBS_BLOCKING_OPP_GOAL               : 0.5
+            OBS_BLOCKING_TEAMMATES              : 0.5
+        POSITION_FOR_OPP_SETPIECE:
+            AVOID_BALL                          : 0.7
+            AVOID_OBSTACLES                     : 0.3
+            AVOID_TEAM_MATES                    : 0.2
+            BETWEEN_POI_AND_CLOSEST_OBSTACLE    : 0.3
+            CLOSE_TO_BALL_CLAIMED_LOCATION      : 0.0
+            CLOSE_TO_OWN_POS                    : 0.0
+            IN_FRONT_OF_OPP_GOAL                : 0.0
+            NEAR_OBSTACLES                      : 0.6
+            NEAR_OWN_GOAL                       : 0.5
+            OBS_BLOCKING_BALL                   : 0.0
+            OBS_BLOCKING_OPP_GOAL               : 0.0
+            OBS_BLOCKING_TEAMMATES              : 0.0
+        POSITION_FOR_OWN_SETPIECE:
+            AVOID_BALL                          : 0.0
+            AVOID_OBSTACLES                     : 0.3
+            AVOID_TEAM_MATES                    : 0.2
+            BETWEEN_POI_AND_CLOSEST_OBSTACLE    : 0.0
+            CLOSE_TO_BALL_CLAIMED_LOCATION      : 0.0
+            CLOSE_TO_OWN_POS                    : 0.0
+            IN_FRONT_OF_OPP_GOAL                : 0.7
+            NEAR_OBSTACLES                      : 0.0
+            NEAR_OWN_GOAL                       : 0.0
+            OBS_BLOCKING_BALL                   : 0.5
+            OBS_BLOCKING_OPP_GOAL               : 0.5
+            OBS_BLOCKING_TEAMMATES              : 0.0
+
+interceptBall:
+    captureRadius: 2.1
+    minimumSpeed: 0.6
+    activeIntercept: False
+
+rules:
+    setpieceExecuteTimeout: 7000
+    penaltyExecuteTimeout: 15000
+    minKickDistanceKicked: 1.5
+    minPenaltyDistanceKicked: 2.0
+    minOwnKickoffDistanceKicked: 1.5
+
+shooting:
+    shootPathWidth: 0.6
+    straightShotThreshold: 5.5
+    aimForCornerThreshold: 8.0
+    angleToGoal:
+        minimum: 0.22
+        maximum: 2.92
+    distanceToGoal:
+        minimum: 0.0
+        maximum: 99.0
+
+strategy:
+    defendingStrategy: False

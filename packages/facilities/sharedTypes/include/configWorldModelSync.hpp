@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,8 +22,9 @@ struct configWorldModelSync
     teamIdType   teamId;
     bool         shareVision;
     std::string  useVisionFrom;
+    bool         forceInplay; // TODO: is not really a 'sync' but a more general wm parameter
 
-    SERIALIZE_DATA(teamId, shareVision, useVisionFrom);
+    SERIALIZE_DATA(teamId, shareVision, useVisionFrom, forceInplay);
 };
 
 #endif

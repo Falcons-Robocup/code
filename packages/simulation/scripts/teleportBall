@@ -1,0 +1,16 @@
+#! /usr/bin/env python3
+
+import simScene
+import argparse
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Teleport the ball to given coordinate")
+    parser.add_argument("x", type=float, help="the x coordinate (e.g. -1.23)")
+    parser.add_argument("y", type=float, help="the y coordinate (e.g. 23.45)")
+
+    args = parser.parse_args()
+
+    simScene.run(simScene.TeleportBall(args.x, args.y))
+

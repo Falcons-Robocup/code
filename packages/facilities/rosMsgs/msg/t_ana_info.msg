@@ -1,1 +1,0 @@
-t_diag_info.msg

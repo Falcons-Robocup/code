@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,12 +17,9 @@
  */
 
 
-#include <boost/interprocess/sync/named_mutex.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-
 #include "int/adapters/RTDB/RTDBInputAdapter.hpp"
 //
-#include "FalconsCommon.h" //getRobotNumber()
+#include "falconsCommon.hpp" //getRobotNumber()
 #include "cDiagnostics.hpp"
 #include "tracing.hpp"
 
@@ -37,6 +34,7 @@ RTDBInputAdapter::RTDBInputAdapter()
     _obstacleAdmin = 0;
     _myRobotId = getRobotNumber();
     _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
+    _robotDisplacementInitialized = false;
 
     _uIDGenerator = identifierGenerator(_myRobotId);
 }
@@ -131,7 +129,7 @@ void RTDBInputAdapter::getBallCandidates()
             _rtdb->put(BALL_CANDIDATES_FCS, &measurementsFcs);
         }
     }
-    
+
     // Then get the Shared FCS data from RTDB
     std::vector<int>::const_iterator it;
     for (it = _rtdbClient._agentIds.begin(); it != _rtdbClient._agentIds.end(); ++it)
@@ -169,7 +167,7 @@ void RTDBInputAdapter::getObstacleCandidates()
     }
 
     int r = _rtdb->get(OBSTACLE_CANDIDATES, &_obstacleCandidates);
-    
+
     // First put the Local FCS candidates to RTDB for sharing with other robots
     T_OBSTACLE_CANDIDATES_FCS measurementsFcs;
     if (r == RTDB2_SUCCESS)
@@ -181,7 +179,7 @@ void RTDBInputAdapter::getObstacleCandidates()
             robotClass_t pos = _robotAdmin->getLocalRobotPosition(_obstacleCandidates[0].timestamp);
             Position2D robotPos(pos.getX(), pos.getY(), pos.getTheta());
             int iter = 0;
-            
+
             for (auto it = _obstacleCandidates.begin(); it != _obstacleCandidates.end(); ++it)
             {
                 obstacleMeasurement obstacleMeasFcs = convertObjectRCSToFCS(*it, robotPos);
@@ -195,7 +193,7 @@ void RTDBInputAdapter::getObstacleCandidates()
             }
         }
     }
-    
+
     // Then get the Shared FCS candidates from RTDB from other robots
     std::vector<int>::const_iterator it;
     for (it = _rtdbClient._agentIds.begin(); it != _rtdbClient._agentIds.end(); ++it)
@@ -227,7 +225,7 @@ void RTDBInputAdapter::getLocalizationCandidates()
 {
     TRACE_FUNCTION("");
     int r = _rtdb->get(LOCALIZATION_CANDIDATES, &_localizationCandidates, _myRobotId);
-    if (r != RTDB2_SUCCESS) 
+    if (r != RTDB2_SUCCESS)
     {
         return;
     }
@@ -258,11 +256,11 @@ void RTDBInputAdapter::getVisionBallPossession()
     TRACE_FUNCTION("");
     RtDB2Item item;
     int r = _rtdb->getItem(VIS_BALL_POSSESSION, item);
-    if (r != RTDB2_SUCCESS) 
+    if (r != RTDB2_SUCCESS)
     {
         return;
     }
-    
+
     // _visionBallPossession is only written when TRUE, so use age to determine ball possession
     // ball possession when age < 500ms
     _visionBallPossession = item.value<T_VIS_BALL_POSSESSION>();
@@ -277,50 +275,57 @@ void RTDBInputAdapter::getVisionBallPossession()
 }
 
 
-void RTDBInputAdapter::getRobotDisplacement()
+void RTDBInputAdapter::getRobotDisplacement(rtime timeNow)
 {
     TRACE_FUNCTION("");
 
-    // mutex with writing from velocityControl
-    boost::interprocess::named_mutex mtx(boost::interprocess::open_or_create, "robot_displacement_named_mutex");
-    {
-        boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(mtx);
+    int ageMs = 0;
 
-        int r = _rtdb->getAndClear(ROBOT_DISPLACEMENT_FEEDBACK, &_robotDisplacements);
-        if (r != RTDB2_SUCCESS)
-        {
-            return;
-        }
+    T_ROBOT_DISPLACEMENT_FEEDBACK newDisplacement;
+
+    int r = _rtdb->get(ROBOT_DISPLACEMENT_FEEDBACK, &newDisplacement, ageMs, _myRobotId);
+    if (r != RTDB2_SUCCESS)
+    {
+        return;
+    }
+
+    if (_robotDisplacementInitialized)
+    {
 
         std::vector<robotDisplacementClass_t> displacements;
 
-        std::vector<robotDisplacement>::const_iterator it;
-        for (it = _robotDisplacements.begin(); it != _robotDisplacements.end(); ++it)
-        {
-            robotDisplacementClass_t displacement;
-            displacement.setID(_uIDGenerator.getUniqueID());
-            displacement.setTimestamp(rtime::now());
-            displacement.setCoordinateType(coordinateType::ROBOT_COORDS);
-            displacement.setDisplacementSource(displacementType::MOTORS);
+        robotDisplacementClass_t displacement;
+        displacement.setID(_uIDGenerator.getUniqueID());
+        displacement.setTimestamp(rtime::now());
+        displacement.setCoordinateType(coordinateType::ROBOT_COORDS);
+        displacement.setDisplacementSource(displacementType::MOTORS);
 
-            displacement.setDeltaPosition(
-                    it->x,
-                    it->y,
-                    it->Rz);
+        displacement.setDeltaPosition(
+            newDisplacement.x - _prevRobotDisplacement.x,
+            newDisplacement.y - _prevRobotDisplacement.y,
+            newDisplacement.Rz - _prevRobotDisplacement.Rz);
 
-            displacements.push_back(displacement);
+        displacements.push_back(displacement);
 
-            tprintf("encoder displacement: dx=%7.3f dy=%7.3f dRz=%7.3f", it->x, it->y, it->Rz);
-        }
+        // tprintf("encoder displacement: dx=%7.3f dy=%7.3f dRz=%7.3f", displacement.getdX(), displacement.getdY(), displacement.getdTheta());
 
         if(_robotAdmin != NULL)
         {
             _robotAdmin->appendRobotDisplacementMeasurements(displacements);
         }
     }
+
+    else
+    {
+        // The motors can have a big displacement when worldModel starts.
+        // Therefore we use the first tick to initialize _prevRobotDisplacement with the displacements in RTDB.
+        _robotDisplacementInitialized = true;
+    }
+
+    _prevRobotDisplacement = newDisplacement;
 }
 
-void RTDBInputAdapter::getRobotVelocity()
+void RTDBInputAdapter::getRobotVelocity(rtime timeNow)
 {
     TRACE_FUNCTION("");
 
@@ -334,7 +339,7 @@ void RTDBInputAdapter::getRobotVelocity()
 
     robotVelocityClass_t velocity;
     velocity.setID(_uIDGenerator.getUniqueID());
-    velocity.setTimestamp(rtime::now());
+    velocity.setTimestamp(timeNow);
     velocity.setCoordinateType(coordinateType::ROBOT_COORDS);
     velocity.setDisplacementSource(displacementType::MOTORS);
 
@@ -350,21 +355,35 @@ void RTDBInputAdapter::getRobotVelocity()
         _robotAdmin->appendRobotVelocityMeasurements(velocities);
     }
 
-    tprintf("encoder velocity    : dx=%7.3f dy=%7.3f dRz=%7.3f", _robotVelocity.x, _robotVelocity.y, _robotVelocity.Rz);
+    //tprintf("encoder velocity    : dx=%7.3f dy=%7.3f dRz=%7.3f", _robotVelocity.x, _robotVelocity.y, _robotVelocity.Rz);
 }
 
+void RTDBInputAdapter::enableInplayOverrule()
+{
+    _inplayOverrule = true;
+}
 
-void RTDBInputAdapter::getInPlayState()
+void RTDBInputAdapter::getInPlayState(rtime timeNow)
 {
     TRACE_FUNCTION("");
-    int r = 0;
+
     T_INPLAY_FEEDBACK currentInPlay;
-    r = _rtdb->get(INPLAY_FEEDBACK, &currentInPlay);
-    
-    // check if we have OK data
-    if (r != RTDB2_SUCCESS)
+
+    if (_config.forceInplay == true || _inplayOverrule)
     {
-        return;
+        // testing override
+        currentInPlay = robotStatusEnum::INPLAY;
+    }
+    else
+    {
+        // regular behavior: get data from RTDB
+        int r = 0;
+        r = _rtdb->get(INPLAY_FEEDBACK, &currentInPlay);
+        // check if we have OK data
+        if (r != RTDB2_SUCCESS)
+        {
+            return;
+        }
     }
 
     // convert to worldmodel's inplay type
@@ -393,7 +412,7 @@ void RTDBInputAdapter::getInPlayState()
     // new state detected
     if (_inPlay != wmInPlay)
     {
-        _robotAdmin->setRobotStatus(_myRobotId, wmInPlay, rtime::now());
+        _robotAdmin->setRobotStatus(_myRobotId, wmInPlay, timeNow);
         // generate an event, for eventlogging on coach
         if (wmInPlay == robotStatusType::INPLAY)
         {
@@ -413,7 +432,7 @@ void RTDBInputAdapter::getBallHandlingBallPossession()
     TRACE_FUNCTION("");
     T_BALLHANDLERS_BALL_POSSESSION ballIsCaughtByBallHandlers;
     int r = _rtdb->get(BALLHANDLERS_BALL_POSSESSION, &ballIsCaughtByBallHandlers);
-    if (r != RTDB2_SUCCESS) 
+    if (r != RTDB2_SUCCESS)
     {
         return;
     }
@@ -461,5 +480,3 @@ void RTDBInputAdapter::getTeamMembers()
         }
     }
 }
-
-

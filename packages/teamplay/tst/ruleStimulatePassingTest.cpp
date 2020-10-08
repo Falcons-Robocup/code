@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,8 +22,6 @@
 /* SUT */
 #include "int/rules/ruleStimulatePassing.hpp"
 
-/* SUT dependencies */
-#include "int/stores/configurationStore.hpp"
 
 using namespace teamplay;
 
@@ -32,7 +30,6 @@ class RuleStimulatePassingTest : public TeamplayTest
 public:
     RuleStimulatePassingTest()
     {
-        configurationStore::getConfiguration().setRuleStimulatePassing(true);
     }
 };
 
@@ -102,14 +99,6 @@ TEST_F(RuleStimulatePassingTest, RuleIsNotValidAfterResetFollowedByAClaim)
     ruleStimulatePassing::getInstance().resetRule();
     ruleStimulatePassing::getInstance().robotClaimsBall(2);
     EXPECT_FALSE(ruleStimulatePassing::getInstance().isRuleValid());
-}
-
-TEST_F(RuleStimulatePassingTest, CanBeDisabled)
-{
-    configurationStore::getConfiguration().setRuleStimulatePassing(false);
-    ruleStimulatePassing::getInstance().robotClaimsBall(3);
-    ruleStimulatePassing::getInstance().robotClaimsBall(4);
-    EXPECT_TRUE(ruleStimulatePassing::getInstance().isRuleValid());
 }
 
 int main(int argc, char **argv)

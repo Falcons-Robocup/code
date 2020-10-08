@@ -10,8 +10,7 @@ cmake_minimum_required(VERSION 2.8.0)
 include_directories( ${PROJECT_SOURCE_DIR}/pymodule ${PROJECT_SOURCE_DIR}/include )
 
 #Get Python package info to build the python modules
-include($ENV{ROS_ROOT}/core/rosbuild/FindPkgConfig.cmake)
-pkg_check_modules( PYTHON REQUIRED python2)
+find_package(PythonLibs REQUIRED)
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 
 find_package(SWIG REQUIRED)
@@ -19,6 +18,8 @@ if (NOT  ${SWIG_FOUND} )
    MESSAGE( FATAL_ERROR "SWIG missing, please install: 'sudo apt-get install swig'" )
 endif()
 
+cmake_policy(SET CMP0078 NEW)
+cmake_policy(SET CMP0086 NEW)
 
 include(${SWIG_USE_FILE})
 
@@ -26,28 +27,27 @@ set(CMAKE_SWIG_FLAGS "")
 
 #override the standard lib outfolder to the pymodule folder
 #to prevent mixup of python modules with C shared libraries
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/pymodule)
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/pymodule)
 #specify where to write all other swig generated module like the module .py file
-set(CMAKE_SWIG_OUTDIR ${PROJECT_SOURCE_DIR}/pymodule)
+#set(CMAKE_SWIG_OUTDIR ${PROJECT_SOURCE_DIR}/pymodule)
 
 # FIELD
-# 20160625: enabled again by MKOE after implementing an alternative for 'list-of-maps'
 set_source_files_properties(EnvironmentField.i PROPERTIES CPLUSPLUS ON)
 set_source_files_properties(EnvironmentField.i PROPERTIES CMAKE_SWIG_FLAGS "-includeall")
-swig_add_module( EnvironmentField python EnvironmentField.i ../src/cEnvironmentField.cpp ../src/cEnvironmentCommon.cpp )
-swig_link_libraries(EnvironmentField EnvironmentField EnvironmentCommon ${PYTHON_LIBRARIES})
+swig_add_library( EnvironmentFieldPy LANGUAGE python SOURCES EnvironmentField.i ../src/cEnvironmentField.cpp ../src/cEnvironmentCommon.cpp )
+swig_link_libraries(EnvironmentFieldPy EnvironmentField EnvironmentCommon ${PYTHON_LIBRARIES})
 
 # BALL
 set_source_files_properties(EnvironmentBall.i PROPERTIES CPLUSPLUS ON)
 set_source_files_properties(EnvironmentBall.i PROPERTIES CMAKE_SWIG_FLAGS "-includeall")
-swig_add_module( EnvironmentBall python EnvironmentBall.i ../src/cEnvironmentBall.cpp ../src/cEnvironmentCommon.cpp )
-swig_link_libraries(EnvironmentBall EnvironmentBall EnvironmentCommon ${PYTHON_LIBRARIES})
+swig_add_library( EnvironmentBallPy LANGUAGE python SOURCES EnvironmentBall.i ../src/cEnvironmentBall.cpp ../src/cEnvironmentCommon.cpp )
+swig_link_libraries(EnvironmentBallPy EnvironmentBall EnvironmentCommon ${PYTHON_LIBRARIES})
 
 # ROBOT
 set_source_files_properties(EnvironmentRobot.i PROPERTIES CPLUSPLUS ON)
 set_source_files_properties(EnvironmentRobot.i PROPERTIES CMAKE_SWIG_FLAGS "-includeall")
-swig_add_module( EnvironmentRobot python EnvironmentRobot.i ../src/cEnvironmentRobot.cpp ../src/cEnvironmentCommon.cpp )
-swig_link_libraries(EnvironmentRobot EnvironmentRobot EnvironmentCommon ${PYTHON_LIBRARIES})
+swig_add_library( EnvironmentRobotPy LANGUAGE python SOURCES EnvironmentRobot.i ../src/cEnvironmentRobot.cpp ../src/cEnvironmentCommon.cpp )
+swig_link_libraries(EnvironmentRobotPy EnvironmentRobot EnvironmentCommon ${PYTHON_LIBRARIES})
 
 
 #swig_link_libraries explanation:

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,15 +18,15 @@
 
 #include "int/heightmaps/hmAvoidObstacles.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "int/stores/obstacleStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
 
 using namespace teamplay;
 
 
-const static float LOW  = 2.0;
-const static float HIGH = 3.55;
+const static float LOW  = 2.8;
+const static float HIGH = 5.5;
 
 hmAvoidObstacles::hmAvoidObstacles() { }
 

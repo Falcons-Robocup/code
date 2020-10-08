@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,8 +18,16 @@ def wayPoints(*args):
     Given a sequence of positions (triples (x,y,phi)), move between them.
     Repeat forever.
     """
-    #xyTol = 0.1
-    #phiTol = 0.06
+    wayPointsSleep(0, *args)
+    
+
+def wayPointsSleep(t, *args):
+    """
+    Given a sequence of positions (triples (x,y,phi)), move between them.
+    Repeat forever.
+    First argument is the amount of seconds to sleep in between.
+    """
+    t = float(t)
     N = len(args) / 3
     it = 0
     while True:
@@ -27,6 +35,8 @@ def wayPoints(*args):
         y = float(args[3*it+1])
         phi = float(args[3*it+2])
         robot.move(x, y, phi) # blocks
+        # sleep?
+        sleep(t)
         # goto next
         it += 1
         if it == N:

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -31,7 +31,7 @@ class observerRtDB: public observer
 {
 
     public:
-        observerRtDB(const uint robotID, const bool cameraCorrectlyMounted, const float minimumLockTime);
+        observerRtDB(const uint robotID, const bool cameraCorrectlyMounted, const float minimumLockTime, const float frequency);
         virtual ~observerRtDB();
 
         virtual void update_own_position(std::vector<robotLocationType> robotLocations, double timestampOffset);
@@ -43,10 +43,11 @@ class observerRtDB: public observer
         RtDB2 *_rtdb;
         int _myRobotId;
         boost::mutex mtx;
+        float _frequency;
 
         // data may be written asynchronously using the update* function
         // there is one thread which writes into RTDB hence triggering worldModel and the rest of the software
-        T_VIS_BALL_POSSESSION     _visionBallPossession;
+        T_VIS_BALL_POSSESSION     _visionBallPossession = false;
         T_LOCALIZATION_CANDIDATES _robotLocCandidates;
         T_OBSTACLE_CANDIDATES     _obstacleCandidates;
         T_BALL_CANDIDATES         _ballCandidates;

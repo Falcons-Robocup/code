@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -40,12 +40,16 @@ bool hasEnding (std::string const &fullString, std::string const &ending) {
 
 void onMouse(const int event, const int x, const int y, int, void* userdata)
 {
-    if (event == CV_EVENT_LBUTTONDOWN)
+    if (event == cv::EVENT_LBUTTONDOWN)
     {
-        deWarper *dewarp = (deWarper *)userdata;
+        Dewarper *dewarp = (Dewarper *)userdata;
+        bool ok;
         int16_t fx, fy;
-        dewarp->transform(x, y, fx, fy);
-        printf("pixel (%5d,%5d) --> result field (coordinates in RCS mm): (%5d,%5d)\n", x, y, fx, fy);
+        ok = dewarp->transformFloor(x, y, fx, fy);
+        printf("pixel (%5d,%5d) --> %s result floor (coordinates in RCS mm): (%6d,%6d)\n", x, y, (ok?" OK":"NOK"), fx, fy);
+        float az, el;
+        ok = dewarp->transformFront(x, y, az, el);
+        printf("pixel (%5d,%5d) --> %s result front (angles in radians):     (%6.3f,%6.3f)\n", x, y, (ok?" OK":"NOK"), az, el);
     }
 }
 
@@ -55,9 +59,9 @@ int main(int argc, char **argv)
     // prepare
     cv::Mat image;
     std::string filename;
-    deWarper dewarp;
+    Dewarper dewarp(0, 0, false); // legacy mode: do not automatically load, instead expect readBIN will be called
     std::string windowName = argv[0];
-    cv::namedWindow(windowName, CV_WINDOW_AUTOSIZE);
+    cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback(windowName, onMouse, &dewarp);
         
     // arg parsing

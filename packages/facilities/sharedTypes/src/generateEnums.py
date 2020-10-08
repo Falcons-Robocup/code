@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -10,7 +10,7 @@
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  """ 
  """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,7 +20,7 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  """ 
- #!/usr/bin/env python
+ #!/usr/bin/env python3
 #
 # Build hook to generate code derived from enum definitions
 # * enum2str conversions
@@ -32,7 +32,7 @@ import datetime
 from collections import OrderedDict
 import argparse
 import clang.cindex
-clang.cindex.Config.set_library_file("/usr/lib/x86_64-linux-gnu/libclang-6.0.so.1")
+clang.cindex.Config.set_library_file("/usr/lib/x86_64-linux-gnu/libclang-10.so")
 
 
 
@@ -129,7 +129,7 @@ class parseEnumsInHeader:
                 if str(node.location.file) in ["None", self.filename]:
                     self.enums.append(self.currentEnum)
         def walk(node, depth):
-            #print "%sdebug (file=%s kind=%s type=%s loc=%s)" % (" " * depth, self.filename, node.kind, node.type.spelling, node.location.file)
+            #print("%sdebug (file=%s kind=%s type=%s loc=%s)" % (" " * depth, self.filename, node.kind, node.type.spelling, node.location.file))
             if node.kind == clang.cindex.CursorKind.ENUM_DECL:
                 # finish previous enum
                 finish(node)
@@ -158,14 +158,14 @@ def generationRequired(args):
         for h in headers:
             if (os.path.getmtime(h) > hpp_mtime) or (os.path.getmtime(h) > py_mtime):
                 if args.verbose:
-                    print "Generation required for (at least) header file: {}".format(h)
+                    print("Generation required for (at least) header file: {}".format(h))
                 return True
     else:
         if args.verbose:
-            print "Output file(s) not existing: generation is required"
+            print("Output file(s) not existing: generation is required")
         return True
     if args.verbose:
-        print "Generation is not required"
+        print("Generation is not required")
     return False
 
 
@@ -173,17 +173,17 @@ def findEnums(args):
     headers = glob.glob(args.inputfolder + '/*.hpp')
     result = []
     if args.verbose:
-        print "scanning for enums in " + args.inputfolder + "/*.hpp"
+        print("scanning for enums in %s/*.hpp" % (args.inputfolder))
     for h in headers:
         if generatedEnumHpp in h:
             continue # ignore output, if written into same folder
         if args.verbose:
-            print "  " + h
+            print("  %s" % (h))
         # parse the file
         p = parseEnumsInHeader(h)
         for e in p.getEnums():
             if args.verbose:
-                print "    ", e
+                print("     %s" % (e))
             result.append(e)
     return result
 
@@ -215,7 +215,7 @@ def writeGeneratedHppEnum2str(args, enums):
         raise RuntimeError('Unexpected error while generating code: {}'.format(str(e)))
     # write to file
     if args.verbose:
-        print "writing file " + filename
+        print("writing file %s" % (filename))
     writeToFile(filename, generatedCode)
 
     
@@ -243,7 +243,7 @@ def writeGeneratedPyEnum2str(args, enums):
         raise RuntimeError('Unexpected error while generating code: {}'.format(str(e)))
     # write to file
     if args.verbose:
-        print "writing file " + filename
+        print("writing file %s" % (filename))
     writeToFile(filename, generatedCode)
 
 
@@ -255,7 +255,7 @@ def writeToFile(filename, generatedCode):
     except Exception as e:
         raise RuntimeError('Unexpected error while trying to open file {}: {}'.format(filename, str(e)))
     try:
-        print >> f, generatedCode
+        print(generatedCode, file=f)
         f.close()
     except IOError as e:
         raise RuntimeError('Error while writing file {}: {}'.format(filename, e.strerror))
@@ -265,7 +265,7 @@ def writeToFile(filename, generatedCode):
 
 if __name__ == '__main__':
     # Argument parsing.
-    descriptionTxt = 'Generate code derived from enums.'
+    descriptionTxt = 'Generate code derived from enums.\nExample usage: python ./src/generateEnums.py -v -i ./include -o ./include/generated_enum2str.hpp -p ./src/sharedTypes.py'
     parser     = argparse.ArgumentParser(description=descriptionTxt)
     parser.add_argument('-i', '--inputfolder', help='folder containing files to scan')
     parser.add_argument('-o', '--outputhpp', help='output C++ header file')

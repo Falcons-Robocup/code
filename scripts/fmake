@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+# Falcons make wrapper
+
+
+import argparse
+import os, shutil
+import subprocess
+import time
+
+
+# constants
+FALCONS_CODE_PATH = os.getenv("FALCONS_CODE_PATH")
+
+
+
+class Commands:
+    """
+    command runner/lister
+    uses some auxiliary functions, for instance to change directories
+    """
+    def __init__(self):
+        self._commands = []
+    def show(self):
+        for (cmd, args) in self._commands:
+            print(cmd, " ".join(args))
+    def run(self):
+        cmd_map = {}
+        cmd_map["cd"] = os.chdir
+        def rmtree(d):
+            if os.path.isdir(d):
+                shutil.rmtree(d)
+        cmd_map["rmtree"] = rmtree
+        def mkdir(d):
+            if not os.path.isdir(d):
+                os.mkdir(d)
+        cmd_map["mkdir"] = mkdir
+        cmd_map["rm"] = os.remove
+        ok = True
+        for (cmd, args) in self._commands:
+            if cmd in cmd_map:
+                cmd_map[cmd](*args)
+            else:
+                s = " ".join([cmd] + list(args))
+                r = os.system(s)
+                if r != 0:
+                    ok = False
+                    break
+        return ok
+    def add(self, command, *args):
+        self._commands.append((command, args))
+
+
+def resolve_package_dirs(packages):
+    result = []
+    for d in packages:
+        # exception: allow '.'
+        if d == '.':
+            result.append(d)
+        else:
+            # standard: use fdir to resolve
+            output = subprocess.run(['fdir', d], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+            if len(output):
+                result.append(output)
+            else:
+                raise Exception("failed to resolve package dir " + d)
+    return result
+
+
+def run(args):
+
+    # check options
+    if args.test_only and (args.pre_clean or args.full_pre_clean):
+        raise Exception("cannot use option '--test-only' together with '--pre-clean'")
+    do_clean = args.pre_clean or args.full_pre_clean
+    do_build = not args.test_only
+    do_test = args.test_only or args.test
+    whats = []
+    if do_build:
+        whats.append("build")
+    if do_test:
+        whats.append("test")
+    what = "+".join(whats)
+
+    # determine requested scope
+    scope = str(args.packages)
+
+    # start a timer
+    t0 = time.time()
+    if not args.dry_run:
+        print("fmake {:s} starting for scope {:s}".format(what, scope))
+
+    # construct sequence of commands
+    # (useful for option --dry-run, in case people are interested in the underwater commands)
+    commands = Commands()
+
+    # to go falcons root
+    # this needs to be done always, even in dry-run mode, to properly detect folders for cleanup
+    commands.add("cd", FALCONS_CODE_PATH)
+    os.chdir(FALCONS_CODE_PATH)
+
+    # resolve package folders
+    package_dirs = resolve_package_dirs(args.packages)
+
+    # pre-clean phase: remove build folders
+    if do_clean:
+        if args.full_pre_clean:
+            commands.add("rmtree", "build")
+        else:
+            if args.pre_clean:
+                if args.all:
+                    commands.add("rmtree", "build")
+                else:
+                    # remove only specific folders
+                    for d in package_dirs:
+                        b = "build/" + d
+                        if os.path.isdir(b):
+                            commands.add("rmtree", b)
+
+    # go into build folder, create if needed
+    commands.add("mkdir", "build")
+    commands.add("cd", "build")
+
+    # build phase
+    if do_build:
+        # run cmake to (re-)generate makefiles
+        commands.add("cmake", "..")
+        for d in package_dirs:
+            # go into relative path in build tree
+            b = FALCONS_CODE_PATH + "/build/" + d
+            commands.add("cd", b)
+            # build
+            commands.add("make", "-j4")
+
+    # test phase
+    if do_test:
+        commands.add("createLogdir")
+        for d in package_dirs:
+            # go into relative path in build tree
+            b = FALCONS_CODE_PATH + "/build/" + d
+            commands.add("cd", b)
+            # use some options for detailed pretty output 
+            # and global test timeout (which otherwise would 
+            # be practically infinite, we don't want hanging Jenkins)
+            # TODO: option for Jenkins integration?
+            commands.add("export GTEST_COLOR=1 ; make ARGS='-VV --timeout 120' test")
+
+    # now run the sequence of commands, unless dry-run
+    if args.dry_run:
+        commands.show()
+    else:
+        ok = commands.run()
+        # report elapsed time
+        elapsed = time.time() - t0
+        print("fmake {:s} finished after {:.1f}s for scope {:s}".format(what, elapsed, scope))
+        if not ok:
+            raise Exception(what + " failed!")
+
+
+
+if __name__ == '__main__':
+    # Argument parsing.
+    descriptionTxt = 'Falcons make wrapper script. Calls rosmake or cmake or whatever build/test system we want to use, with the proper options. Script option interface is inspired by rosmake.\n'
+    exampleTxt = 'Examples:\n   fmake -a\n   fmake rtdb\n   fmake -t simulation\n'
+    parser     = argparse.ArgumentParser(description=descriptionTxt, epilog=exampleTxt, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-a', '--all', help='select all packages', action='store_true')
+    parser.add_argument('-c', '--pre-clean', help='cleanup before build', action='store_true')
+    parser.add_argument('-C', '--full-pre-clean', help='full cleanup before build (remove entire build/ directory)', action='store_true')
+    parser.add_argument('-n', '--dry-run', help='print commands instead of executing them', action='store_true')
+    parser.add_argument('-t', '--test', help='build and test packages', action='store_true')
+    # NOTE: currently, building test targets is done by default - as optimization we could treat them separately?
+    parser.add_argument('--test-only', help='only run tests', action='store_true')
+    parser.add_argument('packages', help='package(s) to build, default all', nargs='*', default=['.'])
+    args       = parser.parse_args()
+
+    # run
+    run(args)
+

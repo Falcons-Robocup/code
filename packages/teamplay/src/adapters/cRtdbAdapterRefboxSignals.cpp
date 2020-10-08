@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,7 +23,7 @@
 #include "int/gameStateManager.hpp"
 
 /* Falcons includes */
-#include "FalconsCommon.h" //getTeamChar()
+#include "falconsCommon.hpp" //getTeamChar()
 #include "tracing.hpp"
 
 using namespace std;
@@ -56,17 +56,28 @@ void cRtdbAdapterRefboxSignals::update()
             if (r == RTDB2_SUCCESS)
             {
                 std::string dataAsString = m.lastRefboxCommand;
-                if (dataAsString.size() > 6)
+                // e.g. "KICKOFF_OWN"
+                std::string refboxSig = dataAsString;
+                TRACE("command: %s", refboxSig.c_str());
+                // special case: refbox protocol uses "DROP_BALL", but teamplay still uses "DROPPED_BALL"
+                if (refboxSig == "DROP_BALL")
                 {
-                    // e.g. "COMM_KICKOFF_OWN"
-                    // Remove "COMM_" from string.
-                    std::string refboxSig = dataAsString.substr(5, std::string::npos);
-                    TRACE("command: %s", refboxSig.c_str());
-                    // Convert string to refbox signal enum
-                    refboxSignalEnum refboxSignal = refboxSignalMapping[refboxSig];
-                    // Store
-                    teamplay::gameStateManager::getInstance().refBoxSignalReceived(refboxSignal);
+                    refboxSig = "DROPPED_BALL";
                 }
+                // special case: substitution command takes arguments
+                std::string refboxSignalArgument;
+                std::string searchStr = "SUBSTITUTION_OWN";
+                size_t pos = refboxSig.find(searchStr);
+                if (pos == 0)
+                {
+                    // split argument out of main signal, so enum can be calculated
+                    refboxSignalArgument = refboxSig.substr(1+std::string(searchStr).size());
+                    refboxSig = searchStr;
+                }
+                // Convert string to refbox signal enum
+                refboxSignalEnum refboxSignal = refboxSignalMapping[refboxSig];
+                // Store
+                teamplay::gameStateManager::getInstance().refBoxSignalReceived(refboxSignal, refboxSignalArgument);
             }
         }
     }

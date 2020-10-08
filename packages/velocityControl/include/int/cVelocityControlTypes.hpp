@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,7 +22,7 @@
 #include <boost/assign/list_of.hpp>
 
 // using Position2D and Velocity2D from FalconsCommon
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "area2D.hpp"
 #include "polygon2D.hpp"
 

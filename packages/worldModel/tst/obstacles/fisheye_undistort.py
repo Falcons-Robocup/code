@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -10,6 +10,7 @@
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  """ 
  import sys
+import os
 import cv2
 import numpy as np
 
@@ -21,7 +22,7 @@ class FisheyeUndistort:
         self.dim = image_dimension
         self.last_M = None
 
-        self.shape_max_dist = 0.2
+        self.shape_max_dist = 0.25
         self.shape_min_area = 50
         self.max_corner_dist = 50
 
@@ -76,7 +77,8 @@ class FisheyeUndistort:
             area = cv2.contourArea(cnt)
             dist = cv2.matchShapes(cnt, reference_corner, cv2.CONTOURS_MATCH_I1, 0)
             if dist < self.shape_max_dist and area > self.shape_min_area:
-                corner_contours.append(cnt)        
+                corner_contours.append(cnt)
+                #print('dist: ' + str(dist) + ' area: ' + str(area))
     
         #self.debug_show_contours(image, corner_contours)
 
@@ -100,6 +102,7 @@ class FisheyeUndistort:
             if self.last_M is None:
                 print("First corner detection failed.")
                 print("Detected corners: " + str(corners))
+                self.debug_show_contours(image, corner_contours)
 
             corners = []
                 
@@ -138,8 +141,15 @@ class FisheyeUndistort:
 
         in_video = cv2.VideoCapture(input_name)
         
-        ret, frame = in_video.read()
-        out_frame = self.get_field_image(frame, output_width)
+        for i in xrange(0,10):
+            try:
+                ret, frame = in_video.read()
+                out_frame = self.get_field_image(frame, output_width)
+                break
+            except:
+                # If there was a failure set last_M to None so that debug is shown again
+                self.last_M = None
+
         in_video.release()
 
         output_dim = (out_frame.shape[1], out_frame.shape[0])
@@ -155,17 +165,22 @@ class FisheyeUndistort:
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         out_video = cv2.VideoWriter(output_name,fourcc, fps, output_dim)
 
+        # The go pro video has a metadata track that opencv does not decode correctly
+        # This causes the video to close after a few frames if processed the regular way
+        # The workaround here checks the total number of frames and trusts that it will be correct
+        # even if some frames along the way cannot be read
         frame_num = 0
-        while(in_video.isOpened()):
-            ret, frame = in_video.read()
-            print("Frame: "+str(frame_num))
+        total_frame_count = in_video.get(cv2.CAP_PROP_FRAME_COUNT)        
+        while frame_num < total_frame_count:
+            ret, frame = in_video.read()            
             if ret==True:
+                print('Frame: '+str(frame_num)+'/'+str(total_frame_count))
                 out_frame = self.get_field_image(frame, output_width)
                 out_video.write(out_frame)
+                frame_num = frame_num + 1
             else:
-                break
+                print('Lost Frame')
 
-            frame_num = frame_num + 1
 
         in_video.release()
         out_video.release()
@@ -188,7 +203,8 @@ class FisheyeUndistort:
     def get_reference_corner_positions(self):
         #corners = [[200, 192], [561, 207], [565, 438], [188, 447]] # 1600 x 1200
         #corners = [[101, 135], [645, 157], [651, 507], [ 84, 521]] # 4000 x 3000
-        corners = [[202, 194], [553, 217], [560, 443], [177, 452]] # 4000 x 3000
+        #corners = [[202, 194], [553, 217], [560, 443], [177, 452]] # 4000 x 3000
+        corners = [[147, 100], [759, 25], [723, 453], [184, 434]] # 4000 x 3000
 
         return corners
 
@@ -216,7 +232,12 @@ D=np.array([[0.04977590855634825], [0.021950450337551962], [-0.01819999908920205
 
 if __name__ == '__main__':
     input_video_name = sys.argv[1]
-    output_video_name = sys.argv[2]
+
+    if len(sys.argv) > 2:
+        output_video_name = sys.argv[2]
+    else:
+        video_time = os.path.getmtime(input_video_name)
+        output_video_name = os.path.expanduser('~') + '/game-videos/' + str(video_time) + '.avi'
     output_width = 800
     fish_und = FisheyeUndistort(K, D, DIM)    
     fish_und.convert_video_file(input_video_name, output_video_name, output_width)

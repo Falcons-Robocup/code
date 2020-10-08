@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #include "ext/cTransmitterUDP.hpp"
 
 #include "tracing.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 #include <string.h>
 #include <arpa/inet.h>
@@ -112,7 +112,6 @@ cTransmitterUDP::~cTransmitterUDP()
     catch (exception &e)
     {
         TRACE("Caught exception: %s", e.what());
-        throw e;
     }
 }
 
@@ -159,7 +158,6 @@ void cTransmitterUDP::sendPacket(cByteArray *packet)
 		if (rc==-1)
 		{
 			TRACE("Failed to send packet, error during sending: %s", strerror(errno));
-			ROS_ERROR("Failed to send packet, error during sending: %s", strerror(errno));
 			throw runtime_error("Failed to send packet, error during sending");
 		}
     }

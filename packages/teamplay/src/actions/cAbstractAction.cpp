@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,7 +21,7 @@
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "int/cWorldStateFunctions.hpp"
 #include "int/rules/ruleAvoidAreas.hpp"
 #include "int/stores/ballStore.hpp"
@@ -32,11 +32,7 @@
 #include "int/adapters/cRTDBInputAdapter.hpp"
 #include "int/adapters/cRTDBOutputAdapter.hpp"
 
-/*
- * Include as last file
- * Undefs TRACE and creates its own
- */
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
 
 using namespace teamplay;
 
@@ -110,8 +106,6 @@ boost::optional<Area2D> cAbstractAction::getArea2DFromStr(const std::map<std::st
 T_ACTION cAbstractAction::makeAction()
 {
     T_ACTION actionData;
-    static int staticActionId = 0; // needed because teamplay sometimes re-starts the counter
-    actionData.id = _actionId = staticActionId++;
     actionData.action = actionTypeEnum::UNKNOWN;
     actionData.position.x = 0.0;
     actionData.position.y = 0.0;
@@ -144,6 +138,35 @@ void cAbstractAction::setForbiddenAreas()
     cRTDBOutputAdapter::getInstance().setForbiddenAreas(forbiddenAreas);
 }
 
+behTreeReturnEnum cAbstractAction::translateActionResultToTreeEnum(T_ACTION_RESULT actionResult)
+{
+    behTreeReturnEnum result = behTreeReturnEnum::RUNNING;
+    switch (actionResult.result)
+    {
+        case actionResultTypeEnum::INVALID:
+        {
+            result = behTreeReturnEnum::INVALID;
+            break;
+        }
+        case actionResultTypeEnum::PASSED:
+        {
+            result = behTreeReturnEnum::PASSED;
+            break;
+        }
+        case actionResultTypeEnum::FAILED:
+        {
+            result = behTreeReturnEnum::FAILED;
+            break;
+        }
+        case actionResultTypeEnum::RUNNING:
+        {
+            result = behTreeReturnEnum::RUNNING;
+            break;
+        }
+    }
+    return result;
+}
+
 behTreeReturnEnum cAbstractAction::moveTo( double x, double y, const std::string& motionProfile )
 {
     std::ostringstream ss;
@@ -152,13 +175,26 @@ behTreeReturnEnum cAbstractAction::moveTo( double x, double y, const std::string
 
     std::map<std::string, std::string> params;
     bool ballHandlersEnabled = true;
-    if (isPrepareSetPiece(params))
+    if (isPrepareSetPiece(params) || isParkingSetPiece(params))
     {
         ballHandlersEnabled = false;
     }
 
-    Position2D pose(x, y, 0.0);
+    Position2D myPos = robotStore::getInstance().getOwnRobot().getPosition();
+    Position2D pose(x, y, myPos.phi);
     bool slow = (motionProfile != "normal");
+
+    // If we do not have the ball: Always face ball.
+    auto robot = robotStore::getInstance().getOwnRobot();
+    if (!robot.hasBall())
+    {
+        auto ball = ballStore::getBall();
+        if (ball.isLocationKnown())
+        {
+            auto ballPos = ballStore::getBall().getPosition();
+            pose.phi = angle_between_two_points_0_2pi(myPos.x, myPos.y, ballPos.x, ballPos.y);
+        }
+    }
 
     setForbiddenAreas();
     
@@ -169,9 +205,7 @@ behTreeReturnEnum cAbstractAction::moveTo( double x, double y, const std::string
     actionData.position.z = pose.phi;
     actionData.slow = slow;
     actionData.ballHandlersEnabled = ballHandlersEnabled;
-    cRTDBOutputAdapter::getInstance().setActionData(actionData);
-
-    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+    return executeAction(actionData);
 }
 
 behTreeReturnEnum cAbstractAction::pass(float x, float y)
@@ -184,24 +218,23 @@ behTreeReturnEnum cAbstractAction::pass(float x, float y)
     actionData.action = actionTypeEnum::PASS;
     actionData.position.x = x;
     actionData.position.y = y;
-    cRTDBOutputAdapter::getInstance().setActionData(actionData);
 
-    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+    return executeAction(actionData);
 }
 
-behTreeReturnEnum cAbstractAction::shoot(float x, float y, float z)
+behTreeReturnEnum cAbstractAction::shoot(const Point2D& target)
 {
     std::ostringstream ss;
-    ss << "target: (" << x << ", " << y << ")";
+    ss << "target: (" << target.x << ", " << target.y << ")";
     TRACE_FUNCTION(ss.str().c_str());
 
     T_ACTION actionData = makeAction();
     actionData.action = actionTypeEnum::SHOOT;
-    actionData.position.x = x;
-    actionData.position.y = y;
-    cRTDBOutputAdapter::getInstance().setActionData(actionData);
-
-    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+    actionData.position.x = target.x;
+    actionData.position.y = target.y;
+    actionData.position.z = 0.0;
+    TRACE("Shooting at target: ") << std::to_string(target.x) << ", " << std::to_string(target.y);
+    return executeAction(actionData);
 }
 
 behTreeReturnEnum cAbstractAction::lobShot(const Point2D& target)
@@ -215,10 +248,9 @@ behTreeReturnEnum cAbstractAction::lobShot(const Point2D& target)
     actionData.position.x = target.x;
     actionData.position.y = target.y;
     actionData.position.z = 0.0;
-    cRTDBOutputAdapter::getInstance().setActionData(actionData);
 
     TRACE("Lob Shooting at target: ") << std::to_string(target.x) << ", " << std::to_string(target.y);
-    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+    return executeAction(actionData);
 }
 
 behTreeReturnEnum cAbstractAction::getBall(const std::string& motionProfile)
@@ -232,9 +264,7 @@ behTreeReturnEnum cAbstractAction::getBall(const std::string& motionProfile)
     T_ACTION actionData = makeAction();
     actionData.action = actionTypeEnum::GET_BALL;
     actionData.slow = slow;
-    cRTDBOutputAdapter::getInstance().setActionData(actionData);
-
-    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+    return executeAction(actionData);
 }
 
 behTreeReturnEnum cAbstractAction::turnAwayFromOpponent(double x, double y, const std::string& motionProfile)
@@ -250,9 +280,7 @@ behTreeReturnEnum cAbstractAction::turnAwayFromOpponent(double x, double y, cons
     actionData.position.x = x;
     actionData.position.y = y;
     actionData.slow = slow;
-    cRTDBOutputAdapter::getInstance().setActionData(actionData);
-
-    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+    return executeAction(actionData);
 }
 
 behTreeReturnEnum cAbstractAction::keeperMove(float x)
@@ -264,9 +292,19 @@ behTreeReturnEnum cAbstractAction::keeperMove(float x)
     T_ACTION actionData = makeAction();
     actionData.action = actionTypeEnum::KEEPER_MOVE;
     actionData.position.x = x;
-    cRTDBOutputAdapter::getInstance().setActionData(actionData);
+    return executeAction(actionData);
+}
 
-    return cRTDBInputAdapter::getInstance().getActionResult(_actionId);
+behTreeReturnEnum cAbstractAction::interceptBall(const std::string& motionProfile)
+{
+    TRACE_FUNCTION("");
+
+    bool slow = (motionProfile != "normal");
+
+    T_ACTION actionData = makeAction();
+    actionData.action = actionTypeEnum::INTERCEPT_BALL;
+    actionData.slow = slow;
+    return executeAction(actionData);
 }
 
 void cAbstractAction::stop()
@@ -280,7 +318,7 @@ void cAbstractAction::stop()
 
     T_ACTION actionData = makeAction();
     actionData.action = actionTypeEnum::STOP;
-    cRTDBOutputAdapter::getInstance().setActionData(actionData);
+    executeAction(actionData); // ignore return value
 }
 
 bool cAbstractAction::positionReached(double x, double y)
@@ -449,5 +487,12 @@ std::vector<polygon2D> cAbstractAction::getForbiddenActionAreas() const
     }
 
     return retVal;
+}
+
+behTreeReturnEnum cAbstractAction::executeAction(T_ACTION const &actionData)
+{
+    // wrapper to call motionPlanning and log diagnostics data
+    cRTDBOutputAdapter::getInstance().setActionData(actionData); // diagnostics, no waitForPut anymore
+    return translateActionResultToTreeEnum( cRTDBOutputAdapter::getInstance().getMPClient().executeAction(actionData) );
 }
 

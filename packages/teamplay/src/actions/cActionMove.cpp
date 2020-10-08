@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,11 +20,11 @@
 
 #include <string>
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "int/stores/ballStore.hpp"
 #include "int/stores/configurationStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 
 
 using namespace teamplay;
@@ -58,29 +58,14 @@ behTreeReturnEnum cActionMove::execute(const std::map<std::string, std::string> 
 {
     try
     {
-        Position2D myPos = robotStore::getInstance().getOwnRobot().getPosition();
-
         // parameter "target" is the place to go.
         std::string targetStr("target");
         boost::optional<Position2D> target = getPos2DFromStr(parameters, targetStr);
 
-        // parameter "distanceThreshold" is the allowed delta between the target and the real position
-        std::string distanceThresholdStr("distanceThreshold");
-        double distanceThreshold = XYpositionTolerance;
-        auto paramValPair = parameters.find(distanceThresholdStr);
-        if (paramValPair != parameters.end())
-        {
-            std::string distanceThresholdVal = paramValPair->second;
-            if (distanceThresholdVal.compare(emptyValue) != 0)
-            {
-                distanceThreshold = std::stod(distanceThresholdVal);
-            }
-        }
-
         // [Optional] parameter "motionProfile" defines with which profile to move with (e.g., normal play or more careful during a setpiece)
         std::string motionProfileStr("motionProfile");
         std::string motionProfileValue = "normal";
-        paramValPair = parameters.find(motionProfileStr);
+        auto paramValPair = parameters.find(motionProfileStr);
         if (paramValPair != parameters.end())
         {
             motionProfileValue = paramValPair->second;
@@ -108,20 +93,8 @@ behTreeReturnEnum cActionMove::execute(const std::map<std::string, std::string> 
             }
 
             // Previously determined targetPos.
-            // Now move there, if not already reached.
-            if (positionReached(targetPos.x, targetPos.y, distanceThreshold))
-            {
-                // Target reached. Do nothing and return PASSED
-                TRACE("cActionMove PASSED (reason: target reached)");
-                moveTo(myPos.x, myPos.y);
-                return behTreeReturnEnum::PASSED;
-            }
-            else
-            {
-                //moveTo and return RUNNING
-                moveTo(targetPos.x, targetPos.y, motionProfileValue);
-                return behTreeReturnEnum::RUNNING;
-            }
+            // Now move there
+            return moveTo(targetPos.x, targetPos.y, motionProfileValue);
         }
 
     }

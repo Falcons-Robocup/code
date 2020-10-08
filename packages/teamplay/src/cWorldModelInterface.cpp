@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,14 +17,13 @@
  */
 #include <stdexcept>
 
-#include "FalconsCommon.h"  // For getRobotNumber
-
 #include "int/rules/ruleStimulatePassing.hpp"
 #include "int/stores/ballStore.hpp"
 #include "int/stores/obstacleStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
 #include "int/cWorldModelInterface.hpp"
+
+#include "cDiagnostics.hpp"
 
 using namespace teamplay;
 
@@ -67,10 +66,10 @@ void cWorldModelInterface::store (const teamplay::worldModelInfo& wmInfo)
         teamplay::robotStore::getInstance().clear();
 
         /* Store the own robot */
-        auto own_robot = robot(getRobotNumber(), treeEnum::R_ROBOT_STOP, wmInfo.ownRobot.position, wmInfo.ownRobot.velocity);
+        auto own_robot = robot(wmInfo.ownRobot.number, treeEnum::R_ROBOT_STOP, wmInfo.ownRobot.position, wmInfo.ownRobot.velocity);
 
         if ((wmInfo.ballPossession.possessionType == ballPossessionEnum::TEAMMEMBER) &&
-                (wmInfo.ballPossession.robotID == getRobotNumber()))
+                (wmInfo.ballPossession.robotID == wmInfo.ownRobot.number))
         {
             own_robot.claimsBallPossession();
         }

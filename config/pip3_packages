@@ -1,0 +1,17 @@
+zstd
+pause
+python-dateutil
+pybindgen
+robotframework
+npyscreen
+hexdump
+cherrypy
+posix-ipc
+bs4
+html5lib
+numpy
+pandas
+matplotlib
+py-dmidecode
+requests
+pyyaml

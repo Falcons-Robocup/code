@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -34,7 +34,7 @@
 #include "cRtDBClient.hpp"
 #include "FalconsRtDB2.hpp"
 
-#include "FalconsCommon.h" // TODO fix type dealing abuse, use geometry package
+#include "falconsCommon.hpp" // TODO fix type dealing abuse, use geometry package
 
 // defines
 #define ACTIVE_TIMEOUT 7.0 // seconds - ignore teammember if data is older
@@ -48,6 +48,7 @@ public:
     
     // update to GET all data from RTDB, store for all getters
     void update();
+    void update(const int myRobotId);
     
     // getters
     bool isActive() const;
@@ -63,7 +64,8 @@ public:
     T_OBSTACLES getObstacles() const;
     int numObstacles() const;
     float closestObstacleDistance() const;
-    bool getRobotState(T_ROBOT_STATE &robot, int robotId); // return success
+    bool getRobotState(T_ROBOT_STATE &robot, const int robotId); // return success
+    bool getRobotState(T_ROBOT_STATE &robot, const int robotId, const int myRobotId);
     std::vector<T_ROBOT_STATE> getTeamMembersExcludingSelf() const;
     // TODO estimated ball direction (if opponent seems to have the ball)
     // TODO last known ball location

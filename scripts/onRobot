@@ -1,0 +1,35 @@
+#!/usr/bin/python3
+
+import os, sys
+import argparse
+
+
+def parse_arguments():
+    descriptionTxt = """Scripting utility to detect if current environment is a robot via shell exit code.
+"""
+    exampleTxt = """Examples:
+
+onRobot && echo this executes if on robot and shows nothing otherwise
+onRobot || echo this executes if NOT on robot and shows nothing otherwise
+onRobot -v # this reports on which robot
+
+"""
+    parser     = argparse.ArgumentParser(description=descriptionTxt, epilog=exampleTxt, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-v', '--verbose', help='report result and if so, on which robot', action='store_true')
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    # parse arguments
+    args = parse_arguments()
+    # run
+    r = os.getenv("TURTLE5K_ROBOTNUMBER")
+    if not r:
+        if args.verbose:
+            print("not on robot")
+        sys.exit(1)
+    if args.verbose:
+        print("on robot " + str(r))
+    sys.exit(0)
+
+

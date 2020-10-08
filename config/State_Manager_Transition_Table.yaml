@@ -58,6 +58,10 @@
   - - NewGameState: INVALID
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: INVALID
+- - RefBoxSignal: PARK
+  - - NewGameState: INVALID
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: INVALID
 - GameState: NEUTRAL_STOPPED
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -117,6 +121,10 @@
   - - NewGameState: NEUTRAL_STOPPED
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: NEUTRAL_PLAYING
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -176,6 +184,10 @@
   - - NewGameState: NEUTRAL_PLAYING
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_KICKOFF_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -235,6 +247,10 @@
   - - NewGameState: OWN_KICKOFF_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_KICKOFF_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -294,6 +310,10 @@
   - - NewGameState: OPP_KICKOFF_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_KICKOFF_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -353,6 +373,10 @@
   - - NewGameState: OWN_KICKOFF_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_KICKOFF_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -412,6 +436,10 @@
   - - NewGameState: OPP_KICKOFF_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_FREEKICK_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -471,6 +499,10 @@
   - - NewGameState: OWN_FREEKICK_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_FREEKICK_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -530,6 +562,10 @@
   - - NewGameState: OPP_FREEKICK_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_FREEKICK_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -589,6 +625,10 @@
   - - NewGameState: OWN_FREEKICK_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_FREEKICK_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -648,6 +688,10 @@
   - - NewGameState: OPP_FREEKICK_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_GOALKICK_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -707,6 +751,10 @@
   - - NewGameState: OWN_GOALKICK_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_GOALKICK_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -766,6 +814,10 @@
   - - NewGameState: OPP_GOALKICK_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_GOALKICK_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -825,6 +877,10 @@
   - - NewGameState: OWN_GOALKICK_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_GOALKICK_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -884,6 +940,10 @@
   - - NewGameState: OPP_GOALKICK_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_THROWIN_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -943,6 +1003,10 @@
   - - NewGameState: OWN_THROWIN_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_THROWIN_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1002,6 +1066,10 @@
   - - NewGameState: OPP_THROWIN_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_THROWIN_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1061,6 +1129,10 @@
   - - NewGameState: OWN_THROWIN_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_THROWIN_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1120,6 +1192,10 @@
   - - NewGameState: OPP_THROWIN_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_CORNER_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1179,6 +1255,10 @@
   - - NewGameState: OWN_CORNER_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_CORNER_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1238,6 +1318,10 @@
   - - NewGameState: OPP_CORNER_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_CORNER_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1297,6 +1381,10 @@
   - - NewGameState: OWN_CORNER_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_CORNER_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1356,6 +1444,10 @@
   - - NewGameState: OPP_CORNER_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_PENALTY_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1415,6 +1507,10 @@
   - - NewGameState: OWN_PENALTY_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_PENALTY_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1474,6 +1570,10 @@
   - - NewGameState: OPP_PENALTY_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_PENALTY_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1533,6 +1633,10 @@
   - - NewGameState: OWN_PENALTY_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_PENALTY_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1592,6 +1696,10 @@
   - - NewGameState: OPP_PENALTY_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: DROPPED_BALL_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1651,6 +1759,10 @@
   - - NewGameState: DROPPED_BALL_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: DROPPED_BALL_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: NEUTRAL_STOPPED
@@ -1710,6 +1822,10 @@
   - - NewGameState: DROPPED_BALL_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: DROPPED_BALL_PREPARE
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OUT_OF_MATCH_NEUTRAL_STOPPED
 - - RefBoxSignal: INVALID
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
@@ -1769,6 +1885,10 @@
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_PENALTY_SHOOTOUT_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
@@ -1828,6 +1948,10 @@
   - - NewGameState: OWN_PENALTY_SHOOTOUT_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_PENALTY_SHOOTOUT_PREPARE
 - - RefBoxSignal: INVALID
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
@@ -1887,6 +2011,10 @@
   - - NewGameState: OPP_PENALTY_SHOOTOUT_PREPARE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OWN_PENALTY_SHOOTOUT_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
@@ -1946,6 +2074,10 @@
   - - NewGameState: OWN_PENALTY_SHOOTOUT_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 - GameState: OPP_PENALTY_SHOOTOUT_EXECUTE
 - - RefBoxSignal: INVALID
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
@@ -2005,4 +2137,71 @@
   - - NewGameState: OPP_PENALTY_SHOOTOUT_EXECUTE
 - - RefBoxSignal: DROPPED_BALL
   - - NewGameState: OUT_OF_MATCH_NEUTRAL_STOPPED
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
+- GameState: PARKING
+- - RefBoxSignal: INVALID
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: STOP
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: HALT
+  - - NewGameState: NEUTRAL_STOPPED
+- - RefBoxSignal: CANCEL
+  - - NewGameState: PARKING
+- - RefBoxSignal: READY
+  - - NewGameState: PARKING
+- - RefBoxSignal: START
+  - - NewGameState: PARKING
+- - RefBoxSignal: RESTART
+  - - NewGameState: PARKING
+- - RefBoxSignal: FIRST_HALF
+  - - NewGameState: PARKING
+- - RefBoxSignal: HALF_TIME
+  - - NewGameState: PARKING
+- - RefBoxSignal: SECOND_HALF
+  - - NewGameState: PARKING
+- - RefBoxSignal: END_GAME
+  - - NewGameState: PARKING
+- - RefBoxSignal: KICKOFF_OWN
+  - - NewGameState: PARKING
+- - RefBoxSignal: KICKOFF_OPP
+  - - NewGameState: PARKING
+- - RefBoxSignal: FREEKICK_OWN
+  - - NewGameState: PARKING
+- - RefBoxSignal: FREEKICK_OPP
+  - - NewGameState: PARKING
+- - RefBoxSignal: GOALKICK_OWN
+  - - NewGameState: PARKING
+- - RefBoxSignal: GOALKICK_OPP
+  - - NewGameState: PARKING
+- - RefBoxSignal: THROWIN_OWN
+  - - NewGameState: PARKING
+- - RefBoxSignal: THROWIN_OPP
+  - - NewGameState: PARKING
+- - RefBoxSignal: CORNER_OWN
+  - - NewGameState: PARKING
+- - RefBoxSignal: CORNER_OPP
+  - - NewGameState: PARKING
+- - RefBoxSignal: PENALTY_OWN
+  - - NewGameState: PARKING
+- - RefBoxSignal: PENALTY_OPP
+  - - NewGameState: PARKING
+- - RefBoxSignal: GOAL_OWN
+  - - NewGameState: PARKING
+- - RefBoxSignal: GOAL_OPP
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBGOAL_OWN
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBGOAL_OPP
+  - - NewGameState: PARKING
+- - RefBoxSignal: DUMMY
+  - - NewGameState: PARKING
+- - RefBoxSignal: DROPPED_BALL
+  - - NewGameState: PARKING
+- - RefBoxSignal: PARK
+  - - NewGameState: PARKING
+- - RefBoxSignal: SUBSTITUTION_OWN
+  - - NewGameState: PARKING
 ...

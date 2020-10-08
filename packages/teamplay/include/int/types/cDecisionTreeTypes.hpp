@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,7 +28,7 @@
 #include "behTreeReturnEnum.hpp"
 
 static std::map<std::string, treeEnum> treeEnumMapping = boost::assign::map_list_of
-    // GAMESTATES                                   // GAMESTATES                                   
+    // GAMESTATES                                   // GAMESTATES
     ("neutralStopped_neutral",                      treeEnum::IN_MATCH_NEUTRAL_STOPPED_NEUTRAL)
     ("neutralPlaying_neutral",                      treeEnum::IN_MATCH_NEUTRAL_PLAYING_NEUTRAL)
     ("ownKickoffPrepare_neutral",                   treeEnum::IN_MATCH_OWN_KICKOFF_PREPARE_NEUTRAL)
@@ -63,6 +63,7 @@ static std::map<std::string, treeEnum> treeEnumMapping = boost::assign::map_list
     ("oppShootoutPrepare",                          treeEnum::OUT_OF_MATCH_OPP_PENALTY_PREPARE_NEUTRAL)
     ("ownShootoutExecute",                          treeEnum::OUT_OF_MATCH_OWN_PENALTY_EXECUTE_NEUTRAL)
     ("oppShootoutExecute",                          treeEnum::OUT_OF_MATCH_OPP_PENALTY_EXECUTE_NEUTRAL)
+    ("parking",                                     treeEnum::PARKING)
 
     // Roles                                        // ROLES
     ("attackerMain",                                treeEnum::ATTACKER_MAIN)
@@ -71,17 +72,19 @@ static std::map<std::string, treeEnum> treeEnumMapping = boost::assign::map_list
     ("defenderAssist",                              treeEnum::DEFENDER_ASSIST)
     ("R_goalkeeper",                                treeEnum::R_GOALKEEPER)
     ("R_robotStop",                                 treeEnum::R_ROBOT_STOP)
-                                                                                                    
+
     // Behaviors                                    // BEHAVIORS
     ("B_goalkeeper",                                treeEnum::B_GOALKEEPER)
     ("B_robotStop",                                 treeEnum::B_ROBOT_STOP)
     ("attackerPassBallStrategy",                    treeEnum::ATTACKER_PASS_BALL_STRATEGY)
+    ("attackerPlayBall",                            treeEnum::ATTACKER_PLAY_BALL)
     ("attackMain",                                  treeEnum::ATTACK_MAIN)
     ("attackAssist",                                treeEnum::ATTACK_ASSIST)
     ("defendAssist",                                treeEnum::DEFEND_ASSIST)
     ("defendPotentialOppAttacker",                  treeEnum::DEFEND_POTENTIAL_OPP_ATTACKER)
     ("defendMain",                                  treeEnum::DEFEND_MAIN)
     ("defenderPassBallStrategy",                    treeEnum::DEFENDER_PASS_BALL_STRATEGY)
+    ("defenderPlayBall",                            treeEnum::DEFENDER_PLAY_BALL)
     ("dropBallExecute",                             treeEnum::DROPBALL_EXECUTE)
     ("dropBallPrepare",                             treeEnum::DROPBALL_PREPARE)
     ("dropBallSearch",                                 treeEnum::DROPBALL_SEARCH)
@@ -120,8 +123,6 @@ static std::map<std::string, treeEnum> treeEnumMapping = boost::assign::map_list
     ("passBallToClosestTeammember",                 treeEnum::PASS_BALL_TO_CLOSEST_TEAMMEMBER)
     ("passBallToFurthestDefender",                  treeEnum::PASS_BALL_TO_FURTHEST_DEFENDER)
     ("positionToFreeSpot",                          treeEnum::POSITION_TO_FREE_SPOT)
-    ("positionToShoot",                              treeEnum::POSITION_TO_SHOOT)
-    ("positionToPass",                              treeEnum::POSITION_TO_PASS)
     ("receivePass",                                       treeEnum::RECEIVE_PASS)
     ("searchBall",                                  treeEnum::SEARCH_BALL)
     ("setPiece",                                      treeEnum::SETPIECE)
@@ -132,6 +133,7 @@ static std::map<std::string, treeEnum> treeEnumMapping = boost::assign::map_list
     ("tipInExecute",                                 treeEnum::TIP_IN_EXECUTE)
     ("turnAwayFromClosestOpponent",                 treeEnum::TURN_AWAY_FROM_CLOSEST_OPPONENT)
     ("testObstacleStrafe",                          treeEnum::TEST_OBSTACLE_STRAFE)
+    ("park",                                        treeEnum::PARK)
     ;
 
 // Implemented in cDecisionTree.cpp

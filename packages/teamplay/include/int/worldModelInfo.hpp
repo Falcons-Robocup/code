@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,12 +24,14 @@
 #include "int/types/cBallLocationTypes.hpp"
 #include "int/types/cBallPossessionTypes.hpp"
 #include "int/types/cRobotLocationTypes.hpp"
+#include "int/types/robot.hpp"
 
 namespace teamplay
 {
 
 typedef struct
 {
+    robotNumber number;
     Position2D position;
     Velocity2D velocity;
 } worldModelInfoOwnRobot;

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,12 +19,11 @@
 #ifndef CSHOOTPLANNER_HPP_
 #define CSHOOTPLANNER_HPP_
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "shootTypeEnum.hpp"
+#include "AbstractInterpolator.hpp" // from package 'filters'
 
 #include "int/adapters/cRTDBOutputAdapter.hpp"
-#include "int/cReconfigureAdapter.hpp"
-#include "int/cInterpolator.hpp"
 #include "int/cShotSolver.hpp"
 
 typedef struct
@@ -42,8 +41,7 @@ typedef struct
 class cShootPlanner
 {
     public:
-        cShootPlanner(const shootPlanningParams_t spParams);
-
+        cShootPlanner();
         ~cShootPlanner();
 
         void prepareForShot(float distance, float z, shootTypeEnum shootType);
@@ -58,11 +56,12 @@ class cShootPlanner
         void calculateLob(float distance, float z);
         void calculateStraightShot(float distance, float z);
 
-        cInterpolator *_passInterpolator;
+        T_CONFIG_SHOOTPLANNING getConfig();
+
+        AbstractInterpolator *_passInterpolator;
         cShotSolver *_shotSolver;
 
         cRTDBOutputAdapter _rtdbOutputAdapter;
-        shootPlanningParams_t _spParams;
         float _kickerStrength;
         float _kickerAngle;
         double _lastSetHeightTimestamp;

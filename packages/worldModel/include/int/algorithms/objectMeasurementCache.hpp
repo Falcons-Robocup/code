@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,7 +21,7 @@
 #define OBJECTMEASUREMENTCACHE_HPP_
 
 #include "objectMeasurement.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "opencv2/core/core.hpp"
 
 class objectMeasurementCache

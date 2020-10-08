@@ -1,40 +1,30 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 3.5.1)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-#set(ROS_BUILD_TYPE Debug)
-set(ROS_BUILD_TYPE Release)
+project(RaspiControl)
 
-rosbuild_init()
+#find_package(Boost COMPONENTS system thread REQUIRED QUIET)
+#find_package(Facilities)
+find_package(MultiCam)
 
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "-std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "-std=c++0x")
-else()
-    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+include_directories("include")
+include_directories(/usr/include/opencv4)
 
 #set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 
 
 # one executable: raspiControl (not production)
 # one library: raspiControlLib, used in raspiSync which runs as part of standard robot software
-rosbuild_add_library(raspiControlLib src/raspiControl.cpp)
-rosbuild_add_executable(raspiControl src/raspiControlMain.cpp src/raspiControl.cpp)
+add_library(raspiControlLib src/raspiControl.cpp)
+target_link_libraries(raspiControlLib mcRaspiCore)
+
+add_executable(raspiControl src/raspiControlMain.cpp src/raspiControl.cpp)
 target_link_libraries(raspiControl raspiControlLib)
 target_link_libraries(raspiControl opencv_core)
 target_link_libraries(raspiControl opencv_highgui)
+target_link_libraries(raspiControl pthread)
+target_link_libraries(raspiControl mcRaspiCore)
 

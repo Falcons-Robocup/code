@@ -1,0 +1,24 @@
+#!/bin/bash
+
+
+RTDB_TOOLS_FOLDER=$FALCONS_CODE_PATH/packages/facilities/rtdb/python
+
+alias rget="python3 $RTDB_TOOLS_FOLDER/rtdb2_get.py $@"
+alias rput="python3 $RTDB_TOOLS_FOLDER/rtdb2_put.py $@"
+redit()
+{
+    # If TURTLE5K_ROBOTNUMBER is set, use it as agent
+    if [ -z "$TURTLE5K_ROBOTNUMBER" ]; then
+        python3 $RTDB_TOOLS_FOLDER/rtdb2_edit.py "$@";
+    else
+        python3 $RTDB_TOOLS_FOLDER/rtdb2_edit.py -a $TURTLE5K_ROBOTNUMBER "$@";
+    fi;
+}
+alias rdump="python3 $RTDB_TOOLS_FOLDER/rtdb2_dump.py $@"
+alias rmon="python3 $RTDB_TOOLS_FOLDER/rtdb2_mon.py $@"
+alias rtop="python3 $RTDB_TOOLS_FOLDER/rtdb2_top.py /tmp/rtdb2_storage"
+
+# for simulation:
+alias rtopteama="python3 $RTDB_TOOLS_FOLDER/rtdb2_top.py /tmp/rtdb2_storage_team_A"
+alias rtopteamb="python3 $RTDB_TOOLS_FOLDER/rtdb2_top.py /tmp/rtdb2_storage_team_B"
+

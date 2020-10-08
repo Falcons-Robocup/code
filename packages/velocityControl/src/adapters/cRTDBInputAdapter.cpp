@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,6 +17,7 @@
  */
 
 #include "tracing.hpp"
+#include "cDiagnostics.hpp"
 
 #include "int/adapters/cRTDBInputAdapter.hpp"
 
@@ -39,11 +40,19 @@ void cRTDBInputAdapter::waitForMotorFeedback()
 {
     while (true)
     {
-        _rtdb->waitForPut(MOTOR_FEEDBACK);
+        try
+        {
+            _rtdb->waitForPut(MOTOR_FEEDBACK);
 
-        getMotorFeedback();
+            getMotorFeedback();
 
-        _iterateFeedbackFunc();
+            _iterateFeedbackFunc();
+        }
+        catch(std::exception &e)
+        {
+            TRACE_ERROR("cRTDBInputAdapter::waitForMotorFeedback() failed: %s", e.what());
+            std::cout << "cRTDBInputAdapter::waitForMotorFeedback() failed: " << e.what() << std::endl;
+        }
     }
 }
 
@@ -51,11 +60,19 @@ void cRTDBInputAdapter::waitForRobotVelocitySetpoint()
 {
     while (true)
     {
-        _rtdb->waitForPut(ROBOT_VELOCITY_SETPOINT);
+        try
+        {
+            _rtdb->waitForPut(ROBOT_VELOCITY_SETPOINT);
 
-        getRobotVelocitySetpoint();
+            getRobotVelocitySetpoint();
 
-        _iterateSetpointFunc();
+            _iterateSetpointFunc();
+        }
+        catch(std::exception &e)
+        {
+            TRACE_ERROR("cRTDBInputAdapter::waitForRobotVelocitySetpoint() failed: %s", e.what());
+            std::cout << "cRTDBInputAdapter::waitForRobotVelocitySetpoint() failed: " << e.what() << std::endl;
+        }
     }
 }
 
@@ -86,7 +103,7 @@ void cRTDBInputAdapter::getMotorFeedback()
 
     if (r == RTDB2_SUCCESS)
     {
-        tprintf("get MOTOR_FEEDBACK [%6.2f, %6.2f, %6.2f]", motorFeedback.m1, motorFeedback.m2, motorFeedback.m3);
+        tprintf("get MOTOR_FEEDBACK disp[%6.2f, %6.2f, %6.2f] vel[%6.2f, %6.2f, %6.2f]", motorFeedback.m1.displacement, motorFeedback.m2.displacement, motorFeedback.m3.displacement, motorFeedback.m1.velocity, motorFeedback.m2.velocity, motorFeedback.m3.velocity);
         vc_motors_data motorData;
         motorData.m1.displacement = motorFeedback.m1.displacement;
         motorData.m2.displacement = motorFeedback.m2.displacement;

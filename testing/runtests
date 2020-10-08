@@ -1,18 +1,14 @@
 #!/bin/bash
 #
 # Regression test sequence.
-# To be executed after each commit on buildserver
-# and also by developers before commit ;).
-# Or else!
 #
 # First run unit tests,
 # then run system tests.
 
 
+cd "$(dirname "$0")"
 ./runtests_unitlevel || exit 1
 
-./runtests_robotframework
+# system/simulation tests to be implemented
+#./runtests_robotframework
 
-
-
-# TODO integrate outputs in buildserver browser (especially unittests; systemlevel tests we already had)

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kst version="2.0.9">
+    <data>
+        <source reader="ASCII file" updateType="0" file="/var/tmp/cpd/plotRobotPos/plotRobotPos.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotRobotPos/plotRobotPos.txt">
+            <properties vector="age" interpretation="3" delimiters="#" columntype="0" headerstart="1" fields="0" readfields="true" usedot="true" columnwidthisconst="false" readunits="false" units="0" limitFileBuffer="false" limitFileBufferSize="0" useThreads="0" asciiTimeFormat="hh:mm:ss.zzz" dataRate="1" offsetDateTime="true" offsetFileDate="false" offsetRelavive="false" dateTimeOffset="2020-09-21T20:52:36.807Z" relativeOffset="0" nanValue="0" updateType="0"/> initialXNum="1" initialTNum="1" initialDSNum="1"
+        </source>
+    </data>
+    <variables>
+        <datavector file="/var/tmp/cpd/plotRobotPos/plotRobotPos.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotRobotPos/plotRobotPos.txt" field="age" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" initialVNum="1" initialXNum="1"/>
+        <datavector file="/var/tmp/cpd/plotRobotPos/plotRobotPos.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotRobotPos/plotRobotPos.txt" field="age" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" initialVNum="2" initialXNum="15"/>
+        <datavector file="/var/tmp/cpd/plotRobotPos/plotRobotPos.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotRobotPos/plotRobotPos.txt" field="ROBOT_STATE.[2][0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="robotpos.x" initialVNum="3" initialXNum="29"/>
+        <datavector file="/var/tmp/cpd/plotRobotPos/plotRobotPos.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotRobotPos/plotRobotPos.txt" field="ROBOT_STATE.[2][1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="robotpos.y" initialVNum="4" initialXNum="43"/>
+        <datavector file="/var/tmp/cpd/plotRobotPos/plotRobotPos.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotRobotPos/plotRobotPos.txt" field="ROBOT_STATE.[2][2]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="robotpos.Rz" initialVNum="5" initialXNum="57"/>
+    </variables>
+    <objects/>
+    <relations>
+        <curve xvector="robotpos.x (V3)" yvector="robotpos.y (V4)" color="#4682b4" alpha="255" headcolor="#501010" headalpha="255" barfillcolor="#105010" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="5" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="1"/>
+    </relations>
+    <graphics currentTab="0">
+        <view name="View &amp;1" width="1843" height="920" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,11,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="false" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="1" name="Plot">
+                <position x="2.9983731019522777" y="2.996742671009772" z="500"/>
+                <rect x="0" y="0" width="1836.0037960954446" height="913.0076004343106"/>
+                <relativesize width="0.9962039045553145" height="0.992399565689468" centerx="0.4997288503253796" centery="0.499457111834962" posx="0.0016268980477223427" posy="0.003257328990228013" leftx="0.0016268980477223427" lefty="0.995656894679696" rightx="0.9978308026030369" righty="0.995656894679696" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" alpha="1" style="1"/>
+                </pen>
+                <brush color="#ffffff" alpha="1" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="12" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="150.6603335765049" y="79.72971847187105" z="500"/>
+                    <rect x="0" y="0" width="0" height="0"/>
+                    <relativesize width="0" height="0" centerx="0.036640441309459225" centery="0.07869212243629585" posx="0.036640441309459225" posy="0.07869212243629585" leftx="0.036640441309459225" lefty="0.07869212243629585" rightx="0.036640441309459225" righty="0.07869212243629585" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" alpha="1" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" alpha="1" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="robotpos.y vs robotpos.x (C1)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="2"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="2"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="-3.0852367877960205" y="-7.887734766169121" width="6.244236946105957" height="9.952623954144578"/>
+            </plot>
+        </view>
+    </graphics>
+</kst>

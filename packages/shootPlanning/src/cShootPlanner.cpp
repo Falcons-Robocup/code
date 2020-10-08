@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -15,37 +15,54 @@
  *  Created on: Jun 21, 2015
  *      Author: Thomas Kerkhof
  */
+#include "FalconsRtDB2.hpp"
+#include "ConfigRTDBAdapter.hpp"
 
 #include "int/cShootPlanner.hpp"
-#include "int/cLinearInterpolator.hpp"
+#include "LinearInterpolator.hpp" // from package 'filters'
 #include "cDiagnostics.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 
 using std::runtime_error;
 using std::exception;
 
-cShootPlanner::cShootPlanner(shootPlanningParams_t spParams)
+ConfigRTDBAdapter<T_CONFIG_SHOOTPLANNING>* _configAdapter;
+
+cShootPlanner::cShootPlanner()
 {
-    _spParams = spParams;
+    // Fetch configuration from yaml file
+    std::string configFile = determineConfig("ShootPlanning");
+    _configAdapter = new ConfigRTDBAdapter<T_CONFIG_SHOOTPLANNING>(CONFIG_SHOOTPLANNING);
+    _configAdapter->loadYAML(configFile);
+
     _lastSetHeightTimestamp = 0.0;
     _kickerAngle = 30;
     _kickerStrength = 180;
 
-    _passInterpolator = new cLinearInterpolator();
+    _passInterpolator = new LinearInterpolator();
     _passInterpolator->load(determineConfig("shootPlanningPassCalibration", ".txt"));
-    
+
     TRACE("constructing lookup table");
     _shotSolver = new cShotSolver();
     _shotSolver->load(determineConfig("shootPlanningShotCalibration", ".txt"));
     
-    TRACE("cShootPlanner constructed with alwaysLobshot=%d", _spParams.alwaysLobshot);
+    TRACE("cShootPlanner constructed");
 
 }
 
 cShootPlanner::~cShootPlanner()
 {
+    delete _configAdapter;
+    delete _passInterpolator;
+    delete _shotSolver;
+}
 
+T_CONFIG_SHOOTPLANNING cShootPlanner::getConfig()
+{
+    T_CONFIG_SHOOTPLANNING result;
+    _configAdapter->get(result);
+    return result;
 }
 
 void cShootPlanner::prepareForShot(float distance, float z, shootTypeEnum shootType)
@@ -60,11 +77,11 @@ void cShootPlanner::prepareForShot(float distance, float z, shootTypeEnum shootT
         {
             _kickerAngle = 0.0;  
         }
-        else if ( _spParams.alwaysLobshot || 
+        else if ( getConfig().alwaysLobshot || 
             ( shootType == shootTypeEnum::LOB && 
-                (distance <= _spParams.maxLobDistance) && 
-                (distance >= _spParams.minLobDistance) && 
-                !_spParams.alwaysStraightshot))
+                (distance <= getConfig().maxLobDistance) && 
+                (distance >= getConfig().minLobDistance) && 
+                !getConfig().alwaysStraightshot))
         {
             calculateLob(distance, z);
         }
@@ -75,7 +92,7 @@ void cShootPlanner::prepareForShot(float distance, float z, shootTypeEnum shootT
         TRACE("setHeightKicker %.2f", _kickerAngle);
         tprintf("setHeightKicker %.2f", _kickerAngle);
         _rtdbOutputAdapter.setKickerSetpoint(kickerSetpointTypeEnum::SET_HEIGHT, _kickerAngle, 0.0);
-        _lastSetHeightTimestamp = rtime::now();
+        _lastSetHeightTimestamp = ftime::now();
     }
 }
 
@@ -110,7 +127,7 @@ bool cShootPlanner::canPrepare()
     // use a brief timer here to prevent 30Hz spam of slightly changing consecutive height setpoints
     // during rotation preparation for shot
     // which has seen to cause ioBoard reconnecting and even high-pitch noises
-    double t = rtime::now();
+    double t = ftime::now();
     if ((t - _lastSetHeightTimestamp) > 0.5)
     {
         return true;
@@ -120,7 +137,7 @@ bool cShootPlanner::canPrepare()
 
 void cShootPlanner::calculatePassPower(float distance)
 {
-    _kickerStrength = _spParams.passScaling * _passInterpolator->interpolate(distance);
+    _kickerStrength = getConfig().passScaling * _passInterpolator->evaluate(distance);
 }
 
 void cShootPlanner::calculateLob(float distance, float z)
@@ -130,8 +147,8 @@ void cShootPlanner::calculateLob(float distance, float z)
 
     bool r = _shotSolver->query(distance, z, true, tmpStrength, tmpAngle);
 
-    _kickerAngle = tmpAngle * _spParams.lobAngleScaling;
-    _kickerStrength = tmpStrength * _spParams.shotStrengthScaling;
+    _kickerAngle = tmpAngle * getConfig().lobAngleScaling;
+    _kickerStrength = tmpStrength * getConfig().shotStrengthScaling;
     
     if (!r)
     {
@@ -146,8 +163,8 @@ void cShootPlanner::calculateStraightShot(float distance, float z)
     float tmpAngle = 0.0;
     bool r = _shotSolver->query(distance, z, false, tmpStrength, tmpAngle);
     
-    _kickerAngle = tmpAngle * _spParams.shotAngleScaling;
-    _kickerStrength = tmpStrength * _spParams.shotStrengthScaling;
+    _kickerAngle = tmpAngle * getConfig().shotAngleScaling;
+    _kickerStrength = tmpStrength * getConfig().shotStrengthScaling;
     
     if (!r)
     {

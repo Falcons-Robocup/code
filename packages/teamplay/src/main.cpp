@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,23 +16,19 @@
  *      Author: Jan Feitsma
  */
 
-#define TEAMPLAY_NODENAME ("teamplay_main") 
+#define TEAMPLAY_NODENAME ("teamplay_main")
 
 /* System includes */
 #include <stdexcept>
-#include "ros/ros.h"
 
 /* Other packages includes */
 #include "cDiagnostics.hpp"
 #include "tracing.hpp"
 
 /* Teamplay includes: input adapters */
-#include "int/adapters/configuration/cConfigHeightmaps.hpp"
-#include "int/adapters/configuration/cConfigInterceptBall.hpp"
-#include "int/adapters/configuration/cConfigRules.hpp"
-#include "int/adapters/configuration/cConfigShooting.hpp"
-#include "int/adapters/configuration/cConfigStrategy.hpp"
+#include "int/adapters/ConfigAdapter.hpp"
 #include "int/adapters/cRTDBInputAdapter.hpp"
+#include "int/adapters/cRTDBOutputAdapter.hpp"
 #include "ext/cRtdbAdapterRefboxSignals.hpp"
 #include "int/cTeamplayControlInterface.hpp"
 
@@ -45,7 +41,7 @@
 #include "int/stores/heightMapStore.hpp"
 #include "int/stores/robotStore.hpp"
 #include "int/stores/ballStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 
 namespace {
 // The memory stack.
@@ -73,11 +69,6 @@ int main(int argc, char **argv)
 
     try
     {
-        // ROS initialization
-        ros::init(argc, argv, TEAMPLAY_NODENAME);
-        ros::Time::init();
-        //TRACE_INFO("teamplay starting"); // must be after ros::init
-        
         INIT_TRACE;
 
         // setup the refbox signal listener by creating the object once (singleton)
@@ -87,12 +78,9 @@ int main(int argc, char **argv)
         // setup the teamplay interface (e.g. for robot control)
         //TODO cControlInterfaceROS controlInterfaceROS;
 
-        // Load the (dynamically reconfigurable) configuration parameters
-        cConfigHeightmaps::getInstance();
-        cConfigInterceptBall::getInstance();
-        cConfigRules::getInstance();
-        cConfigShooting::getInstance();
-        cConfigStrategy::getInstance();
+        // Load the configuration parameters from YAML via RTDB into the configuration store
+        auto configAdapter = new ConfigAdapter();
+        configAdapter->loadYAML(determineConfig("teamplay"));
 
         // Load decision trees into memory
         cDecisionTree::getInstance().loadDecisionTrees("");
@@ -123,13 +111,14 @@ void iterateTeamplay()
     {
         TRACE_SCOPE("iterateTeamplay", "");
 
+        // duty cycle measurement
+        rtime iterationStartTimestamp = ftime::now();
+
         cRtdbAdapterRefboxSignals::getInstance().update(); // check for new refbox command
         cRTDBInputAdapter::getInstance().getWorldModelData(); // call update functions to retrieve latest worldmodel datafeed
 
         // Refresh gamestate: check whether a transition from "setpiece execute" to neutral playing is allowed
         teamplay::gameStateManager::getInstance().refreshGameState();
-
-        treeEnum gameState = teamplay::gameStateStore::getInstance().getGameState_treeEnum();
 
         bool ballLocationKnown = teamplay::ballStore::getInstance().getBall().isLocationKnown();
 
@@ -138,18 +127,18 @@ void iterateTeamplay()
         cTeamplayControlInterface::getInstance().getOverrideState(overrideState);
         tpOverrideResult overrideResult;
         overrideResult.status = behTreeReturnEnum::INVALID;
-        overrideResult.id = overrideState.id;
 
-        if (overrideState.active)
+        // If override state is gameState, set gameState.
+        treeEnum gameState;
+        if (overrideState.active && overrideState.level == tpOverrideLevelEnum::GAMESTATE)
         {
-            tprintf("override id=%d", overrideState.id);
+            gameState = overrideState.treeValue;
+
+            teamplay::gameStateStore::getInstance().updateGameState(overrideState.treeValue);
         }
-        
-        // Stimulate gamestate?
-        if (overrideState.active && (overrideState.level == tpOverrideLevelEnum::GAMESTATE))
+        else
         {
-            TRACE_ERROR("trying to override gamestate -- NOT IMPLEMENTED");
-            // continue anyway?!
+            gameState = teamplay::gameStateStore::getInstance().getGameState_treeEnum();
         }
 
         robotNumber myRobotNr = getRobotNumber();
@@ -224,6 +213,7 @@ void iterateTeamplay()
             // - ball_location_known changes (find ball or lose sight of ball) during setpiece prepare
             if (  (gameState != previousGameState && !teamplay::gameStateStore::getInstance().getGameState().isExecuteSetPiece())
                     || (ballLocationKnown != previousBallLocationKnown && teamplay::gameStateStore::getInstance().getGameState().isPrepareSetPiece())
+                    || ((gameState != previousGameState) && teamplay::gameStateStore::getInstance().getGameState().isParkingSetPiece())
                     || ownRobotRoleIsDuplicate
                 )
             {
@@ -245,35 +235,6 @@ void iterateTeamplay()
         // Restore own robot, old style:
         cWorldStateFunctions::getInstance().setRobotID(myRobotNr);
 
-        if (overrideState.active)
-        {
-            // We want to start not on the current gameState, but on the given overrideState tree.
-            switch (overrideState.level)
-            {
-                case tpOverrideLevelEnum::GAMESTATE:
-                    {
-                        gameState = overrideState.treeValue;
-                        break;
-                    }
-                case tpOverrideLevelEnum::ROLE:
-                    {
-                        gameState = overrideState.treeValue;
-                        break;
-                    }
-                case tpOverrideLevelEnum::BEHAVIOR:
-                    {
-                        gameState = overrideState.treeValue;
-                        myMapParams = overrideState.params;
-                        break;
-                    }
-                default:
-                    {
-                        // Do nothing.
-                        break;
-                    }
-            }
-        }
-
         // Calculate all heightmaps
         tprintf("start heightmap precalculation");  // temporary diagnostics
         teamplay::heightMapStore::getInstance().precalculateAll();
@@ -283,33 +244,16 @@ void iterateTeamplay()
         // Add the gamestate to the diagnostics message -- used to check consistency between robots.
         cDecisionTree::getInstance().clearDiagMsg();
 
-        if (overrideState.active && (overrideState.level == tpOverrideLevelEnum::ACTION))
-        {
-            TRACE_ERROR("trying to override action -- NOT SUPPORTED");
-            /*
-            // override action, do not traverse any tree.
-            tpActionEnum action = overrideState.action;
-            boost::shared_ptr<cAbstractAction> actionObjectPtr = enumToActionMapping.at(action);
-            actionObjectPtr->execute(overrideState.params); // ignore output
-            */
-        }
-        else if (overrideState.active && (overrideState.level == tpOverrideLevelEnum::BEHAVIOR))
-        {
-            // execute tree of behavior
-            overrideResult.status = cDecisionTree::getInstance().executeTree(overrideState.treeValue, overrideState.params, robotMemoryStack.at(myRobotNr), 0, robotNodes.at(myRobotNr));
-            tprintf("behavior override result=%s", enum2str(overrideResult.status));
-        }
-        else if (overrideState.active && (overrideState.level == tpOverrideLevelEnum::DISABLED))
-        {
-            // Do nothing. Teamplay is disabled. :-)
-        }
-        else
+
+        // normal flow: overrideState inactive, or when overrideState in gameState.
+        if (!overrideState.active || (overrideState.active && overrideState.level == tpOverrideLevelEnum::GAMESTATE))
         {
             // Only re-evaluate the role of this robot when:
             // - gamestate changes, but not to setpiece execute or:
             // - ball_location_known changes (find ball or lose sight of ball) during setpiece prepare
             if (  (gameState != previousGameState && !teamplay::gameStateStore::getInstance().getGameState().isExecuteSetPiece())
                     || (ballLocationKnown != previousBallLocationKnown && teamplay::gameStateStore::getInstance().getGameState().isPrepareSetPiece())
+                    || ((gameState != previousGameState) && teamplay::gameStateStore::getInstance().getGameState().isParkingSetPiece())
                     || ownRobotRoleIsDuplicate
                 )
             {
@@ -336,15 +280,81 @@ void iterateTeamplay()
             cDecisionTree::getInstance().diagMsg.trees.push_back( treeEnumToStr(gameState) );
 
             // Having the role of this robot, execute the role.
-            cDecisionTree::getInstance().executeTree(teamplay::robotStore::getInstance().getOwnRobot().getRole(), myMapParams, robotMemoryStack.at(myRobotNr), 0, robotNodes.at(myRobotNr));
+            treeEnum treeToExecute = teamplay::robotStore::getInstance().getOwnRobot().getRole();
+            cDecisionTree::getInstance().executeTree(treeToExecute, myMapParams, robotMemoryStack.at(myRobotNr), 0, robotNodes.at(myRobotNr));
         }
-        
+        else
+        {
+            // overrideState is active. Either set to role, behavior or action.
+
+            if (overrideState.level == tpOverrideLevelEnum::DISABLED)
+            {
+                // Do nothing. Teamplay is disabled. :-)
+            }
+            else if (overrideState.level == tpOverrideLevelEnum::TP_ACTION)
+            {
+                // override Teamplay action, do not traverse any tree.
+                tpActionEnum action = overrideState.tpAction;
+                boost::shared_ptr<cAbstractAction> actionObjectPtr = enumToActionMapping.at(action);
+                overrideResult.status = actionObjectPtr->execute(overrideState.params);
+            }
+            else if (overrideState.level == tpOverrideLevelEnum::MP_ACTION)
+            {
+                // override MotionPlanning action, do not traverse any tree.
+                actionResult mpResult = cRTDBOutputAdapter::getInstance().getMPClient().executeAction(overrideState.mpAction);
+                behTreeReturnEnum tpResult = behTreeReturnEnum::INVALID;
+                switch(mpResult.result)
+                {
+                    case actionResultTypeEnum::INVALID:
+                    {
+                        tpResult = behTreeReturnEnum::INVALID;
+                        break;
+                    }
+                    case actionResultTypeEnum::PASSED:
+                    {
+                        tpResult = behTreeReturnEnum::PASSED;
+                        break;
+                    }
+                    case actionResultTypeEnum::FAILED:
+                    {
+                        tpResult = behTreeReturnEnum::FAILED;
+                        break;
+                    }
+                    case actionResultTypeEnum::RUNNING:
+                    {
+                        tpResult = behTreeReturnEnum::RUNNING;
+                        break;
+                    }
+                }
+                overrideResult.status = tpResult;
+            }
+            else
+            {
+                // execute tree of behavior / role
+                overrideResult.status = cDecisionTree::getInstance().executeTree(overrideState.treeValue, overrideState.params, robotMemoryStack.at(myRobotNr), 0, robotNodes.at(myRobotNr));
+                tprintf("role/behavior override result=%s", enum2str(overrideResult.status));
+            }
+        }
+
         // if applicable, write result back into RTDB for test interfacing
         if (overrideState.active)
         {
-            tprintf("writing override result=%s for id=%d", enum2str(overrideResult.status), overrideResult.id);
+            tprintf("writing override result=%s", enum2str(overrideResult.status));
             cTeamplayControlInterface::getInstance().setOverrideResult(overrideResult);
         }
+
+        // duty cycle measurement
+        double elapsed = double(ftime::now() - iterationStartTimestamp);
+        double nominalFrequency = 30.0;
+        double heartBeatDuration = 1.0 / nominalFrequency;
+        double threshold = heartBeatDuration * 0.9; // 90% of a heartbeat
+        threshold = 0.1; // for now we use a relaxed spec, to detect spikes
+        if (elapsed > threshold)
+        {
+            TRACE_WARNING("tick duration too long: %.2fs", elapsed);
+        }
+        rtime tNow;
+
     }
     catch (std::exception &e)
     {

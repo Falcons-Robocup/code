@@ -12,16 +12,17 @@
 multiCamVideoFeed::multiCamVideoFeed()
 {
     // default: try to connect to /dev/videoX
-    _capture = new cv::VideoCapture(_inputSelector);
-    if (_capture->isOpened())
-    {
-        setMode(videoInputMode::USB);
-    }
-    else
-    {
-        delete (_capture);
-        _capture = NULL;
-    }
+    //_capture = new cv::VideoCapture(_inputSelector, cv::CAP_V4L);
+    //_capture = new cv::VideoCapture(_inputSelector);
+    //if (_capture->isOpened())
+    //{
+    //    setMode(videoInputMode::USB);
+    //}
+    //else
+    //{
+    //    delete (_capture);
+    //    _capture = NULL;
+    //}
 
     // create the camera system receive that will receive also the jpg from the raspi camera's
     _camSysRecv = new camSysReceive();

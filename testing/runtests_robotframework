@@ -18,7 +18,7 @@
 
 
 cd ~
-testsuitedir=${TURTLEROOT}/testing/implementation/testsuites
+testsuitedir=${FALCONS_CODE_PATH}/testing/implementation/testsuites
 
 
 # check options

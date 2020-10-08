@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "FalconsRtDB2.hpp"
+#include "cMotionPlanningClient.hpp"
 
 class cRTDBOutputAdapter
 {
@@ -32,6 +33,7 @@ public:
         return instance;
     }
 
+    cMotionPlanningClient& getMPClient();
     void setActionData(const T_ACTION& actionData);
     void clearForbiddenAreas();
     void setForbiddenAreas(const T_FORBIDDEN_AREAS& forbiddenAreas);
@@ -42,7 +44,7 @@ private:
     cRTDBOutputAdapter();
     RtDB2 *_rtdb;
     int _myRobotId;
-
+    cMotionPlanningClient _mpClient;
 };
 
 #endif

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,9 +22,9 @@
 #include <vector>
 #include <string>
 
+#include "int/adapters/configurators/WorldModelConfig.hpp"
 #include "ballMeasurement.hpp"
 #include "int/types/ball/ballType.hpp"
-#include "int/types/ball/ballConfig.hpp"
 #include "int/types/object/blackListType.hpp"
 #include "int/algorithms/objectMeasurementCache.hpp"
 #include "int/algorithms/objectTracking.hpp"
@@ -51,7 +51,7 @@ struct confidenceDetails
 class ballTracker
 {
     public:
-    	ballTracker(const objectMeasurementCache &measurement);
+    	ballTracker(const objectMeasurementCache &measurement, const WorldModelConfig* wmConfig);
     	~ballTracker();
 
     	void addBallMeasurement(const objectMeasurementCache &measurement, bool &measurementIsAdded);
@@ -67,28 +67,35 @@ class ballTracker
 
         static void reset();
         void traceMeasurements() const;
-    	std::vector<objectMeasurementCache> getBallMeasurements() { return _ballMeasurements; }
+        std::vector<objectMeasurementCache> getBallMeasurements() { return _ballMeasurements; }
+        void makeDiagnostics(diagBallTracker &diag, rtime const &timeNow);
         
     private:
     	std::vector<objectMeasurementCache> _ballMeasurements;
     	ballClass_t _lastBallResult;
     	confidenceDetails _confDetails;
-    	ballConfig _ballCfg;
     	objectTracker _tracker;
     	size_t _trackerID;
     	static size_t _staticTrackerID;
         blackListType _blackList;
         bool _ownBallsFirst;
+        int _ownRobotId;
         rtime _lastGroundTimeStamp;
         rtime _lastAirTimeStamp;
     	rtime _t0;
         rtime _tmin;
         rtime _tmax;
 
+        const WorldModelConfig* _wmConfig;
+
     	void selectOwnOmniMeasurements(std::vector<objectMeasurementCache> &measurements);
+        void selectLowMeasurements(std::vector<objectMeasurementCache> &measurements);
         void calculateConfidence(rtime const t);
     	void setBlackList(blackListType b);
+        void ensureUniqueMeasurements();
     	void cleanUpTimedOutBallMeasurements(rtime const t);
+
+        bool checkDeltaAngles(const objectMeasurementCache &measurement, Vector3D const &expectedPos);
 };
 
 #endif /* BALLTRACKER_HPP_ */

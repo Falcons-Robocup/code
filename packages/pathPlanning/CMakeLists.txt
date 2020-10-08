@@ -1,84 +1,56 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 3.5.1)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-set(ROS_BUILD_TYPE Release)
-#set(ROS_BUILD_TYPE Debug)
+project(PathPlanning)
 
-rosbuild_init()
+find_package(Boost COMPONENTS system thread REQUIRED QUIET)
+find_package(Facilities)
+find_package(WorldModel)
 
-# TKOV: enable enumerate value to be scoped
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror")
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+include_directories("include")
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
 
-#add dynamic reconfigure api
-rosbuild_find_ros_package(dynamic_reconfigure)
-include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-gencfg()
+# Reflexxes Type II Motion Library
+include_directories($ENV{FALCONS_DATA_PATH}/external/ReflexxesTypeII/include)
+link_directories($ENV{FALCONS_DATA_PATH}/external/ReflexxesTypeII/lib)
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+add_library(rtdbAdapters src/adapters/RTDBInputAdapter.cpp
+                         src/adapters/RTDBOutputAdapter.cpp)
+target_link_libraries(rtdbAdapters FalconsCommon)
 
-##### OBSOLETE #####
-#rosbuild_add_executable(PFM_with_MC src/PFM_with_movement_constraints.cpp)
-#rosbuild_add_executable(set_obstacles src/set_obstacles.cpp)
-####################
+add_library(PathPlanning src/PathPlanning.cpp
+                         src/PathPlanningData.cpp
+                         src/PathPlanningClient.cpp
+                         src/facilities/ppgeometry.cpp
+                         src/controllers/StopVelocitySetpointController.cpp
+                         src/controllers/LinearVelocitySetpointController.cpp
+                         src/controllers/PIDVelocitySetpointController.cpp
+                         src/controllers/SPGVelocitySetpointController.cpp
+                         src/algorithms/RequireWorldModelActive.cpp
+                         src/algorithms/CheckStopCommand.cpp
+                         src/algorithms/CheckTargetValid.cpp
+                         src/algorithms/CheckTargetReached.cpp
+                         src/algorithms/Shielding.cpp
+                         src/algorithms/ForwardDriving.cpp
+                         src/algorithms/CalculateDeltas.cpp
+                         src/algorithms/CalculateObstacles.cpp
+                         src/algorithms/SelectVelocityController.cpp
+                         src/algorithms/CalculateVelocity.cpp
+                         src/algorithms/CalculateAccelerating.cpp
+                         src/algorithms/Deadzone.cpp
+                         src/algorithms/ApplyLimits.cpp
+                         src/algorithms/ShiftBallOffset.cpp
+                         src/algorithms/UnShiftBallOffset.cpp
+                         src/algorithms/EscapeForbiddenAreas.cpp
+                         src/algorithms/AvoidObstacles.cpp)
+target_link_libraries(PathPlanning rtdbAdapters wmClient ReflexxesTypeII Tracing FalconsCommon rtdb2 diagnostics EnvironmentField ${Boost_LIBRARIES})
 
-#rosbuild_add_library(PathPlanningRosStub src/cPathPlanningRosStub.cpp)
+add_executable(pathplanningNode src/main.cpp)
+target_link_libraries(pathplanningNode PathPlanning ${Boost_LIBRARIES})
 
-rosbuild_add_library(pathPlanningFacilities src/facilities/cObstacleFacilities.cpp)
-rosbuild_add_library(rtdbAdapters src/adapters/cRTDBInputAdapter.cpp
-                                src/adapters/cRTDBOutputAdapter.cpp
-                                src/adapters/ConfigAdapter.cpp
-                                src/adapters/cDiagnosticsAdapter.cpp)
-rosbuild_add_library(pathPlanningAlgorithms src/cAbstractPathPlanning.cpp
-                                            src/algorithms/cXYLinear.cpp
-                                            src/algorithms/cPhiLinear.cpp
-                                            src/algorithms/cXYLinearAcceleration.cpp
-                                            src/algorithms/cPhiLinearAcceleration.cpp
-                                            src/algorithms/cXYPFM.cpp
-                                            src/algorithms/cPhiPFM.cpp
-                                            src/algorithms/cXYTrajectory.cpp
-                                            src/algorithms/cXYPID.cpp
-                                            src/algorithms/cXPID.cpp
-                                            src/algorithms/cYPID.cpp
-                                            src/algorithms/cPhiPID.cpp
-                                            src/algorithms/cXYBrake.cpp
-                                            src/algorithms/cXYTurnThenMove.cpp
-                                            src/algorithms/cPhiMoveThenTurn.cpp
-                                            src/algorithms/cMoveAtSpeed.cpp
-                                            src/algorithms/cTokyoDrift.cpp
-                                            src/algorithms/cTokyoDriftVelocity.cpp
-                                            src/algorithms/cFCStoRCS.cpp
-                                            src/algorithms/cBoundaryLimiter.cpp
-                                            src/algorithms/cLimitVelocities.cpp
-                                            src/algorithms/cDeadZone.cpp)
-target_link_libraries(rtdbAdapters yaml-cpp)
-target_link_libraries(pathPlanningAlgorithms rtdbAdapters pathPlanningFacilities)
-rosbuild_add_executable(pathplanningNode src/main_ros.cpp
-                                         src/cPathPlanningMain.cpp
-                                         src/cPathPlanningData.cpp)
-target_link_libraries(pathplanningNode rtdbAdapters wmClient)
-target_link_libraries(pathplanningNode pathPlanningAlgorithms)
-rosbuild_link_boost(pathplanningNode system thread)
+add_executable(pathPlanningTest tst/pathPlanningTest.cpp tst/MiniSimulation.cpp tst/pathPlanningTestDefaults.cpp)
+target_link_libraries(pathPlanningTest PathPlanning yaml-cpp ${Boost_LIBRARIES} gtest logging)
+add_test(pathPlanningTest pathPlanningTest)
+set_tests_properties(pathPlanningTest PROPERTIES TIMEOUT 60)
 

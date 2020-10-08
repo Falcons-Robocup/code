@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "TODO: fix this script installBehavior3.sh, preferably without npm"
+# !!! installing npm on Ubuntu20 brings in undesired python2.7 dependency
+# also require sudo apt install nodejs, this one is quite small
+exit 1
+
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 echo 'Install [phase 1] behavior3 dependency: nw-builder'

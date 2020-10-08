@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -46,19 +46,25 @@ public:
     virtual void exchangeOwnRobotWith (const int);
     virtual void undoExchange();
 
+    virtual robot getOwnRobot() const;
     virtual void setOwnRobotRole (const treeEnum&);
 
     virtual std::vector<robot> getAllRobots() const;
     virtual std::vector<robot> getAllRobotsExclGoalie() const;
-    virtual std::vector<robot> getAllRobotsExclGoalieInArea (const fieldArea&) const;
-    virtual std::vector<robot> getAllRobotsExclGoalieSortedByDistanceTo (const Point2D&) const;
-    virtual std::vector<robot> getAllRobotsExclLowestIDSortedByDistanceTo (const Point2D&) const;
     virtual std::vector<robot> getAllRobotsExclOwnRobot() const;
+
+    virtual std::vector<robot> getAllRobotsSortedByDistanceTo(const Point2D&) const;
+    virtual std::vector<robot> getAllRobotsExclGoalieSortedByDistanceTo(const Point2D&) const;
+    virtual std::vector<robot> getAllRobotsExclLowestIDSortedByDistanceTo(const Point2D&) const;
+
+    virtual std::vector<robot> getAllRobotsInArea(const fieldArea&) const;
+    virtual std::vector<robot> getAllRobotsExclGoalieInArea(const fieldArea&) const;
+
     virtual std::vector<robot> getAllRobotsExclOwnRobotInArea(const fieldArea&) const;
-    virtual std::vector<robot> getAllRobotsInArea (const fieldArea&) const;
+    virtual std::vector<robot> getAllRobotsExclOwnRobotExclGoalieInArea(const fieldArea&) const;
+
     virtual boost::optional<robot> getAssistantOfOwnRobot() const;
     virtual boost::optional<robot> getAssistantOfRole (const treeEnum&) const;
-    virtual robot getOwnRobot() const;
     virtual boost::optional<robot> getRobotWithRole (const treeEnum&) const;
 
 private:

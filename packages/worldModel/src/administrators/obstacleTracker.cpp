@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,14 +18,13 @@
 
 #include "int/administrators/obstacleTracker.hpp"
 
-#include "int/configurators/obstacleTrackerConfigurator.hpp"
-
 #include "cDiagnostics.hpp"
 #include "tracing.hpp"
 
 size_t obstacleTracker::_staticTrackerID = 0;
 
-obstacleTracker::obstacleTracker(const objectMeasurementCache &measurement)
+obstacleTracker::obstacleTracker(const objectMeasurementCache &measurement, const WorldModelConfig& wmConfig)
+    : _wmConfig(wmConfig)
 /*!
  * \brief Top-level obstacle tracker that calculates the obstacle position
  *
@@ -44,29 +43,7 @@ obstacleTracker::obstacleTracker(const objectMeasurementCache &measurement)
     _lastObstacleResult.setCoordinates(pos.x, pos.y, 0.0);
     
     // configurables
-    _config.xyTolerance = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorFloats::
-trackerXYTolerance);
-    _config.trackerTimeout = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorFloats::
-trackerTimeout);
-    _config.extrapolationTimeout       = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorFloats::extrapolationTimeout);
-    _config.fitConfig.measPerOrder     = 3;
-    _config.fitConfig.groupingDt       = 0; // unused
-    _config.fitConfig.outlierNSigma    = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorFloats::outlierNSigma);
-    _config.fitConfig.outlierIterFraction = obstacleTrackerConfigurator::getInstance().get    
-(obstacleTrackerConfiguratorFloats::outlierIterFraction);
-    _config.fitConfig.outlierMaxIter   = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorIntegers::outlierMaxIter);
-    _config.fitConfig.depthWeight      = 1.0; // not applicable, triangulation is unused
-    _config.fitConfig.speedFitOrder    = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorIntegers::speedFitOrder);
-    _config.speedMinSize               = obstacleTrackerConfigurator::getInstance().get    
-(obstacleTrackerConfiguratorFloats::speedMinSize);
-    _config.speedMaxSize               = obstacleTrackerConfigurator::getInstance().get    
-(obstacleTrackerConfiguratorFloats::speedMaxSize);
-    _config.speedResidualThreshold     = obstacleTrackerConfigurator::getInstance().get    
-(obstacleTrackerConfiguratorFloats::speedResidualThreshold);
-    _tracker.setConfig(_config.fitConfig);
-
-    // trace
-    obstacleTrackerConfigurator::getInstance().traceAll();
+    _tracker.setConfig(_wmConfig.getConfiguration().obstacleTracker.objectFit);
 }
 
 obstacleTracker::~obstacleTracker()
@@ -95,7 +72,7 @@ void obstacleTracker::addObstacleMeasurement(const objectMeasurementCache &measu
     	 */
         Vector3D currentPos(_lastObstacleResult.getX(), _lastObstacleResult.getY(), 0.0);
         Vector3D newPos = measurement.getPositionFcs();
-        float threshold = _config.xyTolerance;
+        float threshold = _wmConfig.getConfiguration().obstacleTracker.trackerXYTolerance;
         if (vectorsize(currentPos - newPos) < threshold)
     	{
     	    // invariant: measurements shall be sorted by time
@@ -144,7 +121,7 @@ void obstacleTracker::performCalculation(rtime const timeNow)
         // extrapolation or not? if latest measurement is too old for extrapolation,
         // then do not update, but reuse latest result
         double latestMeasurementTimestamp = _obstacleMeasurements.back().getObjectMeasurement().timestamp;
-        if (double(timeNow) <= latestMeasurementTimestamp + _config.extrapolationTimeout)
+        if (double(timeNow) <= latestMeasurementTimestamp + _wmConfig.getConfiguration().obstacleTracker.extrapolationTimeout)
         {
 
             // entry point of the algorithm
@@ -161,7 +138,7 @@ void obstacleTracker::performCalculation(rtime const timeNow)
             // fallback checks on velocity: do not yield a speed vector if there are too few measurements (after outlier removal) 
             // also, if fit residual is large, then apparently the speed vector does not fit nicely --> fallback.
             // if needed, redo fit from scratch (so previously outliers are back on the table) but without speed tracking
-            if (_config.fitConfig.speedFitOrder > 0)
+            if (_wmConfig.getConfiguration().obstacleTracker.objectFit.speedFitOrder > 0)
             {
                 bool redoWithoutSpeed = false;
                 int N = _obstacleMeasurements.size();
@@ -169,7 +146,7 @@ void obstacleTracker::performCalculation(rtime const timeNow)
                 {
                     redoWithoutSpeed = true;
                 }
-                if (_tracker.getFitResidual() > _config.speedResidualThreshold)
+                if (_tracker.getFitResidual() > _wmConfig.getConfiguration().obstacleTracker.speedResidualThreshold)
                 {
                     redoWithoutSpeed = true;
                 }
@@ -177,7 +154,7 @@ void obstacleTracker::performCalculation(rtime const timeNow)
                 {
                     // temporarily change fit config
                     // TODO poor way of changing an option... this needs refactoring
-                    objectFitConfig tmpConfig = _config.fitConfig;
+                    ConfigWorldModelObjectFit tmpConfig = _wmConfig.getConfiguration().obstacleTracker.objectFit;
                     tmpConfig.speedFitOrder = 0;
                     _tracker.setConfig(tmpConfig);
                     // solve
@@ -187,7 +164,7 @@ void obstacleTracker::performCalculation(rtime const timeNow)
                     _lastObstacleResult.setVelocities(0.0, 0.0, 0.0);
                     TRACE("fallback solution for trackerID=%d pos=(%6.2f, %6.2f), vel=0", _trackerID, _lastObstacleResult.getX(), _lastObstacleResult.getY());
                     // restore config
-                    _tracker.setConfig(_config.fitConfig);
+                    _tracker.setConfig(_wmConfig.getConfiguration().obstacleTracker.objectFit);
                 }
             }
             
@@ -198,12 +175,12 @@ void obstacleTracker::performCalculation(rtime const timeNow)
             // (probably not needed, as long as PathPlanning is robust for small speed vectors / does not "get scared" too much)
             // if too fast, then generate a warning because this could suggests poor measurements or bad algorithm/tuning or ...
             float speed = Vector2D(_lastObstacleResult.getVX(), _lastObstacleResult.getVY()).size();
-            if (speed < _config.speedMinSize)
+            if (speed < _wmConfig.getConfiguration().obstacleTracker.speedMinSize)
             {
                 // too slow
                 _lastObstacleResult.setVelocities(0.0, 0.0, 0.0);
             }
-            if (speed > _config.speedMaxSize)
+            if (speed > _wmConfig.getConfiguration().obstacleTracker.speedMaxSize)
             {
                 // too fast: warning
                 int timeout = 3;
@@ -260,7 +237,7 @@ void obstacleTracker::checkFake(std::vector<robotClass_t> const &teamMembers)
     {
         // initialize
         _fake = false; // until proven otherwise
-        float thresholdMember = obstacleTrackerConfigurator::getInstance().get(obstacleTrackerConfiguratorFloats::filterXYmemberTolerance);
+        float thresholdMember = _wmConfig.getConfiguration().obstacleTracker.filterXYmemberTolerance;
         Vector2D obstPos(_lastObstacleResult.getX(), _lastObstacleResult.getY());
 
         // find robot closest to obstacle
@@ -328,7 +305,7 @@ void obstacleTracker::cleanUpTimedOutObstacleMeasurements(rtime const timeNow)
 {
     try
     {
-    	auto trackerTimeout = _config.trackerTimeout;
+    	auto trackerTimeout = _wmConfig.getConfiguration().obstacleTracker.trackerTimeout;
 
     	for(auto i = _obstacleMeasurements.begin(); i != _obstacleMeasurements.end(); )
     	{

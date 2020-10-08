@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -39,6 +39,57 @@ enum class heightmapEnum
 
     SIZE_OF_ENUM
 };
+
+inline char const *enum2str(heightmapEnum const &s)
+{
+    char const *result = "UNKNOWN";
+    switch (s)
+    {
+        case heightmapEnum::AVOID_BALL:
+            result = "AVOID_BALL";
+            break;
+        case heightmapEnum::AVOID_OBSTACLES:
+            result = "AVOID_OBSTACLES";
+            break;
+        case heightmapEnum::AVOID_TEAM_MATES:
+            result = "AVOID_TEAM_MATES";
+            break;
+        case heightmapEnum::BETWEEN_POI_AND_CLOSEST_OBSTACLE:
+            result = "BETWEEN_POI_AND_CLOSEST_OBSTACLE";
+            break;
+        case heightmapEnum::CLOSE_TO_BALL_CLAIMED_LOCATION:
+            result = "CLOSE_TO_BALL_CLAIMED_LOCATION";
+            break;
+        case heightmapEnum::CLOSE_TO_OWN_POS:
+            result = "CLOSE_TO_OWN_POS";
+            break;
+        case heightmapEnum::IN_FRONT_OF_OPP_GOAL:
+            result = "IN_FRONT_OF_OPP_GOAL";
+            break;
+        case heightmapEnum::NEAR_OBSTACLES:
+            result = "NEAR_OBSTACLES";
+            break;
+        case heightmapEnum::NEAR_OWN_GOAL:
+            result = "NEAR_OWN_GOAL";
+            break;
+        case heightmapEnum::OBS_BLOCKING_BALL:
+            result = "OBS_BLOCKING_BALL";
+            break;
+        case heightmapEnum::OBS_BLOCKING_OPP_GOAL:
+            result = "OBS_BLOCKING_OPP_GOAL";
+            break;
+        case heightmapEnum::OBS_BLOCKING_TEAMMATES:
+            result = "OBS_BLOCKING_TEAMMATES";
+            break;
+        case heightmapEnum::SIZE_OF_ENUM:
+            result = "SIZE_OF_ENUM";
+            break;
+
+        default:
+            result = "UNKNOWN";
+    }
+    return result;
+}
 
 } /* namespace teamplay */
 

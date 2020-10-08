@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,7 +25,10 @@
 #include "int/rules/ruleSetpieceExecuteFinished.hpp"
 #include "int/rules/ruleStimulatePassing.hpp"
 #include "int/utilities/timer.hpp"
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
+
+/* Falcons includes */
+#include "falconsCommon.hpp" // getRobotNumber
 
 /* System includes */
 #include <boost/scoped_ptr.hpp>
@@ -69,10 +72,25 @@ void gameStateManager::refreshGameState()
     }
 }
 
-void gameStateManager::refBoxSignalReceived(const refboxSignalEnum& refboxSignal)
+void gameStateManager::refBoxSignalReceived(const refboxSignalEnum& refboxSignal, std::string refboxSignalArgument)
 {
     gameState currentGameState = gameStateStore::getInstance().getGameState();
     gameState newGameState = gameStateTransitionTable::getInstance().calculateNewGameState(currentGameState, refboxSignal);
+
+    // Special case: substitution should only affect gamestate for targeted robots (in refboxSignalArgument)
+    // The command SUBSTITUTION_OWN is basically treated the same as PARK
+    // except that we need to apply it conditionally, all non-targeted robots should remain in their state
+    if (refboxSignal == refboxSignalEnum::SUBSTITUTION_OWN)
+    {
+        // check if this robot is targeted
+        refboxSignalArgument = " " + refboxSignalArgument + " ";
+        bool targeted = (refboxSignalArgument.find(" " + std::to_string(getRobotNumber())+ " ") != std::string::npos);
+        if (!targeted)
+        {
+            // do not go into parking mode, instead keep current state
+            newGameState = currentGameState;
+        }
+    }
 
     // If the new gamestate is of type "setpiece execute"...
     if (newGameState.isSetPiece() && !newGameState.isPrepareSetPiece())

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,11 +21,11 @@
 #include <string>
 #include <vector>
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "int/stores/ballStore.hpp"
 #include "int/stores/heightMapStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 
 
 using namespace teamplay;
@@ -63,7 +63,7 @@ behTreeReturnEnum cActionMoveToFreeSpot::execute(const std::map<std::string, std
         Vector2D ballPos(ball.getPosition().x, ball.getPosition().y);
 
         // Get optimal location from heightmap
-        Point2D optimum = heightMapStore::getInstance().getOptimum(tpActionEnum::MOVE_TO_FREE_SPOT, parameters);
+        Point2D optimum = heightMapStore::getInstance().getOptimum(CompositeHeightmapName::MOVE_TO_FREE_SPOT, parameters);
 
         // Compute target positions
         Position2D targetPos;

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -30,6 +30,7 @@ namespace Visualizer
         const QString showPathPlanningSetting = "field/showPathPlanning"; // Setting itself returns boolean value
         const QString teamColorSetting = "refbox/teamColor";
         const QString playingFieldSetting = "refbox/playingField";
+        const QString ttaConfigSetting = "refbox/ttaConfig";
 
         class SettingsDialog : public QDialog, public Ui::FieldWidgetSettings
         {

@@ -1,0 +1,89 @@
+#!/bin/bash
+
+
+alias aptsearch="apt-cache search $@"
+alias aptshow="dpkg -l $@"
+
+
+alias ntpCheck="ntpq -p"
+
+alias build="fmake -a -C"
+alias alonem="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make"
+alias alonemf="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make clean && make"
+alias remotev="cd $FALCONS_CODE_PATH/tools/multiCamRemote/build && make"
+alias remotevf="cd $FALCONS_CODE_PATH/tools/multiCamRemote/build && make clean && make"
+alias cdcmps="cd $FALCONS_CODE_PATH/tools/cmps10Calibrate"
+alias cds="cd $FALCONS_SCRIPTS_PATH"
+alias cdm="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make"
+alias cdm1="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r1"
+alias cdm2="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r2"
+alias cdm3="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r3"
+alias cdm4="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r4"
+alias cdm5="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r5"
+alias cdm6="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r6"
+alias cdmc="cd $FALCONS_CODE_PATH/packages/raspiControl/alone && make"
+alias cdmv="cd $FALCONS_CODE_PATH/tools/multiCamViewer/build && make"
+alias cdjpg="cd $FALCONS_DATA_PATH/internal/vision/multiCam"
+alias cdg="cd $FALCONS_CODE_PATH/peripherals/zynqGrab/build"
+# alias cdx="cd $FALCONS_CODE_PATH/peripherals/zynqGrab/x86Build"
+alias cdz="cd $FALCONS_CODE_PATH/tools/zynqControl/build"
+alias cdrg="cd $FALCONS_CODE_PATH/peripherals/raspiGrab/armBuild"
+alias cdra="cd $FALCONS_CODE_PATH/peripherals/raspiAnalyze/armBuild"
+alias cdrx="cd $FALCONS_CODE_PATH/peripherals/raspiAnalyze/x86Build"
+alias cdrc="cd $FALCONS_CODE_PATH/packages/raspiControl/alone && make"
+alias cdrs="cd $FALCONS_CODE_PATH/tools/raspiSetup"
+alias cdrsync="cd $FALCONS_CODE_PATH/packages/raspiSync/alone && make"
+alias ne="nedit-nc $@"
+alias cdconf="cd $FALCONS_CODE_PATH/config"
+alias cdc="cd $FALCONS_CODE_PATH/config"
+alias start_refbox="cd $FALCONS_DATA_PATH/external/refbox; java -jar rb-gui-main-2013-2.02.jar"
+alias subfab="cd $FALCONS_CODE_PATH && git pull && fb"
+alias behavior3="google-chrome $FALCONS_DATA_PATH/external/behavior3/build/index.html"
+
+alias mcb='cd ~/falcons/mcb'
+alias sshmcb='ssh root@10.42.0.2'
+
+alias fb='fmake -a'
+alias fc='fcd'
+alias h='history'
+alias l='ls -altr1'
+alias logcd='cd `ls -1dt /var/tmp/falco* | head -1`'
+alias vlog='logcd; tail -f stdout_*_multiCam*.txt'
+alias slog='logcd; tail -f std*_*_raspiSync*.txt'
+alias apicd='cd $FALCONS_CODE_PATH/packages/peripheralsInterface/'
+alias cdfc='cd $FALCONS_CODE_PATH'
+alias cdfs='cd $FALCONS_SCRIPTS_PATH'
+alias td='cd $FALCONS_TPDATA_PATH'
+alias tp='cd $FALCONS_CODE_PATH/packages/teamplay'
+alias logtp='logcd; nedit trace_A?_tp*'
+
+alias pingg='ping www.google.com'
+alias wifi="sudo gnome-control-center"
+alias wifils="nmcli device wifi list"
+alias wifishow="nmcli c show"
+alias wifis="gnome-control-center"
+alias wific="sudo nm-connection-editor"
+alias wifics="nm-connection-editor"
+
+# workaround for some new bug introduced with upgrade to Xenial
+alias nedit="nedit -xrm '*font: -*-dina-medium-r-*-*-16-*-*-*-*-*-*-*'"
+
+# rtdb & logging
+source $FALCONS_CODE_PATH/packages/facilities/rtdb/alias
+alias rdlinfo='frun logging rdlinfo'
+alias rdldump='python3 $FALCONS_CODE_PATH/packages/facilities/logging/scripts/rdlDump.py'
+alias rdlfilter='python3 $FALCONS_CODE_PATH/packages/facilities/logging/scripts/rdlFilter.py'
+
+# run the complete testsuite (v: with visualization)
+alias runtests="$FALCONS_CODE_PATH/testing/runtests"
+alias runtestsv="$FALCONS_CODE_PATH/testing/runtests -v"
+
+alias diggoogle="dig @172.16.74.1 www.google.com"
+
+# useful GIT shortcuts
+alias gitdiff="git diff origin/HEAD HEAD"
+
+# useful GIT shortcuts for teamplayData repository
+alias gpull="cd $FALCONS_CODE_PATH && git pull && cd $FALCONS_TPDATA_PATH && git pull && cd $FALCONS_CODE_PATH"
+alias gpush="cd $FALCONS_CODE_PATH && git push && cd $FALCONS_TPDATA_PATH && git push && cd $FALCONS_CODE_PATH"
+

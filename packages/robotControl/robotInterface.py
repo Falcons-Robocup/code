@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,7 +9,7 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  """ 
- #!/usr/bin/env python
+ #!/usr/bin/env python3
 #
 # Python library for commands, on-robot.
 # This file implements the robot test interface connections.
@@ -43,17 +43,12 @@ import os
 import threading
 
 # other packages
-import roslib # only for easy path management
-roslib.load_manifest('common')
-roslib.load_manifest('rtdb3')
-roslib.load_manifest('sharedTypes')
-roslib.load_manifest('worldModel')
+import falconspy
 from sharedTypes import * # generated enums
 from worldState import WorldState
 from FalconsCoordinates import Vec2d, Vec3d, RobotPose
 
 # config
-import rospy
 import math
 from FalconsConfig import FalconsConfig
 
@@ -99,6 +94,8 @@ class stopWhenNear():
 def connect(robotId):
     global _robotInterface
     _robotInterface = RobotInterface(robotId)
+    global _shutdown
+    _shutdown = False
 
 def disconnect():
     shutDown()
@@ -121,13 +118,15 @@ class RobotInterface():
         self.rtdb_value = None
 
         # World state
-        self.worldState = WorldState()
+        self.worldState = WorldState(robotId)
         self.worldState.startMonitoring() # start its own thread
 
         # Execution architecture
         self.setMatchMode(False) # tell teamplay to not listen to heartbeat anymore, giving control to this library
         sleep(0.5) # avoid race condition: sleep for a while, to let current heartBeat finish ... otherwise immediate enableBallhandlers might not arrive...
         self.frequency = 30
+        if self.isSimulated:
+            self.frequency = 20 # needs to be consistent with the frequency set in package 'simulation' and pp limiters
         self.active = False
         self.stopCondition = stopNever
 
@@ -136,8 +135,6 @@ class RobotInterface():
         self.tpControlId = 0
 
         # Configuration management
-        # TODO: get rid of rospy -- it somehow blocks us from using the logging module
-        #rospy.init_node("robotCLI", anonymous=True) # otherwise reconfigure stuff does not work
         rosNamespace = "/teamA/robot" + str(robotId) + "/"
         self.config = FalconsConfig(rosNamespace)
 

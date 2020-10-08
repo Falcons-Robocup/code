@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,6 +21,7 @@
 #include "int/widgets/Playback/PlaybackWidget.h"
 
 #include "tracing.hpp"
+#include "ftime.hpp"
 
 PlaybackControl::PlaybackControl(bool fileMode, std::string const &filename)
 {
@@ -29,7 +30,7 @@ PlaybackControl::PlaybackControl(bool fileMode, std::string const &filename)
     if (!_fileMode)
     {
         // live visualization mode
-        // it must also be possible to pause and scroll back, for instance to 
+        // it must also be possible to pause and scroll back, for instance to
         // answer 'hey what just happened there?!' without having to halt visualizer and load replay
         // if live, then data is visualized as it comes in (slider at the right end)
         // otherwise, playback determines what must be drawn
@@ -37,8 +38,8 @@ PlaybackControl::PlaybackControl(bool fileMode, std::string const &filename)
         //TODO _dbSync = new cDbSync();
         _isLive = true;
         _isPaused = false;
-        _tStart = rtime::now();
-        _tEnd = rtime::now() + 1.0; // to be updated live
+        _tStart = ftime::now();
+        _tEnd = ftime::now() + 1.0; // to be updated live
     }
     else
     {
@@ -48,7 +49,7 @@ PlaybackControl::PlaybackControl(bool fileMode, std::string const &filename)
         auto header = _playback->getHeader();
         _tStart = header.creation;
         TRACE("_tStart=%s", _tStart.toStr().c_str());
-        _tEnd = _tStart + header.duration;
+        _tEnd = _tStart + _playback->getDuration();
         TRACE("_tEnd=%s", _tEnd.toStr().c_str());
         _isLive = false;
         _isPaused = false;
@@ -107,7 +108,7 @@ void PlaybackControl::tick()
         if (_dbSync != NULL)
         {
             _dbSync->tick();
-            _tEnd = rtime::now();
+            _tEnd = ftime::now();
         }
     }
     else
@@ -145,7 +146,8 @@ void PlaybackControl::rseek(float v)
         _isLive = false;
         rtime tNew = _tStart + double(_tEnd - _tStart) * v;
         // for continuity, don't modify timestamp administration unless really needed
-        if (double(tNew - _tCurrent) > 0.1)
+        double delta = tNew - _tCurrent;
+        if (delta > 0.1 || delta < 0.0)
         {
             _tCurrent = tNew;
             TRACE("scrolling to %s", _tCurrent.toStr().c_str());

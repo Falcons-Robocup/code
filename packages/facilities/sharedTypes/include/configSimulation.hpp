@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -15,6 +15,7 @@
 #include "RtDB2.h" // required for serialization
 #include <string>
 
+
 struct configSimulation
 {
     std::string arbiter;
@@ -22,7 +23,14 @@ struct configSimulation
     int sizeTeamA;
     int sizeTeamB;
 
-    SERIALIZE_DATA(arbiter, sizeTeamA, sizeTeamB);
+    // The number of milliseconds to advance time in a single update (tick), e.g., 50ms == 20Hz
+    int tick_stepsize_ms;
+
+    // The frequency of updating (ticking) simulation (heartbeat), e.g., 20Hz -> 20 updates per second.
+    // Increasing/decreasing this number will influence the simulation speed (e.g., 40 == 2x)
+    int tick_frequency;
+
+    SERIALIZE_DATA(arbiter, sizeTeamA, sizeTeamB, tick_stepsize_ms, tick_frequency);
 };
 
 #endif

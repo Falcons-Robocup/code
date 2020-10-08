@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,6 +21,7 @@
 #define CDIAGNOSTICS_HPP_
 
 #include "FalconsRtDB2.hpp"
+#include "ftime.hpp"
 
 namespace diagnostics
 {
@@ -56,7 +57,7 @@ namespace diagnostics
 #define TRACE_ERROR_TIMEOUT(timeout, ...) \
 { \
     static double tlast = 0; \
-    double tcurr = rtime::now(); \
+    double tcurr = ftime::now(); \
     if (tcurr - tlast > timeout) { \
         (diagnostics::EventHandler(eventSeverityEnum::ERROR,__FILE__,__LINE__,__FUNCTION__))( __VA_ARGS__ ) ; \
         tlast = tcurr; \
@@ -65,7 +66,7 @@ namespace diagnostics
 #define TRACE_INFO_TIMEOUT(timeout, ...) \
 { \
     static double tlast = 0; \
-    double tcurr = rtime::now(); \
+    double tcurr = ftime::now(); \
     if (tcurr - tlast > timeout) { \
         (diagnostics::EventHandler(eventSeverityEnum::INFO,__FILE__,__LINE__,__FUNCTION__))( __VA_ARGS__ ) ; \
         tlast = tcurr; \
@@ -74,7 +75,7 @@ namespace diagnostics
 #define TRACE_WARNING_TIMEOUT(timeout, ...) \
 { \
     static double tlast = 0; \
-    double tcurr = rtime::now(); \
+    double tcurr = ftime::now(); \
     if (tcurr - tlast > timeout) { \
         (diagnostics::EventHandler(eventSeverityEnum::WARNING,__FILE__,__LINE__,__FUNCTION__))( __VA_ARGS__ ) ; \
         tlast = tcurr; \

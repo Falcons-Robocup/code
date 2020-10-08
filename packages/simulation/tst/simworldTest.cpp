@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -49,6 +49,8 @@ class MockGameDataAdapter : public AbstractGameDataAdapter {
 public:
     MOCK_CONST_METHOD1(publishGameData, void(const GameData&));
     MOCK_CONST_METHOD3(publishGameData, void(const GameData&, const TeamID, const RobotID));
+    MOCK_CONST_METHOD1(publishScene, void(const GameData&));
+    MOCK_METHOD1(checkUpdatedScene, bool(SimulationScene &));
 };
 
 

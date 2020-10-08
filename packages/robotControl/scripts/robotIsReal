@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Check if on robot, based on environment.
+#
+
+
+
+# check if on real robot
+if [ "$SIMULATED" = 1 ]; then
+    exit 1 # nope
+fi
+if [ -z "$TURTLE5K_ROBOTNUMBER" ]; then
+    exit 1 # nope
+fi
+
+# yes we are on a real robot
+exit 0
+

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,15 +19,16 @@
 #ifndef CALLACTIONS_HPP_
 #define CALLACTIONS_HPP_
 
-#include "int/cAbstractAction.hpp"
-#include "int/cActionStop.hpp"
-#include "int/cActionKick.hpp"
-#include "int/cActionShootAtTarget.hpp"
-#include "int/cActionPassToTarget.hpp"
-#include "int/cActionMoveToTarget.hpp"
-#include "int/cActionGetBall.hpp"
-#include "int/cActionTurnAwayFromOpponent.hpp"
-#include "int/cActionKeeperMove.hpp"
+#include "MP_AbstractAction.hpp"
+#include "MP_ActionGetBall.hpp"
+#include "MP_ActionKeeperMove.hpp"
+#include "MP_ActionKick.hpp"
+#include "MP_ActionMoveToTarget.hpp"
+#include "MP_ActionPassToTarget.hpp"
+#include "MP_ActionShootAtTarget.hpp"
+#include "MP_ActionStop.hpp"
+#include "MP_ActionTurnAwayFromOpponent.hpp"
+#include "MP_ActionInterceptBall.hpp"
 
 #endif /* CALLACTIONS_HPP_ */
 

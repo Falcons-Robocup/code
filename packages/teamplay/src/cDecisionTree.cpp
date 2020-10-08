@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -34,7 +34,6 @@
 #include "int/stores/fieldDimensionsStore.hpp"
 #include "int/stores/gameStateStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
 #include "int/types/cGameStateTypes.hpp"
 #include "int/types/cRefboxSignalTypes.hpp"
 #include "int/cWorldStateFunctions.hpp"
@@ -59,8 +58,9 @@
 #include "int/actions/cActionDefendPenaltyArea.hpp"
 #include "int/actions/cActionTurnAwayFromOpponent.hpp"
 #include "int/actions/cActionDefendAttackingOpponent.hpp"
-#include "int/actions/cActionDribbleForPass.hpp"
-#include "int/actions/cActionDribbleForShot.hpp"
+#include "int/actions/cActionDribble.hpp"
+
+#include "cDiagnostics.hpp"
 
 using namespace teamplay;
 
@@ -377,8 +377,7 @@ cDecisionTree::cDecisionTree()
         ( tpActionEnum::DEFEND_PENALTY_AREA,  boost::make_shared<cActionDefendPenaltyArea>())
         ( tpActionEnum::TURN_AWAY_FROM_OPPONENT,  boost::make_shared<cActionTurnAwayFromOpponent>())
         ( tpActionEnum::DEFEND_ATTACKING_OPPONENT,  boost::make_shared<cActionDefendAttackingOpponent>())
-        ( tpActionEnum::DRIBBLE_FOR_PASS,  boost::make_shared<cActionDribbleForPass>())
-        ( tpActionEnum::DRIBBLE_FOR_SHOT,  boost::make_shared<cActionDribbleForShot>())
+        ( tpActionEnum::DRIBBLE,  boost::make_shared<cActionDribble>())
         ;
 
     _rtdb = RtDB2Store::getInstance().getRtDB2(getRobotNumber(), getTeamChar());
@@ -407,6 +406,7 @@ behTreeReturnEnum cDecisionTree::executeTree(const treeEnum& treeAsEnum, std::ma
         std::string msg = "tree: ";
         msg.append( treeEnumToStr(treeAsEnum) );
         TRACE_FUNCTION(msg.c_str());
+        //prettyPrintParams(mapParams);
 
         // Get the tree and its root node
         const cParsedTree& tree = getBehaviorTree(treeAsEnum);
@@ -518,12 +518,7 @@ void cDecisionTree::loadDecisionTrees(const std::string& directory)
     TRACE_FUNCTION("");
     try
     {
-        struct passwd *pw = getpwuid(getuid());
-        std::string decisionTreePath("");
-
-        decisionTreePath.append(pw->pw_dir);
-        decisionTreePath.append(DECISIONTREE_PATH);
-        decisionTreePath.append(directory);
+        std::string decisionTreePath = DECISIONTREE_PATH; // TODO what about argument 'directory'?
 
         // Iterate all *.json files
         boost::filesystem::path p(decisionTreePath);
@@ -610,6 +605,15 @@ void cDecisionTree::prettyPrintMemoryStack(memoryStackType& memoryStack, memoryS
     }
 }
 
+// another debug function
+void cDecisionTree::prettyPrintParams(std::map<std::string, std::string> const &mapParams)
+{
+    for (auto it = mapParams.begin(); it != mapParams.end(); ++it)
+    {
+        TRACE("param %s -> %s", it->first.c_str(), it->second.c_str());
+    }
+}
+
 // We need the tree for finding new nodes.
 // We need the 'current' node for recursion
 behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, const cParsedNode& node, std::map<std::string, std::string> &mapParams, const treeEnum& treeAsEnum, memoryStackType& memoryStack, int memoryStackIdx, memoryStackNodes& memoryStackNodes)
@@ -621,6 +625,7 @@ behTreeReturnEnum cDecisionTree::traverseBehaviorTree(const cParsedTree& tree, c
         msg.append("; node: ");
         msg.append( node._name );
         TRACE_FUNCTION(msg.c_str());
+        //prettyPrintParams(mapParams);
 
         // We are executing on this key (Tree, Node)
         memoryStackKey traversingKey = std::make_pair(treeAsEnum, node._id);
@@ -1214,8 +1219,8 @@ const cParsedTree& cDecisionTree::getBehaviorTree(const treeEnum &behavior)
     }
     catch (std::exception &e)
     {
-        TRACE_ERROR("Failed to find tree for behavior: %s", e.what());
-        throw std::runtime_error(std::string("Failed to find tree for behavior.") + e.what());
+        TRACE_ERROR("Failed to find tree for behavior %s", enum2str(behavior));
+        throw std::runtime_error(std::string("Failed to find tree for behavior ") + enum2str(behavior));
     }
 }
 

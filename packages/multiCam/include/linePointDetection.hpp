@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -43,7 +43,7 @@ private:
     // pointers for access to other classes
     configurator *conf;
     cameraReceive *camRecv;
-    deWarper *dewarp[4];
+    Dewarper *dewarp[4];
     preprocessor *prep;
 
     cv::Mat lineBallMask;
@@ -63,7 +63,7 @@ private:
     angleRadiusSt cartesianToPolarShortAxis(size_t cam, linePointSt cartesian);
 
 public:
-    linePointDetection(cameraReceive *camRecv, configurator *conf, deWarper *dewarp[4], preprocessor *prep);
+    linePointDetection(cameraReceive *camRecv, configurator *conf, Dewarper *dewarp[4], preprocessor *prep);
     void update();
     std::vector<angleRadiusSt> getLinePointsPolar();
     void setGoodEnoughLoc(detPosSt value) {

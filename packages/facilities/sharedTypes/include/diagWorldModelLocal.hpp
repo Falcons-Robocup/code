@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,7 +25,8 @@
 #include "RtDB2.h" // required for serialization
 
 #include "vec2d.hpp"
-#include "vector3d.hpp"
+#include "objectMeasurement.hpp"
+#include "ballResult.hpp"
 
 struct diagLocalizationTracker
 {
@@ -33,56 +34,79 @@ struct diagLocalizationTracker
     SERIALIZE_DATA(id);
 };
 
+struct diagObjectMeasurement
+{
+    objectMeasurement m;
+    bool used = true;
+    SERIALIZE_DATA(m, used);
+};
+
+struct diagObjectMeasurementCluster
+{
+    rtime t;
+    float x = 0.0;
+    float y = 0.0;
+    float z = 0.0;
+    bool used = true;
+    SERIALIZE_DATA_FIXED(t, x, y, z, used);
+};
+
 struct diagBallTracker
 {
     int id;
-    std::vector<Vector3D> positionFcs;
-    std::vector<rtime>    timestamps; 
-    SERIALIZE_DATA(id, positionFcs, timestamps);
+    ballResult result;
+    std::vector<diagObjectMeasurement> measurements;
+    std::vector<diagObjectMeasurementCluster> measurementClusters;
+    float ownGoodDataRate = 0.0; // 0.0 = none, 1.0 is 1 sample per heartbeat
+    float outliersFraction = 0.0; // between 0.0 and 1.0
+    float age = 0.0; // time since first measurement
+    float freshness = 0.0; // time since last measurement
+    bool obf = false;
+    SERIALIZE_DATA(id, result, measurements, measurementClusters, age, freshness, ownGoodDataRate, outliersFraction, obf);
 };
 
 struct diagVector2D
 {
-	double x;
-	double y;
-	SERIALIZE_DATA(x, y);
+    double x;
+    double y;
+    SERIALIZE_DATA(x, y);
 };
 
 struct diagMatrix22
 {
-	double matrix[2][2];
-	SERIALIZE_DATA(matrix);
+    double matrix[2][2];
+    SERIALIZE_DATA(matrix);
 };
 
 struct diagGaussian2D
 {
-	diagVector2D mean;
-	diagMatrix22 covariance;
-	SERIALIZE_DATA(mean, covariance);
+    diagVector2D mean;
+    diagMatrix22 covariance;
+    SERIALIZE_DATA(mean, covariance);
 };
 
 struct diagMeasurement
 {
-	diagGaussian2D gaussian2d;
-	uint8_t measurer_id;
-	SERIALIZE_DATA(gaussian2d, measurer_id);
+    diagGaussian2D gaussian2d;
+    uint8_t measurer_id;
+    SERIALIZE_DATA(gaussian2d, measurer_id);
 };
 
 struct diagObstacle
 {
-	diagGaussian2D gaussian2d;
-	bool isTeammember;
-	uint8_t robot_id; // only valid if it is a team member
+    diagGaussian2D gaussian2d;
+    bool isTeammember;
+    uint8_t robot_id; // only valid if it is a team member
 
-	SERIALIZE_DATA(gaussian2d, isTeammember, robot_id);
+    SERIALIZE_DATA(gaussian2d, isTeammember, robot_id);
 };
 
 struct diagGaussianObstacleDiscriminator
 {
-	std::vector<diagMeasurement> measurements;
-	std::vector<diagObstacle> obstacles;
+    std::vector<diagMeasurement> measurements;
+    std::vector<diagObstacle> obstacles;
 
-	SERIALIZE_DATA(measurements, obstacles);
+    SERIALIZE_DATA(measurements, obstacles);
 };
 
 struct diagObstacleTracker
@@ -96,11 +120,13 @@ struct diagWorldModelLocal
     std::vector<diagLocalizationTracker> localization;
     std::vector<diagBallTracker>         balls;
     std::vector<diagObstacleTracker>     obstacles;
+    rtime timestamp;
     
     diagGaussianObstacleDiscriminator gaussianObstacleDiscriminatorData;
 
-
-    SERIALIZE_DATA(localization, balls, obstacles, gaussianObstacleDiscriminatorData);
+    SERIALIZE_DATA(timestamp, localization, balls, obstacles, gaussianObstacleDiscriminatorData);
+    // TODO merge obstacles and gaussianObstacleDiscriminatorData (first was intended as placeholder for second)
+    // TODO reuse stuff between balls and obstacles
 };
 
 #endif

@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,14 +9,10 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  """ 
- import roslib # only for easy path management
-roslib.load_manifest('geometry')
-roslib.load_manifest('common')
-roslib.load_manifest('sharedTypes')
-roslib.load_manifest('rtdb3')
-
+ 
 import threading, time
 
+import falconspy
 from FalconsCoordinates import *
 from FalconsCommon import *
 import FalconsEnv
@@ -26,10 +22,10 @@ from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
 
 class WorldState():
 
-    def __init__(self):
+    def __init__(self, robotId):
         self.rtdb2Store = RtDB2Store(RTDB2_DEFAULT_PATH, True) # read mode
         self.rtdb2Store.refresh_rtdb_instances()
-        self.robotId = FalconsEnv.get_robot_num()
+        self.robotId = robotId
         self.robotStatus = {}
         self.robotPosition = {}
         self.robotVelocity = {}
@@ -37,9 +33,12 @@ class WorldState():
         self.frequency = 20
         self.stopFlag = False
         self.updateThread = None
-        
+        self.ball = None
+
     def startMonitoring(self):
         self.updateThread = threading.Thread(target=self.updateLoop)
+        # daemon=True means thread is killed during shutdown of main thread, and not block main thread from shutdown
+        self.updateThread.setDaemon(True)
         self.updateThread.start()
 
     def stopMonitoring(self):
@@ -57,11 +56,11 @@ class WorldState():
         """
         # ROBOT_STATE for all robots
         for robotId in range(1, MAX_ROBOTS):
-            v = self.rtdb2Store.get(robotId, "ROBOT_STATE")
+            v = self.rtdb2Store.get(robotId, "ROBOT_STATE", timeout=7.0)
             if v == None:
                 # clear
                 self.robotPosition[robotId] = None
-            elif v.age() < 7.0:
+            else:
                 # unpack struct
                 status = robotStatusEnum(v.value[0])
                 #timestamp = v.value[1] # ignore
@@ -81,27 +80,35 @@ class WorldState():
                 self.ball = v.value[0] # ignore any other ball, we expect worldModel to put best ball first
         # obstacles
         v = self.rtdb2Store.get(self.robotId, "OBSTACLES")
-        self.obstacles = []
+        self.obstaclePositions = []
+        self.obstacleVelocities = []
         if v != None:
             for obst in v.value:
-                self.obstacles.append(Vec2d(*obst[0]))
+                self.obstaclePositions.append(Vec2d(*obst[0]))
+                self.obstacleVelocities.append(Vec2d(*obst[1]))
 
-    def getRobotPosition(self, robotId):
+    def getRobotPosition(self, robotId=None):
+        if robotId == None:
+            robotId = self.robotId
         return self.robotPosition[robotId]
 
-    def getRobotVelocity(self, robotId):
+    def getRobotVelocity(self, robotId=None):
+        if robotId == None:
+            robotId = self.robotId
         return self.robotVelocity[robotId]
 
     def activeRobots(self):
         result = []
         for robotId in range(1, MAX_ROBOTS):
-            if self.robotStatus.has_key(robotId):
+            if robotId in self.robotStatus:
                 if self.robotStatus[robotId] == robotStatusEnum.INPLAY:
                     result.append(robotId)
         return result
 
-    def hasBall(self, robotId):
-        if self.robotHasBall.has_key(robotId):
+    def hasBall(self, robotId=None):
+        if robotId == None:
+            robotId = self.robotId
+        if robotId in self.robotHasBall:
             return self.robotHasBall[robotId]
         return False
 
@@ -121,5 +128,18 @@ class WorldState():
         return ballPossessionTypeEnum(self.ball[3][0])
 
     def getObstacles(self):
-        return self.obstacles
+        return self.obstaclePositions
+
+    def getObstacleVelocities(self):
+        return self.obstacleVelocities
+
+    def getRobotId(self):
+        return self.robotId
+
+    def ballDistance(self):
+        r = self.getRobotPosition()
+        b = self.getBallPosition()
+        if b == None:
+            return None
+        return (r.xy() - Vec2d(b.x, b.y)).size()
 

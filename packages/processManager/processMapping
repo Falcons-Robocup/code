@@ -4,35 +4,36 @@
 # NOTE: do NOT use tabs !!
 # 
 
+FALCONS_BUILD_DIR=$FALCONS_CODE_PATH/build
 
 ( 
 cat << EOF
-bh                  rosrun ballHandling ballHandling
-commandGui          python /home/robocup/falcons/code/packages/coachCommands/commandGui.py
-commW               rosrun rtdb3 commW
-halCompass          rosrun peripheralsInterface compass
-halIoBoard          rosrun peripheralsInterface ioBoard
-halMotors           rosrun peripheralsInterface motors
-heartbeat           rosrun heartBeat heartBeatNode
-matchMode           rosrun heartBeat mainMatchMode
-health              rosrun diagnostics robotHealth
-logger              rosrun logging logger 30
-rtdbSync            rosrun logging rtdbSync 30
-pp                  /home/robocup/falcons/code/packages/pathPlanning/bin/pathplanningNode
-mp                  /home/robocup/falcons/code/packages/motionPlanning/bin/motionPlanner
+bh                  $FALCONS_BUILD_DIR/packages/ballHandling/ballHandling
+commW               commW
+halCompass          $FALCONS_BUILD_DIR/packages/peripheralsInterface/compass
+halIoBoard          $FALCONS_BUILD_DIR/packages/peripheralsInterface/ioBoard
+halMotors           $FALCONS_BUILD_DIR/packages/peripheralsInterface/motors
+halMotion           $FALCONS_CODE_PATH/scripts/startupWrapper_motion
+mcbInterface        $FALCONS_BUILD_DIR/packages/mcbInterface/mcbInterface
+heartbeatCoach      $FALCONS_BUILD_DIR/packages/heartBeat/heartBeatCoach
+matchMode           $FALCONS_BUILD_DIR/packages/heartBeat/mainMatchMode
+health              $FALCONS_BUILD_DIR/packages/facilities/diagnostics/robotHealth
+logger              $FALCONS_BUILD_DIR/packages/facilities/logging/logger 50
+rtdbSync            $FALCONS_BUILD_DIR/packages/facilities/logging/rtdbSync 30
+pp                  $FALCONS_BUILD_DIR/packages/pathPlanning/pathplanningNode
+mp                  $FALCONS_BUILD_DIR/packages/motionPlanning/motionPlanner
 refboxGui           startRefbox
-refboxRelay         rosrun refbox refboxRelay
-robotControl        rosrun robotControl robotControlDaemon
-roscore             roscore
-simworld            rosrun simulation sw
-sp                  /home/robocup/falcons/code/packages/shootPlanning/bin/shoot_planner
-tp                  /home/robocup/falcons/code/packages/teamplay/bin/teamplay_main
-vc                  rosrun velocityControl velocityControl
-multiCam            /home/robocup/falcons/code/packages/multiCam/bin/multiCamNode
-raspiSync           /home/robocup/falcons/code/packages/raspiSync/bin/raspiSync
-wm                  /home/robocup/falcons/code/packages/worldModel/bin/worldModelNode
-visualizer          rosrun visualizer visualizer
-setpointGen         python /home/robocup/falcons/code/packages/pathPlanning/scripts/setpointGeneratorNode_2ndorder.py
+refboxRelay         $FALCONS_BUILD_DIR/packages/refbox/refboxRelay
+simworld            $FALCONS_BUILD_DIR/packages/simulation/sw
+sp                  $FALCONS_BUILD_DIR/packages/shootPlanning/shoot_planner
+tp                  $FALCONS_BUILD_DIR/packages/teamplay/teamplay_main
+vc                  $FALCONS_BUILD_DIR/packages/velocityControl/velocityControl
+multiCam            $FALCONS_BUILD_DIR/packages/multiCam/multiCamNode
+raspiSync           $FALCONS_BUILD_DIR/packages/raspiSync/raspiSync
+wm                  $FALCONS_BUILD_DIR/packages/worldModel/worldModelNode
+visualizer          $FALCONS_BUILD_DIR/packages/visualizer/visualizer
+setpointGen         python3 $FALCONS_CODE_PATH/packages/pathPlanning/scripts/setpointGeneratorNode_2ndorder.py
+blockly             python3 $FALCONS_CODE_PATH/packages/robotControl/scripts/blocklyDaemon.py
 EOF
 ) | sed 's/#.*//' # filter comments, like these ;)
 

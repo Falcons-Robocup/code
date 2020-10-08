@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+# Jan Feitsma, December 2019
+
+# For description and usage hints, execute with '-h'
+
+
+import argparse
+import os
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+            description="Reconfigure a robot. Require one or more yaml files as argument. Will deploy the yaml files to robots and load them (using loadYAML.py). This should trigger a re-config in case robot software is running. Actually, robot software must be running for loadYAML to be able to map data.")
+    parser.add_argument("files", nargs='+',
+            help="list of files with absolute or relative paths, for example: PathPlanning.yaml")
+    parser.add_argument("-r", "--robots",   type=str, default="r1,r2,r3,r4,r5,r6,r7",
+            help="comma separated list of robots, for example: -r r1,r6,r3")
+    return parser.parse_args()
+
+
+def make_paths_absolute(paths):
+    abs_paths = list()
+    for path in paths:
+        abs_paths.append(os.path.abspath(path))
+    return abs_paths
+
+
+def is_alive(hostname):
+    command = "ping -W 1 -c 1 {0} >/dev/null 2>/dev/null".format(hostname)
+    return (os.system(command) == 0)
+
+
+def upload(abspath, robot):
+    command = "scp {0} {1}:{0}".format(abspath, robot)
+    result = os.system(command)
+    if result != 0:
+        raise RuntimeError("Failed to upload {0} to robot {1}".format(abspath, robot))
+
+
+def get_key_from_path(abspath):
+    b, e = os.path.splitext(os.path.basename(abspath))
+    assert(e == ".yaml")
+    if b.startswith("PathPlanning"):
+        return "CONFIG_PATHPLANNING"
+    if b.startswith("BallHandling"):
+        return "CONFIG_BALLHANDLING"
+    if b.startswith("worldModelSyncConfig"):
+        return "CONFIG_WORLDMODELSYNC"
+    if b.startswith("teamplay"):
+        return "CONFIG_TEAMPLAY"
+    raise RuntimeError("File base {} not recognized, cannot deduce associated RTDB key".format(b))
+
+
+def deploy_yaml(abspath, robot):
+    upload(abspath, robot)
+    rtdbkey = get_key_from_path(abspath)
+    envcommand = "source /home/robocup/falcons/code/scripts/setupEnv.sh"
+    command = "loadYAML.py -a {0} -k {1} {2}".format(int(robot[1]), rtdbkey, abspath)
+    # wrap the command to enable remote execution
+    command = "ssh {0} \"{1} ; {2}\"".format(robot, envcommand, command)
+    result = os.system(command)
+    if result != 0:
+        raise RuntimeError("Failed to run command on robot {0}: {1}".format(robot, command))
+    
+
+if __name__ == '__main__':
+    config = parse_arguments()
+    robots = list()
+    files = list()
+
+    for hostname in config.robots.split(','):
+        if is_alive(hostname):
+            robots.append(hostname)
+
+    for path in config.files:
+        files.append(path)
+
+    files = make_paths_absolute(files)
+
+    for robot in robots:
+        for file in files:
+            deploy_yaml(file, robot)
+

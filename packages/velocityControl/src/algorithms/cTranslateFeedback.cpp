@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,6 +29,7 @@ void cTranslateFeedback::execute()
     _vcMain->_vcDataClass->getInvMatrix(inverseMatrix);
 
 
+    TRACE("") << "Feedback: m1.disp=" << std::to_string(feedbackMotors.m1.displacement) << "; m2.disp=" << std::to_string(feedbackMotors.m2.displacement) << "; m3.disp=" << std::to_string(feedbackMotors.m3.displacement);
 
 
     /*
@@ -59,6 +60,8 @@ void cTranslateFeedback::execute()
 	feedbackRobotData.velocity.phi = vVelocity(2);
 
 	_vcMain->_vcDataClass->setFeedbackRobotData(feedbackRobotData);
+
+    TRACE("") << "Feedback: x.disp=" << std::to_string(feedbackRobotData.displacement.x) << "; y.disp=" << std::to_string(feedbackRobotData.displacement.y) << "; Rz.disp=" << std::to_string(feedbackRobotData.displacement.phi);
 
 	/* START PTRACE SETGET */
 

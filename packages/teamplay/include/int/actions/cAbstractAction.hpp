@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,8 +24,10 @@
 #include <string>
 #include <map>
 #include <boost/assign/list_of.hpp>
-#include <boost/ptr_container/ptr_map.hpp>
 #include <boost/assign/ptr_map_inserter.hpp>
+#include <boost/optional.hpp>
+#include <boost/ptr_container/ptr_map.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "int/types/cDecisionTreeTypes.hpp"
 
@@ -111,11 +113,12 @@ class cAbstractAction
     protected:
         behTreeReturnEnum moveTo(double x, double y, const std::string& motionProfile = "normal"); // TODO replace motionProfile with 'bool slow'
         behTreeReturnEnum pass(float x, float y);
-        behTreeReturnEnum shoot(float x, float y, float z = 0);
+        behTreeReturnEnum shoot(const Point2D& target);
         behTreeReturnEnum lobShot (const Point2D& target);
         behTreeReturnEnum getBall(const std::string& motionProfile);
         behTreeReturnEnum turnAwayFromOpponent(double x, double y, const std::string& motionProfile);
         behTreeReturnEnum keeperMove(float x);
+        behTreeReturnEnum interceptBall(const std::string& motionProfile);
         void stop();
         bool positionReached(double x, double y);
         bool positionReached(double x, double y, double xy_threshold);
@@ -135,6 +138,8 @@ class cAbstractAction
         T_ACTION makeAction();
         int _actionId = 0;
         void setForbiddenAreas();
+        behTreeReturnEnum translateActionResultToTreeEnum(T_ACTION_RESULT actionResult);
+        behTreeReturnEnum executeAction(T_ACTION const &actionData);
 
 };
 

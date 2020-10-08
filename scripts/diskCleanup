@@ -1,82 +1,364 @@
-#!/bin/bash
+#!/usr/bin/env python3
 #
-# Check disk usage on robot if option -v is used.
-# Otherwise, attempt to cleanup.
-# 
-# JFEI 2019 creation
-# 
+# Jeffrey van Pernis, August 2020
+#
+# Laptop management: clean the disk from falcons generated logging
+
+import argparse
+import getpass
+import os
+import json
+import logging
+import shutil
+import sys
+import textwrap
+from datetime import datetime
+from pathlib import Path
+from logging import handlers
 
 
-# exit upon any error
-set -e
+# ----------------------------------------------------------------
+# Global variables
+#
 
-# only run on robot
-if [ -z "$TURTLE5K_ROBOTNUMBER" ]; then
-    exit 0
-fi
+toolname = Path(__file__).stem
 
-# offer a mode to simply check, which is useful for wtf script
-checkMode=0
-if [ "$1" = "-v" ]; then
-    checkMode=1
-fi
+user = getpass.getuser()
 
-# on robot, we have a small partition for Linux (mount point /)
-# over time, old kernel headers/images can quickly fill the disk
-pct=`df | grep '/$' | nawk '{print $5}' | sed 's/%//'`
-limit=85
-if [ $pct -gt $limit ]; then
-    if [ $checkMode = 1 ]; then
-        echo "disk usage ($pct%) of system partition exceeds threshold ($limit%)"
-        exit 1
-    else
-        sudo apt-get autoremove -y
-    fi    
-fi
+logger = logging.getLogger()
+log_max_size = (10 * (1024 ** 2)) # 10 MiB
+log_max_count = 3
 
-# there is a bigger special partition for /var on robot where logging is stored
-# https://stackoverflow.com/questions/12062236/linux-clean-directory-script
-pct=`/home/robocup/falcons/code/scripts/getDiskUsage`
-limit=70
-numKeepNewest=30
-ageLimit=60
-maxNumObjectsPerIteration=10
-maxIterations=5
-if [ $pct -gt $limit ]; then
-    if [ $checkMode = 1 ]; then
-        echo "disk usage ($pct%) of log partition exceeds threshold ($limit%)"
-        exit 1
-    else
-        # iterative
-        iter=0
-        while [ $pct -gt $limit ]; do
-            # perform a cleanup iteration
-            let "iter = iter + 1"
-            if [ $iter -gt $maxIterations ]; then # failsafe exit after a number of iterations
-                echo "maximum number of iterations exceeded"
-                exit 1
-            fi
-            # find objects to be removed (some of them might be owned by root!)
-            # * sort objects on timestamp, newest first
-            # * whitelist newest objects (numKeepNewest)
-            # * iterate from bottom of the list upwards (maxNumObjectsPerIteration)
-            # * only objects older than ageLimit
-            objects=`find /var/tmp -mindepth 1 -maxdepth 1 -printf "%T@ %p\n" | \
-            sort -nrk1,1 | sed "1,${numKeepNewest}d" | cut -d' ' -f2 | tail -"$maxNumObjectsPerIteration" | \
-            xargs -n1 -I fname \
-            find fname -maxdepth 0 -mtime +$ageLimit -exec echo {} \;`
-            # nothing found -> exit
-            if [ -z "$objects" ]; then
+dryrun = False
+
+default_disk_full_threshold = 85.0
+default_disk_cutoff_threshold = 70.0
+
+default_paths = [
+    '/tmp',
+    '/var',
+    '/home/robocup/IMAGES',
+]
+
+
+# ----------------------------------------------------------------
+# Utilities
+#
+
+def humanize(size, decimal_places=2):
+    """Convenience method to convert a byte count into a human-recognizable file size"""
+
+    units = ['B', 'kiB', 'MiB', 'GiB', 'TiB']
+
+    for unit in units:
+        if size < 1024.0 or unit == units[-1]:
+            break
+
+        size /= 1024.0
+
+    return f'{size:.{decimal_places}f} {unit}'
+
+
+def format_timestamp(timestamp):
+    """Convenience method to convert the unix timestamp into a readable format"""
+    return str(datetime.utcfromtimestamp(timestamp).replace(microsecond=0))
+
+
+# ----------------------------------------------------------------
+# Analyze the disk
+#
+
+def analyze(paths, include_files=False):
+    """Iterate recusively over all the files and folders in the specified paths to gather information, and print this information in JSON format"""
+
+    directories = {}
+
+    for base in paths:
+        for directory, dirs, filenames in os.walk(base):
+
+            logger.debug('Dir %s dirs: %s', directory, str(dirs))
+
+            if directory not in directories:
+                directories[directory] = {
+                    'bytes': 0,
+                    'size': '',
+                    'modified': '',
+                    'accessed': '',
+                    'directories': dirs,
+                }
+
+            if include_files:
+                directories[directory]['files'] = {}
+
+            for filename in filenames:
+                filepath = os.path.join(directory, filename)
+
+                if os.path.islink(filepath):
+                    continue
+
+                size = os.path.getsize(filepath)
+                modified = format_timestamp(os.path.getmtime(filepath))
+                accessed = format_timestamp(os.path.getatime(filepath))
+
+                if modified > directories[directory]['modified']:
+                    directories[directory]['modified'] = modified
+
+                if accessed > directories[directory]['accessed']:
+                    directories[directory]['accessed'] = accessed
+
+                directories[directory]['bytes'] += size
+
+                if include_files:
+                    directories[directory]['files'][filename] = {
+                        'bytes': size,
+                        'size': humanize(size),
+                        'modified': modified,
+                        'accessed': accessed
+                    }
+
+            directories[directory]['size'] = humanize(directories[directory]['bytes'])
+
+    logger.info(json.dumps(directories, indent=2))
+
+    return directories
+
+
+# ----------------------------------------------------------------
+# Clean the disk
+#
+
+def getfiles(paths):
+    """Iterate recusively over all the files in the specified paths, and store the filestat object"""
+    files = {}
+
+    for base in paths:
+        for directory, dirs, filenames in os.walk(base):
+            for filename in filenames:
+                file = Path(directory, filename)
+
+                # Don't include symlinks; we'll already delete the original if required
+                if file.is_symlink():
+                    continue
+
+                # Don't include files we won't have the permissions for to delete them
+                if file.owner() != user:
+                    continue
+
+                files[file] = file.stat()
+
+    return files
+
+
+def get_total_space(files):
+    """Compute the sum of the filestat-reported sizes for all files in the specified dict"""
+    return sum(st.st_size for st in files.values())
+
+
+def clean(files, space_to_clean):
+    """Iterate over all files in the specified dict and delete them until the specified space is cleaned, sorting the files on when they were last used"""
+
+    cleaned_files = 0
+    reclaimed_space = 0
+
+    logger.debug('Cleaning files based on access and modification times:')
+
+    # Use a custom filter for the sort method which sorts the files
+    # based on the last time the file was used (accessed or modified)
+    filter = lambda file: max(files[file].st_atime, files[file].st_mtime)
+
+    for file in sorted(files, key=filter):
+        stat = files[file]
+        used = max(stat.st_atime, stat.st_mtime)
+
+        size_str = humanize(stat.st_size)
+        used_str = format_timestamp(used)
+        logger.debug(f" - Last used {used_str}, size {size_str:>10s}, file {str(file)}")
+
+        # Delete the file
+        if not dryrun:
+            file.unlink()
+
+        # Make sure to clean up any empty directories we're leaving behind
+        # We simply try to delete it, and abort iterating the parent directory
+        # when it fails. This is either when the directory is not empty, or
+        # when we don't have the permission to delete it (e.g. /var)
+        parent = file.parent
+        while parent and not dryrun:
+            try:
+                parent.rmdir()
+                parent = parent.parent
+            except OSError as e:
                 break
-            fi
-            # remove
-            echo removing $objects
-            rm -rf $objects
-            # recalculate
-            pct=`/home/robocup/falcons/code/scripts/getDiskUsage`
-        done
-    fi
-fi
+
+        # Keep track of the totals
+        cleaned_files += 1
+        reclaimed_space += stat.st_size
+
+        # Stop deleting the files if we've already achieved
+        # the requested free space
+        if reclaimed_space >= space_to_clean:
+            break
+
+    # Return the totals
+    return cleaned_files, reclaimed_space
 
 
+# ----------------------------------------------------------------
+# Main
+#
 
+def main(args):
+    """Main method containing all the logic for cleaning the log files"""
+
+    # There's no convenient way to list the disks in Python, so we're going to assume that,
+    # if they have the same total, used, and free space, we're talking about the same disk
+    disks = {}
+    for path in args.paths:
+
+        if not os.path.exists(path):
+            continue
+
+        disk = shutil.disk_usage(path)
+
+        if disk not in disks:
+            disks[disk] = []
+
+        disks[disk].append(path)
+
+
+    # Calculate the threshold for each disk and clean the assigned paths to drop below the cutoff
+    for disk, args.paths in disks.items():
+        total, used, free = disk
+        usage = 100.0 * used / total
+
+        usage_str =  f'{usage:.1f}'
+        threshold_str = f'{args.disk_full_threshold:.1f}'
+        logger.info(f'Disk usage: {usage_str}% / {threshold_str}%')
+
+        # Check whether the disk is filled up enough to perform the clean
+        if usage < args.disk_full_threshold:
+            logger.info('No cleaning needed')
+            continue
+
+        # Calculate the required space we need to clean in order to drop
+        # below the cutoff threshold
+        space_to_clean = used - (total * args.disk_cutoff_threshold / 100.0)
+
+        cutoff_threshold_str = f'{args.disk_cutoff_threshold:.1f}'
+        reclaim_str = humanize(space_to_clean)
+        logger.info(f'Threshold exceeded, need to reclaim {reclaim_str} of data to fall below {cutoff_threshold_str}%')
+
+        # Get all files recursively from the assigned paths, put them in a convenient dict
+        # using path and filestat objects for the item's key and value, respectively
+        files = getfiles(args.paths)
+        total_used_space = get_total_space(files)
+
+        # We cannot delete more than there are files in the paths we've been assigned,
+        # but it might still be not enough
+        if space_to_clean > total_used_space:
+            logger.warning('WARNING: there is not enough data in the assigned paths to reclaim the required space')
+
+        # Stop here and return a useful exit code when we're in check mode
+        # 1: The disk is full
+        # 2: The disk is full and there is more data than we can clean
+        if args.check:
+            return True + (space_to_clean > total_used_space)
+
+        # Perform the clean action
+        cleaned_files, reclaimed_space = clean(files, space_to_clean)
+
+        total_files = len(files)
+        reclaimed_space_str = humanize(reclaimed_space)
+        logger.info(f'Cleaned {cleaned_files} out of {total_files} files to gain {reclaimed_space_str} free space')
+
+
+def init(args):
+    """Setup the root logger to both print to the console and log to a file"""
+
+    # Set the root logger to debug to allow debug statements to reach the log file
+    logger.setLevel(logging.DEBUG)
+
+    # Only set the console to debug if the vebose option was specifieds
+    consoleLevel = logging.DEBUG if args.verbose else logging.INFO
+
+    # Add a file logger
+    fileFormatter = logging.Formatter("%(asctime)s [%(levelname)-7.7s] %(message)s")
+    fileHandler = handlers.RotatingFileHandler(f'/var/tmp/{toolname}.log', maxBytes=log_max_size, backupCount=log_max_count)
+    fileHandler.setLevel(logging.DEBUG)
+    fileHandler.setFormatter(fileFormatter)
+    logger.addHandler(fileHandler)
+
+    # Add a console logger
+    consoleHandler = logging.StreamHandler(sys.stdout)
+    consoleHandler.setLevel(consoleLevel)
+    logger.addHandler(consoleHandler)
+
+
+if __name__ == "__main__":
+
+    if user == 'root':
+        print("This tool should not be run as the root user!")
+        exit(1)
+
+    description = textwrap.dedent(f"""
+        Clean up disk space if required.
+
+        When the specified threshold has been exceeded, it will clean the least used files it finds
+        in the specified paths, until enough data has been deleted to drop below the specified cutoff
+        threshold.
+
+        When in analyze mode, it will only display usage statistics for every (nested) directory found
+        in the paths. This is useful to experiment extending the scope of the paths, and validating
+        whether the additional path is required. It will also include files and  directories which are
+        not owned by the current user, which is helpful to determine where al the disk space went into.
+
+        When in check mode, the disk usage will only be validated, but no files will be deleted yet.
+        The exit status will then tell you the status of the disk:
+          0: There is enough free space remaining
+          1: The disk is full
+          2: The disk is full and there is more data than we can clean
+
+        The dryrun mode also won't delete any files yet. This mode is very useful to see which files
+        it will choose to delete, which can help you prevent accidentally deleting the wrong files if
+        you're not sure whether it causes any harm.
+
+        Examples:
+            {toolname}
+            {toolname} /home/{user}/Downloads
+            {toolname} -n
+            {toolname} --analyze
+            {toolname} --check
+            {toolname} --disk-full-threshold 60.0 --disk-cutoff-threshold 50.0
+    """)
+
+    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    # Add arguments
+    parser.add_argument('-a', '--analyze', help='display the disk usage and exit', action='store_true')
+    parser.add_argument('--analyze-full', help='display the disk usage for all files and exit', action='store_true')
+    parser.add_argument('-c', '--check', help="only check whether the disk is full and exit accordingly", action='store_true')
+
+    parser.add_argument('-v', '--verbose', help='use verbose logging', action='store_true')
+    parser.add_argument('-n', '--dryrun', help="don't actually delete anything yet", action='store_true')
+
+    parser.add_argument('--disk-full-threshold', metavar='<PERCENTAGE>', help=f'disk usage percentage to start cleaning (default: {default_disk_full_threshold:.1f}%%)', default=default_disk_full_threshold, type=float)
+    parser.add_argument('--disk-cutoff-threshold', metavar='<PERCENTAGE>', help=f'the target disk usage percentage after cleaning (default: {default_disk_cutoff_threshold:.1f}%%)', default=default_disk_cutoff_threshold, type=float)
+
+    parser.add_argument('paths', nargs='*', default=default_paths)
+
+
+    # Process arguments
+    args = parser.parse_args()
+    dryrun = args.dryrun
+
+    # Run the tool
+    returncode = 0
+
+    init(args)
+
+    if args.analyze or args.analyze_full:
+        analyze(args.paths, include_files=args.analyze_full)
+    else:
+        returncode = main(args)
+
+    exit(returncode)

@@ -11,8 +11,11 @@ then
     exit 1
 fi
 
+## EKPC - disabling the pre-commit hook
+exit 0
+
 # whitelist certain file types (e.g. CMakeLists.txt)
-for ext in txt xml yaml
+for ext in txt xml yaml scene
 do
     if [[ $f =~ \.$ext$ ]]
     then

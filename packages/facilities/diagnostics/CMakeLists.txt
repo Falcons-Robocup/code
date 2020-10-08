@@ -1,43 +1,46 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 3.5.1)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-
-rosbuild_init()
 find_package(PythonLibs REQUIRED)
+find_package(Facilities)
 
-# TKOV: enable enumerate value to be scoped
+
+find_package(Boost COMPONENTS system thread REQUIRED QUIET)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror")
 
 #set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
-
-#add dynamic reconfigure api
-#rosbuild_find_ros_package(dynamic_reconfigure)
-#include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-#gencfg()
+include_directories("include")
 
 # Create library libDiagnostics
-rosbuild_add_library(diagnostics src/cDiagnostics.cpp)
-rosbuild_link_boost(diagnostics system thread)
+add_library(diagnostics src/cDiagnostics.cpp)
+target_link_libraries(diagnostics
+    Tracing
+    RtDButils
+    FalconsCommon
+    rtdb2
+    FTime
+    ${Boost_LIBRARIES}
+    )
 
 # Executables
-rosbuild_add_executable(robotHealth src/mainRobotHealth.cpp src/cRobotHealth.cpp)
-target_link_libraries(robotHealth diagnostics)
-rosbuild_link_boost(robotHealth system thread)
+add_executable(robotHealth src/mainRobotHealth.cpp src/cRobotHealth.cpp)
+target_link_libraries(robotHealth diagnostics ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
 
-rosbuild_add_executable(sendEvent src/sendEvent.cpp)
-target_link_libraries(sendEvent diagnostics)
+add_executable(sendEvent src/sendEvent.cpp)
+target_link_libraries(sendEvent diagnostics ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
+
+############### TESTERS ####################
+
+add_test(testEventLogHelp eventlog -h)
+add_test(testAnalyzeInterceptHelp analyze_intercept.py -h)
+add_test(testAnalyzeLocalizationHelp analyze_localization.py -h)
+add_test(testAnalyzeMotionHelp analyze_motion.py -h)
+add_test(testMonitorMotionHelp monitor_motion.py -h)
+add_test(testMonitorInterceptHelp monitor_intercept.py -h)
+#add_test(testKSTPlotPPHelp kstplot_pp.py -h) # pykst not supported in python3
+
 

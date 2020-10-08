@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -56,14 +56,27 @@ int main(int argc, char **argv)
     int numFrames = 0;
     tLogFrame frame;
 
-    // TODO: automatically try to fix and reload, if duration is zero? (just call rdlfix)
-
     // run
     int totalDataSize = 0;
     int minDataSize = 999999;
     int maxDataSize = 0;
-    while (logFile.getFrame(frame))
+    float maxAge = 0;
+    bool ok = true;
+    while (ok)
     {
+        try
+        {
+            ok = logFile.getFrame(frame);
+        }
+        catch (...)
+        {
+            std::cerr << "ERROR at frame " << numFrames << std::endl;
+            ok = false;
+        }
+        if (!ok)
+        {
+            break;
+        }
         numFrames++;
         // inspect frame size
         int b = frame.data.size();// + 4; // 4 = string size descriptor
@@ -76,6 +89,12 @@ int main(int argc, char **argv)
             maxDataSize = b;
         }
         totalDataSize += b;
+
+        // store max age (age since first frame)
+        if (frame.age > maxAge)
+        {
+            maxAge = frame.age;
+        }
     }
 
     // display basic statistics
@@ -85,7 +104,7 @@ int main(int argc, char **argv)
     std::cout << "     filesize: " << sz << " [B] (" << std::fixed << std::setprecision(2) << mb << "MB)"<< std::endl;
     std::cout << "     hostname: " << header.hostname << std::endl;
     std::cout << "     creation: " << header.creation.toStr() << std::endl;
-    std::cout << "     duration: " << std::fixed << std::setprecision(2) << header.duration << " [s]" << std::endl;
+    std::cout << "     duration: " << std::fixed << std::setprecision(2) << maxAge << " [s]" << std::endl;
     std::cout << "    frequency: " << header.frequency << " [Hz]" << std::endl;
     std::cout << "   compressed: " << (header.compression ? "yes" : "no") << std::endl;
     std::cout << "    numFrames: " << numFrames << std::endl;
@@ -96,10 +115,7 @@ int main(int argc, char **argv)
     std::cout << "  avgDataSize: " << std::fixed << std::setprecision(2) << (totalDataSize / 1.0 / numFrames) << " [B/frame]" << std::endl;
     std::cout << " avgFrameSize: " << std::fixed << std::setprecision(2) << (sz / 1.0 / numFrames) << " [B/frame]" << std::endl;
     std::cout << "  avgOverhead: " << std::fixed << std::setprecision(2) << ((sz - totalDataSize) / 1.0 / numFrames) << " [B/frame]" << std::endl;
-    if (header.duration > 0)
-    {
-        std::cout << "  avgDataRate: " << std::fixed << std::setprecision(2) << (totalDataSize / 1024.0 / header.duration) << " [KB/s]" << std::endl;
-    }
+    std::cout << "  avgDataRate: " << std::fixed << std::setprecision(2) << (totalDataSize / 1024.0 / maxAge) << " [KB/s]" << std::endl;
     return 0;
 }
 

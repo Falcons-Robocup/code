@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,13 +28,12 @@
 
 struct action
 {
-    int                id; // incrementing counter, to make sure we get the proper action result back from motionPlanning (avoiding race conditions)
     actionTypeEnum     action;
     vec3d              position; // used by move, pass, shoot, lob, turnAwayFromOpponent
     bool               slow; // used by move, getBall, turnAwayFromOpponent -- use the 'slow' motion profile for extra precision
     bool               ballHandlersEnabled; // used by move -- teamplay will disable BH during a prepare setpiece
     
-    SERIALIZE_DATA(id, action, position, slow, ballHandlersEnabled);
+    SERIALIZE_DATA(action, position, slow, ballHandlersEnabled);
 };
 
 #endif

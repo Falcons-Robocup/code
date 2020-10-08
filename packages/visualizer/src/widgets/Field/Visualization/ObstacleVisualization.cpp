@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -38,10 +38,13 @@ ObstacleVisualization::ObstacleVisualization()
     sphereSource->SetCenter(0.0, 0.0, _OBSTACLE_DIAMETER / 2.0);
     sphereSource->SetRadius(_OBSTACLE_DIAMETER / 2.0);
     vtkSmartPointer<vtkActor> actor = addAsActor(sphereSource);
-    actor->GetProperty()->SetColor(0.0, 0.0, 0.0); // uniform black coloring
+    actor->GetProperty()->SetColor(0.5, 0.0, 0.0); // uniform dark-red coloring
+    actor->GetProperty()->SetOpacity(_OBSTACLE_OPACITY);
     
     // Create pointing arrow
-    _arrow->GetProperty()->SetColor(0.0, 0.0, 0.0); // uniform black coloring
+    _arrow->GetProperty()->SetColor(0.5, 0.0, 0.0); // uniform dark-red coloring
+    _arrow->GetProperty()->SetOpacity(_OBSTACLE_OPACITY);
+    _arrow->SetPosition(0, 0, _OBSTACLE_DIAMETER / 2.0);
 
     // Create an assembly consisting of the various parts
     this->VisibilityOn();

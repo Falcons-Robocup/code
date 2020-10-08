@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -35,30 +35,6 @@ static refboxSignalEnum refBoxSignalStrToEnum(const std::string enumString)
 	return	refboxSignalMapping.at(enumString);
 }
 
-/*
- // this looked useful but actually it's not, apparently
-static std::string refBoxSignalEnumToStr(const  refboxSignalEnum RefBoxSigEnum)
-{
-	 try
-	 {
-		std::map<std::string, refboxSignalEnum>::const_iterator it;
-		for(it = refboxSignalMapping.begin(); it != refboxSignalMapping.end(); ++it)
-		{
-			if(it->second == RefBoxSigEnum)
-			{
-				return it->first;
-			}
-		}
-	}
-	catch (std::exception &e)
-		{
-			TRACE_ERROR("Caught exception: %s.", e.what());
-			std::cout << "Caught exception: " << e.what() << std::endl;
-		}
-	TRACE("Unknown RefBox Signal received!");
-	return "INVALID";
-}
-*/
 
 #endif /* CREFBOXSIGNALTYPESFUNCTIONS_HPP_ */
 

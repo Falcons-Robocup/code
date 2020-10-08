@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,7 +9,7 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  """ 
- #!/usr/bin/env python
+ #!/usr/bin/env python3
 
 
 import os, sys
@@ -20,15 +20,15 @@ def env_debug():
     """Debugging: dump environment to stdout."""
     d = os.environ
     for k in sorted(d.keys()):
-        print "%s=%s" % (k, d[k])
+        print("%s=%s" % (k, d[k]))
     
 def get_robot_num():
-    """Returns robot number, which is an int between and including 1 and 6."""
+    """Returns robot number, which is an int between and including 1 and MAX_ROBOTS."""
     result = int(os.environ.get('TURTLE5K_ROBOTNUMBER', 0))
     if not result in range(MAX_ROBOTS+1):
         env_debug()
-        print "something is wrong with environment, check above"
-        print "TURTLE5K_ROBOTNUMBER should be a number between 0 and 6"
+        print("something is wrong with environment, check above")
+        print("TURTLE5K_ROBOTNUMBER should be a number between 0 and %s" % (str(MAX_ROBOTS)))
         # TODO link to wiki documentation
         sys.exit(1)
     return result
@@ -38,14 +38,14 @@ def get_team_name():
     result = os.environ.get('TURTLE5K_TEAMNAME')
     if not result in ["teamA", "teamB"]:
         env_debug()
-        print "something is wrong with environment, check above"
-        print "TURTLE5K_TEAMNAME should be either teamA or teamB"
+        print("something is wrong with environment, check above")
+        print("TURTLE5K_TEAMNAME should be either teamA or teamB")
         # TODO link to wiki documentation
         sys.exit(1)
     return result
 
 def get_simulated():
-    """Returns if we are in simulation mode (see falconsconfig.sh)."""
+    """Returns if we are in simulation mode (see setupEnv.sh)."""
     if get_on_real_robot():
         return False
     if (os.environ.get('SIMULATED') == "1"):
@@ -94,7 +94,7 @@ def get_pyro_port():
     
 def info():
     """Print a oneliner on stdout for debugging."""
-    print "%s:  sim=%d  robotnum=%d  teamname=%s  ip=%s  port=%d" % (sys.argv[0], get_simulated(), get_robot_num(), get_team_name(), get_ip_address(), get_pyro_port())
+    print("%s:  sim=%d  robotnum=%d  teamname=%s  ip=%s  port=%d" % (sys.argv[0], get_simulated(), get_robot_num(), get_team_name(), get_ip_address(), get_pyro_port()))
     
 if __name__ == '__main__':
     env_debug()

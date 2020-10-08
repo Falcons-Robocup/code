@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -33,8 +33,8 @@
 using namespace std;
 
 multicastSend::multicastSend(ballDetection *ballDet[4], ballDetection *ballFarDet[4], cameraReceive *camAnaRecv,
-		camSysReceive *camSysRecv, configurator *conf, ballDetection *cyanDet, determinePosition *detPos,
-		linePointDetection *linePoint, localization *loc, ballDetection *magentaDet, ballDetection *obstDet[4],
+		camSysReceive *camSysRecv, configurator *conf, obstacleDetection *cyanDet, determinePosition *detPos,
+		linePointDetection *linePoint, localization *loc, obstacleDetection *magentaDet, obstacleDetection *obstDet[4],
 		preprocessor *prep, robotFloor *rFloor) {
 	this->ballDet[0] = ballDet[0];
 	this->ballDet[1] = ballDet[1];
@@ -63,7 +63,7 @@ multicastSend::multicastSend(ballDetection *ballDet[4], ballDetection *ballFarDe
 	packetSize = 0;
 
 	size_t ii = 0;
-	char buff[16];
+	char buff[64];
 
 	// create a normal UDP socket
 	if ((fd = socket( AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -239,9 +239,9 @@ void multicastSend::stats() {
 	// TODO use double for localTime (but for now compatible with the omni vision interface)
 	uint64_t localTime = (uint64_t) tv.tv_sec * 1000000 + (uint64_t) tv.tv_usec;
 
-	vector<ballSt> cyans = cyanDet->getPositions();
+	vector<obstacleSt> cyans = cyanDet->getPositions();
 	vector<detPosSt> locations = detPos->getLocList();
-	vector<ballSt> magentas = magentaDet->getPositions();
+	vector<obstacleSt> magentas = magentaDet->getPositions();
 
 	uint8_t ballAmount = 0;
 	for (size_t cam = 0; cam < 4; cam++) {
@@ -305,7 +305,7 @@ void multicastSend::stats() {
 
 	uint8_t obstacleAmount = 0;
 	for (size_t cam = 0; cam < 4; cam++) {
-		vector<ballSt> obstacles = obstDet[cam]->getPositions();
+		vector<obstacleSt> obstacles = obstDet[cam]->getPositions();
 		for (uint ii = 0; ii < obstacles.size(); ii++) {
 			if (obstacles[ii].size >= conf->getBall(obstacleType).pixels) {
 				if (obstacleAmount != 255) {
@@ -616,15 +616,15 @@ void multicastSend::floorLinePoints() {
 }
 
 // send the ball list, also used for the cyanList, magentaList and obstacles
-void multicastSend::ballList(size_t type) {
-	vector<ballSt> ballList;
-	ballList.empty();
+void multicastSend::objectList(size_t type) {
+	vector<objectSt> objectList;
+	objectList.empty();
 	if (type == TYPE_BALLDETECTION) {
 		for (size_t cam = 0; cam < 4; cam++) {
 			vector<ballSt> tmp = ballDet[cam]->getAndClearPositionsRemoteViewer();
 			for (size_t ii = 0; ii < tmp.size(); ii++) {
 				tmp[ii].azimuth += cam * CV_PI / 2.0; // cam * 90 degrees, every camera is 90 degrees rotated
-				ballList.push_back(tmp[ii]);
+				objectList.push_back(tmp[ii]);
 			}
 		}
 	} else if (type == TYPE_BALLFARDETECTION) {
@@ -632,26 +632,26 @@ void multicastSend::ballList(size_t type) {
 			vector<ballSt> tmp = ballFarDet[cam]->getAndClearPositionsRemoteViewer();
 			for (size_t ii = 0; ii < tmp.size(); ii++) {
 				tmp[ii].azimuth += cam * CV_PI / 2.0; // cam * 90 degrees, every camera is 90 degrees rotated
-				ballList.push_back(tmp[ii]);
+				objectList.push_back(tmp[ii]);
 			}
 		}
 	} else if (type == TYPE_CYANDETECTION) {
-		ballList = cyanDet->getPositionsExport();
+		objectList = cyanDet->getPositionsExport();
 	} else if (type == TYPE_MAGENTADETECTION) {
-		ballList = magentaDet->getPositionsExport();
+		objectList = magentaDet->getPositionsExport();
 	} else if (type == TYPE_OBSTACLES) {
 		for (size_t cam = 0; cam < 4; cam++) {
 			vector<ballSt> tmp = obstDet[cam]->getPositionsExport();
 			for (size_t ii = 0; ii < tmp.size(); ii++) {
 				tmp[ii].azimuth += cam * CV_PI / 2.0; // cam * 90 degrees, every camera is 90 degrees rotated
-				ballList.push_back(tmp[ii]);
+				objectList.push_back(tmp[ii]);
 			}
 		}
 	}
 
 	uint16_t payloadIndex = 0;
-	for (size_t ii = 0; ii < ballList.size(); ii++) {
-		double ballSize = 10 * ballList[ii].size; // TODO: create better scale factor
+	for (size_t ii = 0; ii < objectList.size(); ii++) {
+		double ballSize = 10 * objectList[ii].size; // TODO: create better scale factor
 		if (ballSize >= 65535) {
 			sendBuf.pl.u16[payloadIndex++] = 65535;
 		} else {
@@ -659,17 +659,17 @@ void multicastSend::ballList(size_t type) {
 		}
 
 		// remote viewer expects radius in meters
-		double radiusMeter = 0.001 * ballList[ii].radius; // radius provided in mm
+		double radiusMeter = 0.001 * objectList[ii].radius; // radius provided in mm
 		// fixed point: 65536/2048 = 32, radius range 0 to 20 meters
 		sendBuf.pl.u16[payloadIndex++] = round(2048.0 * radiusMeter);
 
 		// remote viewer expects azimuth in radians
-		double azimuth = ballList[ii].azimuth; // azimuth provided in radians
+		double azimuth = objectList[ii].azimuth; // azimuth provided in radians
 		azimuth = fmod(azimuth + 2 * M_PI, 2 * M_PI); // be sure the angle is in the 0 to 2 PI range
 		// fixed point: 65536/8192 = 8, angle range 0 to 6.28 radians
 		sendBuf.pl.u16[payloadIndex++] = round(8192.0 * azimuth);
 		// remote viewer expects elevation in radians
-		double elevation = ballList[ii].elevation; // elevation provided in radians
+		double elevation = objectList[ii].elevation; // elevation provided in radians
 		elevation = fmod(elevation + 2 * M_PI, 2 * M_PI); // be sure the angle is in the 0 to 2 PI range
 		// fixed point: 65536/8192 = 8, angle range 0 to 6.28 radians
 		sendBuf.pl.u16[payloadIndex++] = round(8192.0 * elevation);

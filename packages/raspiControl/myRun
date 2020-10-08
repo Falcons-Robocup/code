@@ -4,4 +4,4 @@
 
 set -e
 
-rosrun raspiControl raspiControl
+frun raspiControl raspiControl

@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# JFEI 2016-05-02 creation
+#
+# Create an image. Assumes successful build has been done.
+#
+# See for more info wiki:buildImages
+#
+
+
+
+# go to codebase root
+cd $FALCONS_CODE_PATH
+
+
+# settings
+branch=`getGitBranch`
+timeStamp=`date '+%Y%m%d'`
+gitId=`git log | head -1 | cut -c 8-13`
+imageName=
+imageServer=`imageServer`
+imageLocation=~/IMAGES
+# do not use option --exclude-vcs-ignore, it will filter too much (like some shared libraries)
+excludeOpts=" --exclude-vcs --exclude=wmTracking --exclude=*.jpg --exclude=build"
+doUpload=0
+
+
+# go one level up to include teamplayData as well
+cd ..
+
+
+# option parsing
+while getopts "n:u" opt; do
+    case "$opt" in
+    n)  imageName=$OPTARG
+        ;;
+    u)  doUpload=1
+        ;;
+    esac
+done
+shift $((OPTIND-1))
+
+
+# work out names
+if [ ! -d $imageLocation ]; then
+    mkdir $imageLocation
+fi
+fullImageName=${branch}_${timeStamp}_${gitId}
+if [ -n "$imageName" ]; then
+    fullImageName=${fullImageName}_$imageName
+fi
+
+
+# border case that an image already exists ...
+targetImageFile=$imageLocation/$fullImageName.tgz
+if [ -f $targetImageFile ]; then
+    echo "ERROR: image already exists: $targetImageFile"
+    exit 1
+fi
+
+# create the image, locally
+echo "creating image: $targetImageFile"
+tar $excludeOpts -c -z -f $targetImageFile code teamplayData
+
+if [ "$doUpload" = 1 ]; then
+    imageUpload $targetImageFile
+fi
+

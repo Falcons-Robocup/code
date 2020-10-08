@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -73,7 +73,7 @@ bool ArbiterGameData::ballIsInNegativeGoal() const
     const auto ballLocation = ball.getLocation();
 
     return  (  (ballLocation.y < -0.5 * cEnvironmentField::getInstance().getLength())
-            && (abs(ballLocation.x) < 1.2)
+            && (abs(ballLocation.x) < cEnvironmentField::getInstance().getGoalPostOffset())
             );
 }
 
@@ -82,7 +82,7 @@ bool ArbiterGameData::ballIsInPositiveGoal() const
     const auto ballLocation = ball.getLocation();
 
     return  (  (ballLocation.y > 0.5 * cEnvironmentField::getInstance().getLength())
-            && (abs(ballLocation.x) < 1.2)
+            && (abs(ballLocation.x) < cEnvironmentField::getInstance().getGoalPostOffset())
             );
 }
 
@@ -91,7 +91,7 @@ bool ArbiterGameData::ballIsAcrossNegativeGoalline() const
     const auto ballLocation = ball.getLocation();
 
     return  (  (ballLocation.y < -0.5 * cEnvironmentField::getInstance().getLength())
-            &&  (abs(ballLocation.x) > 1.2)
+            &&  (abs(ballLocation.x) > cEnvironmentField::getInstance().getGoalPostOffset())
             );
 }
 
@@ -100,7 +100,7 @@ bool ArbiterGameData::ballIsAcrossPositiveGoalline() const
     const auto ballLocation = ball.getLocation();
 
     return  (  (ballLocation.y > 0.5 * cEnvironmentField::getInstance().getLength())
-            && (abs(ballLocation.x) > 1.2)
+            && (abs(ballLocation.x) > cEnvironmentField::getInstance().getGoalPostOffset())
             );
 }
 

@@ -1,7 +1,8 @@
 # JFEI may 2018
 
 TARGET = optiCal
-OBJECTS = optiCalMain.o optiCalGUI.o optiCal.o CameraCalibrator.o multiCamVideoFeed.o camSysReceive.o cvmatio.o $(TARGET).o
+UTIL = upgradeCalibration
+OBJECTS = optiCal.o optiCalGUI.o optiCal.o CameraCalibrator.o multiCamVideoFeed.o camSysReceive.o cvmatio.o
 
 MAKEFLAGS = -j8
 
@@ -10,26 +11,19 @@ CFLAGS = -g3 -O3 -m64 -ansi -std=c++11 -Wall -Wextra -Wpedantic -DNOROS
 # dependencies to Falcons common (tracing, Position2D + transformations) and openCV3
 
 LDFLAGS = -pthread -L/usr/local/lib \
-    -L/home/robocup/falcons/code/packages/facilities/common/lib \
-    -Wl,-rpath,/home/robocup/falcons/code/packages/facilities/common/lib \
+    -L/home/robocup/falcons/code/build/packages/facilities/common \
+    -Wl,-rpath,/home/robocup/falcons/code/build/packages/facilities/common \
     -L/opt/ros/kinetic/lib/x86_64-linux-gnu
-LDLIBS = -lpthread -lFalconsCommon \
-    /opt/ros/kinetic/lib/x86_64-linux-gnu/libopencv_highgui3.so.3.3.1 \
-    /opt/ros/kinetic/lib/x86_64-linux-gnu/libopencv_videoio3.so.3.3.1 \
-    /opt/ros/kinetic/lib/x86_64-linux-gnu/libopencv_imgcodecs3.so.3.3.1 \
-    /opt/ros/kinetic/lib/x86_64-linux-gnu/libopencv_imgproc3.so.3.3.1 \
-    /opt/ros/kinetic/lib/x86_64-linux-gnu/libopencv_ccalib3.so.3.3.1 \
-    /opt/ros/kinetic/lib/x86_64-linux-gnu/libopencv_calib3d3.so.3.3.1 \
-    /opt/ros/kinetic/lib/x86_64-linux-gnu/libopencv_core3.so.3.3.1
+LDLIBS = -lpthread -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_calib3d -lopencv_videoio -lFalconsCommon
 
 # too bad we cannot / may not use rosmake for this. It took some effort to put together this Makefile, but more importantly, it is not very maintainable...
 
 INC = -I../include \
     -I../../../packages/multiCam/include \
     -I/home/robocup/falcons/code/packages/facilities/common/include/ext \
-    -isystem /opt/ros/kinetic/include/opencv-3.3.1-dev -isystem /opt/ros/kinetic/include/opencv-3.3.1-dev/opencv 
+    -I/usr/include/opencv4
 
-all: $(TARGET)
+all: $(TARGET) $(UTIL)
 	@nice -n 15 ./$(TARGET) /home/robocup/falcons/data/internal/vision/multiCam/chessBoard0_12.jpg
 
 %.o: ../src/%.cpp Makefile
@@ -38,9 +32,11 @@ all: $(TARGET)
 %.o: ../../../packages/multiCam/src/%.cpp Makefile
 	g++ $(CFLAGS) $(INC) -o $@ -c $<
 
-$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJECTS) $(TARGET)Main.o
 	g++ $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
+$(UTIL): $(OBJECTS) $(UTIL).o
+	g++ $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 ETHERNET=`multiCamNet`
 eth:

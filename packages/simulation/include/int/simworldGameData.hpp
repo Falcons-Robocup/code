@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,10 +23,14 @@
 #include "gameData.hpp"
 #include "teamID.hpp"
 #include "vector2d.hpp"
+#include "SimulationScene.hpp"
 
 class SimworldGameData : public GameData {
 public:
+    SimworldGameData() : GameData() {}
+    SimworldGameData(GameData const &g) : GameData(g) {}
     void recalculateWorld(const float dt);
+    void setScene(SimulationScene const &scene);
 
 private:
     void recalculateBall(const float dt);

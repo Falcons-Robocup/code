@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,6 +29,7 @@
 #include <minitrace.h>
 
 // required headers
+#include <ctime>
 #include <string>
 #include <cstdio>
 #include <map>
@@ -121,7 +122,7 @@ class SliceTraceClass
     public:
         SliceTraceClass();
         ~SliceTraceClass();
-        void compressSlice();
+        void compressSlice(std::string timestampStr);
 };
 
 // This class is used to overload operators for different TRACE uses for backwards compatibility

@@ -1,8 +1,0 @@
-int8 TURN_TYPE_NORMAL = 0
-int8 TURN_TYPE_TOKYO_DRIFT = 1
-
-float64 pos  # this is the target angle
-int8 turn_type
-rosMsgs/t_polygon2D[] forbiddenAreas
----
-

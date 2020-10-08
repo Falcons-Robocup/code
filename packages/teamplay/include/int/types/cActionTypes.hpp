@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -35,7 +35,6 @@ static std::map<std::string, tpActionEnum> actionMapping = boost::assign::map_li
         ("move", tpActionEnum::MOVE)
         ("stop", tpActionEnum::STOP)
         ("shoot", tpActionEnum::SHOOT)
-        ("shootTarget", tpActionEnum::SHOOT_TARGET)
         ("pass", tpActionEnum::PASS)
         ("positionBeforePOI", tpActionEnum::POSITION_BEFORE_POI)
         ("positionBehindPOI", tpActionEnum::POSITION_BEHIND_POI)
@@ -46,12 +45,10 @@ static std::map<std::string, tpActionEnum> actionMapping = boost::assign::map_li
         ("moveToFreeSpot", tpActionEnum::MOVE_TO_FREE_SPOT)
         ("interceptBall", tpActionEnum::INTERCEPT_BALL)
         ("avoidPOI", tpActionEnum::AVOID_POI)
-        ("aimForShotOnGoal", tpActionEnum::AIM_FOR_SHOT_ON_GOAL)
         ("defendPenaltyArea", tpActionEnum::DEFEND_PENALTY_AREA)
         ("turnAwayFromOpponent", tpActionEnum::TURN_AWAY_FROM_OPPONENT)
         ("defendAttackingOpponent", tpActionEnum::DEFEND_ATTACKING_OPPONENT)
-        ("dribbleForPass", tpActionEnum::DRIBBLE_FOR_PASS)
-        ("dribbleForShot", tpActionEnum::DRIBBLE_FOR_SHOT)
+        ("dribble", tpActionEnum::DRIBBLE)
 
         ;
 

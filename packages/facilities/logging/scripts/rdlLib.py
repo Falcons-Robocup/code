@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -12,9 +12,10 @@
  import struct
 import msgpack
 import zstd
+from collections import defaultdict
+from copy import copy
 
-import sys # TODO nasty hack, should move this library into rtdb toolchain
-sys.path.append("/home/robocup/falcons/code/packages/facilities/rtdb3/src/tools/rtdb2Tools")
+import falconspy
 from rtdb2 import RtDBTime, RtDBItem, RtDBFrameItem
 
 
@@ -35,7 +36,7 @@ class RDLFrame:
             item = RtDBFrameItem()
             item.fromArray(raw_item)
             # create agent dict if not existing
-            if not self.data.has_key(item.agent):
+            if not item.agent in self.data.keys():
                 self.data[item.agent] = {}
             # store item
             self.data[item.agent][item.key] = item
@@ -47,18 +48,18 @@ class RDLFrame:
         return data[0] # TODO why the nesting? problem in logFileWriter?
 
     def __str__(self):
-        return 'agent=%d age=%7.3fs shared=%d data=%s' % (self.agent, self.age, self.shared, str(self.data))
+        return 'age=%7.3fs data=%s' % (self.age, str(self.data))
 
 
 class RDLHeader:
     def __init__(self, raw_header):
         self.raw_header = raw_header
 
-        self.hostname = unicode(raw_header[0])
+        self.hostname = str(raw_header[0], "utf-8")
         self.creation = RtDBTime(*raw_header[1])
         self.compression = raw_header[2]
         self.duration = raw_header[3]
-        self.filename = unicode(raw_header[4])
+        self.filename = str(raw_header[4], "utf-8")
         self.frequency = raw_header[5]
 
     def serialize(self):
@@ -72,9 +73,14 @@ class RDLFile:
         self.header = None
         self.frames = []
 
-    def parseRDL(self):
+    def parseRDL(self, ageMin = None, ageMax = None):
         # Parse the RDL
-
+        
+        if ageMin is None:
+            ageMin = 0
+        if ageMax is None:
+            ageMax = 1e9
+        
         # TODO: do not load all at once, not very memory-efficient (try rdlDump on a large file)
         with open(self.filename, "rb") as f:
             self.header = RDLHeader(self.readFrame(f))
@@ -83,8 +89,10 @@ class RDLFile:
             while True:
                 raw_frame = self.readFrame(f)
                 if raw_frame is not None:
-                    frame = RDLFrame(raw_frame, self.header.compression)
-                    self.frames.append(frame)
+                    frame_age = raw_frame[0]
+                    if frame_age >= ageMin and frame_age <= ageMax:
+                        frame = RDLFrame(raw_frame, self.header.compression)
+                        self.frames.append(frame)
                 else:
                     break
 
@@ -98,7 +106,7 @@ class RDLFile:
 
     def readFrame(self, f):
         framesize = f.read(8)
-        if framesize == "":
+        if framesize == b"":
             return None
         else:
             framesize = struct.unpack('L', framesize)[0]
@@ -118,4 +126,66 @@ class RDLFile:
         framesize = len(packed_frame)
         fp.write(struct.pack('L', framesize))
         fp.write(packed_frame)
+
+
+def RDLResample(rdl, frequency):
+    """
+    Given an RDL object, resample frames to given frequency.
+    Useful for analysis when condensing high-frequent data into a low-frequent dataframe.
+    """
+    # hack for stimulation usecase, where item timestamps are much fresher than frame timestamps (age)
+    useItemTimestamps = "_stim" not in rdl.filename
+    # prepare resulting object
+    r = RDLFile(rdl.filename)
+    r.header = rdl.header
+    r.header.frequency = frequency
+    t0 = r.header.creation
+    age = 0.0
+    dt = 1.0 / frequency
+    n = 0
+    # helper functions
+    def resetFrame(f, age):
+        f.raw_frame = None
+        f.framedata = None
+        f.age = age
+        f.data = defaultdict(lambda : {})
+    def getFrameItems(f):
+        return [(a,k,f.data[a][k]) for a in f.data.keys() for k in f.data[a].keys()]
+    def mergeFrame(f, items):
+        # merge items in frame, remaining items probably belong to next frame
+        rem = []
+        for item in items:
+            (a,k,i) = item
+            if useItemTimestamps:
+                t = i.timestamp[0] + 1e-6 * i.timestamp[1]
+            else:
+                t = f.age # more inaccurate, but needed for instance for stimulated RDL ...
+            if t <= f.age + float(t0):
+                f.data[a][k] = i
+            else:
+                rem.append(item)
+        return rem
+    def storeFrame():
+        r.frames.append(copy(newFrame))
+    # iterate
+    newFrame = copy(rdl.frames[0])
+    resetFrame(newFrame, 0.0)
+    items = []
+    for oldFrame in rdl.frames:
+        # get new items
+        items += getFrameItems(oldFrame)
+        # merge items into running frame if their timestamp matches, return remainder
+        items = mergeFrame(newFrame, items)
+        # check if we can close running frame
+        if oldFrame.age > age:
+            # write new frame
+            storeFrame()
+            # advance to next timestamp
+            n += 1
+            age = n * dt
+            # reset frame
+            resetFrame(newFrame, age)
+    # finish
+    storeFrame()
+    return r
 

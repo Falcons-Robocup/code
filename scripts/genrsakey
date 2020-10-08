@@ -14,13 +14,13 @@ if ! [ -f ~/.ssh/id_rsa ]; then
 fi
 
 
-if ! [ ! -d "$TURTLEROOT/config" ]; then
-    echo "replace .ssh/authorized_keys by symlink to ~/falcons/code/config/authorized_keys"
+if ! [ ! -d "$FALCONS_CODE_PATH/config" ]; then
+    echo "replace .ssh/authorized_keys by symlink to $FALCONS_CODE_PATH/config/authorized_keys"
     rm -f ~/.ssh/authorized_keys
-    ln -s $TURTLEROOT/config/authorized_keys ~/.ssh/authorized_keys
+    ln -s $FALCONS_CODE_PATH/config/authorized_keys ~/.ssh/authorized_keys
 
     echo "add created public key to autorized keys"
-    cat ~/.ssh/id_rsa.pub >> $TURTLEROOT/config/authorized_keys
+    cat ~/.ssh/id_rsa.pub >> $FALCONS_CODE_PATH/config/authorized_keys
 fi
 
 

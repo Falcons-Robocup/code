@@ -25,6 +25,6 @@ if [ ! -f $srcLib ]; then
 fi
 if [ $checkMode = 0 ]; then
     echo "everything should be OK now, please verify with:"
-    echo "   rosmake -s tracing"
+    echo "   fmake tracing"
 fi
 

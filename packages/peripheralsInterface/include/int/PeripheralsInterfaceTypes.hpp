@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -15,7 +15,7 @@
 
 #include <functional>
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "pose2d.hpp"
 
 #include <boost/numeric/ublas/matrix.hpp>

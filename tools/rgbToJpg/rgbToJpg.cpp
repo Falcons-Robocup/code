@@ -11,6 +11,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "rgbToJpg.hpp"
 
@@ -57,7 +58,7 @@ void rgbToJpg::update() {
 		} else if (colorIndex == 2) {
 			blue = data;
 			numPixels++;
-			line(inputFrame, Point(xx, yy), Point(xx, yy), Scalar(blue, green, red), 1);
+            cv::line(inputFrame, Point(xx, yy), Point(xx, yy), Scalar(blue, green, red), 1);
 			colorIndex = 0; // start over for the next byte
 			xx++;
 			if (xx == IMAGE_WIDTH) {
@@ -75,7 +76,7 @@ void rgbToJpg::update() {
 
 	// save as jpg
 	vector<int> jpgCompressionParams;
-	jpgCompressionParams.push_back(CV_IMWRITE_JPEG_QUALITY);
+	jpgCompressionParams.push_back(cv::IMWRITE_JPEG_QUALITY);
 	jpgCompressionParams.push_back(90); // compression factor
 
 	imwrite(outputFileName.c_str(), inputFrame, jpgCompressionParams);
@@ -88,7 +89,7 @@ void rgbToJpg::display() {
 		imshow("original", inputFrame);
 
 		// read the just stored jpg image
-		Mat readBackImage = imread(outputFileName.c_str(), CV_LOAD_IMAGE_COLOR);
+		Mat readBackImage = imread(outputFileName.c_str(), cv::IMREAD_COLOR);
 
 		imshow("compressed", readBackImage);
 

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,8 +16,10 @@
  *      Author: Michel Koenen
  */
 
+#include <yaml-cpp/yaml.h>
+
 #include <ext/cEnvironmentCommon.hpp>
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include <stdlib.h>      // for getenv
 #include "tracing.hpp"
 
@@ -43,7 +45,7 @@ std::string environmentCommon::LoadFileAsString(const std::string &filename, boo
 	if(!file)
 	{
 		std::string error_string=" { \"ERROR\":  \"could not find or open file\" }";
-		// File not found or other file issue, dont fail here, return JSON message anyway
+		// File not found or other file issue, dont fail here, return message anyway
 		return error_string;
 	}
 
@@ -58,24 +60,11 @@ std::string environmentCommon::LoadFileAsString(const std::string &filename, boo
 }
 
 
-bool environmentCommon::readJSON(Json::Value &root)
+bool environmentCommon::readYAML(std::string root, std::vector< std::pair<std::string,std::string> > &values)
 {
 	try
 	{
-		bool successful = false;
-		Json::Reader reader;
-
-		// get environmentvariable for absolute path determination
-		char* TURTLEROOT;  // expect something like /home/robocup/falcons/code
-		TURTLEROOT = getenv( "TURTLEROOT" );
-		if ( TURTLEROOT == NULL )
-		{
-		   std::cerr << "Could not find or read environment TURTLEROOT!\n";
-		   throw;
-		}
-
-		std::string turtleRoot( TURTLEROOT );
-		std::string jsonFilePath=turtleRoot + "/config/cEnvironment.json";
+		std::string yamlFilePath = pathToConfig() + "/cEnvironment.yaml";
 
 		/*file contents something like:
 			{
@@ -106,20 +95,24 @@ bool environmentCommon::readJSON(Json::Value &root)
 		*/
 
 
-		std::string jsonFile = environmentCommon::LoadFileAsString( jsonFilePath, &successful);
+        // Load the YAML and get all entries.
+        YAML::Node yamlNode = YAML::LoadFile(yamlFilePath);
+        YAML::Node rootNode = yamlNode[root];
 
-		if(!successful)
-		{
-		   std::cerr << "Could not find or read cEnvironment.json file!\n" + jsonFilePath;
-		   throw;
-		}
-		return reader.parse(jsonFile, root, false);
+        YAML::const_iterator it;
+        for(it = rootNode.begin(); it != rootNode.end(); ++it)
+        {
+            // Add each yaml entry to values
+            values.push_back( std::make_pair( it->first.as<std::string>(), it->second.as<std::string>() ) );
+        }
+		return true;
 
 	} catch(std::exception& e)
 	{
-		printf("Invalid JSON format!");
-		TRACE("Invalid JSON format for reading environment field inputs");
+		printf("Invalid YAML format!\n");
+		TRACE("Invalid YAML format for reading environment field inputs");
 		throw e;
 	}
+    return false;
 }
 

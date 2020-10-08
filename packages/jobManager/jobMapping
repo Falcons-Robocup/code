@@ -11,15 +11,14 @@
 (
 cat << EOF
 coachPart1       refboxRelay               # part 1: bare essentials (e.g. to bootstrap teamB simulation)
-coachPart2Real   coachPart2Common commW wm heartbeat
+coachPart2Real   coachPart2Common commW wm heartbeatCoach
 coachPart2Sim    coachPart2Common simworld
 coachPart2Common visualizer logger rtdbSync # part 2: extra human interfacing (typically teamA)
 vision           multiCam raspiSync
-robotReal        robotCommon vision halMotors vc bh commW logger health wm
+robotReal        robotCommon vision halMotion vc bh commW logger health wm blockly
 robotSim         robotCommon
-robotCommon      pp mp tp sp matchMode
+robotCommon      tp sp matchMode
 EOF
 ) | sed 's/#.*//' # filter comments, like these ;)
 
 # WARNING: some jobs are context sensitive... still need environment variables ...
-

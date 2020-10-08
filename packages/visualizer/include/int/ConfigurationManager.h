@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #ifndef CONFIGURATION_MANAGER_H
 #define CONFIGURATION_MANAGER_H
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 // Constants for now, to be moved to an interface with customizable implementation later.
 
@@ -31,6 +31,7 @@ const double _CORNER_CIRCLE_RADIUS = 0.75;
 const double _BLACK_POINT_WIDTH = 0.0;
 const double _BLACK_POINT_LENGTH = 0.0;
 
-const double _OBSTACLE_DIAMETER = 0.3; // Fixed diameter assumed for now
+const double _OBSTACLE_DIAMETER = 0.5; // Fixed diameter assumed for now
+const double _OBSTACLE_OPACITY = 0.3;
 
 #endif // CONFIGURATION_MANAGER_H

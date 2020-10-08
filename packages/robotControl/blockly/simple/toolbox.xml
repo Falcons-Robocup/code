@@ -1,0 +1,83 @@
+<xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
+  <category name="Logic" colour="#5b80a5">
+    <block type="controls_if"></block>
+    <block type="logic_operation">
+      <field name="OP">AND</field>
+    </block>
+    <block type="logic_negate"></block>
+    <block type="logic_boolean">
+      <field name="BOOL">TRUE</field>
+    </block>
+  </category>
+  <category name="Loops" colour="#5ba55b">
+    <block type="controls_repeat_ext">
+      <value name="TIMES">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="controls_whileUntil">
+      <field name="MODE">WHILE</field>
+    </block>
+  </category>
+  <category name="Field" colour="#5ba58c">
+    <block type="field_position">
+      <field name="poi">P_CENTER</field>
+    </block>
+    <block type="field_area">
+      <field name="area">A_OWN_SIDE</field>
+    </block>
+    <block type="controls_if">
+      <value name="IF0">
+        <block type="position_in_area">
+          <value name="pos">
+            <block type="ball_position"></block>
+          </value>
+          <value name="area">
+            <block type="field_area">
+              <field name="area">A_OWN_SIDE</field>
+            </block>
+          </value>
+        </block>
+      </value>
+    </block>
+  </category>
+  <category name="Ball" colour="#9fa55b">
+    <block type="ball_position"></block>
+    <block type="robot_has_ball"></block>
+    <block type="robot_sees_ball"></block>
+    <block type="get_ball"></block>
+    <block type="intercept_ball"></block>
+  </category>
+  <category name="Robot" colour="#5b67a5">
+    <block type="robot_position"></block>
+    <block type="move">
+      <value name="pos">
+        <block type="field_position">
+          <field name="poi">P_CENTER</field>
+        </block>
+      </value>
+    </block>
+    <block type="shoot">
+      <field name="shootType">SHOOT</field>
+      <value name="pos">
+        <block type="field_position">
+          <field name="poi">P_OPP_GOALLINE_CENTER</field>
+        </block>
+      </value>
+    </block>
+    <block type="kick">
+      <field name="power">20</field>
+      <field name="height">0</field>
+    </block>
+    <block type="movexyrz">
+      <field name="x">0</field>
+      <field name="y">0</field>
+      <field name="Rz">90</field>
+    </block>
+    <block type="sleep">
+      <field name="duration">1</field>
+    </block>
+  </category>
+</xml>

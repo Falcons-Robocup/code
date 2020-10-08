@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,7 +18,7 @@
 
 #include "int/types/robot/robotType.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 robotClass_t::robotClass_t()
 {

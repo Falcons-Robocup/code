@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,14 +25,15 @@
 
 class cRTDBOutputAdapter
 {
-  public:
+public:
     cRTDBOutputAdapter();
     ~cRTDBOutputAdapter();
 
     void setBallHandlersMotorSetpoint(const bool& enabled, const ballHandlersSetpointsType& setpoints);
     void setBallHandlersBallPossession(const bool& ballPossession);
+    void setDiagnostics(DiagBallHandling const &diag);
 
-  private:
+private:
     int _myRobotId;
     RtDB2 *_rtdb;
 

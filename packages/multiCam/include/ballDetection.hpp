@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,30 +24,22 @@
 #include "dewarp.hpp"
 #include "preprocessor.hpp"
 #include "observer.hpp"
+#include "BallDistanceEstimator.hpp"
 
 #include <mutex>
 
-struct ballSt {
-	int size; // amount of ball pixels
-	int xClosestBy; // for visualization only
-	int yCenter; // for visualization only
-	cv::Rect rect; // for visualization only
-	double radius; // width (related to pixels)
-	double azimuth;
-	double elevation;
-	bool operator<(const ballSt& val) const {
-		// sorting this struct is performed on size = amount of pixels (higher is better)
-		return size > val.size;
-	}
-};
+#include "object.hpp" // commonality between balls and obstacles
+typedef objectSt ballSt;
+
 
 class ballDetection {
 
 private:
 	cameraReceive *camRecv;
 	configurator *conf;
-	deWarper *dewarp;
+	Dewarper *dewarp;
 	preprocessor *prep;
+    BallDistanceEstimator *_distanceEstimator = NULL;
 
 	size_t camIndex;
 	uint16_t width, height;
@@ -75,7 +67,6 @@ private:
 
 	bool busy;
 
-	// List of observers for Obstacle position notifications
 	std::vector<observer*> vecObservers; // only for Ros
 	void notifyNewPos(); // only for Ros
 	void notifyBallPossession(bool ballPossession); // only for Ros
@@ -83,7 +74,7 @@ private:
 
 public:
 
-	ballDetection(cameraReceive *camRecv, configurator *conf, deWarper *dewarp, preprocessor *prep, size_t type,
+	ballDetection(cameraReceive *camRecv, configurator *conf, Dewarper *dewarp, BallDistanceEstimator *distanceEstimator, preprocessor *prep, size_t type,
 			size_t cam);
 	void keepGoing();
 	void update();

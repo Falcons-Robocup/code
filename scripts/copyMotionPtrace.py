@@ -5,12 +5,12 @@ def getLatestLog(cmd):
     try:
 	log = subprocess.check_output(cmd, shell=True).strip().split()[-1]
     except subprocess.CalledProcessError as e:
-	print "Caught Exception:", e
+	print("Caught Exception: %s" % str(e))
         log = ""
 
     return log
 
-parser = argparse.ArgumentParser(description='This script copies the latest ptrace for PathPlanning, VelocityControl and PeripheralsInterface to the given computer dir at ~/kstdata/. This data is to be used with ptrace.kst located in the components scripts dir (e.g., velocityControl/scripts/ptrace.kst). Example: python copyMotionPtrace.py -c pingu')
+parser = argparse.ArgumentParser(description='This script copies the latest ptrace for PathPlanning, VelocityControl and PeripheralsInterface to the given computer dir at ~/kstdata/. This data is to be used with ptrace.kst located in the components scripts dir (e.g., velocityControl/scripts/ptrace.kst). Example: python3 copyMotionPtrace.py -c pingu')
 parser.add_argument('-c', '--computer', help='the computer to which to copy the ptrace data. Should have existing directory ~/kstdata.')
 args = parser.parse_args()
 
@@ -70,4 +70,4 @@ if peripheralsInterfaceLog != "":
     cmd = "scp %s/%s %s:~/kstdata/ptrace_pi.txt" % (logdir, peripheralsInterfaceKstLog, args.computer)
     subprocess.call(cmd, shell=True)
 
-print "Done."
+print("Done.")

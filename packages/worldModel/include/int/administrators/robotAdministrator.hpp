@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,6 +25,8 @@
 
 #include "diagWorldModel.hpp"
 
+#include "int/adapters/configurators/WorldModelConfig.hpp"
+
 #include "int/types/robot/robotMeasurementType.hpp"
 #include "int/types/robot/robotDisplacementType.hpp"
 #include "int/types/robot/robotType.hpp"
@@ -34,7 +36,7 @@
 class robotAdministrator
 {
     public:
-        robotAdministrator();
+        robotAdministrator(WorldModelConfig& wmConfig);
         virtual ~robotAdministrator();
 
         virtual void appendRobotVisionMeasurements(const std::vector<robotMeasurementClass_t> measurements);
@@ -72,9 +74,11 @@ class robotAdministrator
         float _ballClaimedX, _ballClaimedY;
         std::map<uint8_t, robotClass_t> _robots;
         std::map<uint8_t, robotStatusType> _robotStatus;
-        robotLocalization _localizationAlgorithm;
 
         virtual void removeTimedoutRobots(rtime const timeNow);
+
+        WorldModelConfig& _wmConfig;
+        robotLocalization _localizationAlgorithm;
 };
 
 #endif /* ROBOTADMINISTRATOR_HPP_ */

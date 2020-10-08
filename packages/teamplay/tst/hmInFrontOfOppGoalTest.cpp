@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,7 +24,6 @@
 
 /* SUT dependencies */
 #include "int/stores/ballStore.hpp"
-#include "int/stores/configurationStore.hpp"
 
 
 /* Testing the 'in front of opponent goal' heightmap */
@@ -46,8 +45,6 @@ TEST_F(hmInFrontOfOppGoalTest, onBothSides)
 
     _parameters["onSide"] = "both";
     _hmInFrontOfOppGoal.refine(_parameters);
-
-    _hmInFrontOfOppGoal.generateJPG("tst_hmInFrontOfOppGoal");
 }
 
 TEST_F(hmInFrontOfOppGoalTest, onSideWithBall)
@@ -56,8 +53,6 @@ TEST_F(hmInFrontOfOppGoalTest, onSideWithBall)
 
     _parameters["onSide"] = "withBall";
     _hmInFrontOfOppGoal.refine(_parameters);
-
-    _hmInFrontOfOppGoal.generateJPG("tst_hmInFrontOfOppGoalOnSideWithBall");
 }
 
 TEST_F(hmInFrontOfOppGoalTest, onSideWithoutBall)
@@ -66,8 +61,6 @@ TEST_F(hmInFrontOfOppGoalTest, onSideWithoutBall)
 
     _parameters["onSide"] = "withoutBall";
     _hmInFrontOfOppGoal.refine(_parameters);
-
-    _hmInFrontOfOppGoal.generateJPG("tst_hmInFrontOfOppGoalOnSideWithoutBall");
 }
 
 

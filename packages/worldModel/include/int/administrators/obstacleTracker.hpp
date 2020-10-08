@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,27 +25,12 @@
 #include "int/algorithms/objectTracking.hpp"
 #include "int/types/obstacle/obstacleType.hpp"
 #include "int/types/robot/robotType.hpp"
-#include "int/types/object/objectFitConfig.hpp"
-
-struct obstacleTrackerConfig
-{
-    // triangulation and trajectory fit
-    objectFitConfig fitConfig;
-    float speedMinSize;
-    float speedMaxSize;
-    float speedResidualThreshold;
-
-    // tracker administration
-    float xyTolerance;
-    double trackerTimeout;
-    double extrapolationTimeout;
-};
 
 
 class obstacleTracker
 {
 public:
-    obstacleTracker(const objectMeasurementCache &measurement);
+    obstacleTracker(const objectMeasurementCache &measurement, const WorldModelConfig& wmConfig);
     ~obstacleTracker();
 
     void addObstacleMeasurement(const objectMeasurementCache &measurement, bool &measurementIsAdded);
@@ -64,7 +49,8 @@ private:
     bool _fake;
     static size_t _staticTrackerID;
     size_t _trackerID;
-    obstacleTrackerConfig _config;
+
+    const WorldModelConfig& _wmConfig;
 
     void setConfidence(rtime const t);
     void cleanUpTimedOutObstacleMeasurements(rtime const timeNow);

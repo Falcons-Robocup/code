@@ -4,4 +4,4 @@
 
 set -e
 
-rosrun raspiSync raspiSync
+frun raspiSync raspiSync

@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# JFEI 2016-05-02 creation
+#
+# Apply an image on current robot.
+# If image is not present, then download from imageServer.
+#
+# See for more info wiki:buildImages
+
+
+
+# settings
+imageLocation=~/IMAGES
+imageServer=`imageServer`
+
+# option parsing
+while getopts "s:" opt; do
+    case "$opt" in
+    s)  imageServer=$OPTARG
+        ;;
+    esac
+done
+shift $((OPTIND-1))
+image=$1
+if [ -z "$image" ]; then
+    echo "ERROR: image not specified"
+    exit 1
+fi
+
+
+# check image existence
+if [ ! -d $imageLocation ]; then
+    mkdir $imageLocation
+fi
+if [ ! -f $imageLocation/$image ]; then
+    # try to download
+    imageDownload -s $imageServer $image
+    if [ ! -f $imageLocation/$image ]; then
+        echo "ERROR: image not found: $imageLocation/$image"
+        exit 1
+    fi
+fi
+
+
+# cleanup any work-in-progress
+gitClean
+cd $FALCONS_CODE_PATH
+git checkout master
+gitClean # TODO: rm -rf ? dangerous ...
+cd ..
+
+# unpack the tarball
+echo "applying image $image..."
+tar zxf $imageLocation/$image
+
+

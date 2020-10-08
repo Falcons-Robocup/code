@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -47,7 +47,8 @@ enum class setpieceType {
     THROWIN,
     CORNER,
     PENALTY,
-    DROPPED_BALL
+    DROPPED_BALL,
+    PARKING
 };
 
 enum class setpieceOwner {
@@ -81,6 +82,7 @@ public:
     virtual bool isKickoffSetPiece() const;
     virtual bool isPenaltySetPiece() const;
     virtual bool isThrowinSetPiece() const;
+    virtual bool isParkingSetPiece() const;
     virtual bool isInMatch() const;
     virtual bool isStopped() const;
 

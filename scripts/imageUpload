@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# Upload image to image server
+#
+# See for more info wiki:buildImages
+
+
+echo "imageUpload: this is not fully worked out yet"
+exit 1
+
+
+
+if [ -z "$1" ]; then
+    echo "ERROR: missing argument"
+    exit 1
+fi
+targetImage=$1
+if [ ! -f "$targetImage" ]; then
+    echo "ERROR: file not found: $targetImage"
+    exit 1
+fi
+echo "uploading $targetImage ..."
+imageServer=`imageServer`
+imageLocation=~/IMAGES
+scp $targetImage.tgz $imageServer:$imageLocation
+

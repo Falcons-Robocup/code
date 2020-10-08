@@ -1,6 +1,8 @@
 # everything below is the same for all robots and laptops
+# The hosts are divided into sections using double comment hashes, which
+# is used in the setupLaptopInfo.py script to recognize laptop hostnames
 
-# (wlan) wifi network
+## (wlan) wifi network
 172.16.74.51	r1
 172.16.74.52	r2
 172.16.74.53	r3
@@ -8,9 +10,10 @@
 172.16.74.55	r5
 172.16.74.56	r6
 172.16.74.57	r7
-172.16.74.58	r8
-172.16.74.59	r9
+172.16.74.68	r8 # TODO resolve conflict with nest
+# careful, .58-.60 are used already!
 
+# TODO: Jan: I think this can be removed? Erik/Andre, do you still see a use case? Robot ethernet connection nowadays works via r* host/IP addresses.
 # via ethernet (used during tournaments when wifi is saturated)
 10.0.0.51	e1
 10.0.0.52	e2
@@ -22,12 +25,15 @@
 172.16.74.58	nest
 172.16.74.59	git
 172.16.74.60	build
+# TODO: move to end of range (250+)? to free up robot domain
 
+# TODO: are these used? refer to wiki etc.
 172.16.1.1	switch
 172.16.1.2	refereebox
 172.16.1.3	accesspoint1
 172.16.1.4	accesspoint2
 
+## Laptop hostnames
 172.16.74.1	kroonsteentje
 172.16.74.10	fapper
 172.16.74.11	fiction
@@ -65,8 +71,27 @@
 172.16.74.43    hobbes
 172.16.74.44    bakpao
 172.16.74.45    dalek
+172.16.74.46    dummy
+172.16.74.47    pear
+172.16.74.48    mario
+172.16.74.49    wario
+# 50-69 reserved for robots / hardware testrigs
+172.16.74.70    wicky
+172.16.74.71    bowser
+172.16.74.72    vegeta
+172.16.74.73    toad
+172.16.74.74    link
+172.16.74.75    pepper
+172.16.74.76    nao
+172.16.74.77    mango
+172.16.74.78    coconut
+172.16.74.79    dommel
+172.16.74.80    calimero
+172.16.74.81    atlantis
+172.16.74.82    orion
 
-# deprecated names of the robots
+
+## deprecated names of the robots
 172.16.74.51	TURTLE-5K-1
 172.16.74.52	TURTLE-5K-2
 172.16.74.53	TURTLE-5K-3
@@ -74,7 +99,7 @@
 172.16.74.55	TURTLE-5K-5
 172.16.74.56	TURTLE-5K-6
 
-# The following lines are desirable for IPv6 capable hosts
+## The following lines are desirable for IPv6 capable hosts
 ::1     ip6-localhost ip6-loopback
 fe00::0 ip6-localnet
 ff00::0 ip6-mcastprefix

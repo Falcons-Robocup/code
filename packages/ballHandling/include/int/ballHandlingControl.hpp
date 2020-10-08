@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,34 +21,37 @@
 
 #include <chrono>
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
+#include "ConfigInterface.hpp"
 
 #include "int/adapters/cRTDBOutputAdapter.hpp"
 
 #include "types/ballHandlersStatusType.hpp"
 #include "types/ballHandlersSetpointsType.hpp"
-#include "types/ballHandlingSettingsType.hpp"
 
 class ballHandlingControl
 {
 public:
-    ballHandlingControl(cRTDBOutputAdapter& rtdbOutputAdapter);
+    ballHandlingControl(cRTDBOutputAdapter& rtdbOutputAdapter, ConfigInterface<ConfigBallHandling> *cfi);
     ~ballHandlingControl();
-    
+
     void update_status(ballHandlersStatusType);
     void update_enabled(bool enabled);
     void update_robot_velocity(Velocity2D robotVelocity);
     void updateSetpoint();
     void updateFeedback();
 
-    void set_settings(ballHandlingSettingsType settings);
+    void setConfig(ConfigBallHandling const &config);
+    void checkForNewConfig();
 
 private:
     cRTDBOutputAdapter        *_rtdbOutputAdapter;
+    ConfigInterface<ConfigBallHandling> *_configInterface;
 
     ballHandlersStatusType    _status;
     ballHandlersSetpointsType _setpoints;
-    ballHandlingSettingsType _settings;
+    ConfigBallHandling        _config;
+    BallHandlingRobotConfig   _calibration;
 
     Velocity2D _robotVelocity;
 
@@ -58,7 +61,9 @@ private:
     bool _ballPossession;
     double _angleLeftFraction;
     double _angleRightFraction;
-    bool _firstTime;
+    bool _armLeftLifted = false;
+    bool _armRightLifted = false;
+    bool _needCalibrationCheck = false; // triggered by (re)config
 
     void calculateAngleFractions();
     double calculateAngleFraction(int angle, int downAngle, int upAngle);
@@ -72,6 +77,7 @@ private:
     void addVelocityFeedForward();
 
     void traceData();
+    DiagBallHandling makeDiagnostics();
 };
 
 #endif /* BALLHANDLINGCONTROL_HPP_ */

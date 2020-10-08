@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,7 +17,7 @@
  */
 
 #include "tracing.hpp"
-#include "FalconsCommon.h" //getRobotNumber()
+#include "falconsCommon.hpp" //getRobotNumber()
 
 #include "int/adapters/cRTDBOutputAdapter.hpp"
 
@@ -53,3 +53,10 @@ void cRTDBOutputAdapter::setBallHandlersBallPossession(const bool& ballPossessio
 
     _rtdb->put(BALLHANDLERS_BALL_POSSESSION, &ballPossession);
 }
+
+void cRTDBOutputAdapter::setDiagnostics(DiagBallHandling const &diag)
+{
+    TRACE_FUNCTION("");
+    _rtdb->put(DIAG_BALLHANDLING, &diag);
+}
+

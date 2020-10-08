@@ -1,6 +1,8 @@
 # Copyright 2018-2019 Andre Pool
 # SPDX-License-Identifier: Apache-2.0
 
+path=~/falcons/data/internal/vision/multiCam
+
 # path=~/data
 # path=~/falcons/data/internal/vision/multiCam
 
@@ -31,119 +33,152 @@
 # fileread = 20180619_214531
 # fileread = 20180620_145644
 
-# path=~/falcons/data/internal/vision/multiCam/r2_ball
-# fileread = 20180619_214554
+# robot = r3
+# date = 20180620
+# time = 145644
 
+# robot = r2
+# date = 20180619
+# time = 214554
 
-# path=~/falcons/data/internal/vision/multiCam/r3_test_field
-# fileread = 20180620_201643
+# Montreal test field
+# robot = r3
+# date = 20180620
+# time = 201643
 
+# robot = r5
+# date = 20180809
+# time = 231123
 
-# path=~/falcons/data/internal/vision/multiCam/r2
-# fileread = 20180809_223758
-# fileread = 20180809_223759
-# fileread = 20180809_223800
+# lots of balls on lines
+robot = r2
+date = 20180809
+time = 223758
+# time = 223759
+# time = 223800
 
+# lots of balls on lines
+# robot = r3
+# date = 20180809
+# time = 221830
+# time = 221832
+# time = 221833
 
-# path=~/falcons/data/internal/vision/multiCam/r3
-# fileread = 20180809_221830
-# fileread = 20180809_221832
-# fileread = 20180809_221833
+# lots of balls on lines
+# robot = r5
+# date = 20180809
+# time = 231123
 
-# path=~/falcons/data/internal/vision/multiCam/r5
-# fileread = 20180809_231123
+# robot = r1
+# date = 20181030
+# time = 212155
 
+# robot = r4
+# date = 20180927
+# time = 202435
 
-# path=~/falcons/data/internal/vision/multiCam
-# fileread = r1_assyG_20181030_212155
-# fileread = r4_assyF_20180927_202435
+# robot = r3
+# date = 20190113
+# time = 152336
 
-# path=~/falcons/data/internal/vision/multiCam/r3
-# fileread = 20190113_152336
-
-# path=~/falcons/data/internal/vision/multiCam/r1
-# fileread = 20190113_154010
+# robot = r5
+# date = 20190113
+# time = 154010
 # the real bad one
-# fileread = 20190117_204745
-# fileread = 20190117_205319
-# fileread = 20190117_205333
-# fileread = 20190117_205348
-# fileread = 20190220_001102
-# fileread = 20190223_135008
+# date = 20190117
+# time = 204745
+# time = 205319
+# time = 205333
+# time = 205348
 
-# new grabs from Jan to demonstrate the Robot tilt
-# very good: scroe 0.001 - 0.006
-# fileread = 20190217_161726
+# robot = r3
+# date = 20190220
+# time = 001102
+
+# grabs from Jan to demonstrate the Robot tilt
+# robot = r5
+# date = 20190217
+# very good: score 0.001 - 0.006
+# time = 161726
 
 # very good: score 0.000 - 0.001
-# fileread = 20190217_161658
+# time = 161658
 
 # good: score 0.010 - 0.017
-# fileread = 20190217_162111
+# time = 162111
 
 # very good: score 0.000 - 0.012
-# fileread = 20190217_162036
+# time = 162036
 
 # good: score 0.004 - 0.024
-# fileread = 20190217_162012
+# time = 162012
 
 # good: score 0.006-0.017
-# fileread = 20190217_161948
+# time = 161948
 
 # acceptable : score 0.009-0.047
-# fileread = 20190217_161815
+# time = 161815
 
 # very good : score 0.000 - 0.002
-# fileread = 20190217_161749
+# time = 161749
 
-# path=~/falcons/data/internal/vision/multiCam/r1
 # new keeperframe
-# fileread = 20190223_135008
+# robot = r1
+# date = 20190223
+# time = 135008
 
+# robot = r7
+# date = 20190402
+# time = 185039
 
-# path=~/falcons/data/internal/vision/multiCam/r7
-# fileread = 20190402_185039
-
-# path=~/falcons/data/internal/vision/multiCam/r2
-# fileread = 20190404_224958
+# robot = r2
+# date = 20190404
+# time = 224958
 
 # ## porto 2019 ##
-# path=~/falcons/data/internal/vision/multiCam/r6
-# fileread = 20190426_191317
-# fileread = 20190426_191806
-# fileread = 20190426_191818
-# fileread = 20190426_191759
-# path=/home/robocup/falcons/code/tools/multiCamViewer/build
+# robot = r6
+# date = 20190426
+# time = 191317
+# time = 191806
+# time = 191818
+# time = 191759
 
 # techunited robot 3 + eric (false balls)
-# path=~/falcons/data/internal/vision/multiCam/r1
-# fileread = 20190427_160053
-
-# path=~/falcons/code/tools/multiCamViewer/build
-# fileread = 20190426_191232
-# fileread = 20190426_191739
-# fileread = 20190426_191232
-# fileread = 20190426_191201
-# fileread = 20190426_191205
-# fileread = 20190426_191308
+# robot = r1
+# date = 20190427
+# time = 160053
 
 # de locht against tech united
 # path=~/falcons/data/internal/vision/multiCam/r4
 # good examples for wrong obstacle detections
-# fileread = 20190606_212129
-# fileread = 20190606_212209
+# robot = r4
+# date = 20190606
+# time = 212129
+# time = 212209
 # ball before robot
-# fileread = 20190606_212312
-# fileread = 20190606_212310
-# fileread = 20190606_211932
-# fileread = 20190606_211836
-# fileread = 20190606_211839
+# time = 212312
+# time = 212310
+# time = 211932
+# time = 211836
+# time = 211839
 
 # ## Sydney ##
-path=~/falcons/data/internal/vision/multiCam/r2
-# fileread = 20190702_062150
-# fileread = 20190703_051051
-fileread = 20190706_061811
+# robot = r2
+# date = 20190702
+# time = 062150
+# date = 20190703
+# time = 051051
+# date = 20190706
+# time = 061811
+
+# ## demo field for PSV demo, the plastic floor requires
+# a modified floor color filter
+# robot = r4
+# date = 20191130
+# time = 150800
+# time = 163732
+# time = 163555
+# time = 163450
 
 TARGET = raspiAnalyze
 OBJECTS = $(TARGET).o
@@ -269,16 +304,16 @@ $(JPG_TO_RGB):
 # GRAB = 20190428_114659
 
 cam0Image.rgb: $(JPG_TO_RGB) Makefile
-	@$(JPG_TO_RGB) -i $(path)/cam0_$(fileread).jpg -o cam0Image.rgb
+	@$(JPG_TO_RGB) -i $(path)/$(robot)/$(date)/cam0_$(date)_$(time).jpg -o cam0Image.rgb
 #	@cp ~/falcons/data/internal/vision/multiCam/r6/grab0_$(GRAB).rgb cam0Image.rgb
 cam1Image.rgb: $(JPG_TO_RGB) Makefile
-	@$(JPG_TO_RGB) -i $(path)/cam1_$(fileread).jpg -o cam1Image.rgb
+	@$(JPG_TO_RGB) -i $(path)/$(robot)/$(date)/cam1_$(date)_$(time).jpg -o cam1Image.rgb
 #	@cp ~/falcons/data/internal/vision/multiCam/r6/grab1_$(GRAB).rgb cam1Image.rgb
 cam2Image.rgb: $(JPG_TO_RGB) Makefile
-	@$(JPG_TO_RGB) -i $(path)/cam2_$(fileread).jpg -o cam2Image.rgb
+	@$(JPG_TO_RGB) -i $(path)/$(robot)/$(date)/cam2_$(date)_$(time).jpg -o cam2Image.rgb
 #	@cp ~/falcons/data/internal/vision/multiCam/r6/grab2_$(GRAB).rgb cam2Image.rgb
 cam3Image.rgb: $(JPG_TO_RGB) Makefile
-	@$(JPG_TO_RGB) -i $(path)/cam3_$(fileread).jpg -o cam3Image.rgb
+	@$(JPG_TO_RGB) -i $(path)/$(robot)/$(date)/cam3_$(date)_$(time).jpg -o cam3Image.rgb
 #	@cp ~/falcons/data/internal/vision/multiCam/r6/grab3_$(GRAB).rgb cam3Image.rgb
 
 killGrabClient: 

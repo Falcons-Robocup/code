@@ -1,5 +1,6 @@
 # simulator-specific configuration
 # each line contains a measurement sample (distance, power)
+ 0.0   20
  1.0   20
  3.0   30
  5.0   40

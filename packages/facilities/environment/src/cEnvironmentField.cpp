@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,25 +17,51 @@
  */
 
 #include "ext/cEnvironmentCommon.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 
 #include "ext/cEnvironmentField.hpp"
-#include "json.h"
 using namespace std;
 
 
 
 cEnvironmentField::cEnvironmentField()
 {
-    getJSON();
+    getConfig();
     generateFieldPOIs();
     generateFieldAreas();
+    initRtdb();
+    generateTTA();
 }
 
 cEnvironmentField::~cEnvironmentField()
 {
 
+}
+
+void cEnvironmentField::initRtdb()
+{
+    if (_rtdb == NULL)
+    {
+        // only used for global config from coach -> use agent 0 instead of getRobotNumber()
+        _rtdb = RtDB2Store::getInstance().getRtDB2(0);
+    }
+}
+
+void cEnvironmentField::checkUpdateConfiguration(poiName poi)
+{
+    if (poi >= P_TTA_1 && poi <= P_TTA_5)
+    {
+        generateTTA();
+    }
+}
+
+void cEnvironmentField::checkUpdateConfiguration(areaName area)
+{
+    if (area == A_TTA)
+    {
+        generateTTA();
+    }
 }
 
 float cEnvironmentField::getWidth()
@@ -75,6 +101,18 @@ float cEnvironmentField::getGoalHeight()
 
 // getters are used all over TeamPlay
 
+/*! get the poi info (x,y)
+ *
+ * @param[in] poi item from enum list
+ * @return fieldPOI the details of the requested poi
+ */
+poiInfo cEnvironmentField::getFieldPOI( poiName poi)
+{
+    checkUpdateConfiguration(poi); // update relevant poi's if needed (e.g. TTA)
+    return _fieldPOIs[ poi ];
+}
+
+
 /*! get the poi info (x,y) +string of the specified poi
  *
  * @param[in] poi item from enum list
@@ -82,6 +120,7 @@ float cEnvironmentField::getGoalHeight()
  */
 void cEnvironmentField::getFieldPOI( poiName poi, poiInfo &fieldPOI)
 {
+    checkUpdateConfiguration(poi); // update relevant poi's if needed (e.g. TTA)
     fieldPOI = _fieldPOIs[ poi ];
 }
 
@@ -98,6 +137,7 @@ bool cEnvironmentField::getFieldPOIByString( string poiString , poiInfo &fieldPO
     {
         if ( _fieldPOIs[ (poiName) poiNameIndex ].id.compare( poiString ) == 0  )  // compare both strings
         {   // FOUND!!
+            checkUpdateConfiguration((poiName) poiNameIndex); // update relevant poi's if needed (e.g. TTA)
             fieldPOI = _fieldPOIs[ (poiName) poiNameIndex ];
             return true;
         }
@@ -125,9 +165,20 @@ void cEnvironmentField::getFieldPOIList( std::vector<std::string> &vectorOfPOINa
  */
 void cEnvironmentField::getFieldArea( areaName area, areaInfo &fieldArea)
 {
+    checkUpdateConfiguration(area); // update relevant poi's if needed (e.g. TTA)
     fieldArea= _fieldAreas[ area ];
 }
 
+/*! get the area info  of the specified area
+ *
+ * @param[in] area item from enum list
+ * @return fieldArea the details of the requested area
+ */
+areaInfo cEnvironmentField::getFieldArea( areaName area )
+{
+    checkUpdateConfiguration(area); // update relevant poi's if needed (e.g. TTA)
+    return _fieldAreas[ area ];
+}
 
 /*! get the area info  of the specified area
  *
@@ -141,6 +192,7 @@ bool cEnvironmentField::getFieldAreaByString( string areaString, areaInfo &field
     {
         if ( _fieldAreas[ (areaName) areaNameIndex ].id.compare( areaString ) == 0  )  // compare both strings
         {   // FOUND!!
+            checkUpdateConfiguration((areaName) areaNameIndex); // update relevant poi's if needed (e.g. TTA)
             fieldArea = _fieldAreas[ (areaName) areaNameIndex ];
             return true;
         }
@@ -265,171 +317,81 @@ bool cEnvironmentField::isPositionInArea( float x, float y, areaName area, float
 
 }
 
-/*! read the JSON file(s) as part of constructing phase and fill the private class members containing the values
- *
+/*! read the YAML file(s) as part of constructing phase and fill the private class members containing the values
+ 
  */
-void cEnvironmentField::getJSON()
+void cEnvironmentField::getConfig()
 {
     try
     {
 
-        Json::Value root,field;
+        // fieldValues( <length, 18.0>, <width, 12.0>, ... )
+        std::vector< std::pair<std::string,std::string> > fieldValues;
+        environmentCommon::readYAML("field", fieldValues);
 
-        bool parsedSuccess = environmentCommon::readJSON( root);
+        // Find <width, 12.0> in fieldValues using key "width"
+        auto pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("width") ); 
+        _width = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("length") ); 
+        _length = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("goalPostOffset") ); 
+        _goalPostOffset = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("goalPostWidth") ); 
+        _goalPostWidth = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("goalAreaOffset") ); 
+        _goalAreaOffset = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("goalDepth") ); 
+        _goalDepth = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("goalHeight") ); 
+        _goalHeight = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("penaltyAreaOffset") ); 
+        _penaltyAreaOffset = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("penaltySpotOffset") ); 
+        _penaltySpotOffset = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("safetyBoundaryOffset") ); 
+        _safetyBoundaryOffset = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("safetyBoundaryOffset") ); 
+        _safetyBoundaryOffset = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("lineThickness") ); 
+        _lineThickness = std::stof( pair->second );
+
+        pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("centerCircleRadius") ); 
+        _centerCircleRadius = std::stof( pair->second );
 
 
-        if(!parsedSuccess)
-        {
-            TRACE("Invalid JSON format read from cEnvironment.json file");
-            throw;
-        }
 
-        if( ! root.isMember("field"))
-        {
-            TRACE("Cannot read field information from cEnvironment.json file");
-            throw;
-        }
-        else
-        {
-            field = root.get("field", "ERROR");
-        }
+        // ttaValues( <yFar, 8.0>, <yClose, 4.0>, ... )
+        std::vector< std::pair<std::string,std::string> > ttaValues;
+        environmentCommon::readYAML("technicalArea", ttaValues);
 
-        if( field.isMember("width") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _width = field.get("width", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.width'");
-            throw;
-        }
+        // Find <xFar, 1.0> in ttaValues using key "xFar"
+        pair = std::find_if( ttaValues.begin(), ttaValues.end(), KeyEquals("xFar") );
+        _tta_box["xFar"] = std::stof( pair->second );
 
-        if( field.isMember("length") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _length = field.get("length", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.length'");
-            throw;
-        }
+        pair = std::find_if( ttaValues.begin(), ttaValues.end(), KeyEquals("xClose") );
+        _tta_box["xClose"] = std::stof( pair->second );
 
-        if( field.isMember("goalPostOffset") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _goalPostOffset = field.get("goalPostOffset", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.goalPostOffset'");
-            throw;
-        }
+        pair = std::find_if( ttaValues.begin(), ttaValues.end(), KeyEquals("yFar") );
+        _tta_box["yFar"] = std::stof( pair->second );
 
-        if( field.isMember("goalPostWidth") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _goalPostWidth = field.get("goalPostWidth", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.goalPostWidth'");
-            throw;
-        }
-
-        if( field.isMember("goalAreaOffset") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _goalAreaOffset = field.get("goalAreaOffset", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.goalAreaOffset'");
-            throw;
-        }
-
-        if( field.isMember("goalDepth") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _goalDepth = field.get("goalDepth", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.goalDepth'");
-            throw;
-        }
-
-        if( field.isMember("goalHeight") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _goalHeight = field.get("goalHeight", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.goalHeight'");
-            throw;
-        }
-
-        if( field.isMember("penaltyAreaOffset") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _penaltyAreaOffset = field.get("penaltyAreaOffset", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.penaltyAreaOffset'");
-            throw;
-        }
-
-        if( field.isMember("penaltySpotOffset") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _penaltySpotOffset = field.get("penaltySpotOffset", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.penaltySpotOffset'");
-            throw;
-        }
-
-        if( field.isMember("safetyBoundaryOffset") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _safetyBoundaryOffset = field.get("safetyBoundaryOffset", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.safetyBoundaryOffset'");
-            throw;
-        }
-
-        if( field.isMember("lineThickness") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _lineThickness = field.get("lineThickness", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.lineThickness'");
-            throw;
-        }
-
-        if( field.isMember("centerCircleRadius") )
-        {
-            // if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-            _centerCircleRadius = field.get("centerCircleRadius", "ERROR").asFloat();
-        }
-        else
-        {
-            TRACE("JSON format issue with the JSON field 'field.centerCircleRadius'");
-            throw;
-        }
+        pair = std::find_if( ttaValues.begin(), ttaValues.end(), KeyEquals("yClose") );
+        _tta_box["yClose"] = std::stof( pair->second );
 
     } catch (exception &e)
     {
-        printf("Invalid JSON format!");
-        TRACE("Invalid JSON format for reading environment field inputs");
+        printf("Invalid YAML format! '%s'", e.what());
+        TRACE("Invalid YAML format for reading environment field inputs");
         throw e;
     }
 }
@@ -989,4 +951,118 @@ void cEnvironmentField::generateFieldAreas()
 
 }
 
+refboxConfigTTAside cEnvironmentField::getTTAconfig()
+{
+    // get coach config from rtdb
+    int r = 0;
+    int life = 0;
+    if (_rtdb != NULL)
+    {
+        T_REFBOX_CONFIG refboxConfig;
+        r = _rtdb->get(REFBOX_CONFIG, &refboxConfig, life, 0); // configuration -> ignore age
+        if (r == RTDB2_SUCCESS)
+        {
+            return refboxConfig.technicalTeamArea;
+        }
+    }
+    return refboxConfigTTAside::NONE;
+}
+
+/*! based on the field definition values as well as configuration
+ * recalculate the Technical Area positions and area
+ */
+void cEnvironmentField::generateTTA()
+{
+    poiInfo generatedPOI;
+    float halfWidth = _width * 0.5;
+
+    // start with default side FRONT_RIGHT (+x, +y), only outermost positions 1 and 5
+    // internal positions 2,3,4 to be interpolated later
+    // _tta_box comes from configuration
+    generatedPOI.x= halfWidth + 0.5 * (_tta_box["xClose"] + _tta_box["xFar"]);
+    generatedPOI.y= _tta_box["yClose"];
+    generatedPOI.id="P_TTA_1";
+    _fieldPOIs[P_TTA_1]= generatedPOI;
+
+    generatedPOI.x= halfWidth + 0.5 * (_tta_box["xClose"] + _tta_box["xFar"]);
+    generatedPOI.y= _tta_box["yFar"];
+    generatedPOI.id="P_TTA_5";
+    _fieldPOIs[P_TTA_5]= generatedPOI;
+
+    areaInfo generatedArea;
+    generatedArea.id = "A_TTA";
+    generatedArea.type = rectangle;
+    generatedArea.typeC = 'R';
+    generatedArea.R.corner1 = _fieldPOIs[P_TTA_1];
+    generatedArea.R.corner1.x = halfWidth + _tta_box["xClose"];
+    generatedArea.R.corner2 = _fieldPOIs[P_TTA_5];
+    generatedArea.R.corner2.x = halfWidth + _tta_box["xFar"];
+    _fieldAreas[A_TTA] = generatedArea;
+
+    // get coach config from rtdb
+    refboxConfigTTAside ttaSide = getTTAconfig();
+
+    // apply configured orientation, span a line on which to place the robots
+    switch (ttaSide)
+    {
+    case refboxConfigTTAside::FRONT_RIGHT:
+        // nothing to do, coordinates already OK
+        break;
+    case refboxConfigTTAside::FRONT_LEFT:
+        _fieldPOIs[P_TTA_1].x *= -1;
+        _fieldPOIs[P_TTA_5].x *= -1;
+        _fieldAreas[A_TTA].R.corner1.x *= -1;
+        _fieldAreas[A_TTA].R.corner2.x *= -1;
+        break;
+    case refboxConfigTTAside::BACK_RIGHT:
+        _fieldPOIs[P_TTA_1].y *= -1;
+        _fieldPOIs[P_TTA_5].y *= -1;
+        _fieldAreas[A_TTA].R.corner1.y *= -1;
+        _fieldAreas[A_TTA].R.corner2.y *= -1;
+        break;
+    case refboxConfigTTAside::BACK_LEFT:
+        _fieldPOIs[P_TTA_1].x *= -1;
+        _fieldPOIs[P_TTA_5].x *= -1;
+        _fieldPOIs[P_TTA_1].y *= -1;
+        _fieldPOIs[P_TTA_5].y *= -1;
+        _fieldAreas[A_TTA].R.corner1.x *= -1;
+        _fieldAreas[A_TTA].R.corner2.x *= -1;
+        _fieldAreas[A_TTA].R.corner1.y *= -1;
+        _fieldAreas[A_TTA].R.corner2.y *= -1;
+        break;
+    case refboxConfigTTAside::NONE:
+        _fieldAreas[A_TTA] = areaInfo(); // empty
+        break;
+    }
+
+    // sort y coordinates, such that lowest number (typically keeper) is at the back, closest to goal
+    if (_fieldPOIs[P_TTA_5].y < _fieldPOIs[P_TTA_1].y)
+    {
+        float tmp = _fieldPOIs[P_TTA_5].y;
+        _fieldPOIs[P_TTA_5].y = _fieldPOIs[P_TTA_1].y;
+        _fieldPOIs[P_TTA_1].y = tmp;
+    }
+
+    // interpolate positions 2,3,4 and correct positions 1,5 to be nicely centered
+    float x = _fieldPOIs[P_TTA_1].x;
+    float y0 = _fieldPOIs[P_TTA_1].y;
+    float step_y = 0.2 * (_fieldPOIs[P_TTA_5].y - _fieldPOIs[P_TTA_1].y);
+    _fieldPOIs[P_TTA_1].y = y0 + 0.5 * step_y;
+    generatedPOI.x = x;
+    generatedPOI.y = y0 + 1.5 * step_y;
+    generatedPOI.id = "P_TTA_2";
+    _fieldPOIs[P_TTA_2] = generatedPOI;
+    generatedPOI.y = y0 + 2.5 * step_y;
+    generatedPOI.id = "P_TTA_3";
+    _fieldPOIs[P_TTA_3] = generatedPOI;
+    generatedPOI.y = y0 + 3.5 * step_y;
+    generatedPOI.id = "P_TTA_4";
+    _fieldPOIs[P_TTA_4] = generatedPOI;
+    _fieldPOIs[P_TTA_5].y = y0 + 4.5 * step_y;
+}
+
+areaInfo cEnvironmentField::getTTAarea()
+{
+    return getFieldArea(A_TTA);
+}
 

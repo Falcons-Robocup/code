@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,6 +16,7 @@
 #define MULTICAST_SEND
 
 #include "ballDetection.hpp"
+#include "obstacleDetection.hpp"
 #include "cameraReceive.hpp"
 #include "camSysReceive.hpp"
 #include "configurator.hpp"
@@ -48,12 +49,12 @@ private:
     cameraReceive *camAnaRecv;
     camSysReceive *camSysRecv;
     configurator *conf;
-    ballDetection *cyanDet;
+    obstacleDetection *cyanDet;
     determinePosition *detPos;
     linePointDetection *linePoint;
     localization *loc;
-    ballDetection *magentaDet;
-    ballDetection *obstDet[4];
+    obstacleDetection *magentaDet;
+    obstacleDetection *obstDet[4];
     preprocessor *prep;
     robotFloor *rFloor;
 
@@ -62,8 +63,8 @@ private:
 public:
 
     multicastSend(ballDetection *ballDet[4], ballDetection *ballFarDet[4], cameraReceive *camAnaRecv,
-            camSysReceive *camSysRecv, configurator *conf, ballDetection *cyanDet, determinePosition *detPos,
-            linePointDetection *linePoint, localization *loc, ballDetection *magentaDet, ballDetection *obstDet[4],
+            camSysReceive *camSysRecv, configurator *conf, obstacleDetection *cyanDet, determinePosition *detPos,
+            linePointDetection *linePoint, localization *loc, obstacleDetection *magentaDet, obstacleDetection *obstDet[4],
             preprocessor *prep, robotFloor *rFloor);
     void send();
     void printNetworkInterface(char *buff, int flags);
@@ -71,7 +72,7 @@ public:
     void locList();
     void goodEnoughLoc();
     void floorLinePoints();
-    void ballList(size_t type);
+    void objectList(size_t type);
     
     void attach(observer *observer);
     void detach(observer *observer);

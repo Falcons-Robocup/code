@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,14 +22,15 @@
 #include <exception>
 #include <boost/thread/thread.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #include "int/cRobotHealth.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 #include "ext/cDiagnostics.hpp"
 
 using namespace std;
 
-boost::mutex g_mutex;
+boost::mutex g_mutex_diag;
 
 
 
@@ -64,7 +65,7 @@ void cRobotHealth::runSlow()
         }
         // output & send
         {
-            boost::mutex::scoped_lock l(g_mutex);
+            boost::mutex::scoped_lock l(g_mutex_diag);
             _rtdb->put(DIAG_HEALTH_SLOW, &msg);
             tprintf("diskUsage=%d\n", msg.diskUsage);
         }
@@ -126,7 +127,7 @@ void cRobotHealth::runFast()
         }
         // output & send
         {
-            boost::mutex::scoped_lock l(g_mutex);
+            boost::mutex::scoped_lock l(g_mutex_diag);
             _rtdb->put(DIAG_HEALTH_FAST, &msg);
             tprintf("semCount=%2d networkLoad=%7.2fKB/s cpuLoad=%5.1f", msg.semCount, msg.networkLoad, msg.cpuLoad);
         }

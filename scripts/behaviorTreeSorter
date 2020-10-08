@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 This script sorts all json files in the teamplayData directory,
@@ -11,8 +11,9 @@ Usage: behaviorTreeSorter
 
 import json
 import os
+import falconspy
 
-json_directory = "/home/robocup/falcons/teamplayData/"
+json_directory = falconspy.FALCONS_TPDATA_PATH
 
 if __name__ == "__main__":
     for filename in os.listdir(json_directory):

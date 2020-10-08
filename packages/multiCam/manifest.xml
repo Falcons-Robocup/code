@@ -13,6 +13,7 @@
   <depend package="roscpp"/>
   <depend package="dynamic_reconfigure"/>
   <depend package="diagnostics"/>
+  <depend package="filters"/>
   <depend package="sharedTypes"/>
 
   <export>

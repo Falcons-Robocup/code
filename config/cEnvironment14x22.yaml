@@ -1,0 +1,26 @@
+field:
+    length:                 22.0    # A
+    width:                  14.0    # B
+    goalAreaOffset:         0.75    # F
+    penaltyAreaOffset:      2.25    # E
+    penaltySpotOffset:      3.0     # I
+    centerCircleRadius:     2.0     # H/2
+    safetyBoundaryOffset:   1.50    # touchLineBorder
+    lineThickness:          0.132   # lineThickness
+    goalDepth:              0.6     # goalDepth
+    goalPostOffset:         1.2     # goalWidth/2 - goalPostWidth
+    goalPostWidth:          0.125
+    goalHeight:             1.0
+
+technicalArea:
+    yFar:                   10.0
+    yClose:                 5.0
+    xFar:                   2.0
+    xClose:                 1.0
+
+ball:
+    radius:                 0.15
+
+robot:
+    radius:                 0.25
+    radiusMargin:           0.05

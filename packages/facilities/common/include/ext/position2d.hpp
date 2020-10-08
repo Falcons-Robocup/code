@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -38,43 +38,43 @@ class Position2D; // forward declaration
 
 
 
-// differences w.r.t. Position2D: 
+// differences w.r.t. Position2D:
 // * angular speed is not automatically clipped between [0,2pi], for position it is
 // * transformations do not affect angular speed, for position they do
 class Velocity2D
 {
     private:
-	char     buf[80]; // for 2str
+    char     buf[80]; // for 2str
 
     public:
-	double   x;
-	double   y;
-        double   phi;
+    double   x;
+    double   y;
+    double   phi;
 
-        Velocity2D() 
-	{
-		x = 0.0;
-		y = 0.0;
-		phi = 0.0;
-	}
+        Velocity2D()
+    {
+        x = 0.0;
+        y = 0.0;
+        phi = 0.0;
+    }
 
-	Velocity2D(double xx, double yy, double pp)
-	{
-		x = xx;
-		y = yy;
-		phi = pp;
-	}
+    Velocity2D(double xx, double yy, double pp)
+    {
+        x = xx;
+        y = yy;
+        phi = pp;
+    }
 
-	Vector2D xy() const
-	{
-		return Vector2D(x, y);
-	}
+    Vector2D xy() const
+    {
+        return Vector2D(x, y);
+    }
 
-	char *tostr() 
-	{
-		sprintf(buf, "vel=(%6.2f, %6.2f, %6.2f)", x, y, phi);
-		return buf;
-	}
+    char *tostr()
+    {
+        sprintf(buf, "vel=(%8.4f, %8.4f, %8.4f)", x, y, phi);
+        return buf;
+    }
 
     std::string to_string() const
     {
@@ -83,47 +83,57 @@ class Velocity2D
         return msg.str();
     }
 
-	double size() const
-	{
-		return sqrt(x*x+y*y);
-	}
+    double size() const
+    {
+        return sqrt(x*x+y*y);
+    }
 
-	Velocity2D& operator +=(const Velocity2D& other)
-	{
-		x += other.x;
-		y += other.y;
-		phi += other.phi;
-		return (*this);
-	}
+    Velocity2D& operator +=(const Velocity2D& other)
+    {
+        x += other.x;
+        y += other.y;
+        phi += other.phi;
+        return (*this);
+    }
 
-	Velocity2D& operator -=(const Velocity2D& other)
-	{
-		x -= other.x;
-		y -= other.y;
-		phi -= other.phi;
-		return (*this);
-	}
+    Velocity2D& operator -=(const Velocity2D& other)
+    {
+        x -= other.x;
+        y -= other.y;
+        phi -= other.phi;
+        return (*this);
+    }
 
-	Velocity2D operator -(void) const
-	{
-		return (Velocity2D(-x, -y, -phi));
-	}
+    Velocity2D operator -(void) const
+    {
+        return (Velocity2D(-x, -y, -phi));
+    }
 
-	Velocity2D operator +(const Velocity2D& other) const
-	{
-		return (Velocity2D(x + other.x, y + other.y, phi + other.phi));
-	}
+    Velocity2D operator +(const Velocity2D& other) const
+    {
+        return (Velocity2D(x + other.x, y + other.y, phi + other.phi));
+    }
 
-	Velocity2D operator -(const Velocity2D& other) const
-	{
-		return (Velocity2D(x - other.x, y - other.y, phi - other.phi));
-	}
+    Velocity2D operator -(const Velocity2D& other) const
+    {
+        return (Velocity2D(x - other.x, y - other.y, phi - other.phi));
+    }
 
-	Velocity2D& transform_fcs2rcs(const Position2D& robotpos);
-	Velocity2D& transform_rcs2fcs(const Position2D& robotpos);
-	Velocity2D& transform_fcs2acs(bool playing_left_to_right);
-	Velocity2D& transform_acs2fcs(bool playing_left_to_right);
-	// these implementations are in cFalconsCommon.cpp
+    Velocity2D operator *(float f) const
+    {
+        return Velocity2D(x * f, y * f, phi * f);
+    }
+
+    Velocity2D operator /(float f) const
+    {
+        return (*this) * (1.0 / f);
+    }
+
+    Velocity2D& transform_fcs2rcs(const Position2D& robotpos);
+    Velocity2D& transform_rcs2fcs(const Position2D& robotpos);
+    Velocity2D& transform_fcs2acs(bool playing_left_to_right);
+    Velocity2D& transform_acs2fcs(bool playing_left_to_right);
+    // these implementations are in cFalconsCommon.cpp
 
 
 }; // class Velocity2D
@@ -132,45 +142,45 @@ class Velocity2D
 class Position2D
 {
     private:
-	char     buf[80]; // for 2str
+    char     buf[80]; // for 2str
 
     public:
-	double   x;
-	double   y;
-	double   phi;
+    double   x;
+    double   y;
+    double   phi;
 
-	Position2D() {
-		x = 0.0;
-		y = 0.0;
-		phi = 0.0;
-	}
+    Position2D() {
+        x = 0.0;
+        y = 0.0;
+        phi = 0.0;
+    }
 
-	Position2D(double xx, double yy, double pp) {
-		x = xx;
-		y = yy;
-		phi = project_angle_0_2pi(pp);
-	}
+    Position2D(double xx, double yy, double pp) {
+        x = xx;
+        y = yy;
+        phi = project_angle_0_2pi(pp);
+    }
 
-	Position2D& operator= (const Position2D& other)
-	{
-		if (this != &other)
-		{
-			x = other.x;
-			y = other.y;
-			phi = other.phi;
-		}
-		return *this;
-	}
+    Position2D& operator= (const Position2D& other)
+    {
+        if (this != &other)
+        {
+            x = other.x;
+            y = other.y;
+            phi = other.phi;
+        }
+        return *this;
+    }
 
 
-	Vector2D xy() const	{
-		return Vector2D(x, y);
-	}
+    Vector2D xy() const    {
+        return Vector2D(x, y);
+    }
 
-	char *tostr() {
-		sprintf(buf, "pos=(%6.2f, %6.2f, %6.2f)", x, y, phi);
-		return buf;
-	}
+    char *tostr() {
+        sprintf(buf, "pos=(%8.4f, %8.4f, %8.4f)", x, y, phi);
+        return buf;
+    }
 
     std::string to_string() const
     {
@@ -179,54 +189,54 @@ class Position2D
         return msg.str();
     }
 
-	double size() const {
-		return sqrt(x*x+y*y);
-	}
+    double size() const {
+        return sqrt(x*x+y*y);
+    }
 
-	Position2D& operator +=(const Position2D& other) {
-		x += other.x;
-		y += other.y;
-		phi += other.phi;
-		phi = project_angle_0_2pi(phi);
-		return (*this);
-	}
+    Position2D& operator +=(const Position2D& other) {
+        x += other.x;
+        y += other.y;
+        phi += other.phi;
+        phi = project_angle_0_2pi(phi);
+        return (*this);
+    }
 
-	Position2D& operator -=(const Position2D& other) {
-		x -= other.x;
-		y -= other.y;
-		phi -= other.phi;
-		phi = project_angle_0_2pi(phi);
-		return (*this);
-	}
+    Position2D& operator -=(const Position2D& other) {
+        x -= other.x;
+        y -= other.y;
+        phi -= other.phi;
+        phi = project_angle_0_2pi(phi);
+        return (*this);
+    }
 
-	Position2D operator -(void) const {
-		return (Position2D(-x, -y, -phi));
-	}
+    Position2D operator -(void) const {
+        return (Position2D(-x, -y, -phi));
+    }
 
-	Position2D operator +(const Position2D& other) const {
-		return (Position2D(x + other.x, y + other.y, phi + other.phi));
-	}
+    Position2D operator +(const Position2D& other) const {
+        return (Position2D(x + other.x, y + other.y, phi + other.phi));
+    }
 
-	Position2D operator -(const Position2D& other) const {
-		return (Position2D(x - other.x, y - other.y, phi - other.phi));
-	}
+    Position2D operator -(const Position2D& other) const {
+        return (Position2D(x - other.x, y - other.y, phi - other.phi));
+    }
 
-	Position2D operator *(float scale) const {
-		return (Position2D(x * scale, y * scale, phi * scale));
-	}
+    Position2D operator *(float scale) const {
+        return (Position2D(x * scale, y * scale, phi * scale));
+    }
 
-	void update(const Velocity2D& speed, double dt) {
-		x += speed.x * dt;
-		y += speed.y * dt;
-		phi += speed.phi * dt;
-		phi = project_angle_0_2pi(phi);
-	}
+    void update(const Velocity2D& speed, double dt) {
+        x += speed.x * dt;
+        y += speed.y * dt;
+        phi += speed.phi * dt;
+        phi = project_angle_0_2pi(phi);
+    }
 
-	Position2D& transform_fcs2rcs(const Position2D& robotpos);
-	Position2D& transform_rcs2fcs(const Position2D& robotpos);
-	Position2D& transform_fcs2acs(bool playing_left_to_right);
-	Position2D& transform_acs2fcs(bool playing_left_to_right);
-	// these implementations are in cFalconsCommon.cpp
+    Position2D& transform_fcs2rcs(const Position2D& robotpos);
+    Position2D& transform_rcs2fcs(const Position2D& robotpos);
+    Position2D& transform_fcs2acs(bool playing_left_to_right);
+    Position2D& transform_acs2fcs(bool playing_left_to_right);
+    // these implementations are in cFalconsCommon.cpp
 
 
 }; // class Position2D

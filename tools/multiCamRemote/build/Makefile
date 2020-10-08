@@ -10,8 +10,8 @@ MAKEFLAGS = -j8
 
 CFLAGS = -g3 -O3 -m64 -ansi -std=c++11 -Wall -Wextra -Wpedantic -Werror
 
-LDFLAGS = -pthread -L/usr/local/lib
-LDLIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lpthread
+LDFLAGS = -pthread -L/usr/local/lib -L/home/robocup/falcons/code/build/packages/facilities/common
+LDLIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lpthread -lFalconsCommon
 
 ifeq ($(shell uname -m), x86_64)
    CFLAGS += -m64
@@ -19,7 +19,7 @@ else
    CFLAGS += -m32
 endif
 
-INC = -I../include -I../../../packages/multiCam/include/
+INC = -I../include -I../../../packages/multiCam/include -I../../../packages/facilities/common/include/ext -I/usr/include/opencv4
 
 all: $(TARGET)
 	@./$(TARGET)

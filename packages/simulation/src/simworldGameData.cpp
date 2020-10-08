@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,6 +19,8 @@
 #include "int/simworldGameData.hpp"
 #include "int/ballCapabilities.hpp"
 #include "int/robotCapabilities.hpp"
+#include "int/obstacle.hpp"
+#include "int/generated_enum2str.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -32,13 +34,6 @@ const static float SAFETY_BOUNDARY_OFFSET = 0.50;
 template<typename T> inline T square(const T& x) { return x*x; }
 
 // auxiliaries for sorting obstacles during collision handling
-struct Obstacle
-{
-    Circle posr;
-    Vector2D speed;
-    Obstacle(Circle c) : posr(c), speed(Vector2D(0.0, 0.0)) {};
-    Obstacle(Circle c, Vector2D s) : posr(c), speed(s) {};
-};
 
 struct compareDistance
 {
@@ -47,8 +42,8 @@ struct compareDistance
     compareDistance(Vector2D p, double r) : mypos(p), myradius(r) {};
     inline bool operator()(Obstacle const &o1, Obstacle const &o2)
     {
-        double d1 = vectorsize(o1.posr.pos - mypos) - o1.posr.r - myradius;
-        double d2 = vectorsize(o2.posr.pos - mypos) - o2.posr.r - myradius;
+        double d1 = vectorsize(o1.position - mypos) - o1.radius - myradius;
+        double d2 = vectorsize(o2.position - mypos) - o2.radius - myradius;
         return d1 < d2;
     }
 };
@@ -73,7 +68,8 @@ void SimworldGameData::recalculateRobot (Robot& robot, const float dt)
 {
     std::vector<Obstacle> obstacles;
 
-    /* Make a list of obstacles (i.e. all other robots) */
+    /* Make a list of obstacles (i.e. all other robots, and extra externally-provided obstacles (from scene)) */
+    obstacles = nonRobotObstacles;
     for (const auto& teampair: team)
     {
         for (const auto& robotpair: teampair.second)
@@ -99,10 +95,10 @@ void SimworldGameData::recalculateRobot (Robot& robot, const float dt)
             std::sort(obstacles.begin(), obstacles.end(), compareDistance(robot.getLocation(), ROBOT_RADIUS));
 
             const auto closest_obstacle = obstacles[0];
-            const auto closest_distance = vectorsize(closest_obstacle.posr.pos - robot.getLocation()) - closest_obstacle.posr.r - ROBOT_RADIUS;
+            const auto closest_distance = vectorsize(closest_obstacle.position - robot.getLocation()) - closest_obstacle.radius - ROBOT_RADIUS;
             if (closest_distance < 0.00001)
             {
-                resolveRobotToRobotCollision(robot, closest_obstacle.posr, closest_obstacle.speed, dt);
+                resolveRobotToRobotCollision(robot, closest_obstacle.asCircle(), closest_obstacle.velocity, dt);
                 obstacles.erase(obstacles.begin());
             }
             else
@@ -119,6 +115,7 @@ void SimworldGameData::recalculateBall(const float dt)
     std::vector<Obstacle> obstacles;
 
     /* Make a list of all obstacles */
+    obstacles = nonRobotObstacles;
     for (const auto& teampair: team)
     {
         for (const auto& robotpair: teampair.second)
@@ -135,16 +132,11 @@ void SimworldGameData::recalculateBall(const float dt)
         for (auto& robotpair: teampair.second)
         {
             auto& robot = robotpair.second;
-
-            if (robot.canGrabBall(ball.getPosition()))
+            robot.recalculateBallPossession(ball.getPosition());
+            if (robot.hasBall())
             {
                 auto mouthLocation = robot.getMouthLocation(ROBOT_RADIUS);
-
-                if (!robot.canKickBall(ball.getPosition())) // Meaning: the robot does not have the ball yet
-                {
-                    ball.setPickupLocation(mouthLocation);
-                }
-
+                ball.setPickupLocation(mouthLocation);
                 ball.setLocation(mouthLocation);
                 ball.stopMoving();
                 break;
@@ -163,10 +155,10 @@ void SimworldGameData::recalculateBall(const float dt)
             std::sort(obstacles.begin(), obstacles.end(), compareDistance(ball.getLocation(), BALL_RADIUS));
 
             const auto closest_obstacle = obstacles[0];
-            const auto closest_distance = vectorsize(closest_obstacle.posr.pos - ball.getLocation()) - closest_obstacle.posr.r - BALL_RADIUS;
+            const auto closest_distance = vectorsize(closest_obstacle.position - ball.getLocation()) - closest_obstacle.radius - BALL_RADIUS;
             if (closest_distance < 0.00001)
             {
-                resolveBallToRobotCollision(closest_obstacle.posr, closest_obstacle.speed, dt);
+                resolveBallToRobotCollision(closest_obstacle.asCircle(), closest_obstacle.velocity, dt);
                 obstacles.erase(obstacles.begin());
             }
             else
@@ -185,22 +177,26 @@ void SimworldGameData::recalculateBall(const float dt)
             for (auto& robotpair: teampair.second)
             {
                 auto& robot = robotpair.second;
-                if (robot.canKickBall(ball.getPosition()))
+                if (robot.hasBall())
                 {
                     if (robot.isKicking())
                     {
-                        /* Teleport the ball just outside the robot's ball mouth to avoid the robot grabbing it again */
+                        // teleport the ball just outside the robot's ball mouth to avoid the robot grabbing it again
+                        TRACE("robot %s of team %s is kicking the ball", enum2str(robotpair.first), enum2str(teampair.first));
                         ball.setLocation(robot.getMouthLocation(ROBOT_RADIUS + BALL_RADIUS));
 
                         auto phi = robot.getAngle();
                         auto speed = robot.getKickerSpeed();
                         ball.setVelocity(speed * Vector3D(cos(phi), sin(phi), 0.0));
+                        // recalculate ball possession
+                        robot.disableBallHandlers();
+                        robot.recalculateBallPossession(ball.getPosition());
                     }
                     else
                     {
                         // ball should be glued to robot
                         ball.setLocation(robot.getMouthLocation(ROBOT_RADIUS));
-                        ball.setVelocity(Vector3D(0.0, 0.0, 0.0)); // not entirely accuracte, but good enough - no robot should care about small ball speed as function of robot speed
+                        ball.setVelocity(Vector3D(0.0, 0.0, 0.0)); // not entirely accurate, but good enough - no robot should care about small ball speed as function of robot speed
                     }
                 }
             }
@@ -326,3 +322,63 @@ void SimworldGameData::resolveRobotToRobotCollision(Robot& robot, const Circle& 
     //tprintf("newposition x=%6.2f y=%6.2f", newposition.x, newposition.y);
     robot.setPosition(Position2D(newposition.x, newposition.y, robot.getAngle()));
 }
+
+void SimworldGameData::setScene(SimulationScene const &scene)
+{
+    TRACE_FUNCTION("");
+
+    // disable ballHandlers of all robots temporarily,
+    // to make sure ball does not 'stick' due to ballHandling when teleporting (either the ball or the robot)
+    for (auto& teampair: team)
+    {
+        for (auto& robotpair: teampair.second)
+        {
+            auto& robot = robotpair.second;
+            robot.disableBallHandlers();
+        }
+    }
+
+    // friendly and opponent robots
+    for (auto& teamId: {TeamID::A, TeamID::B})
+    {
+        auto robots = scene.robots;
+        if (teamId == TeamID::B)
+        {
+            robots = scene.opponents;
+        }
+        for (auto& robot: robots)
+        {
+            RobotID robotId = (RobotID)(robot.robotId - 1);
+            // teleport
+            if (robot.robotId >= 0 && team[teamId].count(robotId))
+            {
+                Position2D pos(robot.position.x, robot.position.y, robot.position.Rz);
+                Velocity2D vel(robot.velocity.x, robot.velocity.y, robot.velocity.Rz);
+                team[teamId][robotId].setPosition(pos);
+                team[teamId][robotId].setVelocity(vel);
+            }
+            else
+            {
+                throw std::runtime_error("Error: bad robot ID in simulation scene");
+                // TODO: better error handling / robustness
+            }
+        }
+    }
+
+    // ball
+    if (scene.balls.size() == 1)
+    {
+        Point3D ballPos(scene.balls.at(0).position.x, scene.balls.at(0).position.y, scene.balls.at(0).position.z);
+        Vector3D ballVel(scene.balls.at(0).velocity.x, scene.balls.at(0).velocity.y, scene.balls.at(0).velocity.z);
+        ball.setPosition(ballPos);
+        ball.setVelocity(ballVel);
+    }
+
+    // extra obstacles
+    nonRobotObstacles.clear();
+    for (auto &obst: scene.obstacles)
+    {
+        nonRobotObstacles.push_back(Obstacle(Circle(obst.position.x, obst.position.y, ROBOT_RADIUS), Vector2D(obst.velocity.x, obst.velocity.y)));
+    }
+}
+

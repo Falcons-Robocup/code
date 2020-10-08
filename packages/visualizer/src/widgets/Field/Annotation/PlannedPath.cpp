@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,24 +19,31 @@
 #include <vtkLineSource.h>
 #include <vtkPolyDataMapper.h>
 
+#include "tracing.hpp"
+
 // Internal:
 #include "int/widgets/Field/Annotation/PlannedPath.h"
 
-void PlannedPath::initialize(RobotVisualization* anchor) 
+void PlannedPath::initialize(RobotVisualization* anchor)
 {
+    _robotVisualization = anchor;
     Annotation::initialize(anchor);
     connect(anchor, SIGNAL(signalPlannedPathChanged(std::vector<PositionVelocity>&)), this, SLOT(onAnchorPlannedPathChanged(std::vector<PositionVelocity>&)));
 
     this->SetPosition(0, 0, 0);
+    _robotVisualization->hideGhosts();
 }
 
 void PlannedPath::apply()
 {
+    TRACE_FUNCTION("");
+    TRACE("_actors.size()=%d _path.size()=%d", _actors.size(), _path.size());
     for (size_t i = 0; i < _actors.size(); ++i)
     {
         this->RemovePart(_actors[i]);
     }
     _actors.clear();
+    _robotVisualization->hideGhosts();
 
     if (_path.size() == 0)
     {
@@ -48,11 +55,16 @@ void PlannedPath::apply()
     {
         addActor(_path[i], _path[i + 1]);
     }
+    for (size_t i = 0; i < _path.size(); ++i)
+    {
+        _robotVisualization->setGhostPosition((int)i, _path[i]);
+    }
 }
 
 // Draw targets on path with dashed lines
 void PlannedPath::addActor(PositionVelocity& posvel1, PositionVelocity& posvel2)
 {
+    TRACE_FUNCTION("");
     vtkSmartPointer<vtkLineSource> line1 = vtkSmartPointer<vtkLineSource>::New();
     line1->SetPoint1(posvel1.x, posvel1.y, posvel1.z);
     line1->SetPoint2(posvel2.x, posvel2.y, posvel2.z);
@@ -72,10 +84,11 @@ void PlannedPath::addActor(PositionVelocity& posvel1, PositionVelocity& posvel2)
     this->AddPart(actor);
 }
 
-void PlannedPath::onAnchorPositionChanged(PositionVelocity& posvel) 
+void PlannedPath::onAnchorPositionChanged(PositionVelocity& posvel)
 {
+    TRACE_FUNCTION("");
     // Keep annotation at 0,0,0, individual path targets are in world coordinates
-    // Store the position for drawing of path 
+    // Store the position for drawing of path
     _posvel = posvel;
 
     apply();
@@ -83,11 +96,13 @@ void PlannedPath::onAnchorPositionChanged(PositionVelocity& posvel)
 
 void PlannedPath::onAnchorVisibilityChanged(bool visible)
 {
+    TRACE_FUNCTION("");
     this->SetVisibility(visible);
 }
 
 void PlannedPath::onAnchorPlannedPathChanged(std::vector<PositionVelocity>& path)
 {
+    TRACE_FUNCTION("");
     _path.clear();
     for (size_t i = 0; i < path.size(); ++i)
     {

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -13,6 +13,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "multiCam.hpp"
+#ifndef NOROS
+#include "tracing.hpp"
+#endif
 
 #include <cerrno>
 #include <fcntl.h>    /* For O_RDWR */
@@ -61,92 +64,44 @@ multiCamLibrary::multiCamLibrary(int robotIdArg, bool guiEnabled) {
     // setup the dewarp
     std::thread dewarpThread[4];
 
-    printf("INFO      : dewarp calculate start\n");
+    printf("INFO      : initializing dewarp ...\n");
     for (size_t cam = 0; cam < 4; cam++) {
-        // set the config file for the dewarp
-        // TODO: move file name to yaml
-        struct passwd *pw = getpwuid(getuid());
-        std::string configFile("");
-        configFile.append(pw->pw_dir);
-        switch (robotId) {
-        case 1:
-            configFile.append(
-                    "/falcons/data/internal/vision/multiCam/calibration/20190223_r1_assyG_cam" + std::to_string(cam)
-                            + ".bin");
-            break;
-        case 2:
-            configFile.append(
-                    "/falcons/data/internal/vision/multiCam/calibration/20190219_r2_assyI_cam" + std::to_string(cam)
-                            + ".bin");
-            break;
-        case 3:
-            configFile.append(
-                    "/falcons/data/internal/vision/multiCam/calibration/20190219_r3_assyD_cam" + std::to_string(cam)
-                            + ".bin");
-            break;
-        case 4:
-            configFile.append(
-                    "/falcons/data/internal/vision/multiCam/calibration/20180927_r4_assyF_cam" + std::to_string(cam)
-                            + ".bin");
-            break;
-        case 5:
-            configFile.append(
-                    "/falcons/data/internal/vision/multiCam/calibration/20190117_r5_assyE_cam" + std::to_string(cam)
-                            + ".bin");
-            break;
-        case 6:
-            configFile.append(
-                    "/falcons/data/internal/vision/multiCam/calibration/20190611_r6_assyH_cam" + std::to_string(cam)
-                            + ".bin");
-            break;
-        case 7:
-            configFile.append(
-                    "/falcons/data/internal/vision/multiCam/calibration/20190402_r7_cam" + std::to_string(cam)
-                            + ".bin");
-            break;
-        case 8:
-            // WARNING: test only, re-using calibration data or robot 7
-            configFile.append(
-                    "/falcons/data/internal/vision/multiCam/calibration/20190402_r7_cam" + std::to_string(cam)
-                            + ".bin");
-            break;
-        }
-
-        // setup the dewarp
-        dewarp[cam] = new deWarper();
-        dewarp[cam]->readBIN(configFile);
+        bool autoUpdate = (cam == 0);
+        autoUpdate = false; // disable for now, checking if data repo is uptodate etc. seems a bit expensive to do each time
+        dewarp[cam] = new Dewarper(robotId, cam, autoUpdate);
     }
-
     printf("INFO      : dewarp initialized\n");
-    // dewarp[0]->verify();
+
+    // setup ball distance estimator, shared by each ballDetection instance
+    auto bde = new BallDistanceEstimator();
 
     for (size_t cam = 0; cam < 4; cam++) {
-        // create for each camera a separate ball and ballFar detector
-        ballDet[cam] = new ballDetection(camAnaRecv, conf, dewarp[cam], prep, ballType, cam);
-        ballFarDet[cam] = new ballDetection(camAnaRecv, conf, dewarp[cam], prep, ballFarType, cam);
+        // create for each camera a separate ball
+        ballDet[cam] = new ballDetection(camAnaRecv, conf, dewarp[cam], bde, prep, ballType, cam);
+        ballFarDet[cam] = new ballDetection(camAnaRecv, conf, dewarp[cam], bde, prep, ballFarType, cam);
         // start all ball and ballFar detectors, they will wait until data is received from the receiver
         ballDetThread[cam] = thread(&ballDetection::keepGoing, ballDet[cam]);
         ballFarDetThread[cam] = thread(&ballDetection::keepGoing, ballFarDet[cam]);
 
         // create for each camera a separate obstacle detector
-        obstDet[cam] = new ballDetection(camAnaRecv, conf, dewarp[cam], prep, obstacleType, cam);
+        obstDet[cam] = new obstacleDetection(camAnaRecv, conf, dewarp[cam], prep, obstacleType, cam);
         // start all obstacle detectors, they will wait until data is received from the receiver
         // do not run obstacle detection on robot 1 (because of keeper frame first needs to be cut out)
         if (conf->getRobot() != 1) {
-            obstDetThread[cam] = thread(&ballDetection::keepGoing, obstDet[cam]);
+            obstDetThread[cam] = thread(&obstacleDetection::keepGoing, obstDet[cam]);
         }
     }
 
     // TODO: move cyanDet and megentaDet to above loop
-    cyanDet = new ballDetection(camAnaRecv, conf, dewarp[0], prep, cyanType, 0); // TODO also for dewarp1 to dewarp3
-    magentaDet = new ballDetection(camAnaRecv, conf, dewarp[0], prep, magentaType, 0); // TODO also for dewarp1 to dewarp3
+    cyanDet = new obstacleDetection(camAnaRecv, conf, dewarp[0], prep, cyanType, 0); // TODO also for dewarp1 to dewarp3
+    magentaDet = new obstacleDetection(camAnaRecv, conf, dewarp[0], prep, magentaType, 0); // TODO also for dewarp1 to dewarp3
     linePoint = new linePointDetection(camAnaRecv, conf, dewarp, prep);
     rFloor = new robotFloor(conf);
     detPos = new determinePosition(conf, linePoint, prep, rFloor);
     loc = new localization(conf, detPos, linePoint, prep);
 
     view = new viewer(ballDet, ballFarDet, camAnaRecv, camSysRecv, conf, cyanDet, detPos, linePoint, loc, magentaDet, obstDet, prep,
-            rFloor);
+            rFloor, dewarp);
     // obsolete: diag = new cFrameDiagnostics(conf, rFloor, view);
     // TODO: multSend all 4 ball detectors
     multSend = new multicastSend(ballDet, ballFarDet, camAnaRecv, camSysRecv, conf, cyanDet, detPos, linePoint, loc, magentaDet,
@@ -172,9 +127,18 @@ void multiCamLibrary::attach(observer *obs) {
 }
 
 bool multiCamLibrary::update() {
+#ifndef NOROS
+    TRACE("multiCamLibrary::update start");
+#endif
     conf->update();
 
+#ifndef NOROS
+    TRACE("multiCamLibrary::update waiting for new camera data ...");
+#endif
     camAnaRecv->block(); // wait until new data is available, likely synchronized to camera 0 (front)
+#ifndef NOROS
+    TRACE("multiCamLibrary::update got new camera data ...");
+#endif
     prep->update();
 
     if (!loc->getBusy()) { // only start new localization thread when previous thread was finished
@@ -187,11 +151,11 @@ bool multiCamLibrary::update() {
                 multSend->goodEnoughLoc(); // goodEnough is used by the others, except stats(), send as second packet
                 multSend->floorLinePoints();
                 multSend->locList();
-                multSend->ballList(TYPE_BALLDETECTION);
-                multSend->ballList(TYPE_BALLFARDETECTION);
-                multSend->ballList(TYPE_CYANDETECTION);
-                multSend->ballList(TYPE_MAGENTADETECTION);
-                multSend->ballList(TYPE_OBSTACLES);
+                multSend->objectList(TYPE_BALLDETECTION);
+                multSend->objectList(TYPE_BALLFARDETECTION);
+                multSend->objectList(TYPE_CYANDETECTION);
+                multSend->objectList(TYPE_MAGENTADETECTION);
+                multSend->objectList(TYPE_OBSTACLES);
                 // increase previousSendTime for the next send
                 while (uptime > (previousSendTime + multicastSendPeriod)) {
                     previousSendTime += multicastSendPeriod;
@@ -213,66 +177,70 @@ bool multiCamLibrary::update() {
 
     int key = view->getKey();
     if (key == 27 || key == 'q') // escape or q
-            {
+    {
         return false;
     }
     if (!useCamera) {
         // following keys are only available when video is read from file instead of camera (which is when frameCurrent >= 0)
         if (key == 'r') {
-            capture.set(CV_CAP_PROP_POS_FRAMES, 0);
+            capture.set(cv::CAP_PROP_POS_FRAMES, 0);
         } // r
         if (key == 's' || key == 65361 || key == '[') { // left arrow
             frameCurrent = frameCurrent - 10;
             if (frameCurrent < 0) {
                 frameCurrent = 0;
             }
-            capture.set(CV_CAP_PROP_POS_FRAMES, frameCurrent);
+            capture.set(cv::CAP_PROP_POS_FRAMES, frameCurrent);
         }
         if (key == 'f' || key == 65362) { // up arrow
             frameCurrent = frameCurrent + 60;
-            if (frameCurrent >= (capture.get(CV_CAP_PROP_FRAME_COUNT) - 1)) {
+            if (frameCurrent >= (capture.get(cv::CAP_PROP_FRAME_COUNT) - 1)) {
                 frameCurrent = 0;
             }
-            capture.set(CV_CAP_PROP_POS_FRAMES, frameCurrent);
+            capture.set(cv::CAP_PROP_POS_FRAMES, frameCurrent);
         }
         if (key == 'd' || key == 65363 || key == ']') { // right arrow
             frameCurrent = frameCurrent + 10;
-            if (frameCurrent >= (capture.get(CV_CAP_PROP_FRAME_COUNT) - 1)) {
+            if (frameCurrent >= (capture.get(cv::CAP_PROP_FRAME_COUNT) - 1)) {
                 frameCurrent = 0;
             }
-            capture.set(CV_CAP_PROP_POS_FRAMES, frameCurrent);
+            capture.set(cv::CAP_PROP_POS_FRAMES, frameCurrent);
         }
         if (key == 'a' || key == 65364) { // down arrow
             frameCurrent = frameCurrent - 60;
-            capture.set(CV_CAP_PROP_POS_FRAMES, frameCurrent);
+            capture.set(cv::CAP_PROP_POS_FRAMES, frameCurrent);
             if (frameCurrent < 0) {
                 frameCurrent = 0;
             }
         }
         if (key == 'x') {
             frameCurrent = frameCurrent + 1;
-            if (frameCurrent >= (capture.get(CV_CAP_PROP_FRAME_COUNT) - 1)) {
+            if (frameCurrent >= (capture.get(cv::CAP_PROP_FRAME_COUNT) - 1)) {
                 frameCurrent = 0;
             }
-            capture.set(CV_CAP_PROP_POS_FRAMES, frameCurrent);
+            capture.set(cv::CAP_PROP_POS_FRAMES, frameCurrent);
         }
         if (key == 'z') {
             frameCurrent = frameCurrent - 1;
-            capture.set(CV_CAP_PROP_POS_FRAMES, frameCurrent);
+            capture.set(cv::CAP_PROP_POS_FRAMES, frameCurrent);
             if (frameCurrent < 0) {
                 frameCurrent = 0;
             }
         }
 
         if (view->getPause()) {
-            capture.set(CV_CAP_PROP_POS_FRAMES, frameCurrent);
+            capture.set(cv::CAP_PROP_POS_FRAMES, frameCurrent);
         }
 
-        if (frameCurrent >= (capture.get(CV_CAP_PROP_FRAME_COUNT) - 1)) {
+        if (frameCurrent >= (capture.get(cv::CAP_PROP_FRAME_COUNT) - 1)) {
             frameCurrent = 0;
-            capture.set(CV_CAP_PROP_POS_FRAMES, 0);
+            capture.set(cv::CAP_PROP_POS_FRAMES, 0);
         }
     }
 
-	return true;
+#ifndef NOROS
+    TRACE("multiCamLibrary::update end");
+    WRITE_TRACE;
+#endif
+    return true;
 }

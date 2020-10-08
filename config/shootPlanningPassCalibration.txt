@@ -1,6 +1,7 @@
 # robot calibration
 # each line contains a measurement sample (distance, power)
 # in between, linear interpolation is applied
+ 0.0   25
  1.0   25
  4.0   30
  7.0   45

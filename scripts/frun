@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# Run falcons executable from the correct build path. Also check if it is built.
+
+
+
+pkg=$1
+exe=$2
+args="${@:3}"
+
+if [ -z "$exe" ]; then
+    echo "ERROR: too few arguments"
+    exit 1
+fi
+
+# check build folder existence
+pkgdir=$(fdir $pkg)
+if [ -z "$pkgdir" ]; then
+    echo "ERROR: unknown package argument '$pkg'"
+    exit 1
+fi
+cd $FALCONS_CODE_PATH
+if [ ! -d build/ ]; then
+    echo "ERROR: no build folder found, run fmake to build"
+    exit 1
+fi
+if [ ! -d build/$pkgdir ]; then
+    echo "ERROR: no build folder found for $pkg, run 'fmake $pkg' to build"
+    exit 1
+fi
+
+# check target existence
+target=build/$pkgdir/$exe
+if [ ! -f $target ]; then
+    echo "ERROR: file not found: '$target', run 'fmake $pkg' to build"
+    exit 1
+fi
+if [ ! -x $target ]; then
+    echo "ERROR: file misses executable bit: $target"
+    exit 1
+fi
+
+# run
+$target $args
+

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,6 +21,7 @@
 
 #include "teamID.hpp"
 #include <string>
+#include "FalconsRtDB2.hpp" // simulationTimeEnum
 
 class AbstractConfigAdapter {
 public:
@@ -28,6 +29,8 @@ public:
 
     virtual std::string getArbiter() const = 0;
     virtual int getSize(const TeamID) const = 0;
+    virtual int getTickFrequency() const = 0;
+    virtual int getStepSizeMs() const = 0;
 };
 
 #endif /* ABSTRACTCONFIGADAPTER_HPP_ */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,7 +24,7 @@
 // Falcons shared code:
 #include "tracing.hpp"
 
-void FieldWidgetGameSignalSubscriber::setSignalMode(SignalMode mode) 
+void FieldWidgetGameSignalSubscriber::setSignalMode(SignalMode mode)
 {
     GameSignalSubscriber::setSignalMode(mode);
 
@@ -36,9 +36,10 @@ void FieldWidgetGameSignalSubscriber::subscribe(GameSignalAdapter* gameSignalAda
     WidgetGameSignalSubscriber::subscribe(gameSignalAdapter);
 
     QObject::connect(gameSignalAdapter, SIGNAL(signalBallPositionChanged(ObjectId, SignalMode, PositionVelocity&, float, float, CameraType)), this, SLOT(onBallPositionChanged(ObjectId, SignalMode, PositionVelocity&, float, float, CameraType)));
+    QObject::connect(gameSignalAdapter, SIGNAL(signalBallPossessionChanged(uint8_t, SignalMode, BallPossessionType, uint8_t)), this, SLOT(onBallPossessionChanged(uint8_t, SignalMode, BallPossessionType, uint8_t)));
 
     QObject::connect(gameSignalAdapter, SIGNAL(signalClearRobot(uint8_t)), this, SLOT(onRobotClear(uint8_t)));
-    
+
     QObject::connect(gameSignalAdapter, SIGNAL(signalObstaclePositionChanged(ObjectId, SignalMode, PositionVelocity&)), this, SLOT(onObstaclePositionChanged(ObjectId, SignalMode, PositionVelocity&)));
     QObject::connect(gameSignalAdapter, SIGNAL(signalForbiddenAreaChanged(ObjectId, SignalMode, polygon2D&)), this, SLOT(onForbiddenAreaChanged(ObjectId, SignalMode, polygon2D&)));
 
@@ -47,6 +48,7 @@ void FieldWidgetGameSignalSubscriber::subscribe(GameSignalAdapter* gameSignalAda
 
     QObject::connect(gameSignalAdapter, SIGNAL(signalClearAll()), this, SLOT(onClearRequest()));
     QObject::connect(gameSignalAdapter, SIGNAL(signalElapsedTimeChanged(double)), this, SLOT(onElapsedTimeChanged(double)));
+    QObject::connect(gameSignalAdapter, SIGNAL(signalClockTick(double, double)), this, SLOT(onClockTick(double, double)));
     QObject::connect(gameSignalAdapter, SIGNAL(signalPathPlanningInProgress(uint8_t, std::vector<PositionVelocity>&)), this, SLOT(onPathPlanningInProgress(uint8_t, std::vector<PositionVelocity>&)));
     QObject::connect(gameSignalAdapter, SIGNAL(signalShootTargetChanged(uint8_t, SignalMode, PositionVelocity&, bool)), this, SLOT(onShootTargetChanged(uint8_t, SignalMode, PositionVelocity&, bool)));
     QObject::connect(gameSignalAdapter, SIGNAL(signalProjectSpeedChanged(ObjectId, SignalMode, linepoint2D&)), this, SLOT(onProjectSpeedChanged(ObjectId, SignalMode, linepoint2D&)));
@@ -82,10 +84,16 @@ void FieldWidgetGameSignalSubscriber::onElapsedTimeChanged(double t)
     prevT = t;
 }
 
-/* 
+void FieldWidgetGameSignalSubscriber::onClockTick(double elapsedTime, double actualTime)
+{
+    _widget->setClockTick(elapsedTime, actualTime);
+    _widget->updateTechnicalTeamArea(); // TODO: more efficient to update only on config change, need new signal?
+}
+
+/*
 * ========================================
 *           Robot view
-* ======================================== 
+* ========================================
 */
 bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, const SignalMode& signalMode, const DataType &dataType)
 {
@@ -94,18 +102,18 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
     bool result = false;
     if (_viewMode == ROBOT)
     {
-        if( _viewSignalMode == signalMode && 
+        if( _viewSignalMode == signalMode &&
             _robotModeId == robotID)
         {
-            result = true;    
+            result = true;
         }
-        
+
         if(_viewSignalMode == SignalMode::GAUSSIAN_WORLD || _viewSignalMode == SignalMode::GAUSSIAN_MEASUREMENTS)
         {
             if(_robotModeId == robotID)
             {
                 if( (signalMode == SignalMode::GAUSSIAN_WORLD) ||
-                    (dataType == DataType::BALLPOSITION)       ||                     
+                    (dataType == DataType::BALLPOSITION)       ||
                     (dataType == DataType::OBSTACLEPOSITION && signalMode == SignalMode::WORLD ))
                 {
                     result = true;
@@ -116,8 +124,8 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
             {
                 result = true;
             }
-            
-        }        
+
+        }
     }
     else if (_viewMode == TEAM)
     {
@@ -125,17 +133,17 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
         // but not the balls- and obstacles
         if (_viewSignalMode == SignalMode::WORLD)
         {
-            if (dataType == DataType::ROBOTPOSITION)
+            if (dataType == DataType::ROBOTPOSITION || dataType == DataType::PATHPLANNINGPROGRESS)
             {
                 result = true;
             }
             else if (_robotModeId == robotID)
             {
-                if ( (dataType == DataType::BALLPOSITION) || 
-                     (dataType == DataType::OBSTACLEPOSITION && signalMode == SignalMode::WORLD) )
+                if ((dataType == DataType::BALLPOSITION) ||
+                    (dataType == DataType::OBSTACLEPOSITION && signalMode == SignalMode::WORLD) )
                 {
                     result = true;
-                }                
+                }
             }
         }
         else if (_viewSignalMode == SignalMode::VISION)
@@ -160,7 +168,7 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
             {
                 result = true;
             }
-        }        
+        }
         else if (_viewSignalMode == SignalMode::GAUSSIAN_WORLD || _viewSignalMode == SignalMode::GAUSSIAN_MEASUREMENTS)
         {
             if (signalMode == SignalMode::GAUSSIAN_WORLD)
@@ -168,7 +176,7 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
                 result = true;
             }
 
-            if( (dataType == DataType::BALLPOSITION)    || 
+            if( (dataType == DataType::BALLPOSITION)    ||
                 (dataType == DataType::ROBOTPOSITION)   ||
                 (dataType == DataType::OBSTACLEPOSITION && signalMode == SignalMode::WORLD ))
             {
@@ -189,8 +197,12 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
     {
         result = true;
     }
+    if (dataType == DataType::PATHPLANNINGPROGRESS) // always show robot targets
+    {
+        result = true;
+    }
     // debug tracing
-    //TRACE("displayDataFilter(%d, %d, %d) = %d", (int)robotID, (int)signalMode, (int)dataType, (int)result);   
+    //TRACE("displayDataFilter(%d, %d, %d) = %d", (int)robotID, (int)signalMode, (int)dataType, (int)result);
     return result;
 }
 
@@ -213,18 +225,21 @@ void FieldWidgetGameSignalSubscriber::onBallPositionChanged(ObjectId id, SignalM
 
 void FieldWidgetGameSignalSubscriber::onBallPossessionChanged(uint8_t senderRobotId, SignalMode signalMode, BallPossessionType type, uint8_t robotId)
 {
-    if (displayDataFilter(senderRobotId, signalMode, DataType::BALLPOSSESSION))
+    if (true) //displayDataFilter(senderRobotId, signalMode, DataType::BALLPOSSESSION))
     {
-        TRACE("FieldWidgetGameSignalSubscriber::onBallPossessionChanged()");
+        TRACE("FieldWidgetGameSignalSubscriber::onBallPossessionChanged(%d, %d, %d, %d)", (int)senderRobotId, (int)signalMode, (int)type, (int)robotId);
         switch (type)
         {
-            case TYPE_INVALID: 
+            case TYPE_INVALID:
                 break;
-            case TYPE_FIELD: 
+            case TYPE_FIELD:
                 break;
-            case TYPE_OPPONENT: 
+            case TYPE_OPPONENT:
                 break;
-            case TYPE_TEAMMEMBER: 
+            case TYPE_TEAMMEMBER:
+                _widget->getTeamRobot(robotId)->showArrow();
+                // note: hideArrow is called at each robot actor repositioning, see onOwnTeamPositionChanged()
+                // TODO: maybe better to use a timer (tricky), to keep showing the arrow while the ball is following it
                 break;
             default: break;
         }
@@ -259,12 +274,14 @@ void FieldWidgetGameSignalSubscriber::onOwnTeamPositionChanged(uint8_t senderRob
     if (displayDataFilter(senderRobotId, signalMode, DataType::ROBOTPOSITION))
     {
         TRACE(boost::str(boost::format("FieldWidgetGameSignalSubscriber::onOwnTeamPositionChanged(%1%, %2%)") % posvel.x % posvel.y).c_str());
-        _widget->getTeamRobot(robotId)->setPosition(posvel);
-        _widget->getTeamRobot(robotId)->VisibilityOn();
+        auto robot = _widget->getTeamRobot(robotId);
+        robot->setPosition(posvel);
+        robot->hideArrow();
+        robot->VisibilityOn();
     }
 }
 
-void FieldWidgetGameSignalSubscriber::onPathPlanningInProgress(uint8_t senderRobotId, std::vector<PositionVelocity>& path) 
+void FieldWidgetGameSignalSubscriber::onPathPlanningInProgress(uint8_t senderRobotId, std::vector<PositionVelocity>& path)
 {
     if (displayDataFilter(senderRobotId, SignalMode::PATHPLANNING, DataType::PATHPLANNINGPROGRESS))
     {

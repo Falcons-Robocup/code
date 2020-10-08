@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,6 +25,8 @@
 
 #include "diagWorldModel.hpp"
 
+#include "int/adapters/configurators/WorldModelConfig.hpp"
+
 #include "ballMeasurement.hpp"
 #include "int/types/ball/ballType.hpp"
 #include "int/administrators/ballDiscriminator.hpp"
@@ -33,7 +35,7 @@
 class ballAdministrator
 {
     public:
-    	ballAdministrator();
+    	ballAdministrator(WorldModelConfig& wmConfig);
     	virtual ~ballAdministrator();
 
     	virtual void appendBallMeasurements(const std::vector<ballMeasurement> measurements);
@@ -48,6 +50,8 @@ class ballAdministrator
     	uint8_t _ownRobotID;
     	std::map<uint8_t, ballClass_t> _overruledBalls;
     	std::map<uniqueObjectID, ballMeasurement> _ballMeasurements;
+
+        WorldModelConfig& _wmConfig;
 
     	ballDiscriminator _ballDiscriminator;
 

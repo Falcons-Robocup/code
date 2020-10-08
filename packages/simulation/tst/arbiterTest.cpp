@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,6 +24,7 @@
 
 #include "int/arbiter.hpp"
 
+const static float SIMULATION_PERIOD_FOR_TEST = 0.05;
 
 class MockAbstractRefBoxAdapter : public AbstractRefBoxAdapter {
 public:
@@ -74,7 +75,7 @@ public:
          */
         while (arbiter.getGameState() != GameState::RUNNING)
         {
-            arbiter.control(gameData);
+            arbiter.control(gameData, SIMULATION_PERIOD_FOR_TEST);
         }
     }
 
@@ -90,19 +91,19 @@ TEST_F(AnArbiterForARunningGame, DoesNotStopTheGameWhileTheBallIsInside)
     gameData.ball.setVelocity(Vector3D(3.0, 3.0, 0.0));
 
     gameData.ball.setLocation(Point2D(-1.5, 2.5));
-    arbiter.control(gameData);
+    arbiter.control(gameData, SIMULATION_PERIOD_FOR_TEST);
     EXPECT_EQ(GameState::RUNNING, arbiter.getGameState());
 
     gameData.ball.setLocation(Point2D(-1.5, -2.5));
-    arbiter.control(gameData);
+    arbiter.control(gameData, SIMULATION_PERIOD_FOR_TEST);
     EXPECT_EQ(GameState::RUNNING, arbiter.getGameState());
 
     gameData.ball.setLocation(Point2D(1.5, -2.5));
-    arbiter.control(gameData);
+    arbiter.control(gameData, SIMULATION_PERIOD_FOR_TEST);
     EXPECT_EQ(GameState::RUNNING, arbiter.getGameState());
 
     gameData.ball.setLocation(Point2D(1.5, 2.5));
-    arbiter.control(gameData);
+    arbiter.control(gameData, SIMULATION_PERIOD_FOR_TEST);
     EXPECT_EQ(GameState::RUNNING, arbiter.getGameState());
 }
 
@@ -117,7 +118,7 @@ TEST_F(AnArbiterForARunningGame, ArrangesAThrowinIfTheBallIsAcrossTheSideline)
 
     while (arbiter.getGameState() != GameState::PREPARING)
     {
-        arbiter.control(gameData);
+        arbiter.control(gameData, SIMULATION_PERIOD_FOR_TEST);
     }
 }
 
@@ -130,7 +131,7 @@ TEST_F(AnArbiterForARunningGame, StopsTheGameIfTheBallIsOutside)
 
     while (arbiter.getGameState() != GameState::STOPPED)
     {
-        arbiter.control(gameData);
+        arbiter.control(gameData, SIMULATION_PERIOD_FOR_TEST);
     }
 }
 

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,6 +28,9 @@ struct pose
     float Rz = 0;
     
     SERIALIZE_DATA_FIXED(x, y, Rz);
+
+    pose(float xx = 0.0, float yy = 0.0, float Rzz = 0.0) : x(xx), y(yy), Rz(Rzz) {}
+
 };
 
 

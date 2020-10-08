@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -32,8 +32,12 @@ struct diagPeripheralsInterface
     float bh_right_angle;
     float voltage;
     float motion_temperature[3];
+    float motor_pid_output[3];
+    float motor_error[3];
+    float motor_integral[3];
+    float motor_derivative[3];
 
-    SERIALIZE_DATA(feedback_vel, speed_vel, hasball, bh_left_angle, bh_right_angle, voltage, motion_temperature);
+    SERIALIZE_DATA(feedback_vel, speed_vel, hasball, bh_left_angle, bh_right_angle, voltage, motion_temperature, motor_pid_output, motor_error, motor_integral, motor_derivative);
 };
 
 #endif

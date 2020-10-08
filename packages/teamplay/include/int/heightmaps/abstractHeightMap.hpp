@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <boost/numeric/ublas/matrix.hpp>
+#include <opencv2/opencv.hpp>
 
 #include "vector2d.hpp"
 
@@ -33,6 +34,9 @@ typedef std::map<std::string, std::string> parameterMap_t;
 
 namespace heightMapValues
 {
+    /* The resolution is the size (in meters) of a square inside a heightmap. */
+    static const float RESOLUTION = 0.25;
+
     static const float MIN = -100.0;
     static const float NEUTRAL = 0.0;
     static const float MAX = 100.0;
@@ -63,10 +67,9 @@ public:
     virtual std::string getDescription() const;
     virtual std::string getFilename() const;
 
-    void generateSVG (const std::string&) const;
-    void generateJPG (const std::string&) const;
-    Point2D getOptimum() const;
-    float getValueAtCoordinate(const Point2D&) const;
+    cv::Mat generateOpenCVMatrix () const;
+    heightMapField getOptimum() const;
+    heightMapField getFieldAtCoordinate(const Point2D&) const;
     abstractHeightMap scale(const float) const;
     abstractHeightMap operator+(const abstractHeightMap&) const;
 
@@ -83,10 +86,6 @@ protected:
      * heightmapfield _heightmap(nrInX, nrInY) is at field coordinate (+x, +y). */
     typedef boost::numeric::ublas::matrix<heightMapField> heightMap_t;
     heightMap_t _heightMap;
-
-private:
-    /* The resolution is the size (in meters) of a square inside a heightmap. */
-    float _resolution;
 };
 
 } /* namespace teamplay */

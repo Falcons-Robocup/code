@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -36,8 +36,6 @@ class heightMapStoreTest : public TeamplayTest
 public:
     heightMapStoreTest()
     {
-        /* Set heightmap configuration */
-        configurationStore::getConfiguration().setHeightMapsGeneratePictures(true);
     }
 };
 

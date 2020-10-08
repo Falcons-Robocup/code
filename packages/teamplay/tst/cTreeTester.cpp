@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,7 +17,7 @@
  */
 
 #include <gtest/gtest.h>
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
 
 #include "int/actions/cActionStop.hpp"
 #include "int/actions/cActionShoot.hpp"
@@ -36,9 +36,7 @@
 #include "int/actions/cActionDefendPenaltyArea.hpp"
 #include "int/actions/cActionTurnAwayFromOpponent.hpp"
 #include "int/actions/cActionDefendAttackingOpponent.hpp"
-#include "int/actions/cActionDribbleForPass.hpp"
-#include "int/actions/cActionDribbleForShot.hpp"
-#include "int/utilities/trace.hpp"
+#include "int/actions/cActionDribble.hpp"
 
 // SUT
 #include "int/cDecisionTree.hpp"
@@ -60,8 +58,6 @@ int main(int argc, char **argv)
     //Enable tracing
     //teamplay::traceRedirect::getInstance().setAllTracesToStdout();
 
-    ros::init(argc, argv, "cTreeTesterTest");
-
     boost::assign::ptr_map_insert( enumToActionMapping )
     ( tpActionEnum::INVALID, boost::make_shared<cActionStop>() )
     ( tpActionEnum::SUCCESS, boost::make_shared<cActionSuccess>() )
@@ -81,8 +77,7 @@ int main(int argc, char **argv)
     ( tpActionEnum::DEFEND_PENALTY_AREA, boost::make_shared<cActionDefendPenaltyArea>() )
     ( tpActionEnum::TURN_AWAY_FROM_OPPONENT, boost::make_shared<cActionTurnAwayFromOpponent>() )
     ( tpActionEnum::DEFEND_ATTACKING_OPPONENT,  boost::make_shared<cActionDefendAttackingOpponent>() )
-    ( tpActionEnum::DRIBBLE_FOR_PASS,  boost::make_shared<cActionDribbleForPass>() )
-    ( tpActionEnum::DRIBBLE_FOR_SHOT,  boost::make_shared<cActionDribbleForShot>() )
+    ( tpActionEnum::DRIBBLE,  boost::make_shared<cActionDribble>())
     ;
 
     // Run all the tests that were declared with TEST()

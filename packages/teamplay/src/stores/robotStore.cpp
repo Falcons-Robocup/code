@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,7 +23,8 @@
 #include <string>
 
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
 
 using namespace teamplay;
 
@@ -71,21 +72,21 @@ void robotStore::clear()
     _all_active_robots.clear();
 }
 
-void robotStore::addOwnRobot (const robot& r)
+void robotStore::addOwnRobot(const robot& r)
 {
     auto own_robot = r;
     own_robot.setOwnRobot();
     _all_active_robots.push_back(own_robot);
 }
 
-void robotStore::addTeammate (const robot& r)
+void robotStore::addTeammate(const robot& r)
 {
     auto teammate = r;
     teammate.setNotOwnRobot();
     _all_active_robots.push_back(teammate);
 }
 
-void robotStore::exchangeOwnRobotWith (const int teammate_number)
+void robotStore::exchangeOwnRobotWith(const int teammate_number)
 {
     if (_number_of_previously_own_robot)
     {
@@ -121,6 +122,26 @@ void robotStore::undoExchange()
     _number_of_previously_own_robot = boost::none;
 }
 
+robot robotStore::getOwnRobot() const
+{
+    auto own_robot = std::find_if(_all_active_robots.begin(), _all_active_robots.end(),
+            [&](const robot& it){ return it.isOwnRobot(); });
+
+    if (own_robot == _all_active_robots.end())
+    {
+        std::ostringstream msg;
+        msg << "Error: own robot not found";
+        std::cerr << msg.str() << std::endl;
+        throw std::runtime_error(msg.str());
+    }
+    else
+    {
+        TRACE("getOwnRobot: ") << own_robot->str();
+    }
+
+    return *own_robot;
+}
+
 void robotStore::setOwnRobotRole (const treeEnum& r)
 {
     if (!role(r).isSafeOnMultipleRobots())
@@ -154,15 +175,28 @@ std::vector<robot> robotStore::getAllRobotsExclGoalie() const
     return retVal;
 }
 
-std::vector<robot> robotStore::getAllRobotsExclGoalieInArea (const fieldArea& area) const
+std::vector<robot> robotStore::getAllRobotsExclOwnRobot() const
 {
     std::vector<robot> retVal;
 
     std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
-            [&](const robot& it){ return (it.getRole() != treeEnum::R_GOALKEEPER) && it.isInArea(area); });
+            [&](const robot& it){ return !it.isOwnRobot(); });
 
     std::for_each(retVal.begin(), retVal.end(),
-            [&](const robot& it){ TRACE("getAllRobotsExclGoalieInArea: ") << it.str(); });
+            [&](const robot& it){ TRACE("getAllRobotsExclOwnRobot: ") << it.str(); });
+    return retVal;
+}
+
+std::vector<robot> robotStore::getAllRobotsSortedByDistanceTo(const Point2D& p) const
+{
+    std::vector<robot> retVal = _all_active_robots;
+
+    std::sort(retVal.begin(), retVal.end(),
+            [&](const robot& first, const robot& second)
+            { return first.getDistanceTo(p) < second.getDistanceTo(p); });
+
+    std::for_each(retVal.begin(), retVal.end(),
+            [&](const robot& it){ TRACE("getAllRobotsSortedByDistanceTo: ") << it.str(); });
     return retVal;
 }
 
@@ -201,15 +235,27 @@ std::vector<robot> robotStore::getAllRobotsExclLowestIDSortedByDistanceTo (const
     return retVal;
 }
 
-std::vector<robot> robotStore::getAllRobotsExclOwnRobot() const
+std::vector<robot> robotStore::getAllRobotsInArea(const fieldArea& area) const
 {
     std::vector<robot> retVal;
 
     std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
-            [&](const robot& it){ return !it.isOwnRobot(); });
+            [&](const robot& it){ return it.isInArea(area); });
 
     std::for_each(retVal.begin(), retVal.end(),
-            [&](const robot& it){ TRACE("getAllRobotsExclOwnRobot: ") << it.str(); });
+            [&](const robot& it){ TRACE("getAllRobotsInArea: ") << it.str(); });
+    return retVal;
+}
+
+std::vector<robot> robotStore::getAllRobotsExclGoalieInArea (const fieldArea& area) const
+{
+    std::vector<robot> retVal;
+
+    std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
+            [&](const robot& it){ return (it.getRole() != treeEnum::R_GOALKEEPER) && it.isInArea(area); });
+
+    std::for_each(retVal.begin(), retVal.end(),
+            [&](const robot& it){ TRACE("getAllRobotsExclGoalieInArea: ") << it.str(); });
     return retVal;
 }
 
@@ -225,15 +271,15 @@ std::vector<robot> robotStore::getAllRobotsExclOwnRobotInArea(const fieldArea& a
     return retVal;
 }
 
-std::vector<robot> robotStore::getAllRobotsInArea (const fieldArea& area) const
+std::vector<robot> robotStore::getAllRobotsExclOwnRobotExclGoalieInArea(const fieldArea& area) const
 {
     std::vector<robot> retVal;
 
     std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
-            [&](const robot& it){ return it.isInArea(area); });
+            [&](const robot& it){ return !it.isOwnRobot() && (it.getRole() != treeEnum::R_GOALKEEPER) && it.isInArea(area); });
 
     std::for_each(retVal.begin(), retVal.end(),
-            [&](const robot& it){ TRACE("getAllRobotsInArea: ") << it.str(); });
+            [&](const robot& it){ TRACE("getAllRobotsExclOwnRobotExclGoalieInArea: ") << it.str(); });
     return retVal;
 }
 
@@ -266,26 +312,6 @@ boost::optional<robot> robotStore::getAssistantOfRole (const treeEnum& r) const
     }
 }
 
-robot robotStore::getOwnRobot() const
-{
-    auto own_robot = std::find_if(_all_active_robots.begin(), _all_active_robots.end(),
-            [&](const robot& it){ return it.isOwnRobot(); });
-
-    if (own_robot == _all_active_robots.end())
-    {
-        std::ostringstream msg;
-        msg << "Error: own robot not found";
-        std::cerr << msg.str() << std::endl;
-        throw std::runtime_error(msg.str());
-    }
-    else
-    {
-        TRACE("getOwnRobot: ") << own_robot->str();
-    }
-
-    return *own_robot;
-}
-
 boost::optional<robot> robotStore::getRobotWithRole (const treeEnum& r) const
 {
     auto result = std::find_if(_all_active_robots.begin(), _all_active_robots.end(),
@@ -302,4 +328,3 @@ boost::optional<robot> robotStore::getRobotWithRole (const treeEnum& r) const
         return boost::none;
     }
 }
-

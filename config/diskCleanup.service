@@ -1,0 +1,11 @@
+[Unit]
+Description=Clean the disk from falcons generated logging
+
+[Service]
+User=robocup
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/home/robocup/falcons/code/scripts/diskCleanup
+
+[Install]
+WantedBy=multi-user.target

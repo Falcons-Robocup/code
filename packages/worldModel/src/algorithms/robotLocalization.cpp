@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,10 +16,11 @@
  *      Author: Tim Kouters
  */
 
-#include "int/algorithms/robotLocalization.hpp"
-#include "int/configurators/localizationConfigurator.hpp"
+#include <numeric>
 
-#include "FalconsCommon.h"
+#include "int/algorithms/robotLocalization.hpp"
+
+#include "falconsCommon.hpp"
 #include "cEnvironmentField.hpp" // field dimensions
 #include "cDiagnostics.hpp"
 #include "position2d.hpp"
@@ -76,9 +77,10 @@
 
 /*** begin public functions ***/
 
-robotLocalization::robotLocalization()
+robotLocalization::robotLocalization(const WorldModelConfig* wmConfig)
 {
     TRACE("creating robotLocalization");
+    _wmConfig = wmConfig;
     _lastTrackerId = NO_TRACKER_ID;
     _firstVisionTimestamp = TIMESTAMP_UNINITIALIZED;
     _currentTimestamp = TIMESTAMP_UNINITIALIZED;
@@ -87,11 +89,11 @@ robotLocalization::robotLocalization()
     _motorVelocitiesBuffer.clear();
     _trackers.clear();
     _isValid = 0;
+    _initializedInTTA = false;
     _currentPosVel.setCoordinateType(coordinateType::FIELD_COORDS); 
     _currentPosVel.setRobotID(getRobotNumber());
+    initializeTTA();
     _lastMovingTimestamp = 0.0;
-    // trace configuration parameters
-    localizationConfigurator::getInstance().traceAll();
     TRACE("robotLocalization created");
 }
 
@@ -104,10 +106,25 @@ robotLocalization::~robotLocalization()
 
 }
 
+void robotLocalization::initializeTTA()
+{
+    // get TTA configuration
+    areaInfo tta = cEnvironmentField::getInstance().getTTAarea();
+    if (fabs(tta.R.getMaxY()) > 0.1)
+    {
+        poiInfo poiTTA = cEnvironmentField::getInstance().getFieldPOI(P_TTA_3); // typically center
+        // don't need to fine-tune initial positions, we do not know the roles yet
+        // lock & obstacle avoidance should take care of avoiding collisions
+        _initializedInTTA = true;
+        // face forward to properly set playing direction upon getting first vision loc
+        _currentPosVel.setCoordinates(poiTTA.x, poiTTA.x, M_PI * 0.5);
+    }
+}
+
 void robotLocalization::addVisionMeasurement(robotMeasurementClass_t const &measurement)
 {
     traceVisionMeasurement(measurement);
-    float minimumConfidence = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::minimumConfidence);
+    float minimumConfidence = _wmConfig->getConfiguration().localization.minimumConfidence;
     if (measurement.getConfidence() > minimumConfidence)
     {
         _cameraMeasurementsBuffer.push_back(measurement);
@@ -312,6 +329,8 @@ Position2D robotLocalization::processMotorDisplacementsAndVelocities()
             // store FCS update in history buffer, for latency correction
             auto displacementMeasurementFcs = *it;
             displacementMeasurementFcs.setDeltaPosition(displacementFcs.x, displacementFcs.y, displacementFcs.phi);
+            // fix timestamp: in RTDBInputAdapter it is set to rtime::now, but this is not compatible with stimulator
+            displacementMeasurementFcs.setTimestamp(_currentTimestamp);
             _motorDisplacementsHistory.push_back(displacementMeasurementFcs);
             // back to position
             currentPos += Position2D(displacementFcs.x, displacementFcs.y, displacementFcs.phi);
@@ -369,8 +388,8 @@ void robotLocalization::distributeVisionMeasurements()
  */
 {
     // get configuration values
-    float minimumConfidence = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::minimumConfidence);
-    float trackerScoreAcceptanceThreshold = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::trackerScoreAcceptanceThreshold);
+    float minimumConfidence = _wmConfig->getConfiguration().localization.minimumConfidence;
+    float trackerScoreAcceptanceThreshold = _wmConfig->getConfiguration().localization.trackerScoreAcceptanceThreshold;
 
     // work through buffer
     //TRACE("#measurements=%d #trackers=%d", (int)_cameraMeasurementsBuffer.size(), (int)_trackers.size());
@@ -397,7 +416,7 @@ void robotLocalization::distributeVisionMeasurements()
             if (bestScore < trackerScoreAcceptanceThreshold)
             {
                 TRACE("stimulated tracker id=%d, score=%6.2f", bestTrackerId, bestScore);
-                _trackers[bestTrackerId].feedMeasurement(*itMeas, _currentTimestamp);
+                _trackers.at(bestTrackerId).feedMeasurement(*itMeas, _currentTimestamp);
             }
             else
             {
@@ -406,8 +425,9 @@ void robotLocalization::distributeVisionMeasurements()
                 TRACE("created new tracker id=%d, score was %6.2f", newTrackerId, bestScore);
 
                 // create and feed
-                _trackers[newTrackerId].setId(newTrackerId);
-                _trackers[newTrackerId].feedMeasurement(*itMeas, _currentTimestamp);
+                _trackers.insert( {newTrackerId, localizationTracker(_wmConfig)} );
+                _trackers.at(newTrackerId).setId(newTrackerId);
+                _trackers.at(newTrackerId).feedMeasurement(*itMeas, _currentTimestamp);
             }
         }
     }
@@ -454,7 +474,7 @@ void robotLocalization::checkIfMoving(Position2D const &deltaDisplacementPos)
 
 float robotLocalization::calculateWeightFactor()
 {
-    float w = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::visionOwnWeightFactor);
+    float w = _wmConfig->getConfiguration().localization.visionOwnWeightFactor;
     return w; // disable for now, vision phi noise is quite good already, this only adds complexity in tuning & analysis
     
     // reduce the influence of vision over time, but only if robot is standing still
@@ -476,13 +496,13 @@ void robotLocalization::applyBestCameraMeasurement(int bestTrackerId)
  * Latency correction is performed by 'playback' of encoder displacements since last camera measurement.
  */
 {
-    // need at least one tracker 
+    // need at least one tracker
     if (bestTrackerId == NO_TRACKER_ID)
     {
         return;
     }
     // it needs to have been stimulated at this tick
-    if (fabs(_trackers[bestTrackerId].getLastPokeTimestamp() - _currentTimestamp) > 0.001)
+    if (fabs(_trackers.at(bestTrackerId).getLastPokeTimestamp() - _currentTimestamp) > 0.001)
     {
         return;
     }
@@ -491,8 +511,8 @@ void robotLocalization::applyBestCameraMeasurement(int bestTrackerId)
     //TRACE("currentPosition = (%6.2f,%6.2f,%6.2f)", currentPosition.x, currentPosition.y, currentPosition.phi);
     Position2D newPosition;
     // get best camera measurement, match it with current position
-    _trackers[bestTrackerId].matchPosition(currentPosition);
-    Position2D visionPosition = _trackers[bestTrackerId].getPosition();
+    _trackers.at(bestTrackerId).matchPosition(currentPosition);
+    Position2D visionPosition = _trackers.at(bestTrackerId).getPosition();
     //TRACE(" visionPosition = (%6.2f,%6.2f,%6.2f)", visionPosition.x, visionPosition.y, visionPosition.phi);
     // check if tracker was switched
     if (bestTrackerId != _lastTrackerId)
@@ -504,14 +524,14 @@ void robotLocalization::applyBestCameraMeasurement(int bestTrackerId)
         }
         // take over vision position unweighted from the tracker, 
         // choose its best symmetrical score to prevent flips
-        _trackers[bestTrackerId].matchPosition(currentPosition);
-        newPosition = _trackers[bestTrackerId].getPosition();
+        _trackers.at(bestTrackerId).matchPosition(currentPosition);
+        newPosition = _trackers.at(bestTrackerId).getPosition();
         _lastTrackerId = bestTrackerId;
     }
     else // weighted update
     {
         // determine encoder update since vision timestamp
-        Position2D encoderUpdate = getEncoderUpdateSince(_trackers[bestTrackerId].getLastVisionTimestamp());
+        Position2D encoderUpdate = getEncoderUpdateSince(_trackers.at(bestTrackerId).getLastVisionTimestamp());
         //TRACE("  encoderUpdate = (%6.2f,%6.2f,%6.2f)", encoderUpdate.x, encoderUpdate.y, encoderUpdate.phi);
         // determine the most accurate position at the moment of the vision measurement
         Position2D playbackPosition = currentPosition - encoderUpdate;
@@ -550,6 +570,11 @@ void robotLocalization::determineIsValidAndOrient()
     //TRACE(">");
     // check timers
     bool currentIsValid = (gotVision() && timerSinceFirstVisionExpired());
+    // allow blind initialization in TTA
+    if (!_isValid && !currentIsValid && _initializedInTTA)
+    {
+        currentIsValid = true;
+    }
     if (!_isValid)
     {
         // only if not already have a lock
@@ -595,7 +620,7 @@ void robotLocalization::cleanup()
 
 bool robotLocalization::gotVision()
 {
-    return timeSinceLastVision() < localizationConfigurator::getInstance().get(localizationConfiguratorFloats::trackerTimeout);
+    return timeSinceLastVision() < _wmConfig->getConfiguration().localization.trackerTimeout;
 }
 
 double robotLocalization::timeSinceLastVision()
@@ -626,7 +651,7 @@ bool robotLocalization::timerSinceFirstVisionExpired()
     }
     // compare timestamp of first vision measurement since calibration with current timestamp
     double dt = _currentTimestamp - _firstVisionTimestamp;
-    bool result = (dt >= localizationConfigurator::getInstance().get(localizationConfiguratorFloats::settlingTime));
+    bool result = (dt >= _wmConfig->getConfiguration().localization.settlingTime);
     return result;
 }
 
@@ -725,9 +750,9 @@ void robotLocalization::traceVisionMeasurement(const robotMeasurementClass_t mea
 {
     // IO tracing for analysis, debugging and development
     // see also trace2testIO.sh in testsuite
-    //PTRACE("VISION %16.6f %9.6f %9.6f %9.6f %6.3f %d", 
-    //    double(measurement.getTimestamp()), measurement.getX(), measurement.getY(), measurement.getTheta(), 
-    //    measurement.getConfidence(), measurement.getCoordindateType());
+    // PTRACE("VISION %16.6f %9.6f %9.6f %9.6f %6.3f %d", 
+    //     double(measurement.getTimestamp()), measurement.getX(), measurement.getY(), measurement.getTheta(), 
+    //     measurement.getConfidence(), (int)measurement.getCoordindateType());
 }
 
 void robotLocalization::traceDisplacement(const robotDisplacementClass_t displacement)
@@ -740,10 +765,10 @@ void robotLocalization::traceDisplacement(const robotDisplacementClass_t displac
         coordinateTypeString = "ENCODER_FCS";
     }
     // TODO PTRACE
-    //TRACE("%s     %16.6f %9.5f %9.5f %9.5f %d %d",
-    //    coordinateTypeString.c_str(),
-    //    double(displacement.getTimestamp()), displacement.getdX(), displacement.getdY(), displacement.getdTheta(), 
-    //    displacement.getCoordinateType(), displacement.getDisplacementSource());
+    //TRACE("%s     %16.6f %9.5f %9.5f %9.5f %d %d\n",
+    //        coordinateTypeString.c_str(),
+    //        double(displacement.getTimestamp()), displacement.getdX(), displacement.getdY(), displacement.getdTheta(), 
+    //        displacement.getCoordinateType(), (int)displacement.getDisplacementSource());
 }
 
 void robotLocalization::traceVelocity(const robotVelocityClass_t velocity)
@@ -788,7 +813,7 @@ void robotLocalization::determineVisionStability()
     // initialize
     _diagData.visionNoiseXY = 0.0;
     _diagData.visionNoisePhi = 0.0;
-    int visionStabilityLength = localizationConfigurator::getInstance().get(localizationConfiguratorIntegers::visionStabilityLength);
+    int visionStabilityLength = _wmConfig->getConfiguration().localization.visionStabilityLength;
     // make sure list is long enough, otherwise no stats
     if ((int)_visStabList.size() < visionStabilityLength)
     {
@@ -818,16 +843,16 @@ void robotLocalization::gatherDiagnostics(int bestTrackerId)
     determineVisionStability();
     _diagData.numVisionCandidates = _cameraMeasurementsBuffer.size();
     _diagData.numMotorDisplacementSamples = _motorDisplacementsBuffer.size();
-    _diagData.visionLocAge = _trackers[bestTrackerId].getLocAge(_currentTimestamp);
-    // current position and velocity are logged on worldState level
-    Position2D visionPosition = _trackers[bestTrackerId].getPosition();
-    _diagData.bestVisionCandidate.x = visionPosition.x;
-    _diagData.bestVisionCandidate.y = visionPosition.y;
-    _diagData.bestVisionCandidate.Rz = visionPosition.phi;
     // _diagData.bestVisionCandidate not used anymore
     if (bestTrackerId != NO_TRACKER_ID)
     {
-        _diagData.confidence = _trackers[bestTrackerId].getVisionConfidence();
+        _diagData.visionLocAge = _trackers.at(bestTrackerId).getLocAge(_currentTimestamp);
+        // current position and velocity are logged on worldState level
+        Position2D visionPosition = _trackers.at(bestTrackerId).getPosition();
+        _diagData.bestVisionCandidate.x = visionPosition.x;
+        _diagData.bestVisionCandidate.y = visionPosition.y;
+        _diagData.bestVisionCandidate.Rz = visionPosition.phi;
+        _diagData.confidence = _trackers.at(bestTrackerId).getVisionConfidence();
     }
     else
     {
@@ -836,14 +861,18 @@ void robotLocalization::gatherDiagnostics(int bestTrackerId)
     _diagData.isValid = _isValid;
     // extra sanity checks
     robotClass_t posVel = getRobotPositionAndVelocity();
-    float speedLimitXY = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::speedLimitXY);
-    float speedLimitPhi = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::speedLimitPhi);
+    float speedLimitXY = _wmConfig->getConfiguration().localization.speedLimitXY;
+    float speedLimitPhi = _wmConfig->getConfiguration().localization.speedLimitPhi;
     float margin = 0.5;
     float positionLimitX = margin + 0.5 * cEnvironmentField::getInstance().getWidth();
     float positionLimitY = margin + 0.5 * cEnvironmentField::getInstance().getLength();
     if ((fabs(posVel.getX()) > positionLimitX) || (fabs(posVel.getY()) > positionLimitY))
     {
-        TRACE_INFO_TIMEOUT(10.0, "position (%6.1f, %6.1f) out of bounds", posVel.getX(), posVel.getY());
+        // allow robot position in TTA
+        if (!cEnvironmentField::getInstance().isPositionInArea(posVel.getX(), posVel.getY(), A_TTA))
+        {
+            TRACE_INFO_TIMEOUT(10.0, "position (%6.1f, %6.1f) out of bounds", posVel.getX(), posVel.getY());
+        }
     }
     Velocity2D vel(posVel.getVX(), posVel.getVY(), 0);
     if ((vel.size() > speedLimitXY) || (fabs(posVel.getVTheta()) > speedLimitPhi))

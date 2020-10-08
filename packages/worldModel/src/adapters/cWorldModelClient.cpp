@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -70,6 +70,18 @@ void cWorldModelClient::update()
     // update configuration
     _configAdapter.get(_config);
     _myTeamId = _config.teamId;
+}
+
+void cWorldModelClient::update(const int myRobotId)
+{
+    // Overrule my robot ID
+    _myRobotId = myRobotId;
+
+    // GET data from RTDB, store for all getters
+    update();
+
+    // Restore my robot ID
+    _myRobotId = getRobotNumber();
 }
 
 bool cWorldModelClient::isActive() const
@@ -181,9 +193,14 @@ float cWorldModelClient::closestObstacleDistance() const
     return sqrt(result2);
 }
 
-bool cWorldModelClient::getRobotState(T_ROBOT_STATE &robot, int robotId)
+bool cWorldModelClient::getRobotState(T_ROBOT_STATE &robot, const int robotId)
 {
-    if (robotId == _myRobotId)
+    return getRobotState(robot, robotId, _myRobotId);
+}
+
+bool cWorldModelClient::getRobotState(T_ROBOT_STATE &robot, const int robotId, const int myRobotId)
+{
+    if (robotId == myRobotId)
     {
         robot = _robotState;
         return true;

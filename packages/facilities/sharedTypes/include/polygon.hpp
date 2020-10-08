@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,10 +20,29 @@
 
 struct polygon
 {
-    int                  id;
     std::vector<vec2d>   points;
 
-    SERIALIZE_DATA_FIXED(id, points);
+    // this magic was found in geometry, polygon2D.cpp
+    // (original from internet somewhere??)
+    bool isPointInside(vec2d const &p)
+    {
+        bool retVal = false;
+        size_t i, j, nvert = points.size();
+        if (nvert > 2)
+        {
+            for (i = 0, j = nvert - 1; i < nvert; j = i++)
+            {
+                if (((points[i].y >= p.y ) != (points[j].y >= p.y) ) &&
+                    (p.x <= (points[j].x - points[i].x) * (p.y - points[i].y) / (points[j].y - points[i].y) + points[i].x))
+                {
+                    retVal = !retVal;
+                }
+            }
+        }
+        return retVal;
+    }
+
+    SERIALIZE_DATA_FIXED(points);
 };
 
 #endif

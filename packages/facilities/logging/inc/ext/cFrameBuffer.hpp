@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -34,6 +34,7 @@ public:
     
     void insert(rtime const &t, tLogFrame const &frame);
     bool getIndex(size_t idx, tLogFrame &frame);
+    size_t getSize();
     bool timeToIndex(rtime const &t, size_t &idx);
 
     void traceStats();

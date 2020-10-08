@@ -1204,13 +1204,13 @@ void doSendFrame(uint32_t frameCounter) {
 	strcpy(bmpFileName, "/dev/shm/raspiGrab.bmp");
 	strcpy(jpgFileName, "/dev/shm/raspiGrab.jpg");
 #else
-	sprintf(bmpFileName, "/home/robocup/tmp/raspiGrab%u.bmp", camIndex);
-	sprintf(jpgFileName, "/home/robocup/tmp/raspiGrab%u.jpg", camIndex);
+	sprintf(bmpFileName, "/tmp/raspiGrab%u.bmp", camIndex);
+	sprintf(jpgFileName, "/tmp/raspiGrab%u.jpg", camIndex);
 #endif
 
 	rgbToBmp(camIndex, grabFileName, bmpFileName, false, false);
 
-	char command[512];
+	char command[1024];
 	uint8_t compressionQuality = 85; // (~70kB), default 75 (~62kB)
 	sprintf(command, "cjpeg -optimize -quality %u -outfile %s %s", compressionQuality, jpgFileName, bmpFileName);
 

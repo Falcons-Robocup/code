@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -42,6 +42,7 @@ namespace Visualizer
         RefboxConfigAdapter * refboxConfig;
 
         std::vector<QAction*> _robotViewActions;
+        std::vector<QAction*> _robotHeightmapActions;
         std::vector<WidgetBase *> _widgets;
         PlaybackControl *_pbControl;
 

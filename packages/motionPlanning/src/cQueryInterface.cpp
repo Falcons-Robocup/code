@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #include "int/cQueryInterface.hpp"
 #include "tracing.hpp"
 
-void cQueryInterface::connect(cWorldModelInterface* wm)
+void cQueryInterface::connect(MP_WorldModelInterface* wm)
 {
     _wm = wm;
 }

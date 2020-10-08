@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -46,6 +46,7 @@
 #include "tracing.hpp"
 #include "cDiagnostics.hpp"
 #include <boost/algorithm/string.hpp>
+#include <json-c/json.h> // TODO messy to have in here..
 
 using namespace std;
 
@@ -97,6 +98,7 @@ bool CTCPIP_Client::Reconnect()
 {
     DisConnect();
     Connect2Host(_host, _port);
+    return true;
 }
 
 /****************************************
@@ -160,21 +162,16 @@ bool CTCPIP_Client::Connect2Host(const char * host, int port)
      * Side note: re refbox sender terminates each command with a '\n' character
      * but the are neverreceived by the ref_box_listener.
      */
-    char rcvd = '\0';
-    char msg[10];
-    int imsg = 0;
-    int len = 999;		// Any positive read result to get started.
-    memset(msg,0,sizeof(msg));
-    while (len>0 && imsg<1) {
-    	len = read(sockfd,&rcvd,1);
-    	msg[imsg++] = rcvd;
-    }
+    int BUFFERSIZE = 256;
+    char buffer[BUFFERSIZE] = {0};
+    int len = 999;        // Any positive read result to get started.
+    len = read(sockfd, buffer, BUFFERSIZE);
     if (len<=0 ) {
-		cout << "CTCPIP_Client (Connect2Host): Connection lost!" << endl;
-		return false;
-	}
-	cout << "CTCPIP_Client (Connect2Host): Got welcome message = [" << msg << "]." << endl;
-    TRACE("got welcome message %s", msg);
+        cout << "CTCPIP_Client (Connect2Host): Connection lost!" << endl;
+        return false;
+    }
+    cout << "CTCPIP_Client (Connect2Host): Got welcome message = [" << buffer << "]." << endl;
+    TRACE("got welcome message %s", buffer);
 
     /* Start receiving thread */
     TRACE("Start receiving thread");
@@ -213,197 +210,108 @@ void CTCPIP_Client::DisConnect()
     TRACE("DisConnected");
 }
 
+bool isTeamCommand(string command)
+{
+    if (command == "KICKOFF") return true;
+    if (command == "FREEKICK") return true;
+    if (command == "GOALKICK") return true;
+    if (command == "THROWIN") return true;
+    if (command == "CORNER") return true;
+    if (command == "PENALTY") return true;
+    if (command == "SUBSTITUTION") return true;
+    return false;
+}
+
+string decodeJSONcommand(string jsonCommand)
+{
+    // parse json
+    struct json_object *parsed_json = NULL, *j1 = NULL, *j2 = NULL, *j3 = NULL;
+    parsed_json = json_tokener_parse(jsonCommand.c_str());
+    json_object_object_get_ex(parsed_json, "command", &j1);
+    string jCommand = json_object_get_string(j1);
+    json_object_object_get_ex(parsed_json, "targetTeam", &j2);
+    string jTeamName;
+    if (j2 != NULL)
+    {
+        jTeamName = json_object_get_string(j2);
+    }
+    TRACE("parsed jCommand='%s' jTeamName='%s'", jCommand.c_str(), jTeamName.c_str());
+    // interpret and construct output
+    string result = jCommand;
+    if (isTeamCommand(jCommand))
+    {
+        if (jTeamName == "localhost" || jTeamName == "ASML Falcons"
+            || jTeamName == "224.16.32.127" || jTeamName == "224.16.32.74")
+            // IP/team mapping can be found in repo Refbox2015:mslrb2015/data/msl_teams.json
+        {
+            result += "_OWN";
+        }
+        else
+        {
+            result += "_OPP";
+        }
+        // handle substitution arguments
+        if (jCommand == "SUBSTITUTION")
+        {
+            json_object_object_get_ex(parsed_json, "robotID", &j3);
+            string robotIdStr = json_object_get_string(j3);
+            result += " " + robotIdStr;
+        }
+    }
+    // free json objects
+    // j1,j2,j3 do *not* need to be freed, as they have been assigned using json_object_object_get_ex
+    // See json_object_object_get_ex under https://json-c.github.io/json-c/json-c-0.10/doc/html/json__object_8h.html#af3f38b3395b1af8e9d3ac73818c3a936
+    if (parsed_json != NULL) json_object_put(parsed_json);
+    return result;
+}
+
+
 /****************************************
  * Listen()
  ***************************************/
 int CTCPIP_Client::Listen()
 {
     int result = -2;
-    char rcvd;
-    //  strcpy(rcvd, "init");
 
     while (true)
     {
-        result = read(sockfd, &rcvd, sizeof(rcvd));
+        int BUFFERSIZE = 1024;
+        char buffer[BUFFERSIZE] = {0};
+        TRACE("before read");
+        result = read(sockfd, &buffer, BUFFERSIZE);
+        TRACE("after read %d", result);
         if (result > 0)
         {
-            char ch = rcvd;
-            string strCommand("");
-
-            switch (ch)
+            // it can happen that multiple commands (for instance SUBSTITUTION) are glued into one -> iterate
+            int numUnprocessedBytes = result;
+            int numProcessedBytes = 0;
+            while (numUnprocessedBytes > 0)
             {
-                case COMM_STOP:
-                {
-                    strCommand = "COMM_STOP";
-                    break;
-                }
-                case COMM_START:
-                {
-                    strCommand = "COMM_START";
-                    break;
-                }
-                case COMM_FIRST_HALF:
-                {
-                    strCommand = "COMM_FIRST_HALF";
-                    break;
-                }
-                case COMM_HALF_TIME:
-                {
-                    strCommand = "COMM_HALF_TIME";
-                    break;
-                }
-                case COMM_SECOND_HALF:
-                {
-                    strCommand = "COMM_SECOND_HALF";
-                    break;
-                }
-                case COMM_END_GAME:
-                {
-                    strCommand = "COMM_END_GAME";
-                    break;
-                }
-                case COMM_GOAL_MAGENTA:
-                {
-                    strCommand = "COMM_GOAL_MAGENTA";
-                    break;
-                }
-                case COMM_GOAL_CYAN:
-                {
-                    strCommand = "COMM_GOAL_CYAN";
-                    break;
-                }
-                case COMM_SUBGOAL_MAGENTA:
-                    strCommand = "COMM_SUBGOAL_MAGENTA";
-                    break;
-                case COMM_SUBGOAL_CYAN:
-                {
-                    strCommand = "COMM_SUBGOAL_CYAN";
-                    break;
-                }
-                case COMM_RESTART:
-                {
-                    strCommand = "COMM_RESTART";
-                    break;
-                }
-                case COMM_KICKOFF_MAGENTA:
-                {
-                    strCommand = "COMM_KICKOFF_MAGENTA";
-                    break;
-                }
-                case COMM_KICKOFF_CYAN:
-                {
-                    strCommand = "COMM_KICKOFF_CYAN";
-                    break;
-                }
-                case COMM_FREEKICK_MAGENTA:
-                {
-                    strCommand = "COMM_FREEKICK_MAGENTA";
-                    break;
-                }
-                case COMM_FREEKICK_CYAN:
-                {
-                    strCommand = "COMM_FREEKICK_CYAN";
-                    break;
-                }
-                case COMM_GOALKICK_MAGENTA:
-                {
-                    strCommand = "COMM_GOALKICK_MAGENTA";
-                    break;
-                }
-                case COMM_GOALKICK_CYAN:
-                {
-                    strCommand = "COMM_GOALKICK_CYAN";
-                    break;
-                }
-                case COMM_THROWIN_MAGENTA:
-                {
-                    strCommand = "COMM_THROWIN_MAGENTA";
-                    break;
-                }
-                case COMM_THROWIN_CYAN:
-                {
-                    strCommand = "COMM_THROWIN_CYAN";
-                    break;
-                }
-                case COMM_CORNER_MAGENTA:
-                {
-                    strCommand = "COMM_CORNER_MAGENTA";
-                    break;
-                }
-                case COMM_CORNER_CYAN:
-                {
-                    strCommand = "COMM_CORNER_CYAN";
-                    break;
-                }
-                case COMM_PENALTY_MAGENTA:
-                {
-                    strCommand = "COMM_PENALTY_MAGENTA";
-                    break;
-                }
-                case COMM_PENALTY_CYAN:
-                {
-                    strCommand = "COMM_PENALTY_CYAN";
-                    break;
-                }
-                case COMM_DUMMY:
-                {
-                    strCommand = "COMM_DUMMY";
-                    break;
-                }
-                case COMM_DROPPED_BALL:
-                {
-                    strCommand = "COMM_DROPPED_BALL";
-                    break;
-                }   
-                default:
-                {
-                    TRACE("Unknown command received from RefBox");
-                    TRACE("input command =%c", ch);
-                    strCommand = "unknown command";
-                    break;
-                }
-            }
+                string jsonCommand(buffer + numProcessedBytes);
+                TRACE("input json command = '%s'", jsonCommand.c_str());
 
-            TRACE("input command =%s", strCommand.c_str());
+                // decode JSON
+                string strCommand = decodeJSONcommand(jsonCommand);
 
-            // translate CYAN and MAGENTA by OWN and OPP, 
-            // so our robots can stay unaware of their teamcolor.
-            TRACE("find  cyan=%d , magenta=%d ", strCommand.find("CYAN", 0), strCommand.find("MAGENTA", 0));
-            int fC = strCommand.find("CYAN", 0);
-            int fM = strCommand.find("MAGENTA", 0);
-            if (( fC > 0)|| (fM > 0)) 
-            {
-                std::vector<std::string> RBCommand;
-                boost::split(RBCommand, strCommand, boost::is_any_of("_"),
-                boost::token_compress_on);
-                TRACE("Command split 1=%s 2=%s 3=%s", RBCommand[0].c_str(),
-                RBCommand[1].c_str(), RBCommand[2].c_str());
-                TRACE("Team color =%s", _owncolor.c_str());
-                if (RBCommand[2] == _owncolor)
+                TRACE("output command =%s", strCommand.c_str());
+                // echo on stdout
+                cout << "CTCPIP_Client (Connect2Host): command: " << strCommand << endl;
+
+                if (strCommand != "unknown command")
                 {
-                    RBCommand[2] = "OWN";
-                } 
-                else if (RBCommand[2] == _oppcolor) 
-                {
-                    RBCommand[2] = "OPP";
+                    // trigger the callback
+                    TRACE("triggering the callback");
+                    _callback(strCommand.c_str());
                 }
-                strCommand = RBCommand[0] + "_" + RBCommand[1] + "_" + RBCommand[2];
-            }
 
-            TRACE("output command =%s", strCommand.c_str());
-            // echo on stdout
-            cout << "CTCPIP_Client (Connect2Host): command: " << strCommand << endl;
-
-            if (strCommand != "unknown command")
-            {
-                // trigger the callback
-                TRACE("triggering the callback");
-                _callback(strCommand.c_str());
+                // update byte counts, don't forget trailing '\0'
+                numProcessedBytes += jsonCommand.size()+1;
+                numUnprocessedBytes -= jsonCommand.size()+1;
             }
         }
         else if (result == 0)
         {
-            cout << "CTCPIP_Client (Listen): last received msg was '" << rcvd << "'." << endl;
+            cout << "CTCPIP_Client (Listen): last received msg was '" << buffer << "'." << endl;
             return result;
         }
         else if (result < 0)
@@ -419,24 +327,24 @@ int CTCPIP_Client::Listen()
  * Send()
  ***************************************/
 void CTCPIP_Client::Send(uint8_t *buf, int packetSize) {
-	int bytesTransmitted, bytesTotal = 0;
-	do
-	{
-		if( ( bytesTransmitted = send( sockfd, buf, packetSize-bytesTotal, MSG_NOSIGNAL ) ) < 0 )
-		{
-			TRACE_ERROR( "errno message '%s' when transmitting data\n", strerror(errno) );
-			Reconnect();
-		}
-		bytesTotal += bytesTransmitted;
-	}
-	// in case of an unexpected disconnect the function returns zero
-	while( ( bytesTransmitted > 0 ) && ( bytesTotal < packetSize ) );
-	if( bytesTransmitted == 0 ) {
-		TRACE_ERROR( "errno message '%s' when transmitting data (unexpected disconnect)\n", strerror(errno) );
-	}
-	if( bytesTransmitted < 0 ) {
-		TRACE_ERROR( "errno message '%s' when transmitting data (connection error)\n", strerror(errno) );
-	}
+    int bytesTransmitted, bytesTotal = 0;
+    do
+    {
+        if( ( bytesTransmitted = send( sockfd, buf, packetSize-bytesTotal, MSG_NOSIGNAL ) ) < 0 )
+        {
+            TRACE_ERROR( "errno message '%s' when transmitting data\n", strerror(errno) );
+            Reconnect();
+        }
+        bytesTotal += bytesTransmitted;
+    }
+    // in case of an unexpected disconnect the function returns zero
+    while( ( bytesTransmitted > 0 ) && ( bytesTotal < packetSize ) );
+    if( bytesTransmitted == 0 ) {
+        TRACE_ERROR( "errno message '%s' when transmitting data (unexpected disconnect)\n", strerror(errno) );
+    }
+    if( bytesTransmitted < 0 ) {
+        TRACE_ERROR( "errno message '%s' when transmitting data (connection error)\n", strerror(errno) );
+    }
 }
 
 void CTCPIP_Client::setOwnColor(std::string color)

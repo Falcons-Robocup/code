@@ -1,0 +1,166 @@
+#!/usr/bin/env python3
+
+import argparse
+import dateutil.parser
+import json
+import re
+import textwrap
+import falconspy
+from datetime import timedelta
+
+default_config_file = falconspy.FALCONS_PATH + '/matchLogs2020/video-timesync.json'
+
+def load_config(filename, date=None):
+    # Read the config file and load the config for the
+    # specified match date. If no date is specified,
+    # the most recent match is chosen
+
+    with open(filename) as fh:
+        config = json.loads(fh.read())
+
+    base_url = config['base_url']
+
+    # Find the match for the specified date
+    selected_match = {}
+    for match in config['matches']:
+        if date == match['date']:
+            selected_match = match
+
+        # No date specified, keep the most recent match
+        if date is None:
+            if 'date' not in selected_match or match['date'] > selected_match['date']:
+                selected_match = match
+
+    if not selected_match:
+        raise Exception("The specified date was not found in the config")
+
+    # Calculate the video start time for all videos
+    for video in selected_match['videos']:
+        reference_time = dateutil.parser.parse(video['reference_time'])
+        video_timestamp = timedelta(seconds=video['reference_timestamp'])
+        video['start_time'] = reference_time - video_timestamp
+
+    return base_url, selected_match
+
+
+def read_markdown(filename):
+    with open(filename) as fh:
+        content = fh.read()
+    return content
+
+
+def get_markdown_timestamps(content):
+    # Find all timestamps mentioned in the wiki page.
+    # E.g.:
+    #   21:04:25
+    #   21:09:01.5
+    #   21:13:16.08
+    #   [21:16:43](https://www.youtube.com/watch?v=gULOpfXCpbA&t=810)
+
+    base_expression = r'[0-2][0-9]:[0-5][0-9]:[0-9][0-9]\.*[0-9]*'
+    link_expression = r'\[(' + base_expression + r')\]\([^\)]*\)'
+
+    base_pattern = re.compile(base_expression)
+    link_pattern = re.compile(link_expression)
+
+    timestamps = {}
+    for match in re.finditer(base_pattern, content):
+        if match:
+            text = match.group(0)
+            timestamps[text] = text
+
+    for match in re.finditer(link_pattern, content):
+        if match:
+            hyperlinked_text = match.group(0)
+            text = match.group(1)
+            timestamps[text] = hyperlinked_text
+
+    return timestamps
+
+
+def get_closest_video(match, timestamp):
+    # Find the video that most likely captures the given timestamp
+    # The video with the most recent start time, but still occured
+    # before the given timestamp, is assumed to capture the event
+    closest_video = {}
+
+    for video in match['videos']:
+        if video['start_time'] > timestamp:
+            continue
+
+        if 'start_time' not in closest_video or video['start_time'] > closest_video['start_time']:
+            closest_video = video
+
+    return closest_video
+
+
+def build_url(base_url, match, timestamp):
+    # Build the YouTube url based on the given timestamp
+    # and the match data
+    # E.g.:
+    #   21:13:16.08 becomes https://www.youtube.com/watch?v=gULOpfXCpbA&t=604
+
+    timestamp = dateutil.parser.parse(timestamp)
+    video = get_closest_video(match, timestamp)
+
+    video_id = video['id']
+    relative_timestamp = (timestamp - video['start_time']).total_seconds()
+    relative_timestamp = int(relative_timestamp)
+
+    return "{}v={}&t={}".format(base_url, video_id, relative_timestamp)
+
+
+def build_hyperlinked_timestamp(content, text_to_replace, timestamp, url):
+    # Convert the timestamp into a hyperlink to the video, and replace
+    # all occurences in the content with the hyperlink.
+    # E.g.:
+    #  21:13:16.08 becomes [21:13:16.08](https://www.youtube.com/watch?v=gULOpfXCpbA&t=604)
+
+    hyperlinked_timestamp = "[{}]({})".format(timestamp, url)
+    content = content.replace(text_to_replace, timestamp)
+    return content.replace(timestamp, hyperlinked_timestamp)
+
+
+def write_markdown(filename, content):
+    with open(filename, 'w') as fh:
+        fh.write(content)
+
+
+def main(args):
+    base_url, match = load_config(args.config_file, args.date)
+
+    content = read_markdown(args.markdown_file)
+
+    timestamps = get_markdown_timestamps(content)
+
+    for timestamp, text_to_replace in timestamps.items():
+        url = build_url(base_url, match, timestamp)
+        content = build_hyperlinked_timestamp(content, text_to_replace, timestamp, url)
+
+    write_markdown(args.markdown_file, content)
+
+
+if __name__ == "__main__":
+    description = textwrap.dedent("""
+    Convert the timestamps in the wiki markdown file into hyperlinks which point
+    to the actual event in the match YouTube video.
+
+    In order to determine the timestamp to be used for the video, a reference time
+    and timestamp has to be specified. This is then used to calculate the start time
+    of the video, which in turn is used to calculate the video timestamps.
+
+    The config file contains this information for multiple of matches. By default
+    it will use the config for the most recent match.
+
+    By default, the following config file is used:
+      {}
+
+    """.format(default_config_file))
+
+    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-c', '--config-file', metavar='FILE', help='use a different config file than the default', default=default_config_file)
+    parser.add_argument('-d', '--date', help='use details from a specific match date', default=None)
+    parser.add_argument('markdown_file', help='the markdown file that needs to be converted')
+
+    args = parser.parse_args()
+    main(args)

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -30,27 +30,27 @@
 
 struct raspiStatSingle {
 
-    uint32_t           frameCounter;
+    uint32_t           frameCounter = 0;
 
-    uint16_t           cpuUptime;
-    uint16_t           grabberUptime;
-    uint16_t           systemUptime;
-    uint16_t           analyzeUptime;
+    uint16_t           cpuUptime = 0;
+    uint16_t           grabberUptime = 0;
+    uint16_t           systemUptime = 0;
+    uint16_t           analyzeUptime = 0;
 
-    uint8_t            rebootReceivedAge;
+    uint8_t            rebootReceivedAge = 0;
 
-    float              cpuLoad;
+    float              cpuLoad = 0.0;
 
-    uint8_t            cpuTemp;
-    uint8_t            cmosTemp;
-    uint8_t            gpuTemp;
+    uint8_t            cpuTemp = 0;
+    uint8_t            cmosTemp = 0;
+    uint8_t            gpuTemp = 0;
 
-    bool               underVoltage;
-    bool               underVoltageOccurred;
-    bool               cpuThrottle;
-    bool               cpuThrottleOccurred;
-    bool               cpuFrequencyCap;
-    bool               cpuFrequencyCapOccurred;
+    bool               underVoltage = false;
+    bool               underVoltageOccurred = false;
+    bool               cpuThrottle = false;
+    bool               cpuThrottleOccurred = false;
+    bool               cpuFrequencyCap = false;
+    bool               cpuFrequencyCapOccurred = false;
     
     SERIALIZE_DATA(frameCounter, cpuUptime, grabberUptime, systemUptime, analyzeUptime, rebootReceivedAge, cpuLoad, cpuTemp, cmosTemp, gpuTemp, underVoltage, underVoltageOccurred, cpuThrottle, cpuThrottleOccurred, cpuFrequencyCap, cpuFrequencyCapOccurred);
 };
@@ -59,21 +59,21 @@ struct multiCamStatistics {
     uniqueObjectID     identifier;
     std::vector<raspiStatSingle> raspi;
     
-    uint8_t            ballAmount;
-    uint8_t            obstacleAmount;
+    uint8_t            ballAmount = 0;
+    uint8_t            obstacleAmount = 0;
     
-    uint16_t           ballPossessionPixels;
+    uint16_t           ballPossessionPixels = 0;
     
-    uint16_t           linePoints;
+    uint16_t           linePoints = 0;
     
-    float              multiCamUptime;
-    uint64_t           multiCamTime;
+    float              multiCamUptime = 0.0;
+    uint64_t           multiCamTime = 0;
     
-    float              cam0Fps;
-    float              localizationFps;
+    float              cam0Fps = 0.0;
+    float              localizationFps = 0.0;
     
-    uint32_t           cam0Frames;
-    uint32_t           localizationFrames;
+    uint32_t           cam0Frames = 0;
+    uint32_t           localizationFrames = 0;
     
     
     SERIALIZE_DATA(identifier, raspi, ballAmount, obstacleAmount, ballPossessionPixels, linePoints, multiCamUptime, multiCamTime, cam0Fps, localizationFps, cam0Frames, localizationFrames);

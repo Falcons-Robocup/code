@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,6 +25,8 @@
 
 #include "diagWorldModel.hpp"
 
+#include "int/adapters/configurators/WorldModelConfig.hpp"
+
 #include "int/types/robot/robotType.hpp"
 #include "obstacleMeasurement.hpp"
 #include "int/administrators/obstacleDiscriminator.hpp"
@@ -34,7 +36,7 @@
 class obstacleAdministrator
 {
     public:
-        obstacleAdministrator();
+        obstacleAdministrator(WorldModelConfig& wmConfig);
         virtual ~obstacleAdministrator();
 
         virtual void appendObstacleMeasurements(const std::vector<obstacleMeasurement> measurements);
@@ -55,6 +57,8 @@ class obstacleAdministrator
         robotClass_t _ownPos;
         std::vector<robotClass_t> _teamMembers;
         std::vector<obstacleClass_t> _resultObstacles;
+
+        WorldModelConfig& _wmConfig;
 
         virtual void cleanUpTimedOutObstacleMeasurements(rtime const timeNow);
 

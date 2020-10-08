@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,7 +9,7 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  """ 
- #!/usr/bin/env python
+ #!/usr/bin/env python3
 # Author: Jan Feitsma
 # Date: 2018-09-23
 #
@@ -28,11 +28,12 @@
 
 
 from __future__ import print_function
+import argparse
 import signal
 import pygame
 import sys, time
 import pause, datetime
-sys.path.append("/home/robocup/falcons/code/packages/facilities/rtdb3/src/tools/rtdb2Tools")
+import falconspy
 from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
 
 
@@ -105,13 +106,10 @@ class Xbox360Controller:
         joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         if len(joysticks) < 1:
             raise Exception("no joysticks")
-        if len(joysticks) > 1:
-            raise Exception("too many joysticks")
+        for idx in range(len(joysticks)):
+            print("detected joystick {}: {}".format(idx, joysticks[index].get_name()))
+        print("using joystick {}".format(index))
         self.joystick = joysticks[index]
-        expected_name = "Microsoft X-Box 360 pad"
-        got_name = self.joystick.get_name()
-        if got_name != expected_name:
-            raise Exception("was expecting '{}', got '{}'".format(expected_name, got_name))
         self.joystick.init()
         self.frequency = 30.0 # Hz
         
@@ -213,16 +211,16 @@ class Xbox360Controller:
             pass
 
 class xRelay:
-    def __init__(self):
+    def __init__(self, robotId, joystickIndex=0):
         # setup RTDB
-        self.robotId = 2 # TODO: argparse etc, or toggle via select button?
+        self.robotId = robotId # TODO: allow live toggle via select button?
         self.rtdb2Store = RtDB2Store(RTDB2_DEFAULT_PATH, False)
         self.rtdb2Store.refresh_rtdb_instances()
         # ballhandler enable/disable events
         self.enable_bh = False
         self.toggle_bh()
         # setup controller callbacks
-        self.controller = Xbox360Controller()
+        self.controller = Xbox360Controller(joystickIndex)
         self.controller.button_b.when_pressed = self.toggle_bh
         self.controller.callback = self.process_state
         # motion limiters and timing
@@ -302,7 +300,7 @@ class xRelay:
             self.action = "shootAtGoal"
         # serialize and put into RTDB
         item = [self.robotId, [self.vx, self.vy, self.vrz], self.enable_bh, self.kicker_height, self.kicker_power, self.action]
-        self.rtdb2Store.put(0, "JOYSTICK_CONTROL", item)
+        self.rtdb2Store.put(0, "JOYSTICK_CONTROL_" + str(self.robotId), item)
         # shooting?
         if self.kicker_power > 0.0:
             time.sleep(0.5) # wait for ball to leave
@@ -310,10 +308,10 @@ class xRelay:
     def run(self):
         self.controller.run()
             
-def main():
+def main(robotId, joystickIndex=0):
     # RTDB relay
     if 1:
-        xRelay().run()
+        xRelay(robotId, joystickIndex).run()
     else:
         # dev mode: echo controller state change
         controller = Xbox360Controller()
@@ -322,6 +320,14 @@ def main():
         controller.run()
         
 if __name__ == "__main__":
+    # Argument parsing.
+    descriptionTxt = 'Control given robot using a XBOX controller.\n(Or any other regular controller, tooling to be generalized.)\n'
+    exampleTxt = 'Example: driveByXbox360Controller.py 2\n'
+    parser     = argparse.ArgumentParser(description=descriptionTxt, epilog=exampleTxt, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-i', '--index', help='joystick index to use', type=int, default=0)
+    parser.add_argument('robotId', help='target robot', type=int)
+    args       = parser.parse_args()
+
     # execute only if run as a script
-    main()
+    main(args.robotId, args.index)
     

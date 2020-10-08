@@ -1,0 +1,38 @@
+# initial scene when full (5 versus 5) simulation starts
+robots:
+- robotId: 1
+  position: [-4.0, -2.0, 1.5708]
+  velocity: [0.0, 0.0, 0.0]
+- robotId: 2
+  position: [-2.0, -2.0, 1.5708]
+  velocity: [0.0, 0.0, 0.0]
+- robotId: 3
+  position: [0.0, -2.0, 1.5708]
+  velocity: [0.0, 0.0, 0.0]
+- robotId: 4
+  position: [2.0, -2.0, 1.5708]
+  velocity: [0.0, 0.0, 0.0]
+- robotId: 5
+  position: [4.0, -2.0, 1.5708]
+  velocity: [0.0, 0.0, 0.0]
+opponents:
+- robotId: 1
+  position: [-4.0, 2.0, 4.7124]
+  velocity: [0.0, 0.0, 0.0]
+- robotId: 2
+  position: [-2.0, 2.0, 4.7124]
+  velocity: [0.0, 0.0, 0.0]
+- robotId: 3
+  position: [0.0, 2.0, 4.7124]
+  velocity: [0.0, 0.0, 0.0]
+- robotId: 4
+  position: [2.0, 2.0, 4.7124]
+  velocity: [0.0, 0.0, 0.0]
+- robotId: 5
+  position: [4.0, 2.0, 4.7124]
+  velocity: [0.0, 0.0, 0.0]
+balls:
+- position: [0.0, 0.0, 0.0]
+  velocity: [0.0, 0.0, 0.0]
+obstacles: []
+

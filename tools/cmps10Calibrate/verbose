@@ -1,9 +1,0 @@
-#!/bin/bash
-
-rm -f cmps10Calibrate
-gcc cmps10Calibrate.c -o cmps10Calibrate
-sync
-for ii in {0..9}
-do
-	./cmps10Calibrate -d $ii
-done

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,8 +19,9 @@
 #ifndef ROBOT_CAPABILITIES_HPP_
 #define ROBOT_CAPABILITIES_HPP_
 
-const static float ROBOT_DIAMETER = 0.5;
-const static float ROBOT_RADIUS = ROBOT_DIAMETER * 0.5;
+#include "falconsCommon.hpp" // for ROBOT_RADIUS
+// TODO: this robotCapabilities header + ROBOT_RADIUS from FalconsCommon deserve their own common header&location?
+
 const static float ROBOT_KICKER_SPEED_SCALING = 0.05;
 const static float ROBOT_MINIMAL_KICKING_SPEED = 0.01;
 const static float ROBOT_MINIMAL_MOVING_SPEED = 0.01;

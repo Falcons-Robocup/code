@@ -52,7 +52,7 @@ while true; do
       ipAddress=`hostname -I`
       echo "SYSTEM    : $dateString IP address $ipAddress"
 
-      if [[ $ipAddress == "10.0.0."* ]]; then
+      if [[ $ipAddress == *10.0.0.* ]]; then
           echo "SYSTEM    : IP address found, now continue"
          ipFound=true
       else
@@ -62,18 +62,18 @@ while true; do
 
    # use the IP address to tell the system process which camera id it shall use to identify itself to the x86-64
    camIndex=""
-   if [ $ipAddress == "10.0.0.70" ]; then
+   if [[ $ipAddress == *10.0.0.70* ]]; then
       camIndex=0
-   elif [ $ipAddress == "10.0.0.71" ]; then
+   elif [[ $ipAddress == *10.0.0.71* ]]; then
       camIndex=1
-   elif [ $ipAddress == "10.0.0.72" ]; then
+   elif [[ $ipAddress == *10.0.0.72* ]]; then
       camIndex=2
-   elif [ $ipAddress == "10.0.0.73" ]; then
+   elif [[ $ipAddress == *10.0.0.73* ]]; then
       camIndex=3
    else
       echo "#####################################################################"
-      echo "ANALYZER  : ERROR cannot determine camIndex from ip address $ipAddress"
-      echo "ANALYZER  : wait 10 seconds before rebooting"
+      echo "SYSTEM    : ERROR cannot determine camIndex from ip address $ipAddress"
+      echo "SYSTEM    : wait 10 seconds before rebooting"
       ./sleepKillReboot 10 &
 
       # prevent restarting this script (it will be killed by the sleepKillReboot)

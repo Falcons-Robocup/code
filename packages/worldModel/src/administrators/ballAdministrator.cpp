@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,13 +20,12 @@
 
 #include <algorithm>
 
-#include "int/configurators/administrationConfigurator.hpp"
-#include "int/configurators/ballTrackerConfigurator.hpp"
-
 #include "cDiagnostics.hpp"
 #include "tracing.hpp"
 
-ballAdministrator::ballAdministrator()
+ballAdministrator::ballAdministrator(WorldModelConfig& wmConfig)
+    : _wmConfig(wmConfig),
+      _ballDiscriminator(wmConfig)
 /*!
  * \brief Administrates ball measurements
  *
@@ -176,7 +175,7 @@ void ballAdministrator::cleanUpTimedOutBallMeasurements(rtime const timeNow)
     size_t origSize = _ballMeasurements.size();
     try
     {
-        double maxTimeToLive = administrationConfigurator::getInstance().getBallTimeToLive();
+        double maxTimeToLive = _wmConfig.getConfiguration().administration.ball_timeout;
 
         for(auto i = _ballMeasurements.begin(); i != _ballMeasurements.end(); )
         {

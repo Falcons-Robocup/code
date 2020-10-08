@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,10 +18,10 @@
 
 #include "tracing.hpp"
 #include "ext/RTDBConfigAdapter.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "cDiagnostics.hpp"
 
-boost::mutex g_mutex;
+boost::mutex g_mutex_wm;
 
 
 RTDBConfigAdapter::RTDBConfigAdapter()
@@ -42,25 +42,25 @@ RTDBConfigAdapter::~RTDBConfigAdapter()
 
 void RTDBConfigAdapter::loadYAML(std::string const &yamlFile)
 {
-    boost::mutex::scoped_lock l(g_mutex);
+    boost::mutex::scoped_lock l(g_mutex_wm);
     // first do a put to make sure the structure of the data is in place
     // (this is read by the python script and used when mapping yaml to)
     _rtdb->put(_configKey, &_config);
 
     // call a python script which can load YAML and put on top of this data
-    std::string command = std::string("python ~/falcons/code/scripts/loadYAML.py -a ") + std::to_string(_myRobotId)
+    std::string command = std::string("python3 ") + pathToScripts() + "/loadYAML.py -a " + std::to_string(_myRobotId)
         + " -k " + _configKey + " -p " + _rtdb->getPath() + " " + yamlFile;
     tprintf("command: %s", command.c_str());
     int r = system(command.c_str());
     if (r != 0)
     {
-        TRACE_ERROR("something went wrong reading while initializing %s", _configKey);
+        TRACE_ERROR("something went wrong reading while initializing %s", _configKey.c_str());
     }
 }
 
 void RTDBConfigAdapter::get(T_CONFIG_WORLDMODELSYNC &config)
 {
-    boost::mutex::scoped_lock l(g_mutex);
+    boost::mutex::scoped_lock l(g_mutex_wm);
     config = _config;
 }
 
@@ -78,7 +78,7 @@ void RTDBConfigAdapter::loopUpdate()
 
 void RTDBConfigAdapter::update()
 {
-    boost::mutex::scoped_lock l(g_mutex);
+    boost::mutex::scoped_lock l(g_mutex_wm);
     // serialize current config, so we can do a string-compare
     std::string currentConfigSerialized;
     RtDB2Serializer::serialize(_config, currentConfigSerialized);

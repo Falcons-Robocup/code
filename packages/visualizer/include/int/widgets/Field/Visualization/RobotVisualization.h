@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -50,6 +50,10 @@ public:
     void setPath(std::vector<PositionVelocity>& path);
     void setPathPlanningEnabled(bool enabled); // Allows enabling/disabling of path processing
     void setStatus(int status);
+    void hideGhosts();
+    void setGhostPosition(int ghostId, PositionVelocity const&posvel);
+    void showArrow();
+    void hideArrow();
 
 Q_SIGNALS:
     void signalPlannedPathChanged(std::vector<PositionVelocity>& path);
@@ -58,8 +62,10 @@ public Q_SLOTS:
     void blink();
 
 private:
+    int _robotID;
     bool _pathPlanningEnabled;
     vtkSmartPointer<vtkActor> _actor;
+    std::vector<vtkSmartPointer<vtkActor>> _pathGhosts;
     QTimer* _blinkTimer = NULL;
     void blinkOn();
     void blinkOff();

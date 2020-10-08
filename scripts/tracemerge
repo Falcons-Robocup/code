@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 import sys, os
 import argparse
@@ -26,11 +26,11 @@ def run():
                 unsortedlines.append(line)
         except:
             unsortedlines.append(line)
-    # print result
+    # print(result)
     for line in unsortedlines:
-        print line
+        print(line)
     for tstamp in sorted(sortedlines.keys()):
-        print sortedlines[tstamp]
+        print(sortedlines[tstamp])
 
 
 

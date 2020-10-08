@@ -1,45 +1,32 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 3.5.1)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-set(ROS_BUILD_TYPE Release)
+project(Refbox)
 
-rosbuild_init()
+find_package(Boost COMPONENTS system thread REQUIRED QUIET)
+find_package(Facilities)
+find_package(WorldModel)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+include_directories("include")
 
 #set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
 
-#add dynamic reconfigure api
-rosbuild_find_ros_package(dynamic_reconfigure)
-include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-gencfg()
-
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++11")
-
-rosbuild_add_library(refboxFeedback src/logger/cPacketRefboxLogger.cpp)
+add_library(refboxFeedback src/logger/cPacketRefboxLogger.cpp)
 target_link_libraries(refboxFeedback json-c)
 
-rosbuild_add_executable(refboxRelay src/main.cpp src/cRefboxRelay.cpp src/RTDBAdapterLogging.cpp src/TCPIP_client.cpp)
-target_link_libraries(refboxRelay refboxFeedback)
-rosbuild_link_boost(refboxRelay system thread)
+add_executable(refboxRelay src/main.cpp src/cRefboxRelay.cpp src/RTDBAdapterLogging.cpp src/TCPIP_client.cpp)
+target_link_libraries(refboxRelay refboxFeedback ${Boost_LIBRARIES} wmClient Tracing rtdb2 diagnostics)
 
 
 #############################
 # Testers
 ##############################
-rosbuild_add_gtest(cPacketRefBoxLoggerTests tst/cPacketRefBoxLoggerTests.cpp TIMEOUT 10)
-target_link_libraries(cPacketRefBoxLoggerTests refboxFeedback)
-
+add_executable(cPacketRefBoxLoggerTests tst/cPacketRefBoxLoggerTests.cpp)
+target_link_libraries(cPacketRefBoxLoggerTests refboxFeedback gtest pthread)
+add_test(cPacketRefBoxLoggerTests cPacketRefBoxLoggerTests)
+set_tests_properties(cPacketRefBoxLoggerTests PROPERTIES TIMEOUT 10)

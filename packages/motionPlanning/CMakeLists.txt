@@ -1,87 +1,65 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 3.5.1)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-set(ROS_BUILD_TYPE Release)
-#set(ROS_BUILD_TYPE Debug)
+project(MotionPlanning)
 
-rosbuild_init()
+find_package(Boost COMPONENTS system thread REQUIRED QUIET)
+find_package(Facilities)
+find_package(PathPlanning)
+find_package(WorldModel)
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
+include_directories("include")
 
-#add dynamic reconfigure api
-rosbuild_find_ros_package(dynamic_reconfigure)
-include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-gencfg()
+add_library(mpClient src/adapters/cMotionPlanningClient.cpp
+                     src/cMotionPlanner.cpp)
+target_link_libraries(mpClient wmClient PathPlanning)
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+add_library(mpAdapters    src/adapters/MP_RTDBInputAdapter.cpp
+                          src/adapters/MP_RTDBOutputAdapter.cpp)
+target_link_libraries(mpAdapters FalconsCommon)
 
-rosbuild_add_library(mpClient src/adapters/cMotionPlanningClient.cpp)
-target_link_libraries(mpClient wmClient)
+add_library(mpConfigAdapter  src/adapters/configuration/cConfigMotionPlanningData.cpp)
+target_link_libraries(mpConfigAdapter FalconsCommon)
 
-rosbuild_add_library(mpAdapters    src/adapters/cRTDBInputAdapter.cpp
-                                   src/adapters/cRTDBOutputAdapter.cpp)
-#target_link_libraries(stores)
+add_library(mpInterfaces  src/cPathPlanningInterface.cpp
+                          src/cBallHandlingInterface.cpp
+                          src/cQueryInterface.cpp)
+target_link_libraries(mpInterfaces Tracing ${Boost_LIBRARIES} wmClient)
 
-rosbuild_add_library(mpConfigAdapter  src/adapters/configuration/cConfigMotionPlanningData.cpp
-                                      src/adapters/configuration/configuration.cpp
-                                      src/stores/configurationStore.cpp)
-                               
-rosbuild_add_library(mpInterfaces  src/cPathPlanningInterface.cpp
-                                   src/cBallHandlingInterface.cpp
-                                   src/cQueryInterface.cpp)
+add_library(mpTypes       src/types/cForbiddenAreaType.cpp)
 
-rosbuild_add_library(mpTypes       src/types/cForbiddenAreaType.cpp)
+add_library(mpActions     src/MP_AbstractAction.cpp
+                          src/cTimer.cpp
+                          src/algorithms/intercept.cpp
+                          src/MP_ActionKick.cpp
+                          src/MP_ActionShootAtTarget.cpp
+                          src/MP_ActionPassToTarget.cpp
+                          src/MP_ActionMoveToTarget.cpp
+                          src/MP_ActionGetBall.cpp
+                          src/MP_ActionInterceptBall.cpp
+                          src/MP_ActionStop.cpp
+                          src/MP_ActionTurnAwayFromOpponent.cpp
+                          src/MP_ActionKeeperMove.cpp)
+target_link_libraries(mpActions falconsGeometry FalconsCommon)
 
-rosbuild_add_library(mpActions     src/cAbstractAction.cpp
-                                   src/cTimer.cpp
-                                   src/algorithms/intercept.cpp
-                                   src/cActionKick.cpp
-                                   src/cActionShootAtTarget.cpp
-                                   src/cActionPassToTarget.cpp
-                                   src/cActionMoveToTarget.cpp
-                                   src/cActionGetBall.cpp
-                                   src/cActionInterceptBall.cpp
-                                   src/cActionStop.cpp
-                                   src/cActionTurnAwayFromOpponent.cpp
-                                   src/cActionKeeperMove.cpp)
 
-# main
-rosbuild_add_executable(motionPlanner src/main_ros.cpp
-                                      src/cMotionPlanner.cpp)
 target_link_libraries(mpInterfaces mpTypes)
 target_link_libraries(mpAdapters mpTypes)
-target_link_libraries(motionPlanner mpInterfaces)
-target_link_libraries(motionPlanner mpAdapters yaml-cpp)
-target_link_libraries(motionPlanner mpTypes)
-target_link_libraries(motionPlanner mpActions)
-target_link_libraries(motionPlanner mpConfigAdapter)
-rosbuild_link_boost(motionPlanner system thread)
+target_link_libraries(mpClient mpInterfaces)
+target_link_libraries(mpClient mpAdapters yaml-cpp)
+target_link_libraries(mpClient mpTypes)
+target_link_libraries(mpClient mpActions)
+target_link_libraries(mpClient mpConfigAdapter)
+target_link_libraries(mpClient ${Boost_LIBRARIES})
 
 
 # TESTERS
 # cQueryInterface
-rosbuild_add_gtest(cQueryInterfaceTest tst/cQueryInterfaceTest.cpp TIMEOUT 1)
-target_link_libraries(cQueryInterfaceTest mpInterfaces)
+add_executable(cQueryInterfaceTest tst/cQueryInterfaceTest.cpp)
+target_link_libraries(cQueryInterfaceTest mpInterfaces gtest)
+add_test(cQueryInterfaceTest cQueryInterfaceTest)
+set_tests_properties(cQueryInterfaceTest PROPERTIES TIMEOUT 1)
+
+

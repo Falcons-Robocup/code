@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -14,16 +14,18 @@
 #include <stdexcept>
 
 #include "vector2d.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 #include "configurator.hpp"
 
 
 using std::runtime_error;
 
-observerRtDB::observerRtDB(const uint robotID, const bool cameraCorrectlyMounted, const float minimumLockTime)
+observerRtDB::observerRtDB(const uint robotID, const bool cameraCorrectlyMounted, const float minimumLockTime, const float frequency)
 {
+    TRACE_FUNCTION("");
     _myRobotId = getRobotNumber();
+    _frequency = frequency;
 
     initializeRtDB();
 
@@ -49,33 +51,45 @@ observerRtDB::~observerRtDB()
 
 void observerRtDB::initializeRtDB()
 {
+    TRACE_FUNCTION("");
     _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
-    
+
     // start thread which communicates data to worldModel and pokes it
     _heartBeatThread = boost::thread(boost::bind(&observerRtDB::heartBeatLoop, this));
 }
 
 bool observerRtDB::heartBeatTick()
 {
+    TRACE_FUNCTION("");
     mtx.lock();
-    
+
     // report
     // minimize log pollution (to quickly see the real issues)
     // tprintf("bPoss=%d #loc=%d #ball=%d #obst=%d", (int)_visionBallPossession, (int)_robotLocCandidates.size(), (int)_ballCandidates.size(), (int)_obstacleCandidates.size());
-    
+
     // dispatch all data to worldModel
     // get the following datamembers, put them into RTDB
     _rtdb->put(VIS_BALL_POSSESSION, &_visionBallPossession);
     _rtdb->put(LOCALIZATION_CANDIDATES, &_robotLocCandidates);
     _rtdb->put(OBSTACLE_CANDIDATES, &_obstacleCandidates);
     _rtdb->put(BALL_CANDIDATES, &_ballCandidates);
-    _rtdb->put(MULTI_CAM_STATISTICS, &_multiCamStats); // TODO: data is provided at 1Hz, we should not put at >30Hz
+    // be nice for the database, subsample effectively at about 1Hz
+    {
+        static int counter = 0;
+        if (counter++ % 30 == 0)
+        {
+            _rtdb->put(MULTI_CAM_STATISTICS, &_multiCamStats);
+        }
+    }
     // execution architecture: worldModel triggers on new ball candidates
-    
+
     // clear all
     _robotLocCandidates.clear();
     _obstacleCandidates.clear();
     _ballCandidates.clear();
+
+    // tracing
+    WRITE_TRACE;
 
     // final one will trigger worldModel execution
     mtx.unlock();
@@ -84,12 +98,13 @@ bool observerRtDB::heartBeatTick()
 
 void observerRtDB::heartBeatLoop()
 {
-    float frequency = 30.0;
-    rtime::loop(frequency, boost::bind(&observerRtDB::heartBeatTick, this));
+    TRACE_FUNCTION("");
+    rtime::loop(_frequency, boost::bind(&observerRtDB::heartBeatTick, this), "observerRtDB::heartBeatTick");
 }
 
 void observerRtDB::update_own_position(std::vector<robotLocationType> robotLocations, double timestampOffset)
 {
+    TRACE_FUNCTION("");
 
     mtx.lock();
 
@@ -126,23 +141,16 @@ void observerRtDB::update_own_position(std::vector<robotLocationType> robotLocat
 template <typename T1, typename T2>
 bool insertMeasurementInSrv(T1 const &it, T2 &objCandidate, float cameraOffset, float elevation, std::string what, rtime timestamp, cameraEnum camType)
 {
+    TRACE_FUNCTION("");
     float converted_angle = project_angle_0_2pi(it->getAngle() + M_PI_2 + cameraOffset + M_PI); // M_PI workaround for cameraOffset inconsistency w.r.t. localization
     float r = it->getRadius();
-    TRACE("LATENCY %s angle=%6.2f, radius=%6.2f, elevation=%6.2f, confidence=%6.2f", what.c_str(), converted_angle, r, elevation, it->getConfidence());
+    float h = CAMERA_HEIGHT;
 
     // sanity check
-    if (it->getRadius() < 0.1)
+    if (r < 0.1)
     {
         TRACE_WARNING_TIMEOUT(10.0, "got too small multiCam %s radius (%6.2f)", what.c_str(), it->getRadius());
-        return false;
-    }
-
-    // cutoff: for now we do not send floating balls
-    float max_object_distance = 7.0;
-    float h = CAMERA_HEIGHT;
-    float max_elevation = atan2(-h, max_object_distance);
-    if ((r > max_object_distance) || (elevation > max_elevation))
-    {   // reject
+        TRACE("bad data: %s angle=%6.2f, radius=%6.2f, elevation=%6.2f, confidence=%6.2f", what.c_str(), converted_angle, r, elevation, it->getConfidence());
         return false;
     }
 
@@ -151,6 +159,8 @@ bool insertMeasurementInSrv(T1 const &it, T2 &objCandidate, float cameraOffset, 
     // especially for closeby balls this is a significant factor, otherwise worldModel would interpret the ball too closeby
     // so here we must re-calculate radius to be w.r.t. camera
     r = sqrt(r*r + h*h);
+
+    TRACE("sending to WM: %s angle=%6.2f, radius=%6.2f, elevation=%6.2f, confidence=%6.2f", what.c_str(), converted_angle, r, elevation, it->getConfidence());
 
     // fill in the data
     objCandidate.timestamp = timestamp;
@@ -169,6 +179,7 @@ bool insertMeasurementInSrv(T1 const &it, T2 &objCandidate, float cameraOffset, 
 
 void observerRtDB::update_own_ball_position(std::vector<ballPositionType> ballLocations, double timestampOffset)
 {
+    TRACE_FUNCTION("");
     mtx.lock();
 
     rtime timestamp = rtime::now() - timestampOffset;
@@ -202,6 +213,7 @@ void observerRtDB::update_own_ball_position(std::vector<ballPositionType> ballLo
 
 void observerRtDB::update_own_obstacle_position(std::vector<obstaclePositionType> obstacleLocations, double timestampOffset)
 {
+    TRACE_FUNCTION("");
     mtx.lock();
 
     rtime timestamp = rtime::now() - timestampOffset;
@@ -229,7 +241,6 @@ void observerRtDB::update_own_obstacle_position(std::vector<obstaclePositionType
                 obstacleUniqueObjectIDIdx = 0;
             }
 
-
             _obstacleCandidates.push_back(obstacleCandidate);
         }
     }
@@ -239,6 +250,7 @@ void observerRtDB::update_own_obstacle_position(std::vector<obstaclePositionType
 
 void observerRtDB::update_own_ball_possession(const bool hasPossession)
 {
+    TRACE_FUNCTION("");
     mtx.lock();
 
     if (hasPossession)
@@ -255,6 +267,7 @@ void observerRtDB::update_own_ball_possession(const bool hasPossession)
 
 void observerRtDB::update_multi_cam_statistics(multiCamStatistics const &multiCamStats)
 {
+    TRACE_FUNCTION("");
     mtx.lock();
     _multiCamStats = multiCamStats;
     mtx.unlock();

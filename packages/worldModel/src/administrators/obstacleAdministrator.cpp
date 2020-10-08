@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,15 +18,13 @@
 
 
 #include "int/administrators/obstacleAdministrator.hpp"
-
-#include "int/configurators/administrationConfigurator.hpp"
-#include "int/configurators/obstacleTrackerConfigurator.hpp"
 #include "int/administrators/obstacleDiscriminator.hpp"
 
 #include "cDiagnostics.hpp"
 #include "tracing.hpp"
 
-obstacleAdministrator::obstacleAdministrator()
+obstacleAdministrator::obstacleAdministrator(WorldModelConfig& wmConfig)
+    : _wmConfig(wmConfig)
 /*!
  * \brief Administrates obstacle measurements
  *
@@ -52,15 +50,6 @@ void obstacleAdministrator::appendObstacleMeasurements(const std::vector<obstacl
     TRACE("> #meas=%d", (int)measurements.size());
     try
     {
-        // hack: keeper should never respond to nor sync out obstacles, especially now it has a fancy new keeper frame
-        // we saw in testmatch 20180221 that several fake obstacles were projected in the penalty area
-        // teammembers should not be scared of them
-        // proper solution would include one or more configuration parameters, then make R1 specific yaml
-        if (_ownRobotID == 1)
-        {
-            return;
-        }
-
         for(auto itCandidate = measurements.begin(); itCandidate != measurements.end(); itCandidate++)
         {
             auto it = _obstacleMeasurements.find(itCandidate->identifier);
@@ -216,7 +205,7 @@ void obstacleAdministrator::cleanUpTimedOutObstacleMeasurements(rtime const time
     size_t origSize = _obstacleMeasurements.size();
     try
     {
-        double maxTimeToLive = administrationConfigurator::getInstance().getObstacleTimeToLive();
+        double maxTimeToLive = _wmConfig.getConfiguration().administration.obstacle_timeout;
 
         for(auto i = _obstacleMeasurements.begin(); i != _obstacleMeasurements.end();)
         {

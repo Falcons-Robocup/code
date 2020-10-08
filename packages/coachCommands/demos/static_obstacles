@@ -1,9 +1,0 @@
-move 3 -5.05 0
-wait4pos 3 -5.05 0.5
-move -3 -5.05 0
-wait4pos -3 -5.05 0.5
-move -3 -6.05 0
-wait4pos -3 -6.05 0.5
-move 3 -6.05 0
-wait4pos 3 -6.05 0.5
-

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,17 +17,16 @@
  */
 
 #include <ext/cEnvironmentCommon.hpp>
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 
 #include "ext/cEnvironmentRobot.hpp"
-#include "json.h"
 using namespace std;
 
 
 cEnvironmentRobot::cEnvironmentRobot()
 {
-	getJSON();
+	getConfig();
 }
 
 cEnvironmentRobot::~cEnvironmentRobot()
@@ -45,61 +44,30 @@ float cEnvironmentRobot::getRadiusMargin()
 	return _radiusMargin;
 };
 
-/*! read the JSON file(s) as part of constructing phase and fill the private class members containing the values
+/*! read the YAML file(s) as part of constructing phase and fill the private class members containing the values
  *
  */
-void cEnvironmentRobot::getJSON()
+void cEnvironmentRobot::getConfig()
 {
 	try
 	{
+        // robotValues( <radius, 0.25>, <radiusMargin, 0.05>, ... )
+        std::vector< std::pair<std::string,std::string> > robotValues;
+        environmentCommon::readYAML("robot", robotValues);
 
-		Json::Value root,robot;
+        // Find <radius, 0.25> in robotValues using key "radius"
+        auto radiusPair = std::find_if( robotValues.begin(), robotValues.end(), KeyEquals("radius") ); 
+        _radius = std::stof( radiusPair->second );
 
-		bool parsedSuccess = environmentCommon::readJSON( root);
+        // Find <radiusMargin, 0.xx> in robotValues using key "radiusMargin"
+        auto radiusMarginPair = std::find_if( robotValues.begin(), robotValues.end(), KeyEquals("radiusMargin") ); 
+        _radiusMargin = std::stof( radiusMarginPair->second );
 
-
-		if(!parsedSuccess)
-		{
-			TRACE("Invalid JSON format read from cEnvironment.json file");
-		    throw;
-		}
-
-		if( ! root.isMember("robot"))
-		{
-			TRACE("Cannot read robot information from cEnvironment.json file");
-		    throw;
-		}
-		else
-		{
-			robot = root.get("robot", "ERROR");
-		}
-
-		if( robot.isMember("radius") )
-		{
-			// if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-			_radius = robot.get("radius", "ERROR").asFloat();
-		}
-		else
-		{
-			TRACE("JSON format issue with the JSON field 'robot.radius'");
-			throw;
-		}
-
-		if( robot.isMember("radiusMargin") )
-		{
-			// if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-			_radiusMargin = robot.get("radiusMargin", "ERROR").asFloat();
-		}
-		else
-		{
-			TRACE("JSON format issue with the JSON field 'robot.radiusMargin'");
-			throw;
-		}
 
 	} catch (exception &e)
 	{
-    	printf("Invalid JSON format!");
-    	TRACE("Invalid JSON format for reading environment field inputs");
+    	printf("Invalid YAML format!\n");
+    	TRACE("Invalid YAML format for reading environment field inputs");
 		throw e;
 	}
 }

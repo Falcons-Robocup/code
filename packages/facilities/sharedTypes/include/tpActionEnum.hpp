@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,7 +29,6 @@ enum class tpActionEnum
     MOVE,
     STOP,
     SHOOT,
-    SHOOT_TARGET,
     PASS,
     POSITION_BEFORE_POI,
     POSITION_BEHIND_POI,
@@ -40,13 +39,10 @@ enum class tpActionEnum
     MOVE_TO_FREE_SPOT,
     INTERCEPT_BALL,
     AVOID_POI,
-    GET_BALL_ON_VECTOR,
-    AIM_FOR_SHOT_ON_GOAL,
     DEFEND_PENALTY_AREA,
     TURN_AWAY_FROM_OPPONENT,
     DEFEND_ATTACKING_OPPONENT,
-    DRIBBLE_FOR_PASS,
-    DRIBBLE_FOR_SHOT,
+    DRIBBLE,
 
     SIZE_OF_ENUM
 };

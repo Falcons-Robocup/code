@@ -4,4 +4,5 @@
 
 set -e
 # rosrun multiCam multiCamStandalone
-rosrun multiCam multiCamNode | grep -v bPoss
+frun multiCam multiCamNode | grep -v bPoss
+

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,6 +21,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 // TODO: get from central place
 #define SEND_IMAGE_WIDTH (32*25) // 800
@@ -68,7 +69,7 @@ class camSysReceive {
 private:
 	char *directory; // workspace directory of multiCam executable
 	bool storeImages;
-	bool imagePartValid[4][256];
+	bool imagePartValid[4][256] = {{false}};
 	char dateCode[64];
 	std::string imageGrabPath;
 	int multReceiveFd;

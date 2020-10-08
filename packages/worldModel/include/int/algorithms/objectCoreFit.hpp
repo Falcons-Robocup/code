@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,8 +21,8 @@
 
 
 #include <vector>
+#include "int/adapters/configurators/WorldModelConfig.hpp"
 #include "int/algorithms/objectMeasurementCache.hpp"
-#include "int/types/object/objectFitConfig.hpp"
 #include "int/types/object/objectResultType.hpp"
 
 // no class, just functions
@@ -31,7 +31,7 @@ void objectCoreFitTriang(
     // inputs
     std::vector<objectMeasurementCache> const &measurements,
     double t, 
-    objectFitConfig config,
+    ConfigWorldModelObjectFit config,
     // outputs
     objectResultType &objectResult,
     float &residual

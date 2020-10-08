@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,7 +21,7 @@
 
 #include "FalconsRtDB2.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 
 
@@ -48,7 +48,6 @@ int main(int argc, char **argv)
         }
         
         // recalculate matchmode
-        int life = 0;
         bool newMatchMode = false;
         int r = rtdb->get(MATCH_MODE, &newMatchMode);
         if (r == 0)

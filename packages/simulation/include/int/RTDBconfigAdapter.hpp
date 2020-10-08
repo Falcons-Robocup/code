@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,10 +21,19 @@
 
 #include "abstractConfigAdapter.hpp"
 
+#include "ConfigRTDBAdapter.hpp"
+
 class RTDBConfigAdapter : public AbstractConfigAdapter {
 public:
+    RTDBConfigAdapter();
+    ~RTDBConfigAdapter();
     virtual std::string getArbiter() const;
     virtual int getSize(const TeamID) const;
+    virtual int getTickFrequency() const;
+    virtual int getStepSizeMs() const;
+
+private:
+    ConfigRTDBAdapter<T_CONFIG_SIMULATION>* _configAdapter;
 };
 
 #endif /* RTDBCONFIGADAPTER_HPP_ */

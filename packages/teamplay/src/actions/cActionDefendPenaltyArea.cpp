@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,12 +17,12 @@
  */
 #include "int/actions/cActionDefendPenaltyArea.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 #include "int/stores/ballStore.hpp"
 #include "int/stores/fieldDimensionsStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 
 using namespace teamplay;
 
@@ -46,7 +46,7 @@ behTreeReturnEnum cActionDefendPenaltyArea::execute(const std::map<std::string, 
     {
         // ball position
         ball ball = ballStore::getBall();
-        
+
         // By default goto center of goal on line y referenced to outside penalty-area
         Point2D penaltyarea_left_corner = fieldDimensionsStore::getFieldDimensions().getLocation(fieldPOI::OWN_PENALTYAREA_CORNER_LEFT);
         Point2D goalCenter = fieldDimensionsStore::getFieldDimensions().getLocation(fieldPOI::OWN_GOALLINE_CENTER);

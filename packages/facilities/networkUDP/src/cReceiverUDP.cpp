@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #include "ext/cReceiverUDP.hpp"
 
 #include "tracing.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 #include <string.h>
 #include <arpa/inet.h>
@@ -105,7 +105,6 @@ cReceiverUDP::~cReceiverUDP()
     catch (exception &e)
     {
         TRACE("Caught exception: %s", e.what());
-        throw e;
     }
 }
 

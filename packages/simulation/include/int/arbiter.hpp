@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -32,7 +32,7 @@ public:
     Arbiter();
 
     void initialize();
-    GameData control(const GameData&);
+    GameData control(const GameData&, const float simulationPeriod);
 
     GameState getGameState() const;
 

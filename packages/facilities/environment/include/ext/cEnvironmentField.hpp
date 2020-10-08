@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,6 +23,8 @@
 #include <vector>
 
 #include "position2d.hpp"
+#include "FalconsRtDB2.hpp"
+
 
 enum poiName {    // all right and left references as SEEN from OUR SIDE (or OUR GOALIE)
     P_CENTER,
@@ -73,6 +75,11 @@ enum poiName {    // all right and left references as SEEN from OUR SIDE (or OUR
     P_CIRCLE_INTERSECT_LINE_RIGHT,
     P_CIRCLE_INTERSECT_LINE_LEFT,
     P_TIP_IN,
+    P_TTA_1,
+    P_TTA_2,
+    P_TTA_3,
+    P_TTA_4,
+    P_TTA_5,
     POI_COUNT            //KEEP THIS ONE LAST, will be used for ARRAY SIZE DEFINITION!
 };
 
@@ -113,6 +120,7 @@ enum areaName
     A_OPP_MID_LEFT,
     A_OPP_MID_RIGHT,
     A_TEST_TRI,
+    A_TTA,
     AREA_COUNT
 };
 
@@ -278,10 +286,12 @@ class cEnvironmentField
             /*
              * Getter functionality for use by anybody who needs to know
              */
+            poiInfo getFieldPOI(poiName poi);
             void getFieldPOI(poiName poi, poiInfo &fieldPOI);
             bool getFieldPOIByString(std::string poiString , poiInfo &fieldPOI);
             void getFieldPOIList( std::vector<std::string> &vectorOfPOINames);
             void getFieldArea(areaName area, areaInfo &fieldAREA);
+            areaInfo getFieldArea(areaName area);
             bool getFieldAreaByString(std::string areaString, areaInfo &fieldArea);
             void getFieldAreaList( std::vector<std::string> &vectorOfAreaNames);
             bool isPositionInArea( float x, float y, areaName area, float margin = 0.0);
@@ -294,6 +304,8 @@ class cEnvironmentField
             float getGoalHeight();
             float getGoalDepth();
 
+            areaInfo getTTAarea();
+
     private:
             cEnvironmentField();  //constructor definition
             ~cEnvironmentField();
@@ -303,14 +315,21 @@ class cEnvironmentField
             float _width, _length, _goalPostOffset, _goalPostWidth, _goalAreaOffset, _goalDepth, _goalHeight;
             float _penaltyAreaOffset, _penaltySpotOffset, _safetyBoundaryOffset, _lineThickness;
             float _centerCircleRadius;
+            std::map<std::string, float> _tta_box; // relative coordinates (boundingbox), from cEnvironmentField.yaml
 
             poiInfo _fieldPOIs[ (poiName) POI_COUNT];
             areaInfo _fieldAreas[ (areaName) AREA_COUNT];
 
-
-            void getJSON();
+            void getConfig();
             void generateFieldPOIs();
             void generateFieldAreas();
+            void generateTTA();
+            void checkUpdateConfiguration(poiName poi);
+            void checkUpdateConfiguration(areaName area);
+
+            RtDB2 *_rtdb = NULL;
+            void initRtdb();
+            refboxConfigTTAside getTTAconfig();
 };
 
 #endif /* CCENVIRONMENTFIELD_HPP_ */

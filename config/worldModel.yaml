@@ -1,0 +1,70 @@
+administration:
+    teammember_timeout:                 7.0
+    obstacle_timeout:                   0.5
+    ball_timeout:                       2.0
+ballTracker:
+    objectFit:
+        depthWeight:                    0.1  
+        speedFitOrder:                  True 
+        minVmeas:                       999  
+        measPerOrder:                   5    
+        groupingDt:                     0.04 
+        outlierNSigma:                  3.0  
+        outlierMaxIter:                 4    
+        outlierIterFraction:            0.10 
+    useOwnHighVision:                   False
+    useFriendlyHighVision:              False
+    confidenceOmniPref:                 True 
+    confidenceNumCams:                  1    
+    confidenceMeasLim:                  5    
+    confidenceFreshLim:                 0.3  
+    confidenceAgeLim:                   0.5  
+    confidenceFitLim1:                  0.10 
+    confidenceFitLim2:                  0.80 
+    confidenceZLim1:                    1.0  
+    confidenceZLim2:                    5.0  
+    confidenceVLim1:                    2.0  
+    confidenceVLim2:                    20.0 
+    blackListThresholdZ:                0.4  
+    blackListFloatingDuration:          1.0  
+    blackListGroundDuration:            1.0  
+    blackListDefault:                   False
+    solverTrackerConeTolerance:         0.2  
+    solverTrackerTimeout:               0.5  
+    solverTrackerBuffer:                0.8  
+    shareHighVision:                    False
+    confidenceGoodLimit:                0.7  
+    numberOfBallsWarningThreshold:      10   
+    confidenceMaybeLimit:               0.4  
+    maxMaybeBalls:                      1    
+    friendlyMeasurementsDistance:       5.0  
+localization:
+    errorRatioRadianToMeter:            0.5 
+    visionOwnWeightFactor:              0.05
+    trackerScoreAcceptanceThreshold:    0.5 
+    trackerTimeout:                     10.0
+    scoreActivityScale:                 5.0 
+    scoreAgeScale:                      20.0
+    scoreFreshScale:                    0.5 
+    settlingTime:                       3.0 
+    minimumConfidence:                  0.8 
+    speedLimitXY:                       5.0 
+    speedLimitPhi:                      6.0 
+    visionStabilityLength:              30  
+obstacleTracker:
+    objectFit:
+        depthWeight:                    1.0 
+        speedFitOrder:                  True
+        minVmeas:                       0  
+        measPerOrder:                   3  
+        groupingDt:                     0  
+        outlierNSigma:                  4.0
+        outlierMaxIter:                 4  
+        outlierIterFraction:            0.1
+    filterXYmemberTolerance:            1.0
+    trackerXYTolerance:                 1.0
+    trackerTimeout:                     1.0
+    extrapolationTimeout:               0.2
+    speedMinSize:                       0.3
+    speedMaxSize:                       5.0
+    speedResidualThreshold:             1.0

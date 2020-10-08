@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,7 +23,6 @@
 
 #include "FalconsRtDB2.hpp"
 #include "cWorldModelClient.hpp"
-#include "cMotionPlanningClient.hpp"
 #include "int/types/cDecisionTreeTypes.hpp"
 
 class cRTDBInputAdapter
@@ -36,9 +35,8 @@ public:
     }
 
     void waitForRobotState(void (*iterateTeamplayFuncPtr) (void));
-    behTreeReturnEnum getActionResult(int id);
     void getWorldModelData();
-    cMotionPlanningClient& getMPClient();
+    void getWorldModelData(const int robotID);
     std::string getRole(const int robotID);
     T_INTENTION getIntention(const int robotID);
 
@@ -47,9 +45,6 @@ private:
     int _myRobotId;
     RtDB2 *_rtdb;
     cWorldModelClient _wmClient;
-    cMotionPlanningClient _mpClient;
-
-
 };
 
 #endif

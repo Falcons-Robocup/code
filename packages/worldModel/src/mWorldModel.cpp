@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,7 +16,6 @@
  *      Author: Jan Feitsma
  */
 
-#include <ros/ros.h>
 #include "int/cWorldModel.hpp"
 
 #include "tracing.hpp"
@@ -26,16 +25,17 @@ int main(int argc, char **argv)
 {
     try
     {
-        /* Init ROS environment */
-        ros::init(argc, argv, WorldModelNodeNames::worldmodel_nodename);
-
         INIT_TRACE;
         
         // setup worldmodel
         cWorldModel w;
+        if (argc > 1 && std::string(argv[1]) == std::string("--inplay"))
+        {
+            w.enableInplayOverrule();
+        }
         
         /* They see me rollin', they hatin' */
-        ros::spin();
+        w.run();
     }
     catch(std::exception &e)
     {

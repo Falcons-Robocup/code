@@ -1,56 +1,40 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 3.5.1)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-set(ROS_BUILD_TYPE Release)
-
-rosbuild_init()
+find_package(Boost COMPONENTS system thread filesystem REQUIRED QUIET)
+find_package(Facilities)
 
 # using shared_ptr
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror -fPIC")
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+include_directories("include/ext" "include")
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
-
-#add dynamic reconfigure api
-#rosbuild_find_ros_package(dynamic_reconfigure)
-#include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-#gencfg()
-
-include_directories("include/ext")
+# TODO cleanup this component a bit - there is quite some unused stuff, or stuff that belongs in dedicated packages
 
 #Create library libFalconsCommon
-rosbuild_add_library(FalconsCommon src/cFalconsCommon.cpp 
-                                   src/fsm.cpp 
-                                   src/cLinearRegression.cpp
-                                   )
-rosbuild_link_boost(FalconsCommon filesystem)
+add_library(FalconsCommon
+    src/falconsCommonDirs.cpp
+    src/falconsCommonEnv.cpp
+    src/falconsCommonConfig.cpp
+    src/falconsCommonLegacy.cpp
+    src/fsm.cpp
+    src/cLinearRegression.cpp
+)
+
+target_link_libraries(FalconsCommon
+                      FalconsTypes
+                      ${Boost_LIBRARIES})
+
+# Add dependency on generated_enum2str.hpp created by sharedTypes
+add_dependencies(FalconsCommon enum2str)
 
 #Testers
-rosbuild_add_gtest(testPose2D tst/testPose2D.cpp TIMEOUT 1)
-rosbuild_add_gtest(testVelocity2D tst/testVelocity2D.cpp TIMEOUT 1)
+add_executable(testPose2D tst/testPose2D.cpp)
+target_link_libraries(testPose2D gtest pthread)
+add_test(testPose2D testPose2D)
+set_tests_properties(testPose2D PROPERTIES TIMEOUT 1)
 
-# Create autotester for compass package
-#rosbuild_add_pyunit(tst/autotester.py)
+add_executable(testVelocity2D tst/testVelocity2D.cpp)
+target_link_libraries(testVelocity2D gtest pthread)
+add_test(testVelocity2D testVelocity2D)
+set_tests_properties(testVelocity2D PROPERTIES TIMEOUT 1)
 
-
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})

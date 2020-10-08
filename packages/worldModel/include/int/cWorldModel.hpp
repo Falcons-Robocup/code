@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,15 +24,11 @@
 #include "int/administrators/obstacleAdministrator.hpp"
 #include "int/administrators/robotAdministrator.hpp"
 #include "int/adapters/adaptersCollector.hpp"
-#include "int/adapters/ROS/heartBeatAdapterROS.hpp"
-#include "int/adapters/RTDB/RTDBHeartBeatAdapter.hpp"
+#include "int/adapters/RTDB/RobotHeartBeatAdapter.hpp"
+#include "int/adapters/RTDB/CoachHeartBeatAdapter.hpp"
 
 #include "int/adapters/RTDB/RTDBInputAdapter.hpp"
 
-#include "int/adapters/configurators/administratorConfigROS.hpp"
-#include "int/adapters/configurators/ballTrackerConfigROS.hpp"
-#include "int/adapters/configurators/localizationConfigROS.hpp"
-#include "int/adapters/configurators/obstacleTrackerConfigROS.hpp"
 #include "ext/WorldModelNames.h"
 
 #include "cDiagnostics.hpp"
@@ -44,7 +40,9 @@ class cWorldModel
 public:
     cWorldModel();
     ~cWorldModel();
-    
+    void enableInplayOverrule();
+
+    void run(); // block on waitForPut
     void updateNow(bool dummy); // use current timestamp
     void update(rtime const timeNow); // use provided timestamp
 
@@ -52,6 +50,9 @@ public:
     
 private:
     void initialize();
+
+    // config
+    WorldModelConfig         _wmConfig;
     
     // administrators
     robotAdministrator       _robotAdmin;
@@ -62,14 +63,8 @@ private:
     adaptersCollector        _adpCollector;
     RTDBInputAdapter         _rtdbInput;
     RTDBOutputAdapter        _rtdbOutput;
-    RTDBHeartBeatAdapter     _adpHeartBeatRTDB;
-
-    // create ROS & reconfigure adapters (to be migrated to RTDB)
-    heartBeatAdapterROS      _adpHeartBeatROS; // still needed for coach
-    administratorConfigROS   _adpAdminConfigROS;
-    ballTrackerConfigROS     _adpBallTrackerConfigROS;
-    localizationConfigROS    _adpLocalizationConfigROS;
-    obstacleTrackerConfigROS _adpObstacleTrackerConfigROS;
+    RobotHeartBeatAdapter    _adpHeartBeatRobot;
+    CoachHeartBeatAdapter    _adpHeartBeatCoach;
 
 };
 

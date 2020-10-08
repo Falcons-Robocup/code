@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -12,25 +12,36 @@
  #ifndef DIAGPATHPLANNING_HPP_
 #define DIAGPATHPLANNING_HPP_
 
-#include "pose.hpp"
-#include "polygon.hpp"
+#include "wayPoint.hpp"
+#include "forbiddenArea.hpp"
+#include "PIDTerms.hpp"
 
 #include "RtDB2.h" // required for serialization
 
 
-struct wayPoint
+struct diagPIDstate
 {
-    pose pos;
-    pose vel;
-    SERIALIZE_DATA_FIXED(pos, vel);
+    PIDTerms x;
+    PIDTerms y;
+    PIDTerms Rz;
+    SERIALIZE_DATA(x, y, Rz);
 };
+
 
 struct diagPathPlanning
 {
     std::vector<wayPoint> path; // can contain a single target, or no target, or even an extra intermediate (sub-)target
-    std::vector<polygon>  forbiddenAreas;
+    std::vector<forbiddenArea> forbiddenAreas;
+    pose                  distanceToSubTargetRCS; // for kstplot_motion
+    pose                  accelerationRCS; // for kstplot_motion
+    std::vector<bool>     isAccelerating;
+    std::vector<bool>     accelerationClipping;
+    int                   numCalculatedObstacles;
+    bool                  shortStroke;
+    std::vector<bool>     deadzone;
+    diagPIDstate          pid;
 
-    SERIALIZE_DATA(path, forbiddenAreas);
+    SERIALIZE_DATA(path, forbiddenAreas, distanceToSubTargetRCS, accelerationRCS, isAccelerating, accelerationClipping, numCalculatedObstacles, shortStroke, deadzone, pid);
 };
 
 #endif

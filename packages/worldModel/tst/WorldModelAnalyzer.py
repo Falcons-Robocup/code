@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,7 +17,9 @@ from collections import defaultdict
 class Stats:
     def __init__(self, name, values):
         self.name = name
-        self.values = numpy.array(values) # TODO NaN/None robustness
+        # robustness for None values (TODO: NaN?)
+        values = [v for v in values if v != None]
+        self.values = numpy.array(values)
         self.n = len(self.values)
         self.mean = numpy.mean(self.values)
         self.sigma = numpy.std(self.values)

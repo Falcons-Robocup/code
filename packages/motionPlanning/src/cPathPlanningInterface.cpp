@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,7 +17,7 @@
  */
 
 #include "int/cPathPlanningInterface.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 #include "cDiagnostics.hpp"
 
@@ -53,7 +53,7 @@ std::vector<cForbiddenAreaType> cPathPlanningInterface::getForbiddenAreas()
     
 void cPathPlanningInterface::cleanup()
 {
-    rtime timeNow = rtime::now(); // TODO this is not simulator- and test-friendly, better to move timestamping outside
+    rtime timeNow = ftime::now(); // TODO this is not simulator- and test-friendly, better to move timestamping outside
     for (auto it = _forbiddenAreas.begin(); it != _forbiddenAreas.end(); ) 
     {
         if (it->second < double(timeNow)) // expired? 

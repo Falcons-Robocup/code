@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 // Internal:
 #include "PlannedPathStub.h"
 
-void PlannedPathStub::initialize(RobotVisualization* anchor) 
+void PlannedPathStub::initialize(RobotVisualization* anchor)
 {
     connect(anchor, SIGNAL(signalPlannedPathChanged(std::vector<PositionVelocity>&)), this, SLOT(onSetPath(std::vector<PositionVelocity>&)));
 }
@@ -28,7 +28,7 @@ void PlannedPathStub::onSetPath(std::vector<PositionVelocity>& path)
 {
     onPathChangedCalled = true;
     _path.clear();
-    for (int i = 0; i < path.size(); ++i)
+    for (int i = 0; i < (int)path.size(); ++i)
     {
         _path.push_back(path[i]);
     }

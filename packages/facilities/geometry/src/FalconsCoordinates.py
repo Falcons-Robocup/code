@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,12 +9,11 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  """ 
- #!/usr/bin/env python
+ #!/usr/bin/env python3
 
 
 import math
 import copy
-
 
 def project_angle_0_2pi(angle):
     while (angle < 0):
@@ -30,6 +29,9 @@ def project_angle_mpi_pi(angle):
         angle -= 2*math.pi
     return angle
 
+def angle_between_two_points_0_2pi(x1, y1, x2, y2):
+    angle = math.atan2(y2 - y1, x2 - x1)
+    return project_angle_0_2pi(angle)
 
 class Vec2d():
     def __init__(self, x=0.0, y=0.0):

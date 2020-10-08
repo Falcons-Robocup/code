@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -46,6 +46,11 @@ bool cFrameBuffer::getIndex(size_t idx, tLogFrame &frame)
         return true;
     }
     return false;
+}
+
+size_t cFrameBuffer::getSize()
+{
+    return _array.size();
 }
 
 bool cFrameBuffer::timeToIndex(rtime const &t, size_t &idx)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # JFEI 2015-12-01
 # intended for testing purposes only - python is not to be used for high-performance code, instead please refer to C++ facilities::networkUDP
 # based on:
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # Send message(s)
     if len(args.messages) == 0:
         # copy stdin
-        print "reading lines from stdin ..."
+        print("reading lines from stdin ...")
         while True:
             try:
                 line = raw_input()

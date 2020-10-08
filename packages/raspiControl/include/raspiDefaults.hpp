@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -81,8 +81,8 @@
 // ball point detection
 #define BALL_VAL_MIN 140 // test with shadow area
 #define BALL_SAT_MIN 105 // low value for bright ball (in ball handler)
-#define BALL_HUE_MIN 13 // low (below 17) is orange, test for near by, test for TechUnited, yellow is 60 degrees => 60/2=30, 10 results into problems with orange TechUnited cover
-#define BALL_HUE_MAX 45 // high is green, test for far away
+#define BALL_HUE_MIN 22 // low (below 17) is orange, test for near by, test for TechUnited, yellow is 60 degrees => 60/2=30, 10 results into problems with orange TechUnited cover
+#define BALL_HUE_MAX 37 // high is green, test for far away
 #define BALL_WINDOW_SIZE 4
 #define BALL_PIXELS_MIN 2 // TODO: set larger (check values Portugal 2019) and use BALL_FAR for smaller (to prevent orange to green)
 #define BALL_FALSE_PIXELS_MAX 4

@@ -16,14 +16,14 @@
 #include "CameraCalibrator.hpp"
 
 
-  
+
 opticalCalibrator::opticalCalibrator()
 {
     _guiText = "uncorrected";
     _windowName = "optiCal";
     calcLandMarks();
 }
-    
+
 opticalCalibrator::~opticalCalibrator()
 {
     if (_workerThread != NULL)
@@ -37,7 +37,7 @@ opticalCalibrator::~opticalCalibrator()
     // TODO: graceful shutdown & interrupt
     // for now it's ok as long as you do not try to close the application while workerThread is busy
 }
-    
+
 void opticalCalibrator::run()
 {
     // check that we have a valid feed
@@ -53,6 +53,11 @@ void opticalCalibrator::run()
         // show
         showFrame();
         int key = cv::waitKeyEx(30);
+
+        // opencv4 keys are off by 32bits:
+        // https://answers.opencv.org/question/100740/is-there-a-waitkey-table/
+        key = key & 0xFF;
+
         if (key >= 0)
         {
             if ((key == 27) || (key == 'q')) 
@@ -120,7 +125,7 @@ void opticalCalibrator::showFrame()
     }
     // put text, lines and stuff on top of the camera frame
     cv::Mat frameWithExtras = frame.clone();
-    cv::putText(frameWithExtras, getGuiText(), cv::Point(10,30), CV_FONT_NORMAL, 1, cv::Scalar(0, 0, 255), 2);
+    cv::putText(frameWithExtras, getGuiText(), cv::Point(10,30), cv::QT_FONT_NORMAL, 1, cv::Scalar(0, 0, 255), 2);
     if (view >= 2)
     {
         drawGrid(frameWithExtras);
@@ -158,7 +163,7 @@ void opticalCalibrator::drawGrid(cv::Mat &frame)
         iPts.push_back(cv::Point2f(rx/MM, 0));
         iPts.push_back(cv::Point2f(rx/MM, MY/MM));
         cv::perspectiveTransform(iPts, oPts, Hv);
-		cv::line(frame, oPts[0], oPts[1], CV_RGB(0, 255, 0), 1);
+        cv::line(frame, oPts[0], oPts[1], CV_RGB(0, 255, 0), 1);
     }
     for (int ry = 0; ry <= MY; ++ry)
     {
@@ -166,7 +171,7 @@ void opticalCalibrator::drawGrid(cv::Mat &frame)
         iPts.push_back(cv::Point2f(-MX/MM, ry/MM));
         iPts.push_back(cv::Point2f(MX/MM, ry/MM));
         cv::perspectiveTransform(iPts, oPts, Hv);
-		cv::line(frame, oPts[0], oPts[1], CV_RGB(0, 255, 0), 1);
+        cv::line(frame, oPts[0], oPts[1], CV_RGB(0, 255, 0), 1);
     }
     // red diagonals
     for (int sign = -1; sign <= 1; sign += 2)
@@ -175,7 +180,7 @@ void opticalCalibrator::drawGrid(cv::Mat &frame)
         iPts.push_back(cv::Point2f(sign*MX/MM, MY/MM));
         iPts.push_back(cv::Point2f(0, 0));
         cv::perspectiveTransform(iPts, oPts, Hv);
-		cv::line(frame, oPts[0], oPts[1], CV_RGB(255, 0, 0), 1);
+        cv::line(frame, oPts[0], oPts[1], CV_RGB(255, 0, 0), 1);
     }
     // red field boundaries
     for (size_t it = 1; it < _boundariesRcsMM.size(); ++it)
@@ -184,7 +189,7 @@ void opticalCalibrator::drawGrid(cv::Mat &frame)
         iPts.push_back(cv::Point2f(_boundariesRcsMM[it].x, _boundariesRcsMM[it].y));
         iPts.push_back(cv::Point2f(_boundariesRcsMM[it-1].x, _boundariesRcsMM[it-1].y));
         cv::perspectiveTransform(iPts, oPts, Hv);
-		cv::line(frame, oPts[0], oPts[1], CV_RGB(255, 0, 0), 1);
+        cv::line(frame, oPts[0], oPts[1], CV_RGB(255, 0, 0), 1);
     }
 }
 
@@ -222,16 +227,16 @@ void opticalCalibrator::setView(int view)
     // notify user
     switch (_view)
     {
-      case (0):
+    case (0):
         setGuiText(_videoFeed->describe());
         break;
-      case (1):
+    case (1):
         setGuiText("corrected for fisheye");
         break;
-      case (2):
+    case (2):
         setGuiText("corrected for perspective");
         break;
-      case (3):
+    case (3):
         setGuiText("per-pixel verification");
         break;
     }
@@ -347,57 +352,57 @@ void opticalCalibrator::handleKeyPress(int key)
 {
     switch (key)
     {
-      case ('h'):
+    case ('h'):
         showHelp();
         break;
-      case ('f'):
+    case ('f'):
         startThread(new std::thread(&opticalCalibrator::calibrateFisheye, this));
         break;
-      case ('p'):
+    case ('p'):
         cv::setMouseCallback(_windowName, onMouse, this);
         startThread(new std::thread(&opticalCalibrator::calibratePerspectiveClicks, this));
         break;
-      case ('r'):
+    case ('r'):
         setView(0);
         break;
-      case ('w'):
+    case ('w'):
         setView(1);
         break;
-      case ('g'):
+    case ('g'):
         setView(2);
         break;
-      case ('v'):
+    case ('v'):
         setView(3);
         break;
-      case ('s'):
+    case ('s'):
         save();
         break;
-      case ('z'):
+    case ('z'):
         toggleZoom();
         break;
-      case ('c'):
+    case ('c'):
         toggleCamera();
         break;
-      case (','): // left
+    case (','): // left
         moveClick(-1, 0);
         break;
-      case ('.'): // up
+    case ('.'): // up
         moveClick(0, 1);
         break;
-      case ('/'): // right
+    case ('/'): // right
         moveClick(1, 0);
         break;
-      case ('m'): // down
+    case ('m'): // down
         moveClick(0, -1);
         break;
-      case ('0'):
-      case ('1'):
-      case ('2'):
-      case ('3'):
-      case ('4'):
+    case ('0'):
+    case ('1'):
+    case ('2'):
+    case ('3'):
+    case ('4'):
         _selectedLandmark = key - '0';
         break;
-      case ('i'):
+    case ('i'):
         cv::imwrite("/var/tmp/optiCalFrame.png", removeBorder(getCamFrame()));
         break;
     }
@@ -453,13 +458,18 @@ void opticalCalibrator::load(std::string filename)
 {
     // NOTE: this code is highly duplicate and depending on dewarp.cpp
     std::ifstream ifs(filename, std::ios::binary);
+    if (!ifs)
+    {
+        std::cerr << "ERROR: file not found: " + filename << std::endl;
+        exit(1);
+    }
     // header: image dimensions
     int ncol, nrow;
     ifs.read((char*)&ncol, sizeof(ncol));
     ifs.read((char*)&nrow, sizeof(nrow));
     // x and y lookups
-    readMatBinary(ifs, _fmapx);
-    readMatBinary(ifs, _fmapy);
+    readMatBinary(ifs, _floorMapX);
+    readMatBinary(ifs, _floorMapY);
     // calibration struct
     readMatBinary(ifs, _calData.K);
     readMatBinary(ifs, _calData.D);
@@ -470,6 +480,8 @@ void opticalCalibrator::load(std::string filename)
     cv::fisheye::initUndistortRectifyMap(_calData.K, _calData.D, cv::Matx33d::eye(), _calData.K, cv::Size(ncol, nrow+2*BORDER_SIZE), CV_32FC1, _rmapx, _rmapy);
     // pre-calculate forward lookups
     // calcForwardMaps(); no, we might nog have an image yet! (still mode)
+    // put in a dummy image
+    _camFrame = addBorder(cv::Mat::zeros(nrow, ncol, CV_8UC3));
 }
 
 void opticalCalibrator::save(std::string filename)
@@ -487,7 +499,8 @@ void opticalCalibrator::save(std::string filename)
         filename = buffer;
     }
     // calculate maps if not done already
-    ensureForwardMaps();
+    ensureFloorMaps();
+    ensureFrontMaps();
     // save
     // NOTE: this code is highly duplicate and depending on dewarp.cpp
     std::ofstream ofs(filename, std::ios::binary);
@@ -496,17 +509,20 @@ void opticalCalibrator::save(std::string filename)
     ofs.write((char*)&frame.cols, sizeof(frame.cols));
     ofs.write((char*)&frame.rows, sizeof(frame.rows));
     // x and y lookups
-    writeMatBinary(ofs, _fmapx);
-    writeMatBinary(ofs, _fmapy);
+    writeMatBinary(ofs, _floorMapX);
+    writeMatBinary(ofs, _floorMapY);
     // calibration struct
     writeMatBinary(ofs, _calData.K);
     writeMatBinary(ofs, _calData.D);
     writeMatBinary(ofs, _calData.Hf);
+    // placeholder frontView lookup tables
+    writeMatBinary(ofs, _frontMapAz);
+    writeMatBinary(ofs, _frontMapEl);
 }
 
 void opticalCalibrator::onMouse(const int event, const int x, const int y, int, void* userdata)
 {
-    if (event == CV_EVENT_LBUTTONDOWN)
+    if (event == cv::EVENT_LBUTTONDOWN)
     {
         opticalCalibrator *self = (opticalCalibrator *)userdata;
         self->addClick(x, y);

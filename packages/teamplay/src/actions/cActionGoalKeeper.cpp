@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,7 +18,7 @@
 #include "int/actions/cActionGoalKeeper.hpp"
 
 #include "cDiagnostics.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "pose2d.hpp"
 #include "velocity2d.hpp"
 
@@ -208,7 +208,7 @@ void cActionGoalKeeper::timeFilter(Position2D &targetPos)
     // static = HACK! feature request: let the object live... so we can use data members
     static float lastX = 0;
     static double lastT = 0;
-    double t = rtime::now();
+    double t = ftime::now();
     double elapsed = t - lastT;
     if (elapsed < _SMOOTH_TIMEFILTER)
     {

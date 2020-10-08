@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,14 +20,13 @@
 #ifndef FORBIDDENAREA_HPP_
 #define FORBIDDENAREA_HPP_
 
-#include "RtDB2.h" // required for serialization
+#include "polygon.hpp"
 
-
-struct forbiddenArea
+struct forbiddenArea: public polygon
 {
-    std::vector<vec2d>      points;
-    
-    SERIALIZE_DATA_FIXED(points);
+    int id; // extra w.r.t. polygon
+
+    SERIALIZE_DATA_FIXED(id, points);
 };
 
 #endif

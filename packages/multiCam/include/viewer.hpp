@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,6 +17,7 @@
 
 #include "preprocessor.hpp"
 #include "ballDetection.hpp"
+#include "obstacleDetection.hpp"
 #include "cameraReceive.hpp"
 #include "camSysReceive.hpp"
 #include "determinePosition.hpp"
@@ -43,6 +44,7 @@ private:
 
     int viewMode;
     bool floorOverlay;
+    bool dewarpOverlay;
     bool showCostField;
     bool ballView;
     bool ballFarView;
@@ -80,8 +82,8 @@ private:
     cv::Mat linePointsRejectColorFrame; // used to copy the color from for rejected line points to the camera viewer window
     std::vector<cv::Mat> planes;
     std::string viewModeText;
-    std::vector<ballSt> cyans;
-    std::vector<ballSt> magentas;
+    std::vector<obstacleSt> cyans;
+    std::vector<obstacleSt> magentas;
     std::vector<detPosSt> locations;
 
     std::mutex exportMutex;
@@ -92,14 +94,15 @@ private:
     cameraReceive *camAnaRecv;
     camSysReceive *camSysRecv;
     configurator *conf;
-    ballDetection *cyanDet;
+    obstacleDetection *cyanDet;
     determinePosition *detPos;
-    ballDetection *obstDet[4];
+    obstacleDetection *obstDet[4];
     preprocessor *prep;
     linePointDetection *linePoint;
     localization *loc;
-    ballDetection *magentaDet;
+    obstacleDetection *magentaDet;
     robotFloor *rFloor;
+    Dewarper *dewarp[4];
 
     void roundViewerUpdate();
     void floorUpdate();
@@ -117,11 +120,19 @@ private:
     void drawFloorLinePoints(positionStDbl pos, cv::Scalar color);
     void drawFloorRobot(positionStDbl pos, cv::Scalar color);
 
+    void drawIsolineAzimuth(size_t cam, float az, cv::Vec3b color, int stride = 1);
+    void drawIsolineElevation(size_t cam, float el, cv::Vec3b color, int stride = 1);
+    void drawIsoline(cv::Mat &img, std::vector<cv::Point> const &pixels, cv::Vec3b color);
+
+    void pixel2camFrame(int &x, int &y, int &cam);
+    static void onMouse(int event, int x, int y, int flags, void* userdata);
+    void handleClick(int x, int y);
+
 public:
     viewer(ballDetection *ballDet[4], ballDetection *ballFarDet[4], cameraReceive *camAnaRecv,
-            camSysReceive *camSysRecv, configurator *conf, ballDetection *cyanDet, determinePosition *detPos,
-            linePointDetection *linePoint, localization *loc, ballDetection *magentaDet, ballDetection *obstDet[4],
-            preprocessor *prep, robotFloor *rFloor);
+            camSysReceive *camSysRecv, configurator *conf, obstacleDetection *cyanDet, determinePosition *detPos,
+            linePointDetection *linePoint, localization *loc, obstacleDetection *magentaDet, obstacleDetection *obstDet[4],
+            preprocessor *prep, robotFloor *rFloor, Dewarper *dewarp[4]);
     void update();
     cv::Mat getRoundFrame();
     cv::Mat getFloorFrame();

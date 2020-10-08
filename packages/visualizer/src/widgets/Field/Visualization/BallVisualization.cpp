@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -37,13 +37,12 @@ BallVisualization::BallVisualization()
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
     sphereSource->SetCenter(0.0, 0.0, _BALL_DIAMETER / 2.0);
     sphereSource->SetRadius(_BALL_DIAMETER / 2.0);
-    //vtkSmartPointer<vtkActor> actor = addAsActor(sphereSource);
-    //actor->GetProperty()->SetColor(1.0, 1.0, 1.0); // uniform coloring for now
     _actor = addAsActor(sphereSource);
-    _actor->GetProperty()->SetColor(1.0, 1.0, 1.0); // uniform coloring for now
+    _actor->GetProperty()->SetColor(1.0, 1.0, 1.0);
 
     // Create pointing arrow
-    _arrow->GetProperty()->SetColor(1.0, 1.0, 1.0); // uniform coloring for now
+    _arrow->GetProperty()->SetColor(1.0, 1.0, 1.0);
+    _arrow->SetPosition(0, 0, _BALL_DIAMETER / 2.0);
 
     // Create an assembly consisting of the various parts
     this->VisibilityOn();

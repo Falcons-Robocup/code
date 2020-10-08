@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# Start the software on real robot. 
+# 
+
+
+
+# check if on real robot
+if ! robotIsReal ; then
+    echo "ERROR: this script is intended for running on an actual robot"
+    exit 1
+fi
+
+# error in case job is already running
+if robotSwRunning ; then
+    echo "ERROR: software already running!"
+    exit 1
+fi
+
+# start all required processes
+source `which contextSet`
+jobname=robotReal
+jobStart ${CONTEXTKEY}_$jobname & 
+    
+# trigger post-start scenario?
+if [ -f "$FALCONS_CODE_PATH/config/postStart" ]; then
+    # give software some time to boot & lock
+    sleep 10
+    # now start the script
+    source $FALCONS_CODE_PATH/config/postStart &
+fi
+

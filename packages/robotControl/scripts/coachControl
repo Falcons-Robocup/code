@@ -1,0 +1,116 @@
+#!/bin/bash
+#
+# This script controls the on-coach processes.
+#
+# JFEI 2015-12-29 creation
+# MKOE 2016-05-17 change startup check needed for interactiveFieldSetup from reasoning_viewer file existence to ifs file existance
+
+
+
+# do not allow running on robot
+if onRobot ; then
+    echo "do not run this script on robot"
+    exit 1
+fi
+
+# option parsing
+teamchar=A
+interactive=1
+tracing=1
+while getopts "bqt" opt; do
+    case "$opt" in
+    b)  teamchar=B
+        interactive=0
+        ;;
+    q)  interactive=0
+        ;;
+    t)  tracing=0
+        ;;
+    esac
+done
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+jobnames="${teamchar}0_coachPart1"
+# for teamB, run only part1 and not part2 
+# (use case: for 2-team simulation, we only want to see teamA visualizer etc, not teamB, but teamB does need refboxRelay etc)
+if [ $teamchar != "B" ]; then
+    if [ -z "$SIMULATED" -o "$SIMULATED" = 0 ] ; then
+        jobnames="$jobnames ${teamchar}0_coachPart2Real"
+    else
+        jobnames="$jobnames ${teamchar}0_coachPart2Sim"
+    fi
+fi
+
+# simulation mode? wrapping simControl will set SIMULATED=1
+if [ -z "$SIMULATED" ]; then
+    export SIMULATED=0
+fi
+
+# somewhat graceful exit
+function finish {
+    # first kill the logger, to prevent active .bag file with no content
+    (
+        pkill -2 logger
+        sleep 1
+    ) > /dev/null 2>&1
+    # stop the jobs
+    for j in $jobnames; do
+        jobStop $j
+    done
+    # stop all processes
+    processStopAll
+}
+trap finish EXIT
+trap finish SIGINT
+
+# clear RTDB
+rtdbClear
+
+# first time (teamA) only
+if [ $teamchar != "B" ]; then
+
+    # make logging directory for stdout, stderr and tracing
+    createLogdir
+
+    if [ "$tracing" = 1 ]; then
+        # enable tracing
+        set_tracing_trigger.sh `newest_logdir.py`
+    fi
+
+fi
+
+# start coach processes
+export TURTLE5K_TEAMNAME=team$teamchar
+for j in $jobnames; do
+    jobStart $j &
+done
+
+# block?
+if [ "$interactive" = "0" ]; then
+    # called from simControl -- sleep forever (until simControl stops)
+    wait
+else
+    # prompt
+    while :; do
+        sleep 1
+        echo "  q   : quit"
+        echo "  r   : start refbox (2015) application"
+        echo -n "input command: "
+        read ans
+        if [ "$ans" = "q" ]; then
+            echo "shutting down..."
+            break
+        fi
+        if [ "$ans" = "r" ]; then
+            (
+                processStart A0 refboxGui &
+            ) < /dev/null >/dev/null 2>&1
+        fi
+    done
+fi
+
+
+
+
+
+

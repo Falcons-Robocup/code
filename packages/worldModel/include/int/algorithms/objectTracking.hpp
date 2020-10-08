@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,9 +21,11 @@
 
 
 #include <vector>
+
+#include "int/adapters/configurators/WorldModelConfig.hpp"
 #include "int/algorithms/objectMeasurementCache.hpp"
 #include "int/types/object/objectResultType.hpp"
-#include "int/types/object/objectFitConfig.hpp"
+#include "diagWorldModelLocal.hpp" // from sharedTypes
 
 class objectTracker
 {
@@ -40,10 +42,11 @@ class objectTracker
     int getNumBad() const;
     float getTimeSpread() const;
     std::string getDetailsStr() const;
-    void setConfig(objectFitConfig cfg);
+    void setConfig(ConfigWorldModelObjectFit cfg);
+    void makeDiagnostics(std::vector<diagObjectMeasurement> &measurements, std::vector<diagObjectMeasurementCluster> &measurementClusters);
 
   private:
-    objectFitConfig _objectFitCfg;
+    ConfigWorldModelObjectFit _objectFitCfg;
     objectResultType _result;
     float _residual;
     float _maxSpread;

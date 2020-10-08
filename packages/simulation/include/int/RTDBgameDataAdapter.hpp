@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,12 +19,23 @@
 #ifndef RTDBGAMEDATAADAPTER_HPP_
 #define RTDBGAMEDATAADAPTER_HPP_
 
+#include <thread>
 #include "abstractGameDataAdapter.hpp"
 
 class RTDBgameDataAdapter : public AbstractGameDataAdapter {
 public:
+    RTDBgameDataAdapter();
+    ~RTDBgameDataAdapter();
     virtual void publishGameData (const GameData&) const; // publish complete world
     virtual void publishGameData (const GameData&, const TeamID, const RobotID) const; // publish adapted world
+
+    // scene manipulation
+    virtual void publishScene (const GameData&) const;
+    virtual bool checkUpdatedScene(SimulationScene &scene);
+    void monitorScene();
+public:
+    bool _sceneUpdated = false;
+    std::thread _sceneMonitorThread;
 };
 
 #endif /* RTDBGAMEDATAADAPTER_HPP_ */

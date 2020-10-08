@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,11 +20,11 @@
 
 #include <string>
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "int/stores/ballStore.hpp"
 #include "int/stores/configurationStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 
 
 using namespace teamplay;

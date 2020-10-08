@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,7 +18,7 @@
 
 #include "int/motors/MotionBoard.hpp"
 
-#include "int/DeviceManager.hpp"
+#include "int/motors/DeviceManager.hpp"
 
 static ApplicationId MotionBoardTypeToApplicationId(MotionBoardType type) {
 	ApplicationId id = UNKNOWN;

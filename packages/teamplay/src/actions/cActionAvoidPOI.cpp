@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,7 +18,7 @@
 
 #include "int/actions/cActionAvoidPOI.hpp"
 #include "int/stores/ballStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 
 
 cActionAvoidPOI::cActionAvoidPOI()

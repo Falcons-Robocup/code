@@ -11,7 +11,6 @@
 printf "\033[0;36mPre-commit hook is linting your changes for coding guideline violations...\033[0m \n"
 
 # Grab feed of staged files 
-cd ~/falcons/code
 files=$(git diff --name-only --cached)
 numfiles=$( printf '%s' "$files" | grep -c '^' )
 
@@ -95,4 +94,3 @@ else
 fi
 
 exit $exitstatus
-

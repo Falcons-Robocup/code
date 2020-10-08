@@ -1,9 +1,11 @@
 #!/bin/bash
 #
 # Stimulate worldModel
-# 
+#
 # JFEI 2019Q1
 
+
+set -e
 
 # check input
 rdlInputFile=$1
@@ -19,25 +21,19 @@ if [ -f $rdlOutputFile ]; then
     rm $rdlOutputFile # containment for an feature/issue that cLogFileWriter opens with r/w, causing possible frame corruption at the end of file
 fi
 
+# create a logdir for tracing
+createLogdir
+
 # configuration overrule -- it would be nicer if we would do this from WorldModelStimulator constructor (TODO)
-configTgt=/home/robocup/falcons/code/config/worldModelLocalizationConfig.yaml
+configTgt=$FALCONS_CONFIG_PATH/worldModel.yaml
 configBak=$configTgt.bak
-configSrc=/home/robocup/falcons/code/config/worldModelLocalizationConfigStim.yaml
+configSrc=$FALCONS_CONFIG_PATH/worldModelStim.yaml
 cp $configTgt $configBak
 cp $configSrc $configTgt
 
-# run
-(
-    # needed for configurability only ... to be designed away
-    roscore &
-) > /dev/null 2>&1
 echo "agentId=$agentId"
-sleep 5
 export TURTLE5K_ROBOTNUMBER=$agentId
-rosrun worldModel worldModelStimulator -a $agentId -i $rdlInputFile -o $rdlOutputFile -v 4
-
-# shutdown
-killall roscore
+frun worldModel worldModelStimulator -a $agentId -i $rdlInputFile -o $rdlOutputFile -v 4
 
 # revert config
 mv $configBak $configTgt

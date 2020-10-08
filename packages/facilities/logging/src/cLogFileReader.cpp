@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -48,12 +48,14 @@ bool readRaw(T &result, std::ifstream &file)
 {
     size_t sz = 0;
     file.read((char*)(&sz), sizeof(size_t));
+    
     if (!file.good())
     {
         return false;
     }
     msgpack::sbuffer sbuf(sz);
     file.read((char*)(sbuf.data()), sz);
+
     // unpack
     try 
     {
@@ -74,6 +76,7 @@ bool cLogFileReader::getFrame(tLogFrame &frame)
     {
         return false;
     }
+
     // read next
     return readRaw(frame, _file);
 }

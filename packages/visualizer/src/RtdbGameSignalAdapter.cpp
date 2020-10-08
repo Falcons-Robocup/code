@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,6 +22,7 @@
 #include "ctime"
 #include "chrono"
 #include "int/types/RobotColor.h"
+#include "ftime.hpp"
 
 double lastEvents [7][2] = {{0,0},{0,0}, {0,0},{0,0},{0,0}, {0,0}, {0,0}};
 
@@ -31,7 +32,7 @@ RtdbGameSignalAdapter::RtdbGameSignalAdapter()
     _timer = new QTimer(this);
     connect(_timer, SIGNAL(timeout()), this, SLOT(spinOnce()));
     _timer->start(int(1000 * 1.0 / 30)); // number in milliseconds
-    _startTimestamp = rtime::now();
+    _startTimestamp = ftime::now();
     TRACE("<");
 }
 
@@ -50,7 +51,7 @@ void RtdbGameSignalAdapter::emitMatchState(int agentId)
     if (r == RTDB2_SUCCESS)
     {
         _currentTimestamp = s.currentTime; // store for internal use (e.g. robot status timeout)
-        double logElapsedTime = double(s.currentTime - _startTimestamp);
+        double logElapsedTime = s.currentTime.toDouble() - _startTimestamp.toDouble();
         emit signalElapsedTimeChanged(logElapsedTime); // to renderer, for hiding objects
         emit signalClockTick(logElapsedTime, double(s.currentTime)); // to LCDwidget
         emit signalGoal(agentId, s.goalsOwn);
@@ -115,6 +116,7 @@ void RtdbGameSignalAdapter::emitBallResults(int agentId)
             auto ball = balls[b];
             PositionVelocity posvel(ball.position.x, ball.position.y, ball.position.z, 0, ball.velocity.x, ball.velocity.y, ball.velocity.z, 0);
             emit signalBallPositionChanged(ObjectId(agentId, b), WORLD, posvel, ball.confidence, 0, OMNIVISION);
+            emit signalBallPossessionChanged(agentId, WORLD, (BallPossessionType)ball.owner.type, ball.owner.robotId);
         }
     }
 }
@@ -377,7 +379,7 @@ void RtdbGameSignalAdapter::emitPathPlanningDiagnostics(int agentId)
         std::vector<PositionVelocity> path;
         for (auto it = diag_pp.path.begin(); it != diag_pp.path.end(); ++it)
         {
-            path.push_back(PositionVelocity(it->pos.x, it->pos.y, 0, it->pos.Rz, it->vel.x, it->vel.y));
+            path.push_back(PositionVelocity(it->pos.x, it->pos.y, 0, it->pos.Rz, it->vel.x, it->vel.y, 0, it->vel.Rz));
         }
         emit signalPathPlanningInProgress(agentId, path);
 
@@ -408,11 +410,11 @@ void RtdbGameSignalAdapter::spinOnce()
     // clear current state
     // TODO: this is only needed when we scroll back in time, so for performance reasons we then could use actor visibility instead
     emit signalClearAll();
-    
+
     // coach data
     {
         int agentId = 0;
-        
+
         // coach match state
         emitMatchState(agentId);
 
@@ -424,7 +426,7 @@ void RtdbGameSignalAdapter::spinOnce()
 
         // worldModel local data update
         emitGaussianObstacleResults(agentId);
-                
+
         // vision ball candidates
         emitBallCandidates(agentId);
 
@@ -491,31 +493,25 @@ void RtdbGameSignalAdapter::spinOnce()
 /*
 // TODO: below were all emits from RosGameSignalAdapter.cpp
 emit signalBallPositionChanged(ObjectId(senderRobotId, i), WORLD, posvel, ball.confidence, 0, OMNIVISION);
-emit signalBallPossessionChanged(senderRobotId, WORLD, (BallPossessionType)msg->ballPossession.type, msg->ballPossession.robotID);
 emit signalObstaclePositionChanged(ObjectId(senderRobotId, obstacle.id), WORLD, posvel);
-emit signalOwnTeamPositionChanged(senderRobotId, WORLD, robot.id, posvel); 
+emit signalOwnTeamPositionChanged(senderRobotId, WORLD, robot.id, posvel);
 emit signalBallPositionChanged(ObjectId(senderRobotId, ball.id), WORLD, posvel, ball.confidence, 0, OMNIVISION);
-emit signalBallPossessionChanged(senderRobotId, WORLD, (BallPossessionType)msg->ballPossession.type, msg->ballPossession.robotID);
 emit signalObstaclePositionChanged(ObjectId(senderRobotId, obstacle.id), WORLD, posvel);
-emit signalOwnTeamPositionChanged(senderRobotId, WORLD, i, posvel); 
+emit signalOwnTeamPositionChanged(senderRobotId, WORLD, i, posvel);
 emit signalElapsedTimeChanged(logElapsedTime); // to renderer, for hiding objects
 emit signalClockTick(logElapsedTime, msg->currentTime); // to LCDwidget
 emit signalLog(convertRosEvent(msg));
 
 emit signalClearRobot(robotId);
 
-emit signalBallPositionChanged(ObjectId(senderRobotId, 0), WORLD, posvel, ball.confidence, 0, OMNIVISION);
-emit signalBallPossessionChanged(senderRobotId, WORLD, (BallPossessionType)msg->ballPossession.type, msg->ballPossession.robotID);
 emit signalObstaclePositionChanged(ObjectId(senderRobotId, 0), WORLD, posvel);
-emit signalOwnTeamPositionChanged(senderRobotId, WORLD, msg->friends[i].id, posvel); 
-emit signalOwnTeamPositionChanged(senderRobotId, WORLD, senderRobotId, posvel); 
-emit signalOwnTeamPositionChanged(senderRobotId, WORLD, senderRobotId, posvel); 
+emit signalOwnTeamPositionChanged(senderRobotId, WORLD, msg->friends[i].id, posvel);
+emit signalOwnTeamPositionChanged(senderRobotId, WORLD, senderRobotId, posvel);
+emit signalOwnTeamPositionChanged(senderRobotId, WORLD, senderRobotId, posvel);
 
 emit signalBallPositionChanged(ObjectId(senderRobotId, ball.id), WORLD, posvel, ball.confidence, 0, OMNIVISION);
 
 emit signalObstaclePositionChanged(ObjectId(senderRobotId, obst.id), WORLD, posvel);
-
-emit signalBallPossessionChanged(senderRobotId, WORLD, (BallPossessionType)msg->ballPossession.type, msg->ballPossession.robotID);
 
 emit signalBallPositionChanged(ObjectId(robotId, msg->balls[i].objectID), VISION, posvel, 1.0, age, camType);
 emit signalObstaclePositionChanged(ObjectId(robotId, msg->obstacles[i].objectID), VISION, posvel);

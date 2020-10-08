@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,7 +28,7 @@
 #include <map>
 #include <fstream>
 #include "cLogFileWriter.hpp"
-#include "RtDB2.h"
+#include "FalconsRtDB2.hpp"
 
 
 class cLogger
@@ -36,13 +36,15 @@ class cLogger
 public:
     cLogger();
     ~cLogger();
-    
+
     void setFrequency(int frequency);
     std::string createFileName();
     void writeToFile(std::string filename = "auto");
-    bool makeFrame(tLogFrame &frame);
+    bool makeFrame(tLogFrame &frame, rtime const &t);
     void monitor(); // loop around tick()
-    
+    bool tickNow(); // poked from monitor
+    bool tick(rtime const &t); // handy for stimulation
+
 private:
     RtDB2* _rtdb = NULL;
     int _frequency;
@@ -50,8 +52,7 @@ private:
     rtime _t0; // start
     rtime _te; // end
     tLogHeader _header;
-    bool tick(); // poked from monitor
-    
+
 };
 
 #endif

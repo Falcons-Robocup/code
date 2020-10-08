@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,7 +21,7 @@
 #include <exception>
 
 #include "cDbConnection.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 #include "rtdbKeys.hpp"
 // #include "agentIDs.hpp"
@@ -68,7 +68,7 @@ template <typename T> T RtdbRefboxConfigAdapter::getValue(int database, const st
 
 void RtdbRefboxConfigAdapter::setTeamColor(TeamColor teamColor)
 {
-    refboxConfig config = getValue<refboxConfig>(COACH, REFBOX_CONFIG);
+    refboxConfig config = getValue<refboxConfig>(COACH_AGENTID, REFBOX_CONFIG);
 
     switch(teamColor)
     {
@@ -80,12 +80,12 @@ void RtdbRefboxConfigAdapter::setTeamColor(TeamColor teamColor)
         break;
     }
 
-    setValue(COACH, REFBOX_CONFIG, config);
+    setValue(COACH_AGENTID, REFBOX_CONFIG, config);
 }
 
 void RtdbRefboxConfigAdapter::setPlayingField(PlayingField playingField)
 {
-    refboxConfig config = getValue<refboxConfig>(COACH, REFBOX_CONFIG);
+    refboxConfig config = getValue<refboxConfig>(COACH_AGENTID, REFBOX_CONFIG);
 
     switch(playingField)
     {
@@ -109,5 +109,32 @@ void RtdbRefboxConfigAdapter::setPlayingField(PlayingField playingField)
         break;
     }
 
-    setValue(COACH, REFBOX_CONFIG, config);
+    setValue(COACH_AGENTID, REFBOX_CONFIG, config);
 }
+
+void RtdbRefboxConfigAdapter::setTTAConfiguration(RefboxConfigAdapter::TTAConfiguration ttaConfig)
+{
+    refboxConfig config = getValue<refboxConfig>(COACH_AGENTID, REFBOX_CONFIG);
+
+    switch(ttaConfig)
+    {
+    case NONE:
+        config.technicalTeamArea = refboxConfigTTAside::NONE;
+        break;
+    case FRONT_LEFT:
+        config.technicalTeamArea = refboxConfigTTAside::FRONT_LEFT;
+        break;
+    case FRONT_RIGHT:
+        config.technicalTeamArea = refboxConfigTTAside::FRONT_RIGHT;
+        break;
+    case BACK_LEFT:
+        config.technicalTeamArea = refboxConfigTTAside::BACK_LEFT;
+        break;
+    case BACK_RIGHT:
+        config.technicalTeamArea = refboxConfigTTAside::BACK_RIGHT;
+        break;
+    }
+
+    setValue(COACH_AGENTID, REFBOX_CONFIG, config);
+}
+

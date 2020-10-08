@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,6 +25,7 @@
 
 #include "position2d.hpp"
 
+#include "int/adapters/configurators/WorldModelConfig.hpp"
 #include "int/types/robot/robotDisplacementType.hpp"
 #include "int/types/robot/robotVelocityType.hpp"
 #include "int/types/robot/robotMeasurementType.hpp"
@@ -39,7 +40,7 @@
 class robotLocalization
 {
     public:
-        robotLocalization();
+        robotLocalization(const WorldModelConfig* wmConfig);
         ~robotLocalization();
 
         // add-calculate-get main contract
@@ -99,6 +100,7 @@ class robotLocalization
 
         void orientTowardsOpponentGoal(); // Ensures that robot faces +y in FCS
         void flipOrientation();
+        void initializeTTA();
 
         Position2D getEncoderUpdateSince(double timestamp) const;
         void cleanupVisionTrackers();
@@ -116,6 +118,7 @@ class robotLocalization
         localizationDiagnostics_t _diagData;
         robotClass_t _currentPosVel;
         bool _isValid;
+        bool _initializedInTTA = false;
         int _lastTrackerId;
 
         // buffers are flushed each heartbeat calculation
@@ -128,6 +131,8 @@ class robotLocalization
 
         std::deque<Position2D> _visStabList;
         std::map<int, localizationTracker> _trackers;
+
+        const WorldModelConfig* _wmConfig;
 
         /*** end data members ***/
         

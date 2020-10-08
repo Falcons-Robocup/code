@@ -10,9 +10,9 @@ MAKEFLAGS = -j8
 CFLAGS = -g3 -O3 -m64 -ansi -std=c++11 -Wall -Wextra -Wpedantic -Werror
 
 LDFLAGS = -pthread -L/usr/local/lib
-LDLIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lpthread
+LDLIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lpthread
 
-INC = -I./
+INC = -I./ -I/usr/include/opencv4
 
 path=~/falcons/data/internal/vision/multiCam/r6
 fileread = 20190427_224613
@@ -23,7 +23,7 @@ all: $(TARGET)
 	@./$(TARGET) -v -d -i $(path)/grab2_$(fileread).jpg -o grab2.rgb
 	@./$(TARGET) -v -d -i $(path)/grab3_$(fileread).jpg -o grab3.rgb
 
-%.o: ../src/%.cpp Makefile
+%.o: ./%.cpp Makefile
 	g++ $(CFLAGS) $(INC) -o $@ -c $<
 
 $(TARGET): $(OBJECTS)

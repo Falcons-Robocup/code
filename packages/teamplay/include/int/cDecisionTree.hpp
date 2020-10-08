@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -110,7 +110,7 @@ class cDecisionTree
         cDecisionTree(cDecisionTree const&); // Don't Implement
         void operator=(cDecisionTree const&); // Don't implement
 
-		const std::string DECISIONTREE_PATH = "/falcons/code/packages/teamplay/teamplayData/";
+		const std::string DECISIONTREE_PATH = pathToTeamplayDataRepo();
 
         RtDB2 *_rtdb = NULL;
 		// These are the trees that are loaded on startup.
@@ -120,6 +120,7 @@ class cDecisionTree
         behTreeReturnEnum executeAction(const cParsedNode &node, std::map<std::string, std::string> &mapParams);
         const cParsedTree& getBehaviorTree(const treeEnum &behavior);
         void prettyPrintMemoryStack(memoryStackType& memoryStack, memoryStackNodes& memoryStackNodes);
+        void prettyPrintParams(std::map<std::string, std::string> const &mapParams);
 
 };
 

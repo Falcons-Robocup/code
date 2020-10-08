@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,6 +25,7 @@
 
 #include "FalconsRtDB2.hpp"
 #include "tracing.hpp"
+#include "ftime.hpp"
 
 
 RTDBRefBoxAdapter::RTDBRefBoxAdapter()
@@ -37,7 +38,7 @@ RTDBRefBoxAdapter::RTDBRefBoxAdapter()
 void RTDBRefBoxAdapter::sendCommand () const
 {
     T_MATCH_STATE matchState;
-    matchState.currentTime = rtime::now();
+    matchState.currentTime = ftime::now();
     matchState.goalsOwn = _score_for_team_A;
     matchState.goalsOpponent = _score_for_team_B;
 

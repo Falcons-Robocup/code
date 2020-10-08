@@ -1,72 +1,87 @@
-obstacleAvoidanceEnabled:                 true
-normal:
-    limiters:
-        maxVelXY:                         2.00
-        maxVelXY_withBall:                1.50
-        maxVelPhi:                        2.00
-        maxVelPhi_withBall:               4.00
-        maxAccXY:                         3.50
-        maxAccPhi:                        3.50
-        tolerationXY:                     0.01
-        tolerationPhi:                    0.001
-        relativeSpeedFactorX:             1.0
-        relativeSpeedFactorY:             1.0
-        relativeSpeedFactorPhi:           1.0
-        obstacleAvoidanceScalingFactor:   0.1
-        obstacleAvoidanceDistanceFactor:  1.0
-    pid:
-        X_P:                              0.9
-        X_I:                              0.0
-        X_D:                              0.0
-        Y_P:                              0.9
-        Y_I:                              0.0
-        Y_D:                              0.0
-        XY_P:                             0.9
-        XY_I:                             0.0
-        XY_D:                             0.0
-        PHI_P:                            0.9
-        PHI_I:                            0.0
-        PHI_D:                            0.0
-        maxI_XY:                          0.5
-        maxI_Phi:                         0.1
-    brake_deceleration:                   0.0
-    brake_gamma:                          0.0
-    tokyoDrift_radius:                    0.2
-    tokyoDrift_step_angle:                0.785
-    tokyoDrift_facing_target_tol:         0.5
-setpiece:
-    limiters:
-        maxVelXY:                         0.50
-        maxVelXY_withBall:                1.50
-        maxVelPhi:                        2.00
-        maxVelPhi_withBall:               1.00
-        maxAccXY:                         3.50
-        maxAccPhi:                        3.50
-        tolerationXY:                     0.01
-        tolerationPhi:                    0.001
-        relativeSpeedFactorX:             1.0
-        relativeSpeedFactorY:             1.0
-        relativeSpeedFactorPhi:           1.0
-        obstacleAvoidanceScalingFactor:   0.1
-        obstacleAvoidanceDistanceFactor:  1.0
-    pid:
-        X_P:                              0.7
-        X_I:                              0.0
-        X_D:                              0.0
-        Y_P:                              0.7
-        Y_I:                              0.0
-        Y_D:                              0.0
-        XY_P:                             0.7
-        XY_I:                             0.0
-        XY_D:                             0.0
-        PHI_P:                            0.5
-        PHI_I:                            0.0
-        PHI_D:                            0.0
-        maxI_XY:                          0.5
-        maxI_Phi:                         0.1
-    brake_deceleration:                   0.0
-    brake_gamma:                          0.0
-    tokyoDrift_radius:                    0.2
-    tokyoDrift_step_angle:                0.785
-    tokyoDrift_facing_target_tol:         0.5
+nominalFrequency:                         20
+numExtraSettlingTicks:                    1
+velocityControllers:
+    threshold:                            99.0 # effectively disable long-stroke, SPG is preferred for simulation
+    longStroke:
+        type:                             VelocitySetpointControllerTypeEnum:LINEAR
+        coordinateSystem:                 CoordinateSystemEnum:RCS
+    shortStroke:
+        type:                             VelocitySetpointControllerTypeEnum:SPG
+        coordinateSystem:                 CoordinateSystemEnum:RCS
+obstacleAvoidance:
+    enabled:                              true
+    robotRadius:                          0.26
+    obstacleRadius:                       0.26
+    distanceScalingFactor:                0.0
+    speedScalingFactor:                   1.0
+    speedLowerThreshold:                  0.2
+    speedUpperThreshold:                  3.0
+    ballClearance:                        1.0
+    generatedObstacleSpacing:             0.5
+    groupGapDistance:                     0.60
+    subTargetDistance:                    0.75
+    subTargetExtensionFactor:             0.0
+boundaries:
+    targetInsideForbiddenArea:            BoundaryOptionEnum:STOP_AND_FAIL
+    targetOutsideField:                   BoundaryOptionEnum:ALLOW
+    fieldMarginX:                         1.0
+    fieldMarginY:                         0.5
+    targetOnOwnHalf:                      BoundaryOptionEnum:ALLOW
+    targetOnOpponentHalf:                 BoundaryOptionEnum:ALLOW
+slowFactor:                               0.50
+forwardDriving:
+    withoutBall:
+        enabled:                          true # maximize speed
+        minimumDistance:                  1.5
+    withBall:
+        enabled:                          true
+        minimumDistance:                  0.9
+    radiusRobotToBall:                    0.26
+    applyLimitsToBall:                    false # false: simulate perfect ballHandling; true: probably more realistic
+limits:
+    enabled:                              true
+    withoutBall:
+        maxVelX:                          1.0
+        maxVelYforward:                   2.0
+        maxVelYbackward:                  2.0
+        maxVelRz:                         2.0
+        maxAccX:                          1.5
+        maxAccYforward:                   3.5
+        maxAccYbackward:                  3.5
+        maxAccRz:                         3.5
+    withBall:
+        maxVelX:                          0.5
+        maxVelYforward:                   1.5
+        maxVelYbackward:                  0.5
+        maxVelRz:                         4.0
+        maxAccX:                          1.0
+        maxAccYforward:                   3.0
+        maxAccYbackward:                  1.5
+        maxAccRz:                         6.0
+    common:
+        maxDecX:                          4.0
+        maxDecY:                          7.0
+        maxDecRz:                         7.0
+        toleranceXY:                      0.01
+        toleranceRz:                      0.001
+        accThresholdX:                    0.0
+        accThresholdY:                    0.0
+        accThresholdRz:                   0.0
+deadzone:                                 false
+setPointGenerator:
+    synchronizeRotation:                  true
+    weightFactorClosedLoop:               0.0  # simulation is perfect, so use open loop
+    latencyOffset:                        0.00
+    convergenceWorkaround:                true
+pid:
+    XY_P:                                 1.6
+    XY_I:                                 0.0
+    XY_D:                                 0.0
+    RZ_P:                                 3.5
+    RZ_I:                                 0.0
+    RZ_D:                                 0.0
+    maxI_XY:                              0.5
+    maxI_Rz:                              0.1
+    fadeI_XY:                             0.99
+    fadeI_Rz:                             0.99
 

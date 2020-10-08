@@ -17,18 +17,11 @@
 #
 # so all actions go below
 
+# TODO: above description is outdated, since Ioan has been working his magic (see Jenkinsfile, wiki)
 
 
 # Configure environment
-source $HOME/falcons/code/scripts/falconsconfig.sh 
-
-# Inspect wiki activity log and report a summary into gitlab (issue #45)
-# run this script only once per week: friday morning
-if [ `date +%w` = 5 ]; then
-    if [ `date +%H` -lt 3 ]; then
-        postAsJenkinsRecentWikiActivity
-    fi
-fi
+source $HOME/falcons/code/scripts/setupEnv.sh
 
 # Make sure teamplayData is consistent
 cd $HOME/falcons/teamplayData
@@ -40,7 +33,7 @@ set -e
 # Start the build
 falconsbuild.sh --pre-clean
 
-# Run unit testers
-$HOME/falcons/code/testing/runtests_unitlevel
+# Run test suite
+$HOME/falcons/code/testing/runtests
 
 

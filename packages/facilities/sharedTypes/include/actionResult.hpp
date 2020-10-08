@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -34,10 +34,9 @@ SERIALIZE_ENUM(actionResultTypeEnum);
 
 struct actionResult
 {
-    int                  id;
     actionResultTypeEnum result;
     
-    SERIALIZE_DATA_FIXED(id, result);
+    SERIALIZE_DATA_FIXED(result);
 };
 
 #endif

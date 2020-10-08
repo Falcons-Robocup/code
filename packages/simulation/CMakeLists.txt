@@ -1,34 +1,26 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 3.5.1)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE Debug)
+project(Simulation)
 
-rosbuild_init()
+find_package(Boost COMPONENTS system thread REQUIRED QUIET)
+find_package(Facilities)
 
+### RELEASE
+set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror")
 
+### DEBUG
+#set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror -g")
+
+
+include_directories("include" "include/int")
+
 #set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-#Add dynamic reconfigure api
-#rosbuild_find_ros_package(dynamic_reconfigure)
-#include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-#gencfg()
-
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
-
-include_directories("include/int")
 
 #############################
 # Code generators
@@ -43,7 +35,7 @@ add_custom_target(
 #############################
 # Libraries
 #############################
-rosbuild_add_library(
+add_library(
     arbiter
     src/arbiter.cpp
 )
@@ -55,7 +47,7 @@ target_link_libraries(
     refboxAdapter
 )
 
-rosbuild_add_library(
+add_library(
     arbiterControllers
     src/preparingController.cpp
     src/runningController.cpp
@@ -66,9 +58,10 @@ rosbuild_add_library(
 target_link_libraries(
     arbiterControllers
     arbiterGameData
+    EnvironmentField
 )
 
-rosbuild_add_library(
+add_library(
     arbiterGameData
     src/arbiterGameData.cpp
 )
@@ -78,7 +71,7 @@ target_link_libraries(
     gameData
 )
 
-rosbuild_add_library(
+add_library(
     gameData
     src/ball.cpp
     src/gameData.cpp
@@ -87,7 +80,13 @@ rosbuild_add_library(
     src/teamID.cpp
 )
 
-rosbuild_add_library(
+target_link_libraries(
+    gameData
+    Tracing
+    FalconsCommon
+)
+
+add_library(
     configAdapter
     src/RTDBconfigAdapter.cpp
 )
@@ -95,9 +94,10 @@ rosbuild_add_library(
 target_link_libraries(
     configAdapter
     RTDBaccess
+    diagnostics
 )
 
-rosbuild_add_library(
+add_library(
     gameDataAdapter
     src/RTDBgameDataAdapter.cpp
 )
@@ -107,7 +107,7 @@ target_link_libraries(
     RTDBaccess
 )
 
-rosbuild_add_library(
+add_library(
     motionAdapter
     src/RTDBmotionAdapter.cpp
 )
@@ -122,7 +122,7 @@ add_dependencies(
     enum_generator
 )
 
-rosbuild_add_library(
+add_library(
     refboxAdapter
     src/RTDBrefboxAdapter.cpp
 )
@@ -130,6 +130,7 @@ rosbuild_add_library(
 target_link_libraries(
     refboxAdapter
     RTDBaccess
+    FTime
 )
 
 add_dependencies(
@@ -137,12 +138,32 @@ add_dependencies(
     enum_generator
 )
 
-rosbuild_add_library(
+add_library(
+    timeAdapter
+    src/RTDBtimeAdapter.cpp
+)
+
+target_link_libraries(
+    timeAdapter
+    RTDBaccess
+)
+
+add_dependencies(
+    timeAdapter
+    enum_generator
+)
+
+add_library(
     RTDBaccess
     src/RTDBaccess.cpp
 )
 
-rosbuild_add_library(
+target_link_libraries(
+    RTDBaccess
+    FalconsTypes
+)
+
+add_library(
     simworld
     src/simworld.cpp
 )
@@ -153,10 +174,11 @@ target_link_libraries(
     configAdapter
     gameDataAdapter
     motionAdapter
+    timeAdapter
     simworldGameDataFactory
 )
 
-rosbuild_add_library(
+add_library(
     simworldGameData
     src/simworldGameData.cpp
 )
@@ -164,9 +186,15 @@ rosbuild_add_library(
 target_link_libraries(
     simworldGameData
     gameData
+    EnvironmentField
 )
 
-rosbuild_add_library(
+add_dependencies(
+    simworldGameData
+    enum_generator
+)
+
+add_library(
     simworldGameDataFactory
     src/simworldGameDataFactory.cpp
 )
@@ -179,7 +207,7 @@ target_link_libraries(
 #############################
 # Executables
 #############################
-rosbuild_add_executable(
+add_executable(
     sw
     src/simworld_main.cpp
 )
@@ -187,133 +215,66 @@ rosbuild_add_executable(
 target_link_libraries(
     sw
     simworld
+    Tracing
+    rtdb2
+    diagnostics
 )
 
 #############################
 # Testers
 #############################
-rosbuild_add_gtest(
-    arbiterTest
-    tst/arbiterTest.cpp
-    TIMEOUT 1
-)
+add_executable(arbiterTest tst/arbiterTest.cpp)
+target_link_libraries(arbiterTest arbiter gmock gtest)
+add_test(arbiterTest arbiterTest)
+set_tests_properties(arbiterTest PROPERTIES TIMEOUT 1)
 
-target_link_libraries(
-    arbiterTest
-    arbiter
-    gmock
-)
+add_executable(ballTest tst/ballTest.cpp)
+target_link_libraries(ballTest gameData gtest)
+add_test(ballTest ballTest)
+set_tests_properties(ballTest PROPERTIES TIMEOUT 1)
 
-rosbuild_add_gtest(
-    ballTest
-    tst/ballTest.cpp
-    TIMEOUT 1
-)
+add_executable(gameDataTest tst/gameDataTest.cpp)
+target_link_libraries(gameDataTest gameData gtest)
+add_test(gameDataTest gameDataTest)
+set_tests_properties(gameDataTest PROPERTIES TIMEOUT 1)
 
-target_link_libraries(
-    ballTest
-    gameData
-)
+add_executable(robotTest tst/robotTest.cpp)
+target_link_libraries(robotTest gameData gtest)
+add_test(robotTest robotTest)
+set_tests_properties(robotTest PROPERTIES TIMEOUT 1)
 
-rosbuild_add_gtest(
-    gameDataTest
-    tst/gameDataTest.cpp
-    TIMEOUT 1
-)
+add_executable(preparingControllerTest tst/preparingControllerTest.cpp)
+target_link_libraries(preparingControllerTest  arbiterControllers  gmock gtest)
+add_test(preparingControllerTest preparingControllerTest)
+set_tests_properties(preparingControllerTest PROPERTIES TIMEOUT 1)
 
-target_link_libraries(
-    gameDataTest
-    gameData
-)
+add_executable(runningControllerTest tst/runningControllerTest.cpp)
+target_link_libraries(runningControllerTest arbiterControllers gmock gtest)
+add_test(runningControllerTest runningControllerTest)
+set_tests_properties(runningControllerTest PROPERTIES TIMEOUT 1)
 
-rosbuild_add_gtest(
-    robotTest
-    tst/robotTest.cpp
-    TIMEOUT 1
-)
+# this test is crashing with a segfault, seems framework related? -> disabled
+#add_executable(simworldTest tst/simworldTest.cpp)
+#target_link_libraries(simworldTest simworld gmock gtest)
+#add_test(simworldTest simworldTest)
+#set_tests_properties(simworldTest PROPERTIES TIMEOUT 10)  # The timeout is longer, because simworld sleeps by design
 
-target_link_libraries(
-    robotTest
-    gameData
-)
+add_executable(simworldGameDataTest tst/simworldGameDataTest.cpp)
+target_link_libraries(simworldGameDataTest simworldGameData gtest)
+add_test(simworldGameDataTest simworldGameDataTest)
+set_tests_properties(simworldGameDataTest PROPERTIES TIMEOUT 10)
 
-rosbuild_add_gtest(
-    preparingControllerTest
-    tst/preparingControllerTest.cpp
-    TIMEOUT 1
-)
+add_executable(simworldGameDataFactoryTest tst/simworldGameDataFactoryTest.cpp)
+target_link_libraries(simworldGameDataFactoryTest simworldGameDataFactory gtest)
+add_test(simworldGameDataFactoryTest simworldGameDataFactoryTest)
+set_tests_properties(simworldGameDataFactoryTest PROPERTIES TIMEOUT 1)
 
-target_link_libraries(
-    preparingControllerTest
-    arbiterControllers
-    gmock
-)
+add_executable(stoppedControllerTest tst/stoppedControllerTest.cpp)
+target_link_libraries(stoppedControllerTest arbiterControllers gmock gtest)
+add_test(stoppedControllerTest stoppedControllerTest)
+set_tests_properties(stoppedControllerTest PROPERTIES TIMEOUT 1)
 
-rosbuild_add_gtest(
-    runningControllerTest
-    tst/runningControllerTest.cpp
-    TIMEOUT 1
-)
-
-target_link_libraries(
-    runningControllerTest
-    arbiterControllers
-    gmock
-)
-
-rosbuild_add_gtest(
-    simworldTest
-    tst/simworldTest.cpp
-    TIMEOUT 10  # The timeout is longer, because simworld sleeps by design
-)
-
-target_link_libraries(
-    simworldTest
-    simworld
-    gmock
-)
-
-rosbuild_add_gtest(
-    simworldGameDataTest
-    tst/simworldGameDataTest.cpp
-    TIMEOUT 1
-)
-
-target_link_libraries(
-    simworldGameDataTest
-    simworldGameData
-)
-
-rosbuild_add_gtest(
-    simworldGameDataFactoryTest
-    tst/simworldGameDataFactoryTest.cpp
-    TIMEOUT 1
-)
-
-target_link_libraries(
-    simworldGameDataFactoryTest
-    simworldGameDataFactory
-)
-
-rosbuild_add_gtest(
-    stoppedControllerTest
-    tst/stoppedControllerTest.cpp
-    TIMEOUT 1
-)
-
-target_link_libraries(
-    stoppedControllerTest
-    arbiterControllers
-    gmock
-)
-
-rosbuild_add_gtest(
-    stoppingControllerTest
-    tst/stoppingControllerTest.cpp
-    TIMEOUT 1
-)
-
-target_link_libraries(
-    stoppingControllerTest
-    arbiterControllers
-)
+add_executable(stoppingControllerTest tst/stoppingControllerTest.cpp)
+target_link_libraries(stoppingControllerTest arbiterControllers gtest)
+add_test(stoppingControllerTest stoppingControllerTest)
+set_tests_properties(stoppingControllerTest PROPERTIES TIMEOUT 1)

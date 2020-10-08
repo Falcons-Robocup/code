@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,8 +23,8 @@
 
 #include "int/motors/MotorControllerBoard.hpp"
 
-#include "int/Communication.hpp"
-#include "int/DeviceManager.hpp"
+#include "int/motors/Communication.hpp"
+#include "int/motors/DeviceManager.hpp"
 
 using namespace std;
 

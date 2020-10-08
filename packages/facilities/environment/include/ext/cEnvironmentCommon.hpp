@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,14 +16,28 @@
  *      Author: Michel Koenen
  */
 
-#include "json.h"
-
 #include <string>
+#include <vector>
 
 namespace environmentCommon
 {
 	std::string LoadFileAsString(const std::string &filename, bool *successful);
-	bool readJSON(Json::Value &root);
+
+    // in: root value to load (e.g., field, ball, robot)
+    // out: vector with string pairs (e.g., values[0].first == goalHeight && values[0].second == 1.0)
+	bool readYAML(std::string root, std::vector< std::pair<std::string,std::string> > &values);
 }
 
+// This class provides a predicate for finding the yaml values
+class KeyEquals
+{
+    std::string _key;
 
+    public:
+    KeyEquals(std::string key):_key(key) { }
+
+    bool operator()(std::pair<std::string,std::string> compareKey) const
+    {
+        return compareKey.first == _key;
+    }
+};

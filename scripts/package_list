@@ -12,8 +12,9 @@ common
 pathPlanning
 worldModel
 networkUDP
-rtdb3
+rtdb
 sharedTypes
+filters
 refbox
 simulation
 shootPlanning
@@ -23,7 +24,6 @@ teamplay
 multiCam
 raspiControl
 raspiSync
-robotControl
 visualizer
 velocityControl
 EOF

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,7 +18,7 @@
 
 #include "int/adapters/cRTDBOutputAdapter.hpp"
 
-#include "FalconsCommon.h" //getRobotNumber(), getTeamChar()
+#include "falconsCommon.hpp" //getRobotNumber(), getTeamChar()
 #include "tracing.hpp"
 
 cRTDBOutputAdapter::cRTDBOutputAdapter()
@@ -29,22 +29,16 @@ cRTDBOutputAdapter::cRTDBOutputAdapter()
     _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, teamChar);
 }
 
+cMotionPlanningClient& cRTDBOutputAdapter::getMPClient()
+{
+    return _mpClient;
+}
+
 void cRTDBOutputAdapter::setActionData(const T_ACTION& actionData)
 {
     TRACE_FUNCTION("");
 
-    std::map<actionTypeEnum, std::string> ACTIONTYPEENUM2STR; // TODO generate this?
-    ACTIONTYPEENUM2STR[actionTypeEnum::UNKNOWN] = "UNKNOWN";
-    ACTIONTYPEENUM2STR[actionTypeEnum::MOVE] = "MOVE";
-    ACTIONTYPEENUM2STR[actionTypeEnum::PASS] = "PASS";
-    ACTIONTYPEENUM2STR[actionTypeEnum::SHOOT] = "SHOOT";
-    ACTIONTYPEENUM2STR[actionTypeEnum::LOB] = "LOB";
-    ACTIONTYPEENUM2STR[actionTypeEnum::STOP] = "STOP";
-    ACTIONTYPEENUM2STR[actionTypeEnum::GET_BALL] = "GET_BALL";
-    ACTIONTYPEENUM2STR[actionTypeEnum::TURN_AWAY_FROM_OPPONENT] = "TURN_AWAY_FROM_OPPONENT";
-    ACTIONTYPEENUM2STR[actionTypeEnum::KEEPER_MOVE] = "KEEPER_MOVE";
-    
-    tprintf("put ACTION slow=%d bh=%d id=%d position=[%6.2f, %6.2f, %6.2f] type=%s", actionData.slow, actionData.ballHandlersEnabled, actionData.id, actionData.position.x, actionData.position.y, actionData.position.z, ACTIONTYPEENUM2STR[actionData.action].c_str());
+    tprintf("put ACTION slow=%d bh=%d position=[%6.2f, %6.2f, %6.2f] type=%s", actionData.slow, actionData.ballHandlersEnabled, actionData.position.x, actionData.position.y, actionData.position.z, enum2str(actionData.action));
     _rtdb->put(K_ACTION, &actionData);  
 }
 
@@ -58,8 +52,13 @@ void cRTDBOutputAdapter::clearForbiddenAreas()
 void cRTDBOutputAdapter::setForbiddenAreas(const T_FORBIDDEN_AREAS& forbiddenAreas)
 {
     TRACE_FUNCTION("");
-
-    _rtdb->put(FORBIDDEN_AREAS, &forbiddenAreas);
+    // enumerate id's
+    auto tmpForbiddenAreas = forbiddenAreas;
+    for (int it = 0; it < (int)tmpForbiddenAreas.size(); ++it)
+    {
+        tmpForbiddenAreas[it].id = it;
+    }
+    _rtdb->put(FORBIDDEN_AREAS, &tmpForbiddenAreas);
 }
 
 void cRTDBOutputAdapter::setRole(const T_ROBOT_ROLE& role)

@@ -28,7 +28,7 @@ void CameraCalibrator::getObjectPoints(const cv::Size patternSize, std::vector<s
 bool CameraCalibrator::getImagePoints(cv::Mat& image, cv::Size& patternSize, std::vector<std::vector<cv::Point2f>>& imagePoints) const
 {
 	std::vector<cv::Point2f> corners;
-	const bool patternFound = cv::findChessboardCorners(image, cv::Size(_widthChessboard, _heightChessboard), corners, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS | CV_CALIB_CB_NORMALIZE_IMAGE);
+	const bool patternFound = cv::findChessboardCorners(image, cv::Size(_widthChessboard, _heightChessboard), corners, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_FILTER_QUADS | cv::CALIB_CB_NORMALIZE_IMAGE);
 	if (patternFound)
 	{
 		patternSize.width = _widthChessboard;

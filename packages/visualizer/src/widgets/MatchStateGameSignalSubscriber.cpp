@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -44,7 +44,7 @@ void MatchStateGameSignalSubscriber::onCommandTimeChanged(uint8_t senderRobotId,
     commandQDatetime.setTime_t((int)commandTime);
     QTime commandQTime = commandQDatetime.time();
     int msecs = 1000 * (commandTime - (int)commandTime);
-    commandQTime.addMSecs(msecs);
+    commandQTime = commandQTime.addMSecs(msecs);
     QString commandTimeQStr = commandQTime.toString("hh:mm:ss");
 
     _widget->setCommandTime(commandTimeQStr);

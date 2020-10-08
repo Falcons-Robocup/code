@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,11 +16,13 @@
  *      Author: Jan Feitsma
  */
 
+#include <boost/lexical_cast.hpp>
+
 #include "int/heightmaps/hmNearPosition.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
 
 using namespace teamplay;
 

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,6 +28,16 @@ cLogPlayback::cLogPlayback()
 tLogHeader cLogPlayback::getHeader()
 {
     return _header;
+}
+
+float cLogPlayback::getDuration()
+{
+    tLogFrame lastFrame;
+    if ( _frameBuffer.getIndex( (_frameBuffer.getSize()-1), lastFrame ) )
+    {
+        return lastFrame.age;
+    }
+    return -1.0;
 }
 
 bool cLogPlayback::step()
@@ -102,7 +112,7 @@ void cLogPlayback::putFrame(tLogFrame const &frame)
 {
     TRACE_FUNCTION("");
     // write current frame into RTDB
-    rtime t = _header.creation + rtime().fromDouble(frame.age);
+    rtime t = _header.creation + frame.age;
     if (_rtdb == NULL)
     {
         throw std::runtime_error("There is no RTDB connection");

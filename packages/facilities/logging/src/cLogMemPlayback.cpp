@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -40,19 +40,19 @@ bool readRaw(T &result, std::ifstream &file)
     msgpack::sbuffer sbuf(sz);
     file.read((char*)(sbuf.data()), sz);
     // unpack
-    try 
+    try
     {
         msgpack::object_handle msg = msgpack::unpack(sbuf.data(), sz);
         msgpack::object obj = msg.get();
         obj.convert(result);
-    } 
-    catch (...) 
+    }
+    catch (...)
     {
         throw std::runtime_error("Failed to read object from log file");
     }
     return true;
 }
-    
+
 void cPlayback::run()
 {
     rtime::loop(1.0 / _dt, boost::bind(&cPlayback::step, this));
@@ -121,7 +121,7 @@ bool cPlayback::putFrameQueue()
 void cPlayback::putFrame(tLogFrame const &frame)
 {
     // write current frame into RTDB
-    rtime t = _header.creation + rtime().fromDouble(frame.age);
+    rtime t = _header.creation + frame.age;
     int agentId = frame.agent;
     if (!_rtdb.count(agentId))
     {

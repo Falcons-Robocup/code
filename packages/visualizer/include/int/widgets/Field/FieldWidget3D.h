@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -27,8 +27,6 @@
 #include <vtkCubeSource.h>
 #include <vtkEventQtSlotConnect.h>
 #include <vtkCommand.h>
-#include <vtkImageActor.h>
-#include <vtkImageData.h>
 
 // Internal:
 #include "int/widgets/Field/CamFeedParams.h"
@@ -36,6 +34,7 @@
 #include "int/widgets/Field/Visualization/ObstacleVisualization.h"
 #include "int/widgets/Field/Visualization/GaussianVisualization.h"
 #include "int/widgets/Field/Visualization/ForbiddenAreaVisualization.h"
+#include "int/widgets/Field/Visualization/TechnicalTeamAreaVisualization.h"
 #include "int/widgets/Field/Visualization/RobotVisualization.h"
 #include "int/widgets/Field/Visualization/ShootTargetVisualization.h"
 #include "int/widgets/Field/Visualization/projectSpeedVisualization.h"
@@ -46,11 +45,13 @@
 #include "polygon2D.hpp"
 #include "linepoint2D.hpp"
 #include "rtdbStructs.hpp"
+#include "heightmapNames.hpp"
 
 #define OBSTACLE_HEIGHT 0.2
 
 class GameSignalAdapter;
 class FieldWidget3D;
+class FieldVideoActor;
 
 /*
 * Class that handles subscriber data for the FieldWidget
@@ -73,6 +74,7 @@ public Q_SLOTS:
 
     virtual void onClearRequest();
     virtual void onElapsedTimeChanged(double t); // Time elapsed in log session
+    virtual void onClockTick(double elapsedTime, double actualTime) override;
     virtual void onRobotClear(uint8_t robotID);
 
     virtual void onBallPositionChanged(ObjectId id, SignalMode signalMode, PositionVelocity& posvel, float confidence, float age, CameraType camType) override; // Ball position according to one robot
@@ -117,6 +119,13 @@ public:
 public Q_SLOTS:
     void resetZoomPanRotate();
     void flip(bool flip); // Rotate field 180 degrees (resets camera position as well)
+    void switchHeightmapToNone(void);
+    void switchHeightmapToDefendAttackingOpponent(void);
+    void switchHeightmapToDribble(void);
+    void switchHeightmapToMoveToFreeSpot(void);
+    void switchHeightmapToPositionForOppSetpiece(void);
+    void switchHeightmapToPositionForOwnSetpiece(void);
+    void switchHeightmapForRobot(int robotId);
 
 protected:
     virtual void resizeEvent(QResizeEvent * event);
@@ -127,9 +136,10 @@ private Q_SLOTS:  /* == Rendering == */
 public:
     vtkRenderer* getRenderer() { return _mainRenderer; };
     vtkSmartPointer<RobotVisualization> getTeamRobot(uint8_t robotId); // key: robotId [1..n]
-    void setLogTimeStamp(double t) { _timestamp = t; };
+    void setLogTimeStamp(double t);
+    void setClockTick(double elapsedTime, double actualTime);
 
-private: 
+private:
     QTimer *_updateTimer; // Timeout signal used to update
     QMutex _renderMutex;
 
@@ -140,27 +150,27 @@ private:
     vtkRenderer *_annotationRenderer = nullptr; // Renders annotation on top of the scene
 
     vtkCamera* _camera = nullptr;
-    vtkActor* _field = nullptr;
-    
+    //vtkActor* _field = nullptr;
+
     double _timestamp = 0; // Game logging timestamp (0.0 is start), to decide when to hide actors
 
     bool _flipField = false; // Flip field 180 to reflect that the playing direction changed. Note: This just changes the camera orientation, field rendering doesn't change!
+
+    CompositeHeightmapName _heightmapName = CompositeHeightmapName::INVALID;
+    int _robotID;
 
     void clear(); // Make all actors invisible
     void cleanup();
 
     /* == Cam feed rendering (prototyping #435) == */
-    bool cfEnabled = false;
-    // TODO use cam feed instead of static jpg (which is just a proof of concept)
-    // TODO configuration sliders for all of the parameters
-    CamFeedParams cfParams;
-    vtkSmartPointer<vtkImageActor> cfImageActor;
-    vtkSmartPointer<vtkImageData> cfImageData;
-    void cfRender();
+    vtkSmartPointer<FieldVideoActor> fieldVideoActor;
 
     /* == Field rendering == */
     void addFieldActors();
     void addGoalActors();
+    void addTechnicalTeamAreaActor();
+    vtkSmartPointer<TechnicalTeamAreaVisualization> _technicalTeamAreaActor = NULL;
+    void updateTechnicalTeamArea();
 
     /* == Team rendering == */
     std::map<uint8_t, vtkSmartPointer<RobotVisualization>> _teamActors; // key: robotId, index is not zero-based but one-based
@@ -181,7 +191,7 @@ private:
     // TODO: some things in this widget are not anymore MSL common, instead Falcons specific... we should aim for a nice split between these categories
 
     /* == Ball rendering == */
-    std::vector<vtkSmartPointer<BallVisualization>> _ballActors; 
+    std::vector<vtkSmartPointer<BallVisualization>> _ballActors;
     std::map<int, std::pair<int, double>> _ballMapping; // key: ball id, value: (actor index, last update)
     void addBallActor();
     void setBallPosition(PositionVelocity& posvel, ObjectId id, float confidence, float age, CameraType camType);
@@ -191,7 +201,7 @@ private:
     void addShootTargetActor(uint8_t robotId);
     void setShootTargetPosition(uint8_t robotId, PositionVelocity& posvel);
     void hideShootTarget(uint8_t robotId);
-    
+
     /* == project speed vector rendering == */
     std::vector<vtkSmartPointer<projectSpeedVisualization>> _projectSpeedActors;
     std::map<int, std::pair<int, double>> _projectSpeedMapping; // key: obstacle id, value: (actor index, last update)

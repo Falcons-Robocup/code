@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,14 +25,15 @@
 #include "ext/tLogHeader.hpp"
 #include "ext/tLogFrame.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
+#include "ftime.hpp"
 
 
 cLogger::cLogger()
     : _frequency(10)
 {
-    _t0 = rtime::now();
+    _t0 = ftime::now();
     _te = _t0;
     _rtdb = new RtDB2(0); // agent id is irrelevant when getting entire frames at once
     _header.compression = true; // TODO should not hardcode ...
@@ -40,8 +41,6 @@ cLogger::cLogger()
     
 cLogger::~cLogger()
 {
-    // update header with duration
-    _header.duration = double(_te - _t0);
     if (_logFile != NULL)
     {
         _logFile->writeHeader(_header);
@@ -86,14 +85,13 @@ void cLogger::writeToFile(std::string filename)
     _header.frequency = _frequency;
     _header.compression = true; // TODO should not hardcode ...
     _header.creation = _t0;
-    _header.duration = double(_te - _t0);
     char hostname[HOST_NAME_MAX];
     gethostname(hostname, HOST_NAME_MAX);
     _header.hostname = hostname;
     _logFile->writeHeader(_header);
 }
 
-bool cLogger::makeFrame(tLogFrame &frame)
+bool cLogger::makeFrame(tLogFrame &frame, rtime const &t)
 {
     // query RTDB
     auto db = _rtdb;
@@ -104,6 +102,7 @@ bool cLogger::makeFrame(tLogFrame &frame)
     RtDB2FrameSelection frameSelection;
     frameSelection.local = true;
     frameSelection.shared = true;
+    frameSelection.unique = true;
     std::string buffer;
     // unlike comm2, we should NEVER subsample! (argument -1)
     int r = db->getFrameString(buffer, frameSelection, -1);
@@ -121,21 +120,25 @@ bool cLogger::makeFrame(tLogFrame &frame)
         return false;
     }
     // construct frame struct
-    rtime t = rtime::now();
     _te = t;
     frame.age = double(t - _t0);
     frame.data = buffer;
     return true;
 }
 
-bool cLogger::tick()
+bool cLogger::tickNow()
+{
+    return tick(ftime::now());
+}
+
+bool cLogger::tick(rtime const &t)
 {
     if (_logFile == NULL)
     {
         return false;
     }
     tLogFrame frame;
-    if (makeFrame(frame))
+    if (makeFrame(frame, t))
     {
         _logFile->writeFrame(frame);
     }
@@ -144,7 +147,7 @@ bool cLogger::tick()
 
 void cLogger::monitor()
 {
-    rtime::loop(_frequency, boost::bind(&cLogger::tick, this));
+    rtime::loop(_frequency, boost::bind(&cLogger::tickNow, this));
 }
 
 

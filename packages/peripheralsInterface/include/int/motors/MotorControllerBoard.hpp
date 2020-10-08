@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,12 +19,12 @@
 #ifndef INCLUDE_INT_MOTORS_MOTORCONTROLLERBOARD_HPP_
 #define INCLUDE_INT_MOTORS_MOTORCONTROLLERBOARD_HPP_
 
-#include <int/PeripheralsInterfaceData.hpp>
 #include <chrono>
 #include <vector>
 
-#include "int/Communication.hpp"
-#include "int/DeviceManager.hpp"
+#include "int/motors/PeripheralsInterfaceData.hpp"
+#include "int/motors/Communication.hpp"
+#include "int/motors/DeviceManager.hpp"
 
 using namespace std;
 

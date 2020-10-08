@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -37,7 +37,7 @@ public:
     virtual void refreshGameState();
 
     /*! \brief Update the gamestate according to the refbox signal. */
-    virtual void refBoxSignalReceived(const refboxSignalEnum &);
+    virtual void refBoxSignalReceived(const refboxSignalEnum &, std::string refboxSignalArgument = "");
 
 private:
     gameStateManager();

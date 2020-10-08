@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,9 +29,9 @@ struct obstacleResult
 {
     vec2d          position;
     vec2d          velocity;
-    float          confidence;
-    int            id; // optional, if we ever want to track/identify opponents
-    
+    float          confidence = 0.0;
+    int            id = 0; // optional, if we ever want to track/identify opponents
+
     SERIALIZE_DATA_FIXED(position, velocity, confidence, id);
 };
 

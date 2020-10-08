@@ -9,9 +9,9 @@ MAKEFLAGS = -j8
 CFLAGS = -g3 -O3 -m64 -ansi -std=c++11 -Wall -Wextra -Wpedantic -Werror
 
 LDFLAGS = -pthread -L/usr/local/lib
-LDLIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lpthread
+LDLIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lpthread
 
-INC = -I../include -I../../../packages/multiCam/include/
+INC = -I../include -I../../../packages/multiCam/include/ -I/usr/include/opencv4
 
 all: eth $(TARGET)
 	@nice -n 15 ./$(TARGET)

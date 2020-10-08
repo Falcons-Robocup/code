@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,7 +21,6 @@
 
 #include "int/arbiter.hpp"
 #include "int/RTDBrefboxAdapter.hpp"
-#include "int/simulationCapabilities.hpp"
 #include "tracing.hpp"
 
 static RTDBRefBoxAdapter rtdbRefBoxAdapter;
@@ -62,7 +61,7 @@ void Arbiter::initialize()
     }
 }
 
-GameData Arbiter::control(const GameData& gameData)
+GameData Arbiter::control(const GameData& gameData, const float simulationPeriod)
 {
     TRACE_FUNCTION("");
 
@@ -113,7 +112,7 @@ GameData Arbiter::control(const GameData& gameData)
     }
 
     /* Progress time */
-    _secondsSinceLastTransition += SIMULATION_PERIOD;
+    _secondsSinceLastTransition += simulationPeriod;
 
     /* Return the (potentially updated) gamestate */
     return _arbiterGameData;

@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     # check if file exists
     if not os.path.exists(args.file):
-        print "Error: '%s' not found." % (args.file)
+        print("Error: '%s' not found." % (args.file))
         exit()
 
     # expand default arguments, resolve time frame, etc.
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     # go through the frames
     rdlFile = RDLFile(args.file)
-    rdlFile.parseRDL()
+    rdlFile.parseRDL(ageMin, ageMax)
     frameCounter = 0
     for frame in rdlFile.frames:
         # determine whether this frame needs to be shown
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         # print?
         if inspectFrame:
             # header?
-            print "frame=%d/%d age=%.3fs" % (frameCounter, len(rdlFile.frames), frame.age)
+            print("frame=%d/%d age=%.3fs" % (frameCounter, len(rdlFile.frames), frame.age))
             # TODO include human-readable timestamp, without date
             for agent in frame.data.keys():
                 showAgent = False
@@ -71,7 +71,7 @@ if __name__ == "__main__":
                         if showKey:
                             item = frame.data[agent][key]
                             line = "  %2d %s %30s -> %s" % (item.agent, "LS"[item.shared], item.key, str(item.value))
-                            print line
+                            print(line)
         # next
         frameCounter += 1
 

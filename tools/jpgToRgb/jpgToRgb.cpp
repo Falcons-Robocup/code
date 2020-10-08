@@ -30,7 +30,7 @@ jpgToRgb::jpgToRgb(std::string inputFileName, std::string outputFileName, bool v
     }
 
     // read the jpg image
-    inputFrame = imread(inputFileName.c_str(), CV_LOAD_IMAGE_COLOR);
+    inputFrame = imread(inputFileName.c_str(), cv::IMREAD_COLOR);
 
     if (!inputFrame.data) {
         printf("ERROR     : cannot load %s\n", inputFileName.c_str());

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -43,6 +43,7 @@ public:
     void initialize(RobotVisualization* anchor);
 
 private:
+    RobotVisualization* _robotVisualization;
     PositionVelocity _posvel;
     std::vector<PositionVelocity> _path;
     std::vector<vtkSmartPointer<vtkActor>> _actors;

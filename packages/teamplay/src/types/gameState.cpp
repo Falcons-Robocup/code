@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -36,7 +36,7 @@ static bool isValid(const governingGameState& g, const governingMatchState& p, c
        || (g == governingGameState::NEUTRAL_STOPPED)  )
     {
         // Restrictions:
-        // - For setpiece settings, the governing gamestate must be setpiece preparing/executing. 
+        // - For setpiece settings, the governing gamestate must be setpiece preparing/executing.
         //   Otherwise, setpieces settings must be NONE.
         // - In case of out of play state, we cannot be playing (NEUTRAL_PLAYING => IN_PLAY)
         validGameState = ((o == setpieceOwner::NONE) && (t == setpieceType::NONE)) && ((g != governingGameState::NEUTRAL_PLAYING) || (p == governingMatchState::IN_MATCH));
@@ -56,6 +56,12 @@ static bool isValid(const governingGameState& g, const governingMatchState& p, c
                          && (t != setpieceType::NONE)
                          && ((p != governingMatchState::OUT_OF_MATCH) || (t == setpieceType::PENALTY))
                          );
+
+        // Special case for parking
+        if (t == setpieceType::PARKING)
+        {
+            validGameState = (o == setpieceOwner::NONE);
+        }
     }
     else
     {
@@ -171,6 +177,11 @@ bool gameState::isThrowinSetPiece() const
     return (_setpieceType == setpieceType::THROWIN);
 }
 
+bool gameState::isParkingSetPiece() const
+{
+    return (_setpieceType == setpieceType::PARKING);
+}
+
 bool gameState::isInMatch() const
 {
     return (_governingMatchState == governingMatchState::IN_MATCH);
@@ -226,6 +237,9 @@ std::string gameState::toString() const
         break;
     case setpieceType::THROWIN:
         oss << "throwin ";
+        break;
+    case setpieceType::PARKING:
+        oss << "park ";
         break;
     case setpieceType::PENALTY:
         oss << "penalty ";
@@ -341,6 +355,9 @@ std::string gameState::toString(const governingGameState& g, const governingMatc
         break;
     case setpieceType::THROWIN:
         oss << "throw-in";
+        break;
+    case setpieceType::PARKING:
+        oss << "park";
         break;
     case setpieceType::PENALTY:
         oss << "penalty";
@@ -462,6 +479,9 @@ gameState::gameState(const treeEnum& gameState)
         break;
     case treeEnum::OUT_OF_MATCH_OPP_PENALTY_EXECUTE_NEUTRAL:
         setGameState(governingGameState::SETPIECE_EXECUTING, governingMatchState::OUT_OF_MATCH, setpieceOwner::OPPONENT, setpieceType::PENALTY);
+        break;
+    case treeEnum::PARKING:
+        setGameState(governingGameState::SETPIECE_EXECUTING, governingMatchState::OUT_OF_MATCH, setpieceOwner::NONE, setpieceType::PARKING);
         break;
     case treeEnum::INVALID:
     default:
@@ -588,6 +608,9 @@ treeEnum gameState::toTreeEnum() const
     case governingGameState::SETPIECE_EXECUTING:
         switch (_setpieceType)
         {
+        case setpieceType::PARKING:
+            return treeEnum::PARKING; // gamestate -> role -> behavior
+            break;
         case setpieceType::DROPPED_BALL:
             return treeEnum::IN_MATCH_DROPPED_BALL_EXECUTE_NEUTRAL;
             break;
@@ -680,7 +703,6 @@ treeEnum gameState::toTreeEnum() const
             break;
         }
         break;
-
     case governingGameState::INVALID:
     default:
         return treeEnum::INVALID;

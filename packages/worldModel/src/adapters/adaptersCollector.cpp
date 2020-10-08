@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -121,6 +121,31 @@ void adaptersCollector::updateDiagnostics()
         {
             _obstacleAdmin->fillDiagnostics(_diagnostics);
         }
+        // some extra checks to generate warnings if needed
+        bool ballIsCloseBy = _diagnostics.shared.ownBallsFirst;
+        if (ballIsCloseBy)
+        {
+            float dataRate = _diagnostics.local.balls[0].ownGoodDataRate;
+            float outliersFraction = _diagnostics.local.balls[0].outliersFraction;
+            float ballTrackerAge = _diagnostics.local.balls[0].age;
+            float freshness = _diagnostics.local.balls[0].freshness;
+            bool fresh = freshness < 0.05;
+            if (dataRate < 0.7) // this could be due to poor view on the ball
+            {
+                // but it could also be for other perfectly fine reasons - prevent false warnings
+                // * if ball is just coming into view (low age)
+                // * if ball is just going outside of view (high freshness)
+                if (fresh && ballTrackerAge > 2.0)
+                {
+                    TRACE_WARNING_TIMEOUT(10.0, "ball data rate from vision too low (%.1f%%)", 100.0 * dataRate);
+                }
+            }
+            if (outliersFraction > 0.5)
+            {
+                TRACE_WARNING_TIMEOUT(10.0, "too many ball outliers removed from ball result (%.1f%%)", 100.0 * outliersFraction);
+            }
+        }
+        // write diagnostics data to RTDB
         _rtdb->put(DIAG_WORLDMODEL_LOCAL, &_diagnostics.local);
         _rtdb->put(DIAG_WORLDMODEL_SHARED, &_diagnostics.shared);
         // write an informative line to stdout using tprintf
@@ -272,15 +297,15 @@ void adaptersCollector::heartBeatRecalculation(rtime const timeNow)
             // First get the localization measurements, and perform the localization tick
             // We do this first because the balls and obstacle measurements need the robot position for conversion to FCS
             _rtdbInputAdapter->getLocalizationCandidates();
-            _rtdbInputAdapter->getInPlayState();
+            _rtdbInputAdapter->getInPlayState(timeNow);
             _robotAdmin->performCalculation(timeNow);
 
             // Then get all remaining data
             _rtdbInputAdapter->getBallCandidates();
             _rtdbInputAdapter->getObstacleCandidates();
             _rtdbInputAdapter->getVisionBallPossession();
-            _rtdbInputAdapter->getRobotDisplacement();
-            _rtdbInputAdapter->getRobotVelocity();
+            _rtdbInputAdapter->getRobotDisplacement(timeNow);
+            _rtdbInputAdapter->getRobotVelocity(timeNow);
             _rtdbInputAdapter->getBallHandlingBallPossession();
             _rtdbInputAdapter->getTeamMembers();
 

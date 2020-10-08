@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# Clear /tmp and /var/tmp file artefacts. Useful when switching users.
+# 
+
+
+
+# check problematic files
+for f in /var/tmp/MiniSimulation*.rdl ; do
+    if [ -f "$f" ]; then
+        rm $f || exit 1
+    fi
+done
+
+# check problematic folders
+for d in /tmp/refbox2019 ; do
+    if [ -d $d ]; then
+        rm -rf $d || exit 1
+    fi
+done
+

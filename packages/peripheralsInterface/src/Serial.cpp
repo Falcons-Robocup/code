@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,6 +22,7 @@
 #include <cstring>
 #include <cerrno>
 
+#include <cmath>
 #include <fcntl.h>
 #include <int/PeripheralsInterfaceExceptions.hpp>
 #include <sys/ioctl.h>
@@ -59,7 +60,7 @@ void Serial::openPort() {
 }
 
 void Serial::setSettings() {
-	struct termios tio = {0};
+	struct termios tio = {0,};
 	tio.c_ospeed = 0;
 	tio.c_iflag = 0;	
 	tio.c_oflag = 0;

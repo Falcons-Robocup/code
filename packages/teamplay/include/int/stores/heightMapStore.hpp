@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,10 +23,11 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <opencv2/opencv.hpp>
 
 #include "int/heightmaps/abstractHeightMap.hpp"
-#include "tpActionEnum.hpp" // sharedTypes
 #include "int/types/heightmapEnumTypes.hpp"
+#include "ext/heightmapNames.hpp"
 
 namespace teamplay
 {
@@ -41,8 +42,9 @@ public:
 
     virtual void precalculateAll();
     virtual std::vector<std::string> getDescriptions() const;
-    virtual Point2D getOptimum( const tpActionEnum&, const parameterMap_t& ) const;
-    virtual void generateJPG( const tpActionEnum&, const std::string&, const parameterMap_t& ) const;
+    virtual Point2D getOptimum( const CompositeHeightmapName&, const parameterMap_t& ) const;
+    virtual Point2D getOptimum( const CompositeHeightmapName&, const parameterMap_t&, const float ) const;
+    virtual cv::Mat generateOpenCVMatrix( const CompositeHeightmapName& ) const;
 
 private:
     heightMapStore();
@@ -50,7 +52,7 @@ private:
     heightMapStore(heightMapStore const&); // Don't implement
     void operator= (heightMapStore const&); // Don't implement
 
-    abstractHeightMap combineHeightmaps( const tpActionEnum& action, const parameterMap_t& params) const;
+    abstractHeightMap combineHeightmaps( const CompositeHeightmapName& name, const parameterMap_t& params) const;
 
     std::map<heightmapEnum, std::shared_ptr<abstractHeightMap> > _heightmaps;
 };

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -43,8 +43,18 @@ public:
         FIELD_LOCALHOST
     };
 
+    enum TTAConfiguration
+    {
+        NONE,
+        FRONT_LEFT,
+        FRONT_RIGHT,
+        BACK_LEFT,
+        BACK_RIGHT
+    };
+
     virtual void setTeamColor(RefboxConfigAdapter::TeamColor teamColor) = 0;
     virtual void setPlayingField(RefboxConfigAdapter::PlayingField playingField) = 0;
+    virtual void setTTAConfiguration(RefboxConfigAdapter::TTAConfiguration ttaConfig) = 0;
 };
 
 #endif /* INCLUDE_INT_REFBOXCONFIGADAPTER_H_ */

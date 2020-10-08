@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,7 +23,7 @@
 
 #include <string>
 #include "opencv2/core/core.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 
 // 32bits single channel floats, should be enough

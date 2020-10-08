@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,7 +18,6 @@
 
 
 #include "int/cShotSolver.hpp"
-#include "int/cLinearInterpolator.hpp"
 #include "tracing.hpp"
 #include "cDiagnostics.hpp"
 

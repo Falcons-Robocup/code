@@ -1,12 +1,6 @@
 .cproject
 .project
 .pydevproject
-build/
-msg_gen/
-src/teamplay/
-srv_gen/
-bin/
-lib/
 *.cxx
 *.cxx_parameters
 *.qrc.depends
@@ -15,7 +9,4 @@ ui_*.h
 devel/
 gtest/
 *.cmake
-catkin/
-catkin_generated/
-CMakeFiles/
-CMakeCache.txt
+

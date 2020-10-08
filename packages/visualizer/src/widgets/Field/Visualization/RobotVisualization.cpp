@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -35,16 +35,32 @@
 
 void RobotVisualization::initialize(int robotID, vtkRenderer *renderer)
 {
-    std::string stlFile = "/home/robocup/falcons/code/packages/visualizer/rc/robot.stl";
+    _robotID = robotID;
+    std::string stlFile = pathToCodeRepo() + "/packages/visualizer/rc/robot.stl";
     QFile file(stlFile.c_str()); // TODO extract the .stl resource from the application instead of reading it from the source location
     if (file.exists())
     {
         // Load STL
         vtkSmartPointer<vtkSTLReader> reader = vtkSmartPointer<vtkSTLReader>::New();
-        reader->SetFileName(stlFile.c_str()); 
+        reader->SetFileName(stlFile.c_str());
         reader->Update();
         _actor = addAsActor(reader);
         _actor->GetProperty()->SetColor(0.1, 0.1, 1.0);
+
+        // Add ghost robots for path visualization
+        int MAX_PATH_LENGTH = 5;
+        _pathGhosts.clear();
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputConnection(reader->GetOutputPort());
+        for (int it = 0; it < MAX_PATH_LENGTH; ++it)
+        {
+            vtkSmartPointer<vtkActor> ghostActor = vtkSmartPointer<vtkActor>::New();
+            ghostActor->GetProperty()->SetColor(179/255.0, 179/255.0, 204/255.0); // grey
+            ghostActor->GetProperty()->SetOpacity(0.3);
+            ghostActor->SetMapper(mapper);
+            renderer->AddActor(ghostActor);
+            _pathGhosts.push_back(ghostActor);
+        }
     }
     else
     {
@@ -55,9 +71,12 @@ void RobotVisualization::initialize(int robotID, vtkRenderer *renderer)
         _actor = addAsActor(sphereSource);
         _actor->GetProperty()->SetColor(0.0, 1.0, 0.0);
     }
-    
-    // no arrow anymore
+
+    // only show arrow when robot has ball, to indicate shooting aim
     _arrow->VisibilityOff();
+    _arrow->GetProperty()->SetColor(0.1, 0.1, 1.0);
+    _arrow->GetProperty()->SetOpacity(0.3);
+    _arrow->SetPosition(0, 0, 0.2);
 
     // Create annotation for path planning and add to renderer
     vtkSmartPointer<PlannedPath> path = vtkSmartPointer<PlannedPath>::New();
@@ -70,13 +89,53 @@ void RobotVisualization::initialize(int robotID, vtkRenderer *renderer)
     //vtkSmartPointer<VisionLock> lock = vtkSmartPointer<VisionLock>::New();
     //lock->initialize(renderer, this);
     //renderer->AddActor(lock);
-    
+
     _pathPlanningEnabled = true;
-    
+
     this->VisibilityOff();
 
     _blinkTimer = new QTimer(this);
     connect(_blinkTimer, SIGNAL(timeout()), this, SLOT(blink()));
+}
+
+void RobotVisualization::hideGhosts()
+{
+    TRACE_FUNCTION("");
+    TRACE("_pathGhosts.size=%d", (int)_pathGhosts.size());
+    for (int it = 0; it < (int)_pathGhosts.size(); ++it)
+    {
+        _pathGhosts.at(it)->VisibilityOff();
+    }
+}
+
+void RobotVisualization::setGhostPosition(int ghostId, PositionVelocity const& posvel)
+{
+    TRACE_FUNCTION("");
+    TRACE("ghostId=%d, _pathGhosts.size=%d", ghostId, (int)_pathGhosts.size());
+    if (ghostId < (int)_pathGhosts.size())
+    {
+        auto ghost = _pathGhosts.at(ghostId);
+        ghost->SetPosition(posvel.x, posvel.y, 0.0);
+        ghost->SetOrientation(0, 0, 180.0 * posvel.phi / M_PI); // radians to degrees
+        TRACE("robotId=%d ghostId=%d pose=(%6.2f, %6.2f, %6.2f)", _robotID, ghostId, posvel.x, posvel.y, posvel.phi);
+        ghost->VisibilityOn();
+    }
+}
+
+void RobotVisualization::hideArrow()
+{
+    _arrow->VisibilityOff();
+}
+
+void RobotVisualization::showArrow()
+{
+    // use arrow to visualize orientation (aiming direction)
+    _arrow->SetOrientation(0, 0, 0);
+    double length = 5.0;
+    double scale[3] = { length, 1, 1 };
+    _arrow->SetScale(scale);
+    _arrowSource->SetTipLength(0.3 / length);
+    _arrow->VisibilityOn();
 }
 
 void RobotVisualization::setPosition(PositionVelocity& posvel)
@@ -139,8 +198,8 @@ void RobotVisualization::blinkOff()
         _blinkTimer->stop();
 
         // Set back to green player color
-        _actor->GetProperty()->SetColor(0.0, 1.0, 0.0); 
-        _arrow->GetProperty()->SetColor(0.0, 1.0, 0.0); 
+        _actor->GetProperty()->SetColor(0.0, 1.0, 0.0);
+        _arrow->GetProperty()->SetColor(0.0, 1.0, 0.0);
     }
 }
 
@@ -152,13 +211,13 @@ void RobotVisualization::blink()
     // Blink red / green
     if (color[0] > 0.5)
     {
-        _actor->GetProperty()->SetColor(0.0, 1.0, 0.0); 
-        _arrow->GetProperty()->SetColor(0.0, 1.0, 0.0); 
+        _actor->GetProperty()->SetColor(0.0, 1.0, 0.0);
+        _arrow->GetProperty()->SetColor(0.0, 1.0, 0.0);
     }
     else
     {
-        _actor->GetProperty()->SetColor(1.0, 0.0, 0.0); 
-        _arrow->GetProperty()->SetColor(1.0, 0.0, 0.0); 
+        _actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
+        _arrow->GetProperty()->SetColor(1.0, 0.0, 0.0);
     }
 }
 

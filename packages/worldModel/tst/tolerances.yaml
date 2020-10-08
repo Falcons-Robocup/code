@@ -1,0 +1,55 @@
+# delta numbers are default maximum delta compared with annotated position
+# all sigma numbers are one standard deviation and apply at a certain given distance (scaling)
+
+# 'stationary' means that all robots are standing still (for example at initialization, or soon after STOP was issued)
+# 'dynamic' is the converse: at least one robot is moving
+# some reasons to distinguish between stationary and dynamic situation:
+# * impact of latency (encoders, vision)
+# * multiCam may not be able to keep up
+
+localization:
+    stationary:
+        xySigma:       0.03
+        rzSigma:       0.02
+        xyDelta:       0.03
+        rzDelta:       0.03
+
+# 'still' or 'moving' applies to the object of interest (a ball or an obstacle)
+# tolerances typically scale linearly with distance, the numbers apply to given distance
+ball:
+    distanceScaling:   4.0
+    still:
+        stationary:
+            pos:       0.03
+            vel:       0.05
+            delta:     0.03
+        dynamic:
+            pos:       0.03
+            vel:       0.05
+            delta:     0.03
+    moving:
+        stationary:
+            pos:       0.05
+            vel:       0.15
+        dynamic:
+            pos:       0.05
+            vel:       0.15
+obstacle:
+    distanceScaling:   4.0
+    stationary:
+        still:
+            pos:       0.03
+            vel:       0.05
+            delta:     0.03
+        moving:
+            pos:       0.05
+            vel:       0.15
+    dynamic:
+        still:
+            pos:       0.03
+            vel:       0.05
+            delta:     0.03
+        moving:
+            pos:       0.05
+            vel:       0.15
+

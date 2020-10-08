@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,6 +17,7 @@
  */
 
 #include "int/cTimer.hpp"
+#include "ftime.hpp"
 
 
 cTimer::cTimer()
@@ -31,12 +32,12 @@ cTimer::~cTimer()
 
 void cTimer::reset()
 {
-    _t0 = rtime::now();
+    _t0 = ftime::now();
 }
 
 float cTimer::elapsed()
 {
-    return (double)(rtime::now() - _t0);
+    return (double)(ftime::now() - _t0);
 }
 
 void cTimer::setDuration(float duration)

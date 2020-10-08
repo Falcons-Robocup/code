@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,12 +16,14 @@
  *      Author: Jan Feitsma
  */
 
+#include <boost/lexical_cast.hpp>
+
 #include "int/cRefboxRelay.hpp"
 #include "tracing.hpp"
 #include "cDiagnostics.hpp"
 #include <boost/bind.hpp>
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 static const char TEAM_B = 'B';
 
@@ -34,6 +36,8 @@ cRefboxRelay::cRefboxRelay()
     _refboxConfig.teamColor = refboxConfigTeamColor::CYAN;
     _refboxConfig.field = refboxConfigField::FIELD_LOCALHOST;
     _rtdb->put(REFBOX_CONFIG, &_refboxConfig);
+    T_REFBOX_OVERRIDE noOverride;
+    _rtdb->put(REFBOX_OVERRIDE, &noOverride);
     _matchState.goalsOwn = 0;
     _matchState.goalsOpponent = 0;
     _matchState.phase = matchPhaseEnum::UNKNOWN;
@@ -70,6 +74,7 @@ bool cRefboxRelay::tick()
 {
     TRACE_FUNCTION("");
     _iteration++;
+    int life = 0, r = 0;
     if (_iteration % _subsampleMSLfeedback == 0)
     {
         _logger.update(_client);
@@ -82,12 +87,12 @@ bool cRefboxRelay::tick()
 
         // read config, check for change
         refboxConfig config;
-        int life = 0;
-        int r = _rtdb->get(REFBOX_CONFIG, &config, life, 0);
-        if (r == RTDB2_SUCCESS && (config != _refboxConfig))
+        r = _rtdb->get(REFBOX_CONFIG, &config, life, 0);
+        if (r == RTDB2_SUCCESS)
         {
-            TRACE_INFO("reconfiguring refbox");
-            needReconnect = true;
+            // TTA configuration change should not trigger reconnect
+            needReconnect |= (config.teamColor != _refboxConfig.teamColor);
+            needReconnect |= (config.field != _refboxConfig.field);
             _refboxConfig = config;
         }
 
@@ -98,6 +103,23 @@ bool cRefboxRelay::tick()
                 delete _client;
             }
             createClient();
+            if (_client != NULL)
+            {
+                TRACE_INFO("reconfigured refbox");
+            }
+        }
+    }
+
+    // allow overrule from coach laptop
+    RtDB2Item item;
+    if (_rtdb->getItem(REFBOX_OVERRIDE, item) == RTDB2_SUCCESS)
+    {
+        T_REFBOX_OVERRIDE rbo = item.value<T_REFBOX_OVERRIDE>();
+        if (item.age() < 1.0 && _matchState.lastRefboxCommandTime != item.timestamp && rbo.command.size())
+        {
+            _matchState.lastRefboxCommand = rbo.command;
+            _matchState.lastRefboxCommandTime = item.timestamp;
+            TRACE_INFO_TIMEOUT(0.0, "refbox (coach override): %s", rbo.command.c_str());
         }
     }
 
@@ -110,7 +132,7 @@ bool cRefboxRelay::tick()
         _matchState_sim_team_B.currentTime = _matchState.currentTime;
         _rtdb_sim_team_B->put(MATCH_STATE, &_matchState_sim_team_B);
     }
-    TRACE("Last RefBox command %s", _matchState.lastRefboxCommand);
+    TRACE("Last RefBox command %s", _matchState.lastRefboxCommand.c_str());
     WRITE_TRACE;
 
     return true; // TODO check on some global flag for graceful shutdown?
@@ -121,10 +143,70 @@ void cRefboxRelay::run()
     rtime::loop(_frequency, boost::bind(&cRefboxRelay::tick, this));
 }
 
-// callback which gets a string from TCP_IP client
-void cRefboxRelay::refboxCallBack(char const *command)
+// refbox protocol does not nicely fit with our periodic broadcast
+// in case of multi-robot substitution, each robot gets a specific SUBSTITUTION command
+// and these are communicated so fast that typically the last one is the one to be sent to our team
+// so, we must keep a bit of memory and send all recent substitution target robots
+std::string substitutionMemory(std::string const &command)
 {
-    TRACE_FUNCTION(command);
+    std::string result = command;
+    // do nothing in case command is not SUBSTITUTION
+    static std::set<int> substitutionRobots;
+    size_t pos = command.find("SUBSTITUTION_OWN");
+    if (pos == 0)
+    {
+        // register target robot
+        std::string targetRobotStr = command.substr(pos+17);
+        try
+        {
+            int targetRobot = boost::lexical_cast<int>(targetRobotStr);
+            substitutionRobots.insert(targetRobot);
+        }
+        catch (...)
+        {
+            TRACE_WARNING("failed to parse target robot from substitition command, str='%s'", targetRobotStr.c_str());
+        }
+        // add all memorized target robots to command
+        result = "SUBSTITUTION_OWN";
+        for (auto it = substitutionRobots.begin(); it != substitutionRobots.end(); ++it)
+        {
+            result += " " + std::to_string(*it);
+        }
+    }
+    else
+    {
+        // clear memory unless SUBSTITUTION_OPP
+        pos = command.find("SUBSTITUTION_OPP");
+        if (pos != 0)
+        {
+            substitutionRobots.clear();
+        }
+    }
+    return result;
+}
+
+bool ignoreCommand(std::string const &command)
+{
+    // hack: ignore SUBSTITUTE_OPP
+    // reason: refbox state is written periodically and when we get a burst of singular commands, we typically miss everything except the last ...
+    size_t pos = command.find("SUBSTITUTION_OPP");
+    if (pos == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+// callback which gets a string from TCP_IP client
+void cRefboxRelay::refboxCallBack(char const *c)
+{
+    TRACE_FUNCTION(c);
+    if (ignoreCommand(c))
+    {
+        TRACE("ignoring command: %s", c);
+        return;
+    }
+    std::string command = substitutionMemory(c);
     _matchState.lastRefboxCommand = command;
     _matchState.lastRefboxCommandTime = rtime::now();
     _matchState_sim_team_B.lastRefboxCommand = command;
@@ -169,17 +251,10 @@ void cRefboxRelay::refboxCallBack(char const *command)
         _matchState_sim_team_B.lastRefboxCommand.replace(_matchState_sim_team_B.lastRefboxCommand.find("OPP"), 3, "OWN");
     }
 
-
-    // TODO: consider using one shared enum in sharedTypes, but only if it is accompanied with generated enum2str and vice versa
-    // something like https://github.com/aantron/better-enums ?
-    // TODO: update the following matchState variables, perhaps using some kind of state machine
-    // but only if we plan to actually use this (draw in visualizer, or analyzer, or teamplay)
-    //    _matchState.goalsOwn++
-    //    _matchState.goalsOpponent++
-    //    _matchState.phase // is a matchPhaseEnum
+    // TODO: instead of using a string for refbox command, better to make a shared enum in sharedTypes? we now have enum2str.
 
     // notify an info event
-    TRACE_INFO("refbox: %s", command);
+    TRACE_INFO_TIMEOUT(0.0, "refbox: %s", command.c_str());
 }
 
 void cRefboxRelay::createClient()

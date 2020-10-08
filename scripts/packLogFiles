@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Coen Tempelaars, April 2018
 
@@ -72,8 +72,8 @@ if __name__ == '__main__':
     filelist = get_files(dirlist, config.contains, config.since)
 
     if config.dryrun:
-        print "Would have created archive", config.archive, "containing files:"
+        print("Would have created archive %s containing files:" % config.archive)
         for f in filelist:
-            print "", f
+            print(f)
     else:
         create_archive(filelist, config.archive, config.compress)

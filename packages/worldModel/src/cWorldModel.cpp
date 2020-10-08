@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,6 +21,10 @@
 
 
 cWorldModel::cWorldModel()
+    : _wmConfig(),
+      _robotAdmin(_wmConfig),
+      _ballAdmin(_wmConfig),
+      _obstacleAdmin(_wmConfig)
 {
     initialize();
 }
@@ -48,21 +52,25 @@ void cWorldModel::initialize()
     _adpCollector.setRobotAdministrator(&_robotAdmin);
 
     // attach adapters
-    _adpHeartBeatROS.setUpdateFunction(boost::bind(&cWorldModel::updateNow, this, _1)); // coach
-    _adpHeartBeatRTDB.setUpdateFunction(boost::bind(&cWorldModel::updateNow, this, _1)); // robots
-
-    // initialize ROS adapters
-    _adpAdminConfigROS.initializeROS();
-    _adpBallTrackerConfigROS.initializeROS();
-    _adpLocalizationConfigROS.initializeROS();
-    _adpObstacleTrackerConfigROS.initializeROS();
-    _adpHeartBeatROS.InitializeROS();
+    _adpHeartBeatCoach.setUpdateFunction(boost::bind(&cWorldModel::updateNow, this, _1)); // coach
+    _adpHeartBeatRobot.setUpdateFunction(boost::bind(&cWorldModel::updateNow, this, _1)); // robots
 }
 
 cWorldModel::~cWorldModel()
 {
 }
-    
+
+void cWorldModel::run()
+{
+    // Block on the robot heartbeat (waitForPut)
+    _adpHeartBeatRobot.run();
+}
+
+void cWorldModel::enableInplayOverrule()
+{
+    _rtdbInput.enableInplayOverrule();
+}
+
 void cWorldModel::updateNow(bool dummy)
 {
     update(rtime::now());

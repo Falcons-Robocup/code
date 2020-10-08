@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -24,12 +24,11 @@
 #include <limits>
 #include <stdexcept>
 #include "boost/format.hpp"
-#include <opencv2/opencv.hpp>
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 #include "int/stores/fieldDimensionsStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
 
 using namespace teamplay;
 
@@ -66,7 +65,6 @@ float heightMapField::getValue() const
 
 abstractHeightMap::abstractHeightMap()
 {
-    _resolution = 0.25;
     reset();
 }
 
@@ -84,15 +82,15 @@ unsigned int abstractHeightMap::getNrOfHeightMapFieldsInY() const
 
 void abstractHeightMap::reset()
 {
-    _heightMap.resize((int)ceil(fieldDimensionsStore::getFieldDimensions().getWidth() / _resolution),
-                    (int)ceil(fieldDimensionsStore::getFieldDimensions().getLength() / _resolution));
+    _heightMap.resize((int)ceil(fieldDimensionsStore::getFieldDimensions().getWidth() / heightMapValues::RESOLUTION),
+                    (int)ceil(fieldDimensionsStore::getFieldDimensions().getLength() / heightMapValues::RESOLUTION));
 
     for (unsigned int i = 0; i < getNrOfHeightMapFieldsInX(); i++)
     {
         for (unsigned int j = 0; j < getNrOfHeightMapFieldsInY(); j++)
         {
-            auto center = Point2D( (i - floor(getNrOfHeightMapFieldsInX() / 2)) * _resolution,
-                                   (j - floor(getNrOfHeightMapFieldsInY() / 2)) * _resolution);
+            auto center = Point2D( (i - floor(getNrOfHeightMapFieldsInX() / 2)) * heightMapValues::RESOLUTION,
+                                   (j - floor(getNrOfHeightMapFieldsInY() / 2)) * heightMapValues::RESOLUTION);
             _heightMap(i, j)._center = center;
             _heightMap(i, j).setValue(heightMapValues::NEUTRAL);
         }
@@ -119,7 +117,7 @@ std::string abstractHeightMap::getFilename() const
     throw std::runtime_error("Not implemented");
 }
 
-Point2D abstractHeightMap::getOptimum() const
+heightMapField abstractHeightMap::getOptimum() const
 {
     heightMapField optimum;
     optimum.setValue(std::numeric_limits<float>::min());
@@ -135,22 +133,25 @@ Point2D abstractHeightMap::getOptimum() const
         }
     }
 
-    return optimum._center;
+    return optimum;
 }
 
-float abstractHeightMap::getValueAtCoordinate(const Point2D& p) const
+heightMapField abstractHeightMap::getFieldAtCoordinate(const Point2D& p) const
 {
-    for (unsigned int i = 0; i < getNrOfHeightMapFieldsInX(); i++)
+    auto halfFieldWidth = 0.5 * fieldDimensionsStore::getFieldDimensions().getWidth();
+    auto halfFieldLength = 0.5 * fieldDimensionsStore::getFieldDimensions().getLength();
+
+    auto i = floor((p.x + halfFieldWidth) / heightMapValues::RESOLUTION);
+    auto j = floor((p.y + halfFieldLength) / heightMapValues::RESOLUTION);
+
+    try
     {
-        for (unsigned int j = 0; j < getNrOfHeightMapFieldsInY(); j++)
-        {
-            if (calc_distance(_heightMap(i, j)._center, p) < _resolution)
-            {
-                return _heightMap(i, j).getValue();
-            }
-        }
+        return _heightMap(i,j);
     }
-    throw std::runtime_error("Coordinate (" + std::to_string(p.x) + "," + std::to_string(p.y) + ") out of bounds");
+    catch (std::exception&)
+    {
+        throw std::runtime_error("Coordinate (" + std::to_string(p.x) + "," + std::to_string(p.y) + ") out of bounds");
+    }
 }
 
 abstractHeightMap abstractHeightMap::scale(const float factor) const
@@ -181,80 +182,6 @@ abstractHeightMap abstractHeightMap::operator+(const abstractHeightMap& that) co
     }
 
     return sum;
-}
-
-std::string valueToSVGColor (const float value)
-{
-    /* This function may look expensive. We have done experiments implementing
-     * it using a lookup-table. This did not gain us any speed. */
-
-    int r, g, b = 0;
-
-    if ((-100.0 <= value) && (value < -50.0))
-    {
-        b = 255;
-        g = (int)floor(5.1 * (value + 100.0));
-        r = 0;
-    }
-    else if ((-50.0 <= value) && (value < 0.0))
-    {
-        b = (int)floor(-5.1 * value);
-        g = 255;
-        r = 0;
-    }
-    else if ((0.0 <= value) && (value < 50.0))
-    {
-        b = 0;
-        g = 255;
-        r = (int)floor(5.1 * value);
-    }
-    else if ((50.0 <= value) && (value <= 100.0))
-    {
-        b = 0;
-        g = (int)floor(-5.1 * (value - 100.0));
-        r = 255;
-    }
-    else
-    {
-        throw std::runtime_error("Value out of bounds: " + std::to_string(value));
-    }
-
-    return str(boost::format("fill:rgb(%1%,%2%,%3%)") % r % g % b);
-}
-
-void abstractHeightMap::generateSVG (const std::string& filename) const
-{
-    /* Warning: this function is expensive. Consider using generateJPG instead. */
-
-    std::ofstream file (filename);
-    file << "<!DOCTYPE html>\n<html>\n<body>\n";
-
-    file << boost::format("<svg width='%1%' height='%2%'>\n")
-            % (fieldsize * getNrOfHeightMapFieldsInY())
-            % (fieldsize * getNrOfHeightMapFieldsInX());
-
-    for (unsigned int i = 0; i < getNrOfHeightMapFieldsInX(); i++)
-    {
-        for (unsigned int j = 0; j < getNrOfHeightMapFieldsInY(); j++)
-        {
-            try
-            {
-                file << boost::format("<rect width='%1%' height='%1%' x='%2%' y='%3%' style='%4%' />\n")
-                        % fieldsize % (10 * j) % (10 * i)
-                        % valueToSVGColor(_heightMap(i, j).getValue());
-            }
-            catch (std::exception& e)
-            {
-                throw std::runtime_error("Error converting heightmap field " + std::to_string(i) + ","
-                                         + std::to_string(j) + " to color: " + e.what());
-            }
-        }
-    }
-
-    file << "</svg>\n";
-
-    file << "</body>\n</html>\n";
-    file.close();
 }
 
 void valueToVec3b (const float value, cv::Vec3b& bgr)
@@ -292,12 +219,9 @@ void valueToVec3b (const float value, cv::Vec3b& bgr)
     }
 }
 
-void abstractHeightMap::generateJPG (const std::string& filename) const
+cv::Mat abstractHeightMap::generateOpenCVMatrix () const
 {
-    /* This function is implemented using opencv. On modern hardware,
-     * it is a factor 6 cheaper than generateSVG */
-
-    TRACE("Start generating jpg: ") << filename;
+    TRACE("Start generating OpenCV Matrix");
 
     cv::Mat image(getNrOfHeightMapFieldsInX(), getNrOfHeightMapFieldsInY(), CV_8UC3);
     for (int i = 0; i < image.rows; ++i) {
@@ -306,12 +230,9 @@ void abstractHeightMap::generateJPG (const std::string& filename) const
         }
     }
 
-    cv::Mat scaledImage(fieldsize * getNrOfHeightMapFieldsInX(), fieldsize * getNrOfHeightMapFieldsInY(), CV_8UC3);
-    cv::resize(image, scaledImage, scaledImage.size());
+    TRACE("Done generating OpenCV Matrix");
 
-    imwrite("/var/tmp/" + filename + ".jpg", scaledImage);
-
-    TRACE("Done generating jpg: ") << filename;
+    return image;
 }
 
 double abstractHeightMap::angleOnPath (const Point2D& source, const Point2D& at, const Point2D& destination) const

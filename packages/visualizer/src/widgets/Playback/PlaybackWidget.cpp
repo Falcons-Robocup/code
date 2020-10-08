@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -138,6 +138,11 @@ void PlaybackWidget::onSliderValueChange(int v)
 void PlaybackWidget::setSliderValue(int v)
 {
     TRACE_FUNCTION("");
+
+    // blocking the signal on this function prevents a seek being called
+    // when the slider is not updated by the user
+    _slider->blockSignals(true);
     _slider->setValue(v);
+    _slider->blockSignals(false);
 }
 

@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,22 +9,19 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  """ 
- #!/usr/bin/env python
-PKG='logging'
-import roslib; roslib.load_manifest(PKG)
+ #!/usr/bin/env python3
 
 import sys, os
 from shutil import copyfile
 import subprocess
 import unittest
+import falconspy
 
-TEST_RDL_FILE = '/home/robocup/falcons/data/internal/logfiles/20190618_rdltest.rdl'
+TEST_RDL_FILE = falconspy.FALCONS_DATA_PATH + '/internal/logfiles/20190618_rdltest.rdl'
 TEST_RDL_FILE_TMP = '/var/tmp/rdltest.rdl'
-RDLINFO = 'rosrun logging rdlinfo'
-RDLFIX = 'rosrun logging rdlfix'
-RDLFILTER = 'python /home/robocup/falcons/code/packages/facilities/logging/scripts/rdlFilter.py'
-RDLDUMP = 'python /home/robocup/falcons/code/packages/facilities/logging/scripts/rdlDump.py'
-# these ones are duplicate w.r.t. aliases ... TODO make common somehow? without paths?
+RDLINFO = 'frun logging rdlinfo'
+RDLFILTER = 'python3 ' + falconspy.FALCONS_CODE_PATH + '/packages/facilities/logging/scripts/rdlFilter.py'
+RDLDUMP = 'python3 ' + falconspy.FALCONS_CODE_PATH + '/packages/facilities/logging/scripts/rdlDump.py'
 
 
 class TestRdl(unittest.TestCase):
@@ -35,14 +32,14 @@ class TestRdl(unittest.TestCase):
 
     def run_get_output(self, tool, args):
         command = tool + ' ' + args
-        print "running command: '{}'".format(command)
+        print("running command: '{}'".format(command))
         actual_output = subprocess.check_output(command, shell=True)
-        return actual_output
-    
+        return actual_output.decode('utf-8')
+
     def run_compare_output(self, tool, args, expected_output):
         actual_output = self.run_get_output(tool, args)
         self.assertEqual(actual_output, expected_output, "output mismatch: expected '\n{}\n', got '\n{}\n'".format(expected_output, actual_output))
-    
+
     def expected_rdlinfo(self):
         return """     filename: /var/tmp/20190615_155806_coach.rdl
      filesize: 213781 [B] (0.20MB)
@@ -64,25 +61,11 @@ class TestRdl(unittest.TestCase):
         # tools should always provide a help text
         actual_output = self.run_get_output(RDLINFO, "-h")
         self.assertTrue(len(actual_output) > 20)
-        
+
     def test_rdlinfo(self):
         # rdlinfo utility
         expected_output = self.expected_rdlinfo()
-        # note that the header of this datafile is incomplete: duration is 0.0 seconds, we will fix it in the next testcase
-        expected_output = expected_output.replace('duration: 30.98 [s]', 'duration: 0.00 [s]')
-        expected_output = expected_output.replace('  avgDataRate: 6.71 [KB/s]\n', '')
         self.run_compare_output(RDLINFO, TEST_RDL_FILE, expected_output)
-
-    def test_rdlfix(self):
-        # rdlfix utility: fix header (in particular the 'duration' field)
-        # first copy file so we can modify it inline
-        self.ensure_no_tmp()
-        copyfile(TEST_RDL_FILE, TEST_RDL_FILE_TMP)
-        expected_output = "" # rdlfix gives no output, it just fixes the file inline
-        self.run_compare_output(RDLFIX, TEST_RDL_FILE_TMP, expected_output)
-        # verify success by again running rdlinfo on the temporary file
-        expected_output = self.expected_rdlinfo()
-        self.run_compare_output(RDLINFO, TEST_RDL_FILE_TMP, expected_output)
 
     def test_rdlfilter_help(self):
         # tools should always provide a help text
@@ -97,7 +80,7 @@ class TestRdl(unittest.TestCase):
         # verify success by again running rdlinfo on the temporary file
         # note that it automatically fixed header
         expected_output = self.expected_rdlinfo()
-        
+
     def test_rdlfilter_arg(self):
         # rdlfilter: select only a small part of the file
         # the file was already reduced to only frames with age between 29 and 31 seconds
@@ -108,8 +91,8 @@ class TestRdl(unittest.TestCase):
         expected_output = """     filename: /var/tmp/20190615_155806_coach.rdl
      filesize: 102892 [B] (0.10MB)
      hostname: bakpao
-     creation: 2019-06-15,15:58:06.559372
-     duration: 30.98 [s]
+     creation: 2019-06-15,15:58:36.559372
+     duration: 0.98 [s]
     frequency: 30 [Hz]
    compressed: yes
     numFrames: 30
@@ -118,11 +101,9 @@ class TestRdl(unittest.TestCase):
   avgDataSize: 3410.40 [B/frame]
  avgFrameSize: 3429.73 [B/frame]
   avgOverhead: 19.33 [B/frame]
-  avgDataRate: 3.23 [KB/s]
+  avgDataRate: 102.19 [KB/s]
 """
         self.run_compare_output(RDLINFO, TEST_RDL_FILE_TMP, expected_output)
-        # TODO: revise header and the invariants related to it
-        # * get rid of rdlfix, it will either not be needed or applied automatically
         # * first frame has age=0
         # * duration == age of last frame
         # * filename is redundant w.r.t. creation + hostname, so remove
@@ -146,8 +127,11 @@ class TestRdl(unittest.TestCase):
 
     # TODO: test options of rdldump
     # TODO: test performance of rdldump and rdlfilter, these should not load entire file in memory ...
-    
+
 if __name__ == '__main__':
-    import rosunit
-    rosunit.unitrun(PKG, 'test_rdl', TestRdl)
+    # run
+    unittest.main()
+    #runner = unittest.TextTestRunner(verbosity=2)
+    #result = runner.run('TestRdl')
+    #sys.exit(len(result.errors))
 

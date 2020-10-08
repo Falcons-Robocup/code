@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -96,7 +96,7 @@ camSysReceive::camSysReceive() {
 
 #else
 	directory = (char*) malloc(128);
-	sprintf(directory, "%s/packages/multiCam", getenv("TURTLEROOT"));
+	sprintf(directory, "%s/packages/multiCam", getenv("FALCONS_CODE_PATH"));
 
 #endif
 	printf("INFO      : multiCam directory %s\n", directory);
@@ -243,7 +243,7 @@ void camSysReceive::storeImage(size_t camIndex, size_t receivedAlready) {
 	fclose(fd);
 
 // verify if the stored image image is valid
-	cv::Mat retVal = imread(fileName, CV_LOAD_IMAGE_COLOR);
+	cv::Mat retVal = imread(fileName, cv::IMREAD_COLOR);
 
 // there still might be a change the file does not contain a valid image
 	if ((retVal.cols == SEND_IMAGE_WIDTH) && (retVal.rows == SEND_IMAGE_HEIGHT)) {
@@ -559,7 +559,7 @@ cv::Mat camSysReceive::getCameraFrame(size_t camIndex) {
 		sprintf(symLinkName, "%s/cam%zu.jpg", imageGrabPath.c_str(), camIndex);
 		// printf("INFO      : cam %zu symlink name %s\n", camIndex, symLinkName);
 		camImageExportMutex.lock();
-		retVal = imread(symLinkName, CV_LOAD_IMAGE_COLOR);
+		retVal = imread(symLinkName, cv::IMREAD_COLOR);
 		camImageExportMutex.unlock();
 
 		// there still might be a change the file does not contain a valid image

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -41,12 +41,24 @@ enum class refboxConfigField
 
 SERIALIZE_ENUM(refboxConfigField);
 
+enum class refboxConfigTTAside
+{
+    NONE,
+    FRONT_LEFT,  // +y, -x in FCS
+    FRONT_RIGHT, // +y, +x
+    BACK_LEFT,   // -y, -x
+    BACK_RIGHT   // -y, +x
+};
+
+SERIALIZE_ENUM(refboxConfigTTAside);
+
 struct refboxConfig // associated RTDB key: REFBOX_CONFIG
 {
     refboxConfigTeamColor  teamColor;
     refboxConfigField      field;
-    
-    SERIALIZE_DATA_FIXED(teamColor, field);
+    refboxConfigTTAside    technicalTeamArea = refboxConfigTTAside::NONE;
+
+    SERIALIZE_DATA_FIXED(teamColor, field, technicalTeamArea);
 };
 
 #endif

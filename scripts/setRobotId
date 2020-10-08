@@ -48,11 +48,11 @@ function subConfigureIp
 
 function subAutoboot
 {
-    mkdir -p ~/.config/autostart
-    cat >~/.config/autostart/autoboot.desktop <<EOL
+    mkdir -p /home/robocup/.config/autostart
+    cat >/home/robocup/.config/autostart/autoboot.desktop <<EOL
 [Desktop Entry]
 Type=Application
-Exec=/home/robocup/falcons/code/packages/robotControl/autoboot
+Exec=/home/robocup/falcons/code/packages/robotControl/scripts/robotOnBoot
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
@@ -73,9 +73,11 @@ robotNum=$1
 subCheckRobotNum $robotNum
 subCheckSudo
 
-# TODO some sanity check or prompt, to prevent user accidentally running this on own laptop?
-echo "Safety Warning: Exiting before making changes -- disable me from the code to run this script!"
-exit 0
+# safety: only execute this on a robot
+if [ ! onRobot ]; then
+    echo This script is intended to be executed on a robot ONLY! Exiting...
+    exit 1
+fi
 
 # do the work
 subSetHostName $robotNum

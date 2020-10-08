@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -287,11 +287,21 @@ void mtr_flush() {
 			snprintf(arg_buf, ARRAY_SIZE(arg_buf), "\"%s\":\"%s\"", raw->arg_name, raw->a_str);
 			break;
 		case MTR_ARG_TYPE_STRING_COPY:
-			if (strlen(raw->a_str) > 700) {
-				snprintf(arg_buf, ARRAY_SIZE(arg_buf), "\"%s\":\"%.*s\"", raw->arg_name, 700, raw->a_str);
-			} else {
-				snprintf(arg_buf, ARRAY_SIZE(arg_buf), "\"%s\":\"%s\"", raw->arg_name, raw->a_str);
-			}
+
+            // EKPC 2020-01-30
+            // a_str is sometimes a null ptr
+            if (raw->a_str)
+            {
+                if (strlen(raw->a_str) > 700) {
+                    snprintf(arg_buf, ARRAY_SIZE(arg_buf), "\"%s\":\"%.*s\"", raw->arg_name, 700, raw->a_str);
+                } else {
+                    snprintf(arg_buf, ARRAY_SIZE(arg_buf), "\"%s\":\"%s\"", raw->arg_name, raw->a_str);
+                }
+            }
+            else
+            {
+                snprintf(arg_buf, ARRAY_SIZE(arg_buf), "\"%s\":\"%s\"", raw->arg_name, "");
+            }
 			break;
 		case MTR_ARG_TYPE_NONE:
 			arg_buf[0] = '\0';

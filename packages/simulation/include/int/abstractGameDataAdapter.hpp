@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,6 +21,7 @@
 
 #include "gameData.hpp"
 #include "vector2d.hpp"
+#include "SimulationScene.hpp"
 
 class AbstractGameDataAdapter {
 public:
@@ -28,6 +29,11 @@ public:
 
     virtual void publishGameData (const GameData&) const = 0;
     virtual void publishGameData (const GameData&, const TeamID, const RobotID) const = 0;
+
+    // scene manipulation
+    virtual void publishScene (const GameData&) const = 0;
+    virtual bool checkUpdatedScene(SimulationScene &scene) = 0;
+
 };
 
 #endif /* ABSTRACTGAMEDATAADAPTER_HPP_ */

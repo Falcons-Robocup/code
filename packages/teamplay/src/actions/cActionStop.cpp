@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,7 +17,7 @@
  */
 
 #include "int/actions/cActionStop.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 
 
 cActionStop::cActionStop()

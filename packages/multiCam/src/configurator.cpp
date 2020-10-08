@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -13,6 +13,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "configurator.hpp"
+
+#include "falconsCommonDirs.hpp"
 
 #include <unistd.h>
 #include <pwd.h>
@@ -31,10 +33,7 @@ configurator::configurator(int robot) {
     magentaMutex.lock();
     cyanMutex.lock();
 
-    struct passwd *pw = getpwuid(getuid());
-    std::string configFile("");
-    configFile.append(pw->pw_dir);
-    configFile.append("/falcons/code/packages/multiCam/multiCam.yaml");
+    std::string configFile = pathToConfig() + "/multiCam.yaml";
     FileStorage fs(configFile, FileStorage::READ);
 
     FileNode global = fs["global"];
@@ -254,7 +253,7 @@ void configurator::showTrackbars(int floorWidth, int floorHeight) {
 
     // create the slide bars
     colorWindowLine = "line";
-    namedWindow(colorWindowLine, CV_WINDOW_NORMAL);
+    namedWindow(colorWindowLine, cv::WINDOW_NORMAL);
     createTrackbar("l WidthMin", colorWindowLine, &lineSt.widthMin, 100);
     createTrackbar("l WidthMax", colorWindowLine, &lineSt.widthMax, 1000);
     createTrackbar("l Erode", colorWindowLine, &lineSt.erodeSlider, 20, &configurator::cbUpdateLineErodeTrackbar, this);
@@ -266,7 +265,7 @@ void configurator::showTrackbars(int floorWidth, int floorHeight) {
     createTrackbar("l Amount Minimal", colorWindowLine, &lineSt.linePointsNumberMinimal, 200);
 
     colorWindowBall = "ball detection";
-    namedWindow(colorWindowBall, CV_WINDOW_NORMAL);
+    namedWindow(colorWindowBall, cv::WINDOW_NORMAL);
     createTrackbar("b Erode", colorWindowBall, &ball.erodeSlider, 20, &configurator::cbUpdateBallErodeTrackbar, this);
     createTrackbar("b Dilate", colorWindowBall, &ball.dilateSlider, 20, &configurator::cbUpdateBallDilateTrackbar,
             this);
@@ -278,7 +277,7 @@ void configurator::showTrackbars(int floorWidth, int floorHeight) {
 #ifdef NONO
     // balls and far away balls are combined on raspi
     colorWindowBallFar = "ball far detection";
-    namedWindow(colorWindowBallFar, CV_WINDOW_NORMAL);
+    namedWindow(colorWindowBallFar, cv::WINDOW_NORMAL);
     createTrackbar("f Erode", colorWindowBallFar, &ballFar.erodeSlider, 20, &configurator::cbUpdateBallFarErodeTrackbar, this);
     createTrackbar("f Dilate", colorWindowBallFar, &ballFar.dilateSlider, 20, &configurator::cbUpdateBallFarDilateTrackbar,
             this);
@@ -296,7 +295,7 @@ void configurator::showTrackbars(int floorWidth, int floorHeight) {
 
 
     colorWindowObstacle = "obstacle";
-    namedWindow(colorWindowObstacle, CV_WINDOW_NORMAL);
+    namedWindow(colorWindowObstacle, cv::WINDOW_NORMAL);
     createTrackbar("o Erode", colorWindowObstacle, &obstacle.erodeSlider, 20,
             &configurator::cbUpdateObstacleErodeTrackbar, this);
     createTrackbar("o Dilate", colorWindowObstacle, &obstacle.dilateSlider, 20,
@@ -313,7 +312,7 @@ void configurator::showTrackbars(int floorWidth, int floorHeight) {
     createTrackbar("o mask right far", colorWindowObstacle, &mask.rightFarAway, 400);
 
     configWindow = "metrics";
-    namedWindow(configWindow, CV_WINDOW_NORMAL);
+    namedWindow(configWindow, cv::WINDOW_NORMAL);
     createTrackbar("x  Export-100/10", configWindow, &exportOffsetInt.x, 200); // center is 100, -100/10 to 100/10 = range -10 pixels to 10 pixels
     createTrackbar("y  Export-100/10", configWindow, &exportOffsetInt.y, 200); // center is 100, -100/10 to 100/10 = range -10 pixels to 10 pixels
     createTrackbar("rz Export-100/10", configWindow, &exportOffsetInt.rz, 200); // center is 100, -100/10 to 100/10 = range -10 degrees to 10 degrees

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -61,26 +61,28 @@ public:
     void getVisionBallPossession();
 
     // Data from VelocityControl
-    void getRobotDisplacement();
-    void getRobotVelocity();
+    void getRobotDisplacement(rtime timeNow);
+    void getRobotVelocity(rtime timeNow);
 
     // Data from PeripheralsInterface
-    void getInPlayState();
+    void getInPlayState(rtime timeNow);
 
     // Data from BallHandling
     void getBallHandlingBallPossession();
-    
+
     // Teammembers, needed for fake obstacle filtering
     void getTeamMembers();
 
     // Reconfiguration
     void updateConfig(T_CONFIG_WORLDMODELSYNC const &config);
+    void enableInplayOverrule();
 
 private:
     RtDB2 *_rtdb;
     int _myRobotId;
     cRtDBClient _rtdbClient;
     T_CONFIG_WORLDMODELSYNC _config;
+    bool _inplayOverrule = false;
 
     // WM's internal data administrators
     ballAdministrator *_ballAdmin;
@@ -94,13 +96,14 @@ private:
     T_LOCALIZATION_CANDIDATES _localizationCandidates;
     T_VIS_BALL_POSSESSION _visionBallPossession;
     robotStatusType _inPlay;
-    T_ROBOT_DISPLACEMENT_FEEDBACK _robotDisplacements;
+    T_ROBOT_DISPLACEMENT_FEEDBACK _prevRobotDisplacement;
     T_ROBOT_VELOCITY_FEEDBACK _robotVelocity;
     T_BALLHANDLERS_BALL_POSSESSION _ballIsCaughtByBallHandlers;
+
+    bool _robotDisplacementInitialized;
 
     // helpers
     bool useVisionFromRobot(int robotId);
 };
 
 #endif
-

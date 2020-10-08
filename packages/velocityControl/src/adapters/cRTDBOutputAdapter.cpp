@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -15,9 +15,6 @@
  *  Created on: Dec 27, 2018
  *      Author: Erik Kouters
  */
-
-#include <boost/interprocess/sync/named_mutex.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include "tracing.hpp"
 
@@ -37,46 +34,31 @@ cRTDBOutputAdapter::~cRTDBOutputAdapter()
 
 void cRTDBOutputAdapter::setRobotDisplacementFeedback(const vc_robot_data& robotData)
 {
-    TRACE_FUNCTION("");
+    std::stringstream str;
+    str << "x=" << robotData.displacement.x << "; y=" << robotData.displacement.y << "; Rz=" << project_angle_mpi_pi(robotData.displacement.phi);
+    TRACE_FUNCTION(str.str().c_str());
 
-    // Get the current list of displacements from RTDB
-    // Add the latest displacement to the list
-    // Put the list back to RTDB
+    // Put the latest displacement to RTDB
 
     T_ROBOT_DISPLACEMENT_FEEDBACK robotDisplacementFeedback;
-    int ageMs = 0;
 
-    // mutex with reading from WorldModel
-    tprintf("setRobotDisplacementFeedback before lock");
-    boost::interprocess::named_mutex mtx(boost::interprocess::open_or_create, "robot_displacement_named_mutex");
-    {
-        boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(mtx);
-
-        _rtdb->get(ROBOT_DISPLACEMENT_FEEDBACK, &robotDisplacementFeedback, ageMs, _myRobotId);
-        tprintf("setRobotDisplacementFeedback robotDisplacementFeedback.size=%d", (int)robotDisplacementFeedback.size());
-
-        robotDisplacement newDisplacement;
-        newDisplacement.x = robotData.displacement.x;
-        newDisplacement.y = robotData.displacement.y;
-        newDisplacement.Rz = project_angle_mpi_pi(robotData.displacement.phi);
-        robotDisplacementFeedback.push_back(newDisplacement);
-
-        tprintf("setRobotDisplacementFeedback put");
-        _rtdb->put(ROBOT_DISPLACEMENT_FEEDBACK, &robotDisplacementFeedback);
-    }
-    tprintf("setRobotDisplacementFeedback end");
+    robotDisplacementFeedback.x = robotData.displacement.x;
+    robotDisplacementFeedback.y = robotData.displacement.y;
+    robotDisplacementFeedback.Rz = project_angle_mpi_pi(robotData.displacement.phi);
+    _rtdb->put(ROBOT_DISPLACEMENT_FEEDBACK, &robotDisplacementFeedback);
 }
 
 void cRTDBOutputAdapter::setRobotVelocityFeedback(const vc_robot_data& robotData)
 {
-    TRACE_FUNCTION("");
+    std::stringstream str;
+    str << "x=" << robotData.velocity.x << "; y=" << robotData.velocity.y << "; Rz=" << project_angle_mpi_pi(robotData.velocity.phi);
+    TRACE_FUNCTION(str.str().c_str());
 
     // Get the current list of velocities from RTDB
     // Add the latest velocity to the list
     // Put the list back to RTDB
 
     T_ROBOT_VELOCITY_FEEDBACK robotVelocityFeedback;
-    int ageMs = 0;
 
     robotVelocityFeedback.x = robotData.velocity.x;
     robotVelocityFeedback.y = robotData.velocity.y;
@@ -87,7 +69,9 @@ void cRTDBOutputAdapter::setRobotVelocityFeedback(const vc_robot_data& robotData
 
 void cRTDBOutputAdapter::setMotorVelocitySetpoint(const vc_motors_data& motorsData)
 {
-    TRACE_FUNCTION("");
+    std::stringstream str;
+    str << "m1=" << motorsData.m1.velocity << "; m2=" << motorsData.m2.velocity << "; m3=" << motorsData.m3.velocity;
+    TRACE_FUNCTION(str.str().c_str());
 
     T_MOTOR_VELOCITY_SETPOINT motorVelocitySetpoint;
     motorVelocitySetpoint.m1 = motorsData.m1.velocity;

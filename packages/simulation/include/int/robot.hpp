@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -59,11 +59,13 @@ public:
     bool isKicking() const;
     bool canGrabBall (const Point3D&) const;
     bool canKickBall (const Point3D&) const;
+    bool hasBall() const;
     bool hasBallHandlersEnabled() const;
     float getKickerHeight() const;
     float getKickerSpeed() const;
 
     void recalculatePosition (const float dt);
+    void recalculateBallPossession(const Point3D& ballPosition);
     void setBallHandlingModuleAbsent();
     void setBallHandlingModulePresent();
     void setPlayingDirection (const PlayingDirection&);
@@ -83,7 +85,8 @@ private:
     PlayingDirection _playingDirection;
     Position2D _position;
     Velocity2D _velocity;
-    bool _ballHandlersEnabled;
+    bool _ballHandlersEnabled = false;
+    bool _hasBall = false;
     Kicker _kicker;
 };
 

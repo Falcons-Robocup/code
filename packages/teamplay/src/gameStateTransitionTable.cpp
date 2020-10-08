@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,13 +21,14 @@
 
 /* Other teamplay includes */
 #include "int/types/cRefboxSignalTypesFunctions.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
+#include "falconsCommonDirs.hpp"
 
 /* System includes */
 #include "yaml-cpp/yaml.h"
 
 /* Static definitions */
-const static std::string g_gameStateTransitionTableFileName = "/home/robocup/falcons/code/config/State_Manager_Transition_Table.yaml";
+const static std::string g_gameStateTransitionTableFileName = pathToCodeRepo() + "/config/State_Manager_Transition_Table.yaml";
 static treeEnum g_gameStateTransitionTable[(size_t)treeEnum::SIZE_OF_ENUM][(size_t)refboxSignalEnum::SIZE_OF_ENUM];
 
 /* YAML conversion helper structures */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -15,6 +15,8 @@
  *  Created on: Sep 13, 2016
  *      Author: Jan Feitsma
  */
+
+#include <boost/lexical_cast.hpp>
 
 #include "int/algorithms/objectTracking.hpp"
 #include "int/algorithms/objectCoreFit.hpp"
@@ -69,7 +71,7 @@ float objectTracker::getTimeSpread() const
     return _maxSpread;
 }
 
-void objectTracker::setConfig(objectFitConfig cfg)
+void objectTracker::setConfig(ConfigWorldModelObjectFit cfg)
 {
     _objectFitCfg = cfg;
 }
@@ -143,6 +145,40 @@ Vector3D objectTracker::triangulate(std::vector<objectMeasurementCache> const &m
     return result;
 }
 
+void objectTracker::makeDiagnostics(std::vector<diagObjectMeasurement> &measurements, std::vector<diagObjectMeasurementCluster> &measurementClusters)
+{
+    // fill in details for diagnostics (plot_balls.py)
+    measurements.clear();
+    measurementClusters.clear();
+    
+    return; // JFEI 20200523: disable for now, below assertion very rarely triggers a crash ...
+    
+    assert(_groupedTime.size() == _positionsFcs.size());
+    assert(_groupedTime.size() == _removedMask.size());
+    assert(_groupedTime.size() == _groupedMeasurements.size());
+    for (size_t it = 0; it < _groupedTime.size(); ++it)
+    {
+        // cluster
+        diagObjectMeasurementCluster c;
+        c.t = _groupedTime[it];
+        Vector3D posFcs = _positionsFcs[it];
+        c.x = posFcs.x;
+        c.y = posFcs.y;
+        c.z = posFcs.z;
+        c.used = (0 != _removedMask[it]);
+        measurementClusters.push_back(c);
+        // tag raw measurements according to outlier removal
+        auto currentGroup = _groupedMeasurements[it];
+        for (size_t imeas = 0; imeas < currentGroup.size(); ++imeas)
+        {
+            diagObjectMeasurement meas;
+            meas.m = currentGroup[imeas].getObjectMeasurement();
+            meas.used = c.used; // outlier removal is based on cluster
+            measurements.push_back(meas);
+        }
+    }
+}
+
 void objectTracker::makeDetailsStr()
 {
     // encode data in a string, 1cm/1ms resolution: 
@@ -162,7 +198,7 @@ void objectTracker::makeDetailsStr()
         Vector3D posFcs = _positionsFcs[it];
         char buf[64] = {0};
         sprintf(buf, " %.3f %.2f %.2f %.2f", t, posFcs.x, posFcs.y, posFcs.z);
-        if (0 == _removedMask[it])
+        if (0 != _removedMask[it])
         {
             badList += buf;
             _numBad++;
@@ -307,8 +343,5 @@ void objectTracker::solve(std::vector<objectMeasurementCache> const &measurement
     
     // calculate confidence heuristics and tracing details
     makeDetailsStr();
-    
-    // tprintf
-    
 }
 

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -55,7 +55,6 @@ TEST_F(hmBetweenPoiAndClosestObstacleTest, poiBall)
     _parameters["POI"] = "ball";
 
     _hmBetweenPoiAndClosestObstacle.refine(_parameters);
-    _hmBetweenPoiAndClosestObstacle.generateJPG("tst_hmBetweenPoiAndClosestObstacle_ball");
 }
 
 TEST_F(hmBetweenPoiAndClosestObstacleTest, poiOwnGoal)
@@ -63,7 +62,6 @@ TEST_F(hmBetweenPoiAndClosestObstacleTest, poiOwnGoal)
     _parameters["POI"] = "P_OWN_GOALLINE_CENTER";
 
     _hmBetweenPoiAndClosestObstacle.refine(_parameters);
-    _hmBetweenPoiAndClosestObstacle.generateJPG("tst_hmBetweenPoiAndClosestObstacle_ownGoal");
 }
 
 

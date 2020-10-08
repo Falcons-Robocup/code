@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     # check if file exists
     if not os.path.exists(args.inputfile):
-        print "Error: '%s' not found." % (args.inputfile)
+        print("Error: '%s' not found." % (args.inputfile))
         exit()
 
     # expand default arguments, resolve time frame, etc.
@@ -43,25 +43,27 @@ if __name__ == "__main__":
 
     # setup output file and load input entirely into memory (TODO: make nicer)
     if args.inputfile == args.outputfile:
-        print "Error: input and outputfiles may not be equal."
+        print("Error: input and outputfiles may not be equal.")
         exit()
     rdlInputFile = RDLFile(args.inputfile)
-    rdlInputFile.parseRDL()
+    rdlInputFile.parseRDL(ageMin, ageMax)
     rdlOutputFile = RDLFile(args.outputfile)
     
     # go through the frames
     for frame in rdlInputFile.frames:
         # determine whether this frame needs to be kept
         if (frame.age >= ageMin and frame.age <= ageMax):
+            # correct frame.age w.r.t. new creation timestamp
+            frame.age = frame.age - ageMin
+            frame.raw_frame[0] = frame.age # TODO: make nicer
             # keep
             rdlOutputFile.frames.append(frame)
             # TODO: satisfy other options (agent, key)
             # TODO: minimize code duplication w.r.t. rdlDump
-            # TODO: correct frame.age w.r.t. new creation timestamp
 
     # tweak the header
     rdlOutputFile.header = rdlInputFile.header
-    rdlOutputFile.header.duration = rdlOutputFile.frames[-1].age
+    rdlOutputFile.header.creation = rdlInputFile.header.creation + ageMin
 
     # write output file
     rdlOutputFile.write()

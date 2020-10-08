@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,6 +26,7 @@ using std::map;
 
 static RefboxConfigAdapter::TeamColor teamColorFromString(QString value);
 static RefboxConfigAdapter::PlayingField playingFieldFromString(QString value);
+static RefboxConfigAdapter::TTAConfiguration ttaConfigurationFromString(QString value);
 
 MainWindow::MainWindow(PlaybackControl *pb)
     : _pbControl(pb)
@@ -51,6 +52,12 @@ MainWindow::MainWindow(PlaybackControl *pb)
     connect(actionViewVisionView, SIGNAL(triggered()), this, SLOT(switchViewToVision()));
     connect(actionViewPathPlanningView, SIGNAL(triggered()), this, SLOT(switchViewToPathPlanning()));
     connect(actionViewTeamplayView, SIGNAL(triggered()), this, SLOT(switchViewToTeamplay()));
+    connect(actionHeightmapNone, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToNone()));
+    connect(actionHeightmapDefendAttackingOpponent, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToDefendAttackingOpponent()));
+    connect(actionHeightmapDribble, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToDribble()));
+    connect(actionHeightmapMoveToFreeSpot, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToMoveToFreeSpot()));
+    connect(actionHeightmapPositionForOppSetpiece, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToPositionForOppSetpiece()));
+    connect(actionHeightmapPositionForOwnSetpiece, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToPositionForOwnSetpiece()));
     connect(actionResetZoomPanRotate, SIGNAL(triggered()), fieldWidget, SLOT(resetZoomPanRotate()));
     connect(actionFlip, SIGNAL(toggled(bool)), fieldWidget, SLOT(flip(bool)));
 
@@ -62,24 +69,48 @@ MainWindow::MainWindow(PlaybackControl *pb)
     // Add actions for Settings-dialogs
     connect(toolButton, SIGNAL(pressed()), this, SLOT(showSettingsDialog()));
 
-    // === Add actions to switch to team/robot view
+    // Add actions to switch to team view
     connect(actionViewTeam, SIGNAL(triggered()), this, SLOT(switchViewToTeam()));
     switchViewToTeam();
-    QSignalMapper* mapper = new QSignalMapper(); // Use QSignalMapper to supply robot id to the signal
-    connect(mapper, SIGNAL(mapped(int)), this, SLOT(switchViewToRobot(int)));
-    boost::format format_robot("Robot %1%");
-    for (int id = 1; id < _NR_OF_ROBOTS_PER_TEAM + 1; id++)
+
+    // Add actions to switch to robot view
     {
-        std::string message_robot = boost::str(format_robot % id);
-        QAction* robotAction = new QAction(actionViewTeamGroup);
+        QSignalMapper* mapper = new QSignalMapper(); // Use QSignalMapper to supply robot id to the signal
+        connect(mapper, SIGNAL(mapped(int)), this, SLOT(switchViewToRobot(int)));
+        boost::format format_robot("Robot %1%");
+        for (int id = 1; id < _NR_OF_ROBOTS_PER_TEAM + 1; id++)
+        {
+            std::string message_robot = boost::str(format_robot % id);
+            QAction* robotAction = new QAction(actionViewTeamGroup);
 
-        mapper->setMapping(robotAction, id);
-        connect(robotAction, SIGNAL(triggered()), mapper, SLOT(map()));
+            mapper->setMapping(robotAction, id);
+            connect(robotAction, SIGNAL(triggered()), mapper, SLOT(map()));
 
-        robotAction->setCheckable(true);
-        robotAction->setText(QApplication::translate("MainWindow", message_robot.c_str(), 0));
-        menuViewTeamRobot->addAction(robotAction);
-        _robotViewActions.push_back(robotAction);
+            robotAction->setCheckable(true);
+            robotAction->setText(QApplication::translate("MainWindow", message_robot.c_str(), 0));
+            menuViewTeamRobot->addAction(robotAction);
+            _robotViewActions.push_back(robotAction);
+        }
+    }
+
+    // Add actions to switch heightmap for robot
+    {
+        QSignalMapper* mapper = new QSignalMapper(); // Use QSignalMapper to supply robot id to the signal
+        connect(mapper, SIGNAL(mapped(int)), fieldWidget, SLOT(switchHeightmapForRobot(int)));
+        boost::format format_robot("Robot %1%");
+        for (int id = 1; id < _NR_OF_ROBOTS_PER_TEAM + 1; id++)
+        {
+            std::string message_robot = boost::str(format_robot % id);
+            QAction* robotAction = new QAction(actionHeightmapRobotGroup);
+
+            mapper->setMapping(robotAction, id);
+            connect(robotAction, SIGNAL(triggered()), mapper, SLOT(map()));
+
+            robotAction->setCheckable(true);
+            robotAction->setText(QApplication::translate("MainWindow", message_robot.c_str(), 0));
+            menuHeightmapRobot->addAction(robotAction);
+            _robotHeightmapActions.push_back(robotAction);
+        }
     }
 
     // Initialize table widget nr of columns
@@ -108,6 +139,8 @@ MainWindow::MainWindow(PlaybackControl *pb)
     }
 
     switchViewToWorld(); // Initially world view is selected.
+    actionHeightmapNone->setChecked(true); // Initially no heightmap is selected.
+    _robotHeightmapActions.at(0)->setChecked(true); // Initially heightmap for robot 1 is selected.
 
     // Restore previous window state
     QSettings settings;
@@ -135,6 +168,12 @@ MainWindow::~MainWindow()
         delete action;
     }
     _robotViewActions.clear();
+
+    for (QAction* action : _robotHeightmapActions)
+    {
+        delete action;
+    }
+    _robotHeightmapActions.clear();
 
     delete refboxConfig;
 }
@@ -275,9 +314,11 @@ void MainWindow::showSettingsDialog()
         QSettings settings;
         QString teamColor = settings.value(Settings::teamColorSetting).toString();
         QString playingField = settings.value(Settings::playingFieldSetting).toString();
+        QString ttaConfig = settings.value(Settings::ttaConfigSetting).toString();
 
         refboxConfig->setTeamColor(teamColorFromString(teamColor));
         refboxConfig->setPlayingField(playingFieldFromString(playingField));
+        refboxConfig->setTTAConfiguration(ttaConfigurationFromString(ttaConfig));
     }
 }
 
@@ -304,3 +345,19 @@ static RefboxConfigAdapter::PlayingField playingFieldFromString(QString value)
 
     return playingFieldMap[value];
 }
+
+static RefboxConfigAdapter::TTAConfiguration ttaConfigurationFromString(QString value)
+{
+    std::string s = value.toStdString();
+    tprintf("ttaConfigurationFromString %s", s.c_str());
+    map<QString, RefboxConfigAdapter::TTAConfiguration> ttaConfigMap = {
+            {"NONE", RefboxConfigAdapter::TTAConfiguration::NONE},
+            {"FRONT_LEFT", RefboxConfigAdapter::TTAConfiguration::FRONT_LEFT},
+            {"FRONT_RIGHT", RefboxConfigAdapter::TTAConfiguration::FRONT_RIGHT},
+            {"BACK_LEFT", RefboxConfigAdapter::TTAConfiguration::BACK_LEFT},
+            {"BACK_RIGHT", RefboxConfigAdapter::TTAConfiguration::BACK_RIGHT},
+    };
+
+    return ttaConfigMap.at(value);
+}
+

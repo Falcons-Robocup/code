@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,7 +26,7 @@
 #include <limits>
 
 #include <boost/algorithm/string.hpp>
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 #include "int/stores/ballStore.hpp"
 #include "int/stores/configurationStore.hpp"
@@ -36,11 +36,13 @@
 #include "int/stores/gameStateStore.hpp"
 #include "int/stores/obstacleStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
 #include "int/utilities/timer.hpp"
 #include "int/actions/cAbstractAction.hpp"
 
 #include "int/adapters/cRTDBInputAdapter.hpp"
+#include "int/adapters/cRTDBOutputAdapter.hpp"
+
+#include "cDiagnostics.hpp"
 
 using std::exception;
 using std::runtime_error;
@@ -75,11 +77,6 @@ cWorldStateFunctions::cWorldStateFunctions()
     _fieldLength = teamplay::fieldDimensionsStore::getFieldDimensions().getLength();
 
     _positionMargin = 0.15;
-}
-
-cWorldStateFunctions::~cWorldStateFunctions()
-{
-
 }
 
 bool isShortTurnToGoalBlockedByOpponent(const std::map<std::string, std::string> &params)
@@ -293,20 +290,17 @@ bool cWorldStateFunctions::isMemberInArea(areaName area, bool includeOwnRobot, b
 
 bool doesTeamHaveBall(const std::map<std::string, std::string> &params)
 {
-    bool ret_val = false;
-
     try
     {
-        auto all_robots = teamplay::robotStore::getInstance().getAllRobots();
-        ret_val = std::any_of(all_robots.begin(), all_robots.end(),
-                              [&](const teamplay::robot it){ return it.hasBall(); });
-    } catch (exception &e)
+        const auto all_robots = teamplay::robotStore::getInstance().getAllRobots();
+        return std::any_of(all_robots.begin(), all_robots.end(), 
+            [](const teamplay::robot r){ return r.hasBall(); });
+    }
+    catch (exception &e)
     {
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
-
-    return ret_val;
 }
 
 /*! Calculate the distance from given robot to the ball
@@ -335,386 +329,165 @@ boost::optional<float> cWorldStateFunctions::ballDistance(const robotNumber &rob
             Position2D robotPos = getPosition2D(teamMembers.at(robotID).position);
             return float (calc_distance( ballPosition.x, ballPosition.y, robotPos.x, robotPos.y ));
         }
+        return boost::none;
     }
     catch (exception &e)
     {
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
-    return boost::none;
 }
 
-/*! get the x,y location of the closest team member to the specified location
- *
- * @param[in] location_x x of the reference location to compare with
- * @param[in] location_y y of the reference location to compare with
- */
-void cWorldStateFunctions::getClosestMemberToLocationXY(double location_x, double location_y, bool includeOwnRobot, bool includeGoalie, bool &foundMember, uint8_t &robotID)
-{   // returns robotID 0 and foundMember = 0 when no valid robot can be returned and inCludeOwnRobot is false
-    foundMember = false;
-    robotID = 0;
-
-    try
-    {
-        // start with imaginary high value
-        double shortestDistance=99.0;
-
-        // First calculate my distance to ball (if included)
-        if (includeOwnRobot)
-        {
-            Position2D robotPos = getLocationOfRobot(_robotID);
-
-            double robotDistance = calc_distance(
-                    location_x,
-                    location_y,
-                    robotPos.x,
-                    robotPos.y
-                );
-
-            shortestDistance = robotDistance;
-            foundMember = true;
-            robotID = _robotID;
-        }
-
-        // get all team mates locations from WorldModelInterface
-        robotLocations teamMembers = getTeammembers();
-
-        // remove goalkeeper from the equation
-        robotLocations::iterator it = teamMembers.begin();
-        if (!includeGoalie) {
-            for(it = teamMembers.begin(); it != teamMembers.end(); it++)
-            {
-                // Remove the goalie if he should not be included in the result
-                if (getRobotRole(it->first) == treeEnum::R_GOALKEEPER) {
-                    teamMembers.erase(it);
-                    break;
-                }
-            }
-        }
-
-        // Find closest remaining member to the given location
-        robotLocations::iterator robotIt = teamMembers.begin();
-        for(robotIt = teamMembers.begin(); robotIt != teamMembers.end(); robotIt++)
-        {
-            double robotDistance = calc_distance(
-                    location_x,
-                    location_y,
-                    robotIt->second.position.x,
-                    robotIt->second.position.y
-                );
-
-            if(robotDistance < shortestDistance)
-            {
-                foundMember = true;
-                robotID = robotIt->first;
-
-                shortestDistance = robotDistance;
-            }
-        }
-    } catch (exception &e)
-    {
-        std::cout << "Caught exception: " << e.what() << std::endl;
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
-    }
-}
-
-
-/*! get the x,y location of the closest team member of this robot
- *
- * @param[out] target_x  x location of the closest team member
- * @param[out] target_y  y location of the closest team member
- * @return true if the function was successful in its task
- *         false if the function was not successful in its task, do not trust target_x and target_y
- */
-
-bool cWorldStateFunctions::getClosestTeammember(double &target_x, double &target_y, bool includeGoalie)
-{   // returns false when no valid coordinates can be returned
-    bool retVal = false;
-
-    try
-    {
-        // Get team members
-        // get all team mates locations from WorldModelInterface
-        robotLocations teamMembers = getTeammembers();
-        Position2D teamMemberLocation;
-        Position2D closestLocation;
-        Position2D myLocation =  getLocationOfRobot(_robotID);
-        float shortestDistance = 100;
-
-        // check for every team mate; iterate over vector since not fixed how many team mates are in play and are seen by vision
-        robotLocations::iterator it = teamMembers.begin();
-        if (!includeGoalie) {
-            for(it = teamMembers.begin(); it != teamMembers.end(); it++)
-            {
-                // Remove the goalie if he should not be included in the result
-                if (getRobotRole(it->first) == treeEnum::R_GOALKEEPER) {
-                    teamMembers.erase(it);
-                    break;
-                }
-            }
-        }
-
-        for(it = teamMembers.begin(); (it != teamMembers.end()) ; it++)
-        {
-            // check current team member coordinates against the area match
-            teamMemberLocation = Position2D(it->second.position.getX(), it->second.position.getY(), it->second.position.getPhi());
-            float distance = calc_distance(myLocation, teamMemberLocation);
-            if (distance < shortestDistance)
-            {
-                shortestDistance = distance;
-                closestLocation = teamMemberLocation;
-                retVal = true;
-            }
-        }
-
-        if(retVal)
-        {
-            target_x = closestLocation.x;
-            target_y = closestLocation.y;
-        }
-
-    } catch (exception &e)
-    {
-        std::cout << "Caught exception: " << e.what() << std::endl;
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
-    }
-
-    return retVal;
-}
-
-bool cWorldStateFunctions::getClosestAttacker(areaName area, double &target_x, double &target_y)
+boost::optional<teamplay::robot> cWorldStateFunctions::getClosestTeammemberToLocationXY(
+    Point2D location, bool includeOwnRobot, bool includeGoalie, const std::set<treeEnum> &withRole) const
 {
-    bool result = false;
     try
     {
-
-        // get my own location
-        Position2D myPos = getLocationOfRobot(_robotID);
-
-        double distanceToClosestAttacker = 999.0;
-
-        // Find attackers.
-        boost::optional<robotNumber> attackerMain = getRobotWithRole(treeEnum::ATTACKER_MAIN);
-        boost::optional<robotNumber> attackerAssist = getRobotWithRole(treeEnum::ATTACKER_ASSIST);
-
-        robotLocations teamMembers = getTeammembers();
-
-        // TODO: what if no attacker found in area??? this was already the case with 1 attacker-main and no attacker-assist
-
-        if (attackerMain &&
-        (*attackerMain != _robotID) &&
-        (teamMembers.find(*attackerMain) != teamMembers.end()))// If attackerMain role exists, and it's not me
+        const auto &robotStore = teamplay::robotStore::getInstance();
+        const std::vector<teamplay::robot> &robots = robotStore.getAllRobotsSortedByDistanceTo(location);
+        for (const auto &robot : robots)
         {
-            // Compute distance between attacker and me.
-            Position2D robotPos = getPosition2D(teamMembers.at(*attackerMain).position);
-
-            // check current team member coordinates against the area match
-            if (cEnvironmentField::getInstance().isPositionInArea((float) robotPos.x, (float) robotPos.y, area,    _positionMargin))
+            if (!includeOwnRobot && robot.isOwnRobot())
             {
-                double distance = calc_distance( myPos, robotPos );
-                if (distance < distanceToClosestAttacker)
-                {
-                    distanceToClosestAttacker = distance;
-                    target_x = robotPos.x;
-                    target_y = robotPos.y;
-
-                    result = true;
-                }
+                continue;
             }
-        }
-
-        if (attackerAssist &&
-        (*attackerAssist != _robotID) &&
-        (teamMembers.find(*attackerAssist) != teamMembers.end())) // If attackerAssist role exists, and it's not me
-        {
-            // Compute distance between attacker and me.
-            Position2D robotPos = getPosition2D(teamMembers.at(*attackerAssist).position);
-
-            // check current team member coordinates against the area match
-            if (cEnvironmentField::getInstance().isPositionInArea((float) robotPos.x, (float) robotPos.y, area,    _positionMargin))
+            const auto &role = robot.getRole();
+            if (!includeGoalie && (role == treeEnum::R_GOALKEEPER))
             {
-                double distance = calc_distance( myPos, robotPos );
-                if (distance < distanceToClosestAttacker)
-                {
-                    distanceToClosestAttacker = distance;
-                    target_x = robotPos.x;
-                    target_y = robotPos.y;
-
-                    result = true;
-                }
+                continue;
             }
+            if (!withRole.empty() && (withRole.find(role) == withRole.end()))
+            {
+                continue;
+            }
+            return robot;
         }
-
+        return {};
     } catch (exception &e)
+    {
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+}
+
+boost::optional<teamplay::robot> cWorldStateFunctions::getClosestTeammember(const bool includeGoalie) const
+{
+    try
+    {
+        const auto &robotStore = teamplay::robotStore::getInstance();
+        const Point2D ownLocation = robotStore.getOwnRobot().getLocation();
+
+        return getClosestTeammemberToLocationXY(ownLocation, false, includeGoalie);
+    }
+    catch (exception &e)
+    {
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+}
+
+boost::optional<teamplay::robot> cWorldStateFunctions::getClosestTeammemberToOpponentGoal(const std::set<treeEnum> &withRole) const
+{
+    try
+    {
+        const Point2D oppGoallineCenter = teamplay::fieldDimensionsStore::getFieldDimensions()
+            .getLocation(teamplay::fieldPOI::OPP_GOALLINE_CENTER);
+
+        return getClosestTeammemberToLocationXY(oppGoallineCenter, false, true, withRole);
+    }
+    catch (exception &e)
+    {
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+}
+
+boost::optional<teamplay::robot> cWorldStateFunctions::getClosestAttacker(const boost::optional<teamplay::fieldArea> area) const
+{
+    try
+    {
+        const auto &robotStore = teamplay::robotStore::getInstance();
+
+        std::vector<teamplay::robot> robots;
+        if (area) {
+            robots = robotStore.getAllRobotsExclOwnRobotInArea(*area);
+        }
+        else
+        {
+            robots = robotStore.getAllRobotsExclOwnRobot();
+        }
+
+        std::vector<teamplay::robot> attackers;
+        std::copy_if(robots.begin(), robots.end(), std::back_inserter(attackers),
+            [&](const teamplay::robot &r) {
+                const auto role = r.getRole();
+                return (role == treeEnum::ATTACKER_MAIN) || (role == treeEnum::ATTACKER_ASSIST);
+            });
+
+        const Point2D ownLocation = robotStore.getOwnRobot().getLocation();
+        std::sort(attackers.begin(), attackers.end(),
+            [&](const teamplay::robot& lhs, const teamplay::robot& rhs)
+            { return lhs.getDistanceTo(ownLocation) < rhs.getDistanceTo(ownLocation); });
+
+        if (attackers.empty())
+        {
+            return boost::none;
+        }
+        else
+        {
+            return attackers.front();
+        }
+    }
+    catch (exception &e)
     {
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("cWorldStateFunctions::getClosestAttacker Linked to: ") + e.what());
     }
-
-    return result;
 }
 
-void cWorldStateFunctions::getClosestAttackerToOpponentGoal(double &target_x, double &target_y)
+boost::optional<teamplay::robot> cWorldStateFunctions::getClosestAttackerToOpponentGoal() const
 {
     try
     {
-        // goal opponent goal info
-        Point2D oppGoallineCenter = teamplay::fieldDimensionsStore::getFieldDimensions().getLocation(teamplay::fieldPOI::OPP_GOALLINE_CENTER);
-
-        // Find attackers.
-        boost::optional<robotNumber> attackerMain = getRobotWithRole(treeEnum::ATTACKER_MAIN);
-        boost::optional<robotNumber> attackerAssist = getRobotWithRole(treeEnum::ATTACKER_ASSIST);
-
-        robotLocations teamMembers = getTeammembers();
-
-        double distanceToClosestAttacker = 999.0;
-
-        if (attackerMain &&
-        (*attackerMain != _robotID) &&
-        (teamMembers.find(*attackerMain) != teamMembers.end()))// If attackerMain role exists, and it's not me
-        {
-            // Compute distance between attacker and me.
-            Position2D robotPos = getPosition2D(teamMembers.at(*attackerMain).position);
-
-            double distance = calc_distance(oppGoallineCenter.x, oppGoallineCenter.y , robotPos.x, robotPos.y);
-            if (distance < distanceToClosestAttacker)
-            {
-                distanceToClosestAttacker = distance;
-                target_x = robotPos.x;
-                target_y = robotPos.y;
-            }
-        }
-
-        if (attackerAssist &&
-        (*attackerAssist != _robotID) &&
-        (teamMembers.find(*attackerAssist) != teamMembers.end())) // If attackerAssist role exists, and it's not me
-        {
-            // Compute distance between attacker and me.
-            Position2D robotPos = getPosition2D(teamMembers.at(*attackerAssist).position);
-
-            double distance = calc_distance(oppGoallineCenter.x, oppGoallineCenter.y , robotPos.x, robotPos.y);
-            if (distance < distanceToClosestAttacker)
-            {
-                distanceToClosestAttacker = distance;
-                target_x = robotPos.x;
-                target_y = robotPos.y;
-            }
-        }
-
-    } catch (exception &e)
-    {
-        std::cout << "Caught exception: " << e.what() << std::endl;
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
+        const std::set<treeEnum> roles({treeEnum::ATTACKER_MAIN, treeEnum::ATTACKER_ASSIST});
+        return cWorldStateFunctions::getClosestTeammemberToOpponentGoal(roles);
     }
-
-}
-
-void cWorldStateFunctions::getClosestDefender(double &target_x, double &target_y)
-{
-    try
-    {
-        // get my own location
-        Position2D myPos = getLocationOfRobot(_robotID);
-
-        double distanceToClosestDefender = 999.0;
-
-        // Find defenders.
-        boost::optional<robotNumber> defenderMain = getRobotWithRole(treeEnum::DEFENDER_MAIN);
-        boost::optional<robotNumber> defenderAssist = getRobotWithRole(treeEnum::DEFENDER_ASSIST);
-
-        robotLocations teamMembers = getTeammembers();
-
-    if (defenderMain &&
-       (*defenderMain != _robotID) &&
-       (teamMembers.find(*defenderMain) != teamMembers.end()))// If defenderMain role exists, and it's not me
-        {
-            // Compute distance between defender and me.
-            Position2D robotPos = getPosition2D(teamMembers.at(*defenderMain).position);
-
-            double distance = calc_distance( myPos, robotPos );
-            if (distance < distanceToClosestDefender)
-            {
-                distanceToClosestDefender = distance;
-                target_x = robotPos.x;
-                target_y = robotPos.y;
-            }
-        }
-
-    if (defenderAssist &&
-       (*defenderAssist != _robotID) &&
-       (teamMembers.find(*defenderAssist) != teamMembers.end()))// If defenderAssist role exists, and it's not me
-        {
-            // Compute distance between defender and me.
-            Position2D robotPos = getPosition2D(teamMembers.at(*defenderAssist).position);
-
-            double distance = calc_distance( myPos, robotPos );
-            if (distance < distanceToClosestDefender)
-            {
-                distanceToClosestDefender = distance;
-                target_x = robotPos.x;
-                target_y = robotPos.y;
-            }
-        }
-    } catch (exception &e)
+    catch (exception &e)
     {
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
 }
 
-void cWorldStateFunctions::getClosestDefenderToOpponentGoal(double &target_x, double &target_y)
+boost::optional<teamplay::robot> cWorldStateFunctions::getClosestDefender() const
 {
     try
     {
-        // goal opponent goal info
-        Point2D oppGoallineCenter = teamplay::fieldDimensionsStore::getFieldDimensions().getLocation(teamplay::fieldPOI::OPP_GOALLINE_CENTER);
+        const auto &robotStore = teamplay::robotStore::getInstance();
+        const Point2D ownLocation = robotStore.getOwnRobot().getLocation();
+        const std::set<treeEnum> roles({treeEnum::DEFENDER_MAIN, treeEnum::DEFENDER_ASSIST});
 
-        // Find attackers.
-        boost::optional<robotNumber> defenderMain = getRobotWithRole(treeEnum::DEFENDER_MAIN);
-        boost::optional<robotNumber> defenderAssist = getRobotWithRole(treeEnum::DEFENDER_ASSIST);
-
-        robotLocations teamMembers = getTeammembers();
-
-        double distanceToClosestDefender = 999.0;
-
-        if (defenderMain &&
-        (*defenderMain != _robotID) &&
-        (teamMembers.find(*defenderMain) != teamMembers.end()))// If defenderMain role exists, and it's not me
-        {
-            // Compute distance between attacker and me.
-            Position2D robotPos = getPosition2D(teamMembers.at(*defenderMain).position);
-
-            double distance = calc_distance(oppGoallineCenter.x, oppGoallineCenter.y , robotPos.x, robotPos.y);
-            if (distance < distanceToClosestDefender)
-            {
-                distanceToClosestDefender = distance;
-                target_x = robotPos.x;
-                target_y = robotPos.y;
-            }
-        }
-
-        if (defenderAssist &&
-        (*defenderAssist != _robotID) &&
-        (teamMembers.find(*defenderAssist) != teamMembers.end())) // If defenderAssist role exists, and it's not me
-        {
-            // Compute distance between attacker and me.
-            Position2D robotPos = getPosition2D(teamMembers.at(*defenderAssist).position);
-
-            double distance = calc_distance(oppGoallineCenter.x, oppGoallineCenter.y , robotPos.x, robotPos.y);
-            if (distance < distanceToClosestDefender)
-            {
-                distanceToClosestDefender = distance;
-                target_x = robotPos.x;
-                target_y = robotPos.y;
-            }
-        }
-
-    } catch (exception &e)
+        return getClosestTeammemberToLocationXY(ownLocation, false, false, roles);
+    }
+    catch (exception &e)
     {
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
+}
 
+boost::optional<teamplay::robot> cWorldStateFunctions::getClosestDefenderToOpponentGoal() const
+{
+    try
+    {
+        const std::set<treeEnum> roles({treeEnum::DEFENDER_MAIN, treeEnum::DEFENDER_ASSIST});
+        return cWorldStateFunctions::getClosestTeammemberToOpponentGoal(roles);
+    }
+    catch (exception &e)
+    {
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
 }
 
 /*! get the x,y location of the closest opponent to the specified location
@@ -1064,6 +837,10 @@ bool isThrowinSetPiece(const std::map<std::string, std::string> &params)
     return teamplay::gameStateStore::getInstance().getGameState().isThrowinSetPiece();
 }
 
+bool isParkingSetPiece(const std::map<std::string, std::string> &params)
+{
+    return teamplay::gameStateStore::getInstance().getGameState().isParkingSetPiece();
+}
 
 robotNumber cWorldStateFunctions::getRobotID()
 {
@@ -1110,8 +887,8 @@ bool within1mOfBall(const std::map<std::string, std::string> &params)
 
         if (ball.isLocationKnown())
         {
-            Point3D ball_location = ball.getPosition();
-            Vector2D delta = Vector2D(ball_location.x, ball_location.y) - myPos.xy();
+            Point3D ballLocation = ball.getPosition();
+            Vector2D delta = Vector2D(ballLocation.x, ballLocation.y) - myPos.xy();
             if (delta.size() < 1.0)
             {
                 retVal = true;
@@ -1367,7 +1144,7 @@ bool isOwnRobotNearestToBall(const std::map<std::string, std::string> &params)
         auto robots = teamplay::robotStore::getInstance().getAllRobotsExclGoalie();
         for (auto robot = robots.begin(); robot != robots.end(); ++robot)
         {
-            auto time_to_ball = cRTDBInputAdapter::getInstance().getMPClient().getTimeToBall(robot->getNumber());
+            auto time_to_ball = cRTDBOutputAdapter::getInstance().getMPClient().getTimeToBall(robot->getNumber());
             if (time_to_ball < quickest_to_ball.second)
             {
                 quickest_to_ball.first = *robot;
@@ -1388,34 +1165,27 @@ bool isOwnRobotNearestToBall(const std::map<std::string, std::string> &params)
 
 bool isOwnRobotNearestToLastKnownBallLocation(const std::map<std::string, std::string> &params)
 {
-    bool retVal = false;
-
     try
     {
-        uint8_t robotID = 0;
-        bool memberFound = false;
         teamplay::ball ball = teamplay::ballStore::getBall();
+        Point2D ballLocation = ball.getLocation();
 
-        Point3D ball_location = ball.getPosition();
-
-        cWorldStateFunctions::getInstance().getClosestMemberToLocationXY(
-                ball_location.x,
-                ball_location.y,
+        boost::optional<teamplay::robot> robot = cWorldStateFunctions::getInstance()
+            .getClosestTeammemberToLocationXY(ballLocation,
                 true, // Include own robot
-                false, // Exclude goalie
-                memberFound,
-                robotID
-            );
+                false); // Exclude goalie
 
-        retVal = ((robotID == cWorldStateFunctions::getInstance().getRobotID()) && (memberFound));
+        if (robot)
+        {
+            return robot->isOwnRobot();
+        }
+        return false;
     }
     catch (exception &e)
     {
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
-
-    return retVal;
 }
 
 bool isBallLocationKnown(const std::map<std::string, std::string> &params)
@@ -1645,10 +1415,10 @@ bool isBallApproachingRobot(const std::map<std::string, std::string> &params)
             }
         }
 
-        //TRACE("captureRadius=") << std::to_string(captureRadius)
-        //    << " ballIntersectsCaptureRadius=" << std::to_string(ballIntersectsCaptureRadius)
-        //    << " ballIsMovingTowardsUs=" << std::to_string(ballIsMovingTowardsUs)
-        //    << " ballMovingFastEnough=" << std::to_string(ballMovingFastEnough);
+        TRACE("captureRadius=") << std::to_string(captureRadius)
+            << " ballIntersectsCaptureRadius=" << std::to_string(ballIntersectsCaptureRadius)
+            << " ballIsMovingTowardsUs=" << std::to_string(ballIsMovingTowardsUs)
+            << " ballMovingFastEnough=" << std::to_string(ballMovingFastEnough);
         return (ballIntersectsCaptureRadius && ballIsMovingTowardsUs && ballMovingFastEnough);
 
     } catch (exception &e)
@@ -1686,10 +1456,11 @@ bool isPassApproachingRobot(const std::map<std::string, std::string> &params)
                 if (robotsByDistance.at(0).isOwnRobot())
                 {
                     closestRobotToPassTarget = true;
+                    TRACE("This robot is the closest robot to the Pass target");
                 }
             }
         }
-        
+
         // check if pass has been given recently enough
         auto distance = cWorldStateFunctions::getInstance().ballDistance(teamplay::robotStore::getInstance().getOwnRobot().getNumber());
         double timeout = 10.0;
@@ -1698,9 +1469,15 @@ bool isPassApproachingRobot(const std::map<std::string, std::string> &params)
             float speed = 1.0; // TODO make speed scaling configurable
             timeout = *distance / speed;
         }
+
         teamplay::ball ball = teamplay::ballStore::getBall();
         bool ballLost = !ball.isLocationKnown();
-        bool teammateRecentPassIntention = !lastPassIntention.hasElapsed(timeout);
+        if (ballLost)
+        {
+            TRACE("No ball location known. Stay in place for intercept.");
+        }
+
+        bool teammateRecentPassIntention = lastPassIntention.hasStarted() && !lastPassIntention.hasElapsed(timeout);
         if (teammateRecentPassIntention)
         {
             // timers not yet expired -> check ball movement
@@ -1716,8 +1493,16 @@ bool isPassApproachingRobot(const std::map<std::string, std::string> &params)
             if (ballLost || ballApproaching || closestRobotToPassTarget)
             {
                 retVal = true;
-                TRACE("staying in place to intercept");
+                TRACE("staying in place to intercept. ");
             }
+            TRACE("")
+                << "ballLost=" << std::to_string(ballLost) << "; "
+                << "ballApproaching=" << std::to_string(ballApproaching) << "; "
+                << "closestRobotToPassTarget=" << std::to_string(closestRobotToPassTarget);
+        }
+        else
+        {
+            TRACE("No recent Pass intention known.");
         }
     } catch (exception &e)
     {
@@ -1832,6 +1617,38 @@ void cWorldStateFunctions::getObstructingObstaclesInPath(const Point2D robotPos,
 
 }
 
+bool isInScoringPosition(const std::map<std::string, std::string> &params)
+{
+    bool retVal = false;
+
+    try
+    {
+        if(isOwnRobotAtOpponentSide(params))
+        {
+            auto own_location = teamplay::robotStore::getInstance().getOwnRobot().getLocation();
+            auto goal_location = teamplay::fieldDimensionsStore::getFieldDimensions().getLocation(teamplay::fieldPOI::OPP_GOALLINE_CENTER);
+
+            /*
+             * angle_to_goal is the angle (in FCS) at the location of the robot towards the center of the opponent goal.
+             * e.g. if the robot is located on the line perpendicular to the center of the goal, angle_to_goal equals 0.5*PI
+             */
+            auto angle_to_goal = angle_between_two_points_0_2pi(own_location.x, own_location.y, goal_location.x, goal_location.y);
+            auto distance_to_goal = calc_distance(own_location, goal_location);
+
+            retVal = (  (teamplay::configurationStore::getConfiguration().getMinimumAngleToGoal() < angle_to_goal)
+                     && (angle_to_goal < teamplay::configurationStore::getConfiguration().getMaximumAngleToGoal())
+                     && (teamplay::configurationStore::getConfiguration().getMinimumDistanceToGoal() < distance_to_goal)
+                     && (distance_to_goal < teamplay::configurationStore::getConfiguration().getMaximumDistanceToGoal()));
+        }
+    } catch (exception &e)
+    {
+        std::cout << "Caught exception: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("Linked to: ") + e.what());
+    }
+
+    return retVal;
+}
+
 bool isShotOnGoalBlocked(const std::map<std::string, std::string> &params)
 {
     bool retVal = false; // initially shot on goal is not blocked
@@ -1937,11 +1754,9 @@ bool isPassToClosestTeammemberBlocked(const std::map<std::string, std::string> &
         Point2D robotPos(robotPos2D.x, robotPos2D.y);
 
         // get closest teammember Point2D
-        Point2D closest_teammember;
-        cWorldStateFunctions::getInstance().getClosestTeammember(closest_teammember.x, closest_teammember.y, false);
+        Point2D closest_teammember = cWorldStateFunctions::getInstance().getClosestTeammember(false)->getLocation();
 
         std::vector<robotLocation> obstacles;
-
         cWorldStateFunctions::getInstance().getObstructingObstaclesInPath(robotPos, closest_teammember, shootPathRadius, obstacles);
 
         if (obstacles.size() > 0)
@@ -1970,12 +1785,10 @@ bool isPassToClosestAttackerBlocked(const std::map<std::string, std::string> &pa
 
         Point2D robotPos(robotPos2D.x, robotPos2D.y);
 
-        // get closest attacker Point2D
-        Point2D closest_attacker;
-        bool attackerFound = cWorldStateFunctions::getInstance().getClosestAttacker(A_FIELD, closest_attacker.x, closest_attacker.y);
-
-        if (attackerFound)
+        boost::optional<teamplay::robot> attacker = cWorldStateFunctions::getInstance().getClosestAttacker();
+        if (attacker)
         {
+            Point2D closest_attacker = attacker->getLocation();
             std::vector<robotLocation> obstacles;
 
             cWorldStateFunctions::getInstance().getObstructingObstaclesInPath(robotPos, closest_attacker, shootPathRadius, obstacles);
@@ -2001,70 +1814,64 @@ bool isPassToClosestAttackerBlocked(const std::map<std::string, std::string> &pa
 
 bool isPassToFurthestAttackerBlocked(const std::map<std::string, std::string> &params)
 {
-    bool retVal = false; // initially pass to closest attacker is not blocked
-
     try
     {
-        double shootPathRadius = teamplay::configurationStore::getConfiguration().getShootPathWidth() / 2.0;
+        const Point2D robotPos = teamplay::robotStore::getInstance().getOwnRobot().getLocation();
 
-        Position2D robotPos2D = teamplay::robotStore::getInstance().getOwnRobot().getPosition();
+        const boost::optional<teamplay::robot> furthestAttacker = cWorldStateFunctions::getInstance().getClosestAttackerToOpponentGoal();
+        if (!furthestAttacker)
+        {
+            return true;
+        }
 
-        Point2D robotPos(robotPos2D.x, robotPos2D.y);
-
-        // get furthest attacker Point2D
-        Point2D furthest_attacker;
-        cWorldStateFunctions::getInstance().getClosestAttackerToOpponentGoal(furthest_attacker.x, furthest_attacker.y);
+        const double shootPathRadius = teamplay::configurationStore::getConfiguration().getShootPathWidth() / 2.0;
 
         std::vector<robotLocation> obstacles;
-
-        cWorldStateFunctions::getInstance().getObstructingObstaclesInPath(robotPos, furthest_attacker, shootPathRadius, obstacles);
+        cWorldStateFunctions::getInstance().getObstructingObstaclesInPath(
+            robotPos, furthestAttacker->getLocation(), shootPathRadius, obstacles);
 
         if (obstacles.size() > 0)
         {
-            retVal = true; // pass to closest attacker is blocked by an obstacle
+            return true;
         }
-
-    } catch (exception &e)
+        return false;
+    }
+    catch (exception &e)
     {
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
-
-    return retVal;
 }
 
 bool isPassToFurthestDefenderBlocked(const std::map<std::string, std::string> &params)
 {
-    bool retVal = false; // initially pass to closest defender is not blocked
-
     try
     {
-        double shootPathRadius = teamplay::configurationStore::getConfiguration().getShootPathWidth() / 2.0;
+        const Point2D robotPos = teamplay::robotStore::getInstance().getOwnRobot().getLocation();
 
-        Position2D robotPos2D = teamplay::robotStore::getInstance().getOwnRobot().getPosition();
+        const boost::optional<teamplay::robot> furthestDefender = cWorldStateFunctions::getInstance().getClosestDefenderToOpponentGoal();
+        if(!furthestDefender)
+        {
+            return true;
+        }
 
-        Point2D robotPos(robotPos2D.x, robotPos2D.y);
-
-        // get furthest defender Point2D
-        Point2D furthest_defender;
-        cWorldStateFunctions::getInstance().getClosestDefenderToOpponentGoal(furthest_defender.x, furthest_defender.y);
+        const double shootPathRadius = teamplay::configurationStore::getConfiguration().getShootPathWidth() / 2.0;
 
         std::vector<robotLocation> obstacles;
-
-        cWorldStateFunctions::getInstance().getObstructingObstaclesInPath(robotPos, furthest_defender, shootPathRadius, obstacles);
+        cWorldStateFunctions::getInstance().getObstructingObstaclesInPath(
+            robotPos, furthestDefender->getLocation(), shootPathRadius, obstacles);
 
         if (obstacles.size() > 0)
         {
-            retVal = true; // pass to closest attacker is blocked by an obstacle
+            return true;
         }
-
-    } catch (exception &e)
+        return false;
+    }
+    catch (exception &e)
     {
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
-
-    return retVal;
 }
 
 bool isTipInBlocked(const std::map<std::string, std::string> &params)
@@ -2188,23 +1995,6 @@ bool defendingStrategyOn(const std::map<std::string, std::string> &params)
     return retVal;
 }
 
-bool dribbleStrategyOn(const std::map<std::string, std::string> &params)
-{
-    bool retVal = false;
-
-    try
-    {
-        retVal = teamplay::configurationStore::getConfiguration().getDribbleStrategy();
-    }
-    catch (exception &e)
-    {
-        std::cout << "Caught exception: " << e.what() << std::endl;
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
-    }
-
-    return retVal;
-}
-
 bool multipleOpponentsOnOwnHalf(const std::map<std::string, std::string> &params)
 {
     bool retVal = false;
@@ -2239,73 +2029,15 @@ bool multipleOpponentsOnOwnHalf(const std::map<std::string, std::string> &params
 
 bool isAnAttackerOnOppHalf(const std::map<std::string, std::string> &params)
 {
-    bool retVal = false;
-
     try
     {
-        // get closest attacker Point2D
-        Point2D closest_attacker(0.0, 0.0);
-        retVal = cWorldStateFunctions::getInstance().getClosestAttacker(A_OPP_SIDE, closest_attacker.x, closest_attacker.y);
+        return (cWorldStateFunctions::getInstance().getClosestAttacker(teamplay::fieldArea::OPP_SIDE) != boost::none);
     }
     catch (exception &e)
     {
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
-
-    return retVal;
-}
-
-
-bool shotThresholdReached(const std::map<std::string, std::string> &params)
-{
-    bool retVal = false;
-
-    try
-    {
-        float shotThreshold = teamplay::configurationStore::getConfiguration().getShotThreshold();
-
-        Point2D ownPos = teamplay::robotStore::getInstance().getOwnRobot().getLocation();
-
-        Point2D opp_goalline_center;
-        opp_goalline_center = teamplay::fieldDimensionsStore::getFieldDimensions().getLocation(teamplay::fieldPOI::OPP_GOALLINE_CENTER);
-
-        retVal = ( calc_distance(ownPos.x, ownPos.y, opp_goalline_center.x, opp_goalline_center.y) < shotThreshold );
-
-    }
-    catch (exception &e)
-    {
-        std::cout << "Caught exception: " << e.what() << std::endl;
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
-    }
-
-    return retVal;
-}
-
-bool shotThresholdReachable(const std::map<std::string, std::string> &params)
-{
-    bool retVal = false;
-
-    try
-    {
-        float shotThreshold = teamplay::configurationStore::getConfiguration().getShotThreshold();
-        float distToShotThreshold = 2.0;
-
-        Point2D ownPos = teamplay::robotStore::getInstance().getOwnRobot().getLocation();
-
-        Point2D opp_goalline_center;
-        opp_goalline_center = teamplay::fieldDimensionsStore::getFieldDimensions().getLocation(teamplay::fieldPOI::OPP_GOALLINE_CENTER);
-
-        retVal = ( calc_distance(ownPos.x, ownPos.y, opp_goalline_center.x, opp_goalline_center.y) < (shotThreshold + distToShotThreshold));
-
-    }
-    catch (exception &e)
-    {
-        std::cout << "Caught exception: " << e.what() << std::endl;
-        throw std::runtime_error(std::string("Linked to: ") + e.what());
-    }
-
-    return retVal;
 }
 
 bool cWorldStateFunctions::getPreferredShootXYOfGoal(float &target_x, float &target_y)
@@ -2420,8 +2152,7 @@ boost::optional<Position2D> cWorldStateFunctions::getPositionOfPOI(const std::st
     }
     else if (POI.compare("closestTeammemberIncludeGoalie") == 0)
     {
-        Position2D teammemberPos;
-        cWorldStateFunctions::getInstance().getClosestTeammember(teammemberPos.x, teammemberPos.y, true);
+        Position2D teammemberPos = cWorldStateFunctions::getInstance().getClosestTeammember(true)->getPosition();
 
         retVal.x = teammemberPos.x;
         retVal.y = teammemberPos.y;
@@ -2429,8 +2160,7 @@ boost::optional<Position2D> cWorldStateFunctions::getPositionOfPOI(const std::st
     }
     else if (POI.compare("closestTeammember") == 0)
     {
-        Position2D teammemberPos;
-        cWorldStateFunctions::getInstance().getClosestTeammember(teammemberPos.x, teammemberPos.y, false);
+        Position2D teammemberPos = cWorldStateFunctions::getInstance().getClosestTeammember(false)->getPosition();
 
         retVal.x = teammemberPos.x;
         retVal.y = teammemberPos.y;
@@ -2438,52 +2168,46 @@ boost::optional<Position2D> cWorldStateFunctions::getPositionOfPOI(const std::st
     }
     else if (POI.compare("closestAttacker") == 0)
     {
-        double attackerPosX = 0.0;
-        double attackerPosY = 0.0;
-        cWorldStateFunctions::getInstance().getClosestAttacker(A_FIELD, attackerPosX, attackerPosY);
-
-        retVal.x = attackerPosX;
-        retVal.y = attackerPosY;
+        boost::optional<teamplay::robot> attacker = cWorldStateFunctions::getInstance().getClosestAttacker();
+        if (attacker) {
+            return attacker->getPosition();
+        }
         return retVal;
     }
     else if (POI.compare("closestAttackerOnOppHalf") == 0)
     {
-        double attackerPosX = 0.0;
-        double attackerPosY = 0.0;
-        cWorldStateFunctions::getInstance().getClosestAttacker(A_OPP_SIDE, attackerPosX, attackerPosY);
-
-        retVal.x = attackerPosX;
-        retVal.y = attackerPosY;
+        boost::optional<teamplay::robot> attacker = cWorldStateFunctions::getInstance().getClosestAttacker(teamplay::fieldArea::OPP_SIDE);
+        if (attacker)
+        {
+            return attacker->getPosition();
+        }
         return retVal;
     }
     else if (POI.compare("closestAttackerToOppGoal") == 0)
     {
-        double attackerPosX = 0.0;
-        double attackerPosY = 0.0;
-        cWorldStateFunctions::getInstance().getClosestAttackerToOpponentGoal(attackerPosX, attackerPosY);
-
-        retVal.x = attackerPosX;
-        retVal.y = attackerPosY;
+        boost::optional<teamplay::robot> robot = cWorldStateFunctions::getInstance().getClosestAttackerToOpponentGoal();
+        if (robot)
+        {
+            retVal = robot->getPosition();
+        }
         return retVal;
     }
     else if (POI.compare("closestDefender") == 0)
     {
-        double defenderPosX = 0.0;
-        double defenderPosY = 0.0;
-        cWorldStateFunctions::getInstance().getClosestDefender(defenderPosX, defenderPosY);
-
-        retVal.x = defenderPosX;
-        retVal.y = defenderPosY;
+        boost::optional<teamplay::robot> robot = cWorldStateFunctions::getInstance().getClosestDefender();
+        if (robot)
+        {
+            retVal = robot->getPosition();
+        }
         return retVal;
     }
     else if (POI.compare("closestDefenderToOppGoal") == 0)
     {
-        double defenderPosX = 0.0;
-        double defenderPosY = 0.0;
-        cWorldStateFunctions::getInstance().getClosestDefenderToOpponentGoal(defenderPosX, defenderPosY);
-
-        retVal.x = defenderPosX;
-        retVal.y = defenderPosY;
+        boost::optional<teamplay::robot> robot = cWorldStateFunctions::getInstance().getClosestDefenderToOpponentGoal();
+        if (robot)
+        {
+            retVal = robot->getPosition();
+        }
         return retVal;
     }
     else if (POI.compare("closestOpponent") == 0)

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,9 +23,9 @@ using namespace cv;
 using namespace std;
 
 viewer::viewer(ballDetection *ballDet[4], ballDetection *ballFarDet[4], cameraReceive *camAnaRecv,
-		camSysReceive *camSysRecv, configurator *conf, ballDetection *cyanDet, determinePosition *detPos,
-		linePointDetection *linePoint, localization *loc, ballDetection *magentaDet, ballDetection *obstDet[4],
-		preprocessor *prep, robotFloor *rFloor) {
+		camSysReceive *camSysRecv, configurator *conf, obstacleDetection *cyanDet, determinePosition *detPos,
+		linePointDetection *linePoint, localization *loc, obstacleDetection *magentaDet, obstacleDetection *obstDet[4],
+		preprocessor *prep, robotFloor *rFloor, Dewarper *dewarp[4]) {
 	this->ballDet[0] = ballDet[0];
 	this->ballDet[1] = ballDet[1];
 	this->ballDet[2] = ballDet[2];
@@ -48,6 +48,10 @@ viewer::viewer(ballDetection *ballDet[4], ballDetection *ballFarDet[4], cameraRe
 	this->obstDet[3] = obstDet[3];
 	this->prep = prep;
 	this->rFloor = rFloor;
+	this->dewarp[0] = dewarp[0];
+	this->dewarp[1] = dewarp[1];
+	this->dewarp[2] = dewarp[2];
+	this->dewarp[3] = dewarp[3];
 
 	exportMutex.lock();
 	key = 0;
@@ -59,6 +63,7 @@ viewer::viewer(ballDetection *ballDet[4], ballDetection *ballFarDet[4], cameraRe
 	cyanView = false;
 	magentaView = false;
 	floorOverlay = false;
+    dewarpOverlay = false;
 	showCostField = false;
 	help = false;
 	selectWindow = "camera view, press h for help";
@@ -141,6 +146,9 @@ void viewer::update() {
 		}
 	}
 
+    // clicking for coordinates (via dewarp)
+    cv::setMouseCallback(selectWindow, onMouse, this);
+
 	key = waitKey(20);
 	switch (key) {
 	case 'b':
@@ -157,6 +165,9 @@ void viewer::update() {
 	case 'h':
 		help = !help;
 		break;
+    case 'i': // i from isolines
+        dewarpOverlay = !dewarpOverlay;
+        break;
 	case 'k':
 		floorOverlay = !floorOverlay;
 		break;
@@ -351,6 +362,23 @@ void viewer::roundViewerUpdate() {
 					}
 				}
 
+                // contour lines (isolines) from dewarp, first, to draw below any other objects
+                if (dewarpOverlay) {
+                    // colors are BGR
+                    // first the horizon: elevation == 0, color purple
+                    drawIsolineElevation(cam,      0.0, Vec3b(168,  50, 123));
+                    // center view axis: azimuth == 0, color cyan
+                    drawIsolineAzimuth  (cam,      0.0, Vec3b(168, 160,  50));
+                    // camera nominal view range of 90 degrees, pixels outside are bonus (overlap with other cam)
+                    drawIsolineAzimuth  (cam, -CV_PI/4, Vec3b(168, 160,  50));
+                    drawIsolineAzimuth  (cam,  CV_PI/4, Vec3b(168, 160,  50));
+                    drawIsolineAzimuth  (cam, -CV_PI/8, Vec3b(168, 160,  50), 6);
+                    drawIsolineAzimuth  (cam,  CV_PI/8, Vec3b(168, 160,  50), 6);
+                    // 2m and 6m distance
+                    drawIsolineElevation(cam, -atan2(CAMERA_HEIGHT, 2.0), Vec3b(168,  50, 123));
+                    drawIsolineElevation(cam, -atan2(CAMERA_HEIGHT, 6.0), Vec3b(168,  50, 123));
+                }
+				
 				// ## lines ##
 				Scalar lineColor = { 255, 0, 0 };
 				// in case the line points from a board are not received, the information can only be used once
@@ -475,7 +503,7 @@ void viewer::roundViewerUpdate() {
 				line(camFrameList[cam], blockLeft, blockRight, maskColor, 1);
 
 				// ## obstacle contours ##
-				vector<ballSt> obstacleList = obstDet[cam]->getPositionsExport();
+				vector<obstacleSt> obstacleList = obstDet[cam]->getPositionsExport();
 				for (size_t ii = 0; ii < obstacleList.size(); ii++) {
 					Rect rectScaled;
 					rectScaled.x = obstacleList[ii].rect.x / 2;
@@ -720,7 +748,8 @@ void viewer::printText() {
 		line += 20;
 		bool ballFound = false;
 		size_t ballSize = 0;
-		double ballRadius, ballAngle;
+		double ballRadius = 0.0;
+		double ballAngle = 0.0;
 		for (size_t cam = 0; cam < 4; cam++) {
 			vector<ballSt> balls = ballDet[cam]->getPositions();
 			for (size_t ii = 0; ii < balls.size(); ii++) {
@@ -749,7 +778,8 @@ void viewer::printText() {
 	if (ballFarView || viewMode == bgr) {
 		bool ballFound = false;
 		size_t ballSize = 0;
-		double ballRadius, ballAngle;
+		double ballRadius = 0.0;
+		double ballAngle = 0.0;
 		for (size_t cam = 0; cam < 4; cam++) {
 			vector<ballSt> balls = ballFarDet[cam]->getPositions();
 			for (size_t ii = 0; ii < balls.size(); ii++) {
@@ -1087,7 +1117,7 @@ void viewer::drawObstacles() {
 // show the obstacles on the rectangular floor
 void viewer::drawFloorObstacles(positionStDbl robot) {
 	for (size_t cam = 0; cam < 4; cam++) {
-		vector<ballSt> obstacles = obstDet[cam]->getPositions();
+		vector<obstacleSt> obstacles = obstDet[cam]->getPositions();
 
 		for (size_t ii = 0; ii < obstacles.size(); ii++) {
 			double azimuth = obstacles[ii].azimuth;
@@ -1294,6 +1324,29 @@ void viewer::drawFloorRobot(positionStDbl pos, Scalar color) {
 	line(floorFrame, Point((int) (pos.x + 0.5f), (int) (pos.y + 0.5f)), Point(xShooter, yShooter), color, 1);
 }
 
+void viewer::drawIsolineAzimuth(size_t cam, float az, Vec3b color, int stride)
+{
+    std::vector<cv::Point> pixels = dewarp[cam]->calcIsolineAzimuth(az, stride);
+    drawIsoline(camFrameList[cam], pixels, color);
+}
+
+void viewer::drawIsolineElevation(size_t cam, float el, Vec3b color, int stride)
+{
+    std::vector<cv::Point> pixels = dewarp[cam]->calcIsolineElevation(el, stride);
+    drawIsoline(camFrameList[cam], pixels, color);
+}
+
+void viewer::drawIsoline(cv::Mat &img, std::vector<cv::Point> const &pixels, Vec3b color)
+{
+    for (size_t it = 0; it < pixels.size(); ++it)
+    {
+        // 50% scaling for viewer
+        int x = pixels[it].x / 2;
+        int y = pixels[it].y / 2;
+        img.at<Vec3b>(x, y) = color;
+    }
+}
+
 void viewer::printStats() {
 	if (getTickCount() > nextLogFileTick) {
 		// print only every 2 seconds one line
@@ -1331,7 +1384,7 @@ void viewer::printStats() {
 
 		amount = 0;
 		for (size_t cam = 0; cam < 4; cam++) {
-			vector<ballSt> obstacle = obstDet[cam]->getPositions();
+			vector<obstacleSt> obstacle = obstDet[cam]->getPositions();
 			for (size_t ii = 0; ii < obstacle.size(); ii++) {
 				if (obstacle[ii].size >= conf->getBall(obstacleType).pixels) {
 					amount++;
@@ -1378,3 +1431,89 @@ cv::Mat viewer::getWhiteBallFrame() {
 	exportMutex.unlock();
 	return retVal;
 }
+
+void viewer::pixel2camFrame(int &x, int &y, int &cam)
+{
+    // inverse transformations of placing the 4 camFrames into the viewer
+    // TODO check off-by-1 pixel calculations
+    int xi = x, yi = y, xo = x, yo = y;
+    int cw2 = camHeight / 2; // hmm, was expecting transposed values
+    int ch2 = camWidth / 2;
+    if ((yi <= ch2) && (xi >= ch2) && (xi <= ch2 + cw2))
+    {
+        cam = 0;
+        yo = 2 * (ch2 - yi);
+        xo = 2 * (xi - ch2);
+    }
+    else if ((yi >= ch2) && (yi <= ch2 + cw2) && (xi <= ch2))
+    {
+        cam = 1;
+        yo = 2 * (ch2 - xi);
+        xo = 2 * (ch2 + cw2 - yi);
+    }
+    else if ((yi >= ch2 + cw2) && (xi >= ch2) && (xi <= ch2 + cw2))
+    {
+        cam = 2;
+        yo = 2 * (yi - ch2 - cw2);
+        xo = 2 * (ch2 + cw2 - xi);
+    }
+    else if ((yi >= ch2) && (yi <= ch2 + cw2) && (xi >= ch2 + cw2))
+    {
+        cam = 3;
+        yo = 2 * (xi - ch2 - cw2);
+        xo = 2 * (yi - ch2);
+    }
+    else
+    {
+        // other region
+        cam = -1;
+    }
+    // check and return result
+    x = xo;
+    y = yo;
+    if (cam != -1)
+    {
+        assert(x >= 0);
+        assert(y >= 0);
+        assert(x <= 2 * cw2);
+        assert(y <= 2 * ch2);
+    }
+}
+
+void viewer::handleClick(int x, int y)
+{
+    int cam = -1, xp = x, yp = y;
+    pixel2camFrame(xp, yp, cam);
+    if (cam != -1)
+    {
+        float floorX = nanf(""), floorY = nanf(""), frontAz = 0.0, frontEl = 0.0;
+        bool ok = true;
+        int16_t tmpX = 0, tmpY = 0;
+        ok = dewarp[cam]->transformFront(yp, xp, frontAz, frontEl);
+        if (ok)
+        {
+            ok = dewarp[cam]->transformFloor(yp, xp, tmpX, tmpY);
+            if (ok)
+            {
+                floorX = 1e-3 * tmpX;
+                floorY = 1e-3 * tmpY;
+            }
+            else
+            {
+                // floor maps not everywhere defined, continue OK
+                ok = true;
+            }
+        }
+        printf("handleClick: cam=%d pixel=(%4d,%4d) floor=(%7.3f,%7.3f) az=%7.3f el=%7.3f\n", cam, xp, yp, floorX, floorY, frontAz, frontEl);
+    }
+}
+
+void viewer::onMouse(const int event, const int x, const int y, int, void* userdata)
+{
+    if (event == cv::EVENT_LBUTTONDOWN)
+    {
+        viewer *self = (viewer *)userdata;
+        self->handleClick(x, y);
+    }
+}
+

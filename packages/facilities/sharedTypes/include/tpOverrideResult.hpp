@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,10 +25,9 @@
 
 struct tpOverrideResult
 {
-    int                      id;
     behTreeReturnEnum        status;
     
-    SERIALIZE_DATA_FIXED(id, status);
+    SERIALIZE_DATA(status);
 };
 
 

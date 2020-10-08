@@ -1,0 +1,66 @@
+rdl:                     ${FALCONS_DATA_PATH}/internal/logfiles/20200310_191742_subset_r3.rdl
+annotations:
+-   type:                BallPossession
+    start:               19:25:10
+    end:                 19:25:22
+    robot:               3
+    hasBall:             false
+
+-   type:                BallPossession
+    start:               19:25:10
+    end:                 19:25:25
+    robot:               6
+    hasBall:             false
+
+-   type:                BallPossession
+    start:               19:25:22.6
+    end:                 19:25:23.5 # first pass to r6
+    robot:               3
+    hasBall:             true
+
+-   type:                BallPossession
+    start:               19:25:26.1
+    end:                 19:25:26.4 # very quick pass back
+    robot:               6
+    hasBall:             true
+
+-   type:                StillRobot
+    start:               19:25:10
+    end:                 19:25:15
+    x:                  -1.03
+    y:                  -2.74
+    Rz:                  1.636
+
+-   type:                MovingRobot
+    start:               19:25:16
+    end:                 19:25:20
+
+-   type:                StillObstacle
+    start:               19:25:10
+    end:                 19:26:00
+    x:                   0.0
+    y:                  -2.0
+
+-   type:                StillObstacle
+    start:               19:25:10
+    end:                 19:26:00
+    x:                  -3.0
+    y:                  -2.0
+
+# test disabled - current wm implementation/tuning is not good enough, wait for Lucas' re-implementation
+#-   type:                StillBall
+#    start:               19:25:17 # TODO 19:25:10, but gaps occur...
+#    end:                 19:25:22
+#    x:                   2.0
+#    y:                   0.0
+
+-   type:                MovingBall
+    start:               19:25:23.75
+    end:                 19:25:26.00
+    startPos:
+        x:               1.72
+        y:              -0.06
+    endPos:
+        x:              -2.77
+        y:              -0.24
+

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,14 +21,11 @@
 #include <iostream>
 #include <boost/program_options.hpp>
 
-// ROS (legacy)
-#include <ros/ros.h>
-
 // internal includes
 #include "cWorldModelStimulator.hpp"
 
 // other packages
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 // local defines and namespaces
 namespace po = boost::program_options;
@@ -88,9 +85,6 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // HACK for to-be-migrated ROS dependency (heartbeat + configurators)
-    ros::init(argc, argv, WorldModelNodeNames::worldmodel_nodename); // TODO
-    
     // initialize and run
     // TODO: override configuration yaml file?
     cWorldModelStimulator stim(agentId, inputFile, outputFile);

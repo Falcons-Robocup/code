@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -36,6 +36,7 @@ public:
     virtual ~cLogPlayback() {};
 
     tLogHeader getHeader();
+    float getDuration();
     bool step(); // process a single frame, return success
     bool stepBack();
     bool seek(rtime t); // advance/jump to given timestamp

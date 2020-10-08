@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #ifndef CQUERYINTERFACE_HPP_
 #define CQUERYINTERFACE_HPP_
 
-#include "int/cWorldModelInterface.hpp"
+#include "MP_WorldModelInterface.hpp"
 
 class cQueryInterface
 {
@@ -27,12 +27,12 @@ class cQueryInterface
     cQueryInterface() {};
     virtual ~cQueryInterface() {};
 
-    void connect(cWorldModelInterface* wm);
+    void connect(MP_WorldModelInterface* wm);
 
     double timeToBall(const uint8_t robotID) const;
     
   private:
-    cWorldModelInterface* _wm;
+    MP_WorldModelInterface* _wm;
 
 };
 

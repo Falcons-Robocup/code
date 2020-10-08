@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -39,11 +39,15 @@ class RuleSetpieceExecuteFinishedTest : public TeamplayTest
 public:
     RuleSetpieceExecuteFinishedTest()
     {
-        configurationStore::getConfiguration().setSetPieceExecuteTimeout(1);
-        configurationStore::getConfiguration().setPenaltyExecuteTimeout(2);
-        configurationStore::getConfiguration().setMinKickDistanceKickedMeters(1);
-        configurationStore::getConfiguration().setMinPenaltyDistanceKickedMeters(2);
-        configurationStore::getConfiguration().setMinOwnKickoffDistanceKickedMeters(3);
+        configTeamplay config;
+
+        config.rules.setpieceExecuteTimeout = 1;
+        config.rules.penaltyExecuteTimeout = 2;
+        config.rules.minKickDistanceKicked = 1;
+        config.rules.minPenaltyDistanceKicked = 2;
+        config.rules.minOwnKickoffDistanceKicked = 3;
+
+        configurationStore::getConfiguration().update(config);
 
         timer_p.reset(new NiceMock<TimerMock>);
     }

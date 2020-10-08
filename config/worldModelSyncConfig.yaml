@@ -1,4 +1,5 @@
 teamId:           A       # robots with the same ID will play together (teamplay/worldModelClient)
 useVisionFrom:    A       # use vision from which teams (can be multiple, as string, e.g. "ABC")
 shareVision:      true
+forceInplay:      false   # set to true when testing (.rdl stimulation), or in case button/IOboard does not work
 

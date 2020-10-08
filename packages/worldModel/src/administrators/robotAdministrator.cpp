@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,16 +16,18 @@
  *      Author: Tim Kouters
  */
 
-#include "int/administrators/robotAdministrator.hpp"
+#include <boost/lexical_cast.hpp>
 
-#include "int/configurators/administrationConfigurator.hpp"
+#include "int/administrators/robotAdministrator.hpp"
 
 #include "cDiagnostics.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 
-robotAdministrator::robotAdministrator()
+robotAdministrator::robotAdministrator(WorldModelConfig& wmConfig)
+    : _wmConfig(wmConfig),
+      _localizationAlgorithm(&wmConfig)
 /*!
  * \brief Administrates robot measurements
  *
@@ -196,7 +198,7 @@ void robotAdministrator::setRobotStatus(const uint8_t robotID, const robotStatus
 
         if((status == robotStatusType::INPLAY) && (robotID == _ownRobotID) && !_isSimulated)
         {
-            _localizationAlgorithm = robotLocalization();
+            _localizationAlgorithm = robotLocalization(&_wmConfig);
         }
 
     }
@@ -369,7 +371,7 @@ void robotAdministrator::removeTimedoutRobots(rtime const timeNow)
     TRACE_FUNCTION("");
     try
     {
-        double maxTimeToLive = administrationConfigurator::getInstance().getRobotTimeToLive();
+        double maxTimeToLive = _wmConfig.getConfiguration().administration.teammember_timeout;
 
         for(auto i = _robots.begin(); i != _robots.end(); )
         {

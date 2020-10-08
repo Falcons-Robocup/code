@@ -1,0 +1,87 @@
+nominalFrequency:                         30
+numExtraSettlingTicks:                    0
+velocityControllers:
+    threshold:                            1.5
+    longStroke:
+        type:                             VelocitySetpointControllerTypeEnum:SPG
+        coordinateSystem:                 CoordinateSystemEnum:RCS
+    shortStroke:
+        type:                             VelocitySetpointControllerTypeEnum:PID
+        coordinateSystem:                 CoordinateSystemEnum:RCS
+obstacleAvoidance:
+    enabled:                              true
+    robotRadius:                          0.26
+    obstacleRadius:                       0.40
+    distanceScalingFactor:                0.1
+    speedScalingFactor:                   0.5
+    speedLowerThreshold:                  0.2
+    speedUpperThreshold:                  3.0
+    ballClearance:                        1.0
+    generatedObstacleSpacing:             0.5
+    groupGapDistance:                     0.60
+    subTargetDistance:                    0.75
+    subTargetExtensionFactor:             0.0
+boundaries:
+    targetInsideForbiddenArea:            BoundaryOptionEnum:STOP_AND_FAIL
+    targetOutsideField:                   BoundaryOptionEnum:CLIP
+    fieldMarginX:                         1.0
+    fieldMarginY:                         0.5
+    targetOnOwnHalf:                      BoundaryOptionEnum:ALLOW
+    targetOnOpponentHalf:                 BoundaryOptionEnum:ALLOW
+slowFactor:                               0.50
+forwardDriving:
+    withoutBall:
+        enabled:                          false # set to false to get 'alwaysFacingBall' Rz setpoint
+        minimumDistance:                  1.0
+    withBall:
+        enabled:                          true
+        minimumDistance:                  1.0
+    radiusRobotToBall:                    0.26
+    applyLimitsToBall:                    true # generalization of Tokyo Drift
+limits:
+    enabled:                              true
+    withoutBall:
+        maxVelX:                          1.0 # was 1.9 in pp1
+        maxVelYforward:                   1.0 # was 1.9 in pp1
+        maxVelYbackward:                  1.0
+        maxVelRz:                         3.0
+        maxAccX:                          2.0 # was 1.6 in pp1
+        maxAccYforward:                   3.0 # was 1.6 in pp1
+        maxAccYbackward:                  2.0
+        maxAccRz:                         4.0
+    withBall:
+        maxVelX:                          0.5
+        maxVelYforward:                   1.2
+        maxVelYbackward:                  0.5
+        maxVelRz:                         3.0
+        maxAccX:                          1.0
+        maxAccYforward:                   3.0
+        maxAccYbackward:                  1.5
+        maxAccRz:                         3.0
+    common:
+        maxDecX:                          8.0 # was infinite in pp1
+        maxDecY:                          6.0 # was infinite in pp1
+        maxDecRz:                        30.0 # was infinite in pp1
+        toleranceXY:                      0.02
+        toleranceRz:                      0.005 # real Rz-only performance is a bit worse (~0.012) due to wheel mounting errors (wobbly, at least seen on r5)
+        accThresholdX:                    0.0
+        accThresholdY:                    0.0
+        accThresholdRz:                   0.0
+deadzone:                                 true # true = better for motors (not continuously sending small setpoints)
+setPointGenerator:
+    synchronizeRotation:                  true # true is good for motion crosstalk but not good for alwaysFacingBall since robot is choosing to rotate slow
+    weightFactorClosedLoop:               0.0
+    latencyOffset:                        0.0
+    convergenceWorkaround:                false
+pid:
+    XY_P:                                 1.5
+    XY_I:                                 0.01
+    XY_D:                                 0.0
+    RZ_P:                                 6.0
+    RZ_I:                                 5.5
+    RZ_D:                                 0.3
+    maxI_XY:                              0.5
+    maxI_Rz:                              0.1
+    fadeI_XY:                             1.00
+    fadeI_Rz:                             0.98
+

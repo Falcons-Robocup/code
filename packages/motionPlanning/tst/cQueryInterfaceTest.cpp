@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -32,7 +32,7 @@ class cQueryInterfaceTest : public ::testing::Test
         cQueryInterfaceTest()
         {
             // Connect WorldModelInterface to cQueryInterface
-            cWorldModelInterface wm;
+            MP_WorldModelInterface wm;
             _queryInterface.connect(&wm);
 
             // Set data in WorldModelInterface

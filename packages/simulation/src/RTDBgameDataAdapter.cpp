@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,6 +25,39 @@
 
 #include "FalconsRtDB2.hpp"
 #include "tracing.hpp"
+#include "cEnvironmentField.hpp"
+#include <mutex>
+#include "ftime.hpp"
+
+
+std::mutex g_mutex_sim;
+
+
+RTDBgameDataAdapter::RTDBgameDataAdapter()
+{
+    // Start a thread to monitor SIMULATION_SCENE, in case user modifies it
+    _sceneMonitorThread = std::thread(&RTDBgameDataAdapter::monitorScene, this);
+}
+
+RTDBgameDataAdapter::~RTDBgameDataAdapter()
+{
+    // Stop the thread. This causes Signal 6 (SIGABRT)
+    _sceneMonitorThread.std::thread::~thread();
+}
+
+void addNonRobotObstaclesTo(std::vector<Obstacle> const &nonRobotObstacles, T_OBSTACLES &resultObstacles)
+{
+    for (auto& obst: nonRobotObstacles)
+    {
+        obstacleResult obstacle;
+        obstacle.confidence = 1.0;
+        obstacle.position.x = obst.position.x;
+        obstacle.position.y = obst.position.y;
+        obstacle.velocity.x = obst.velocity.x;
+        obstacle.velocity.y = obst.velocity.y;
+        resultObstacles.push_back(obstacle);
+    }
+}
 
 void RTDBgameDataAdapter::publishGameData (const GameData& gameData) const
 {
@@ -52,11 +85,13 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData) const
         else
         {
             ball.owner.type = ballPossessionTypeEnum::OPPONENT;
+            ball.owner.robotId = 0;
         }
     }
     else /* No team has the ball */
     {
         ball.owner.type = ballPossessionTypeEnum::FIELD;
+        ball.owner.robotId = 0;
     }
 
     T_BALLS balls;
@@ -96,7 +131,7 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData) const
                 obstacle.id
                 );
     }
-
+    addNonRobotObstaclesTo(gameData.nonRobotObstacles, obstacles);
     r = rtdbConnection->put(OBSTACLES, &obstacles);
     if (r != RTDB2_SUCCESS)
     {
@@ -131,15 +166,22 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData,
         else
         {
             ball.owner.type = ballPossessionTypeEnum::OPPONENT;
+            ball.owner.robotId = 0;
         }
     }
     else /* No team has the ball */
     {
         ball.owner.type = ballPossessionTypeEnum::FIELD;
+        ball.owner.robotId = 0;
     }
 
     T_BALLS balls;
-    balls.push_back(ball);
+    // hide ball if far outside field
+    if (abs(ball.position.x) < (0.5 * cEnvironmentField::getInstance().getWidth() + 2.0) &&
+        abs(ball.position.y) < (0.5 * cEnvironmentField::getInstance().getLength() + 2.0))
+    {
+        balls.push_back(ball);
+    }
 
     auto rtdbConnection = getRTDBConnection(teamID, robotID);
     auto r = rtdbConnection->put(BALLS, &balls);
@@ -163,6 +205,7 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData,
 
         obstacles.push_back(obstacle);
     }
+    addNonRobotObstaclesTo(gameData.nonRobotObstacles, obstacles);
     r = rtdbConnection->put(OBSTACLES, &obstacles);
     if (r != RTDB2_SUCCESS)
     {
@@ -171,7 +214,7 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData,
 
     T_ROBOT_STATE robot;
     robot.status = robotStatusEnum::INPLAY;
-    robot.timestamp = rtime::now();
+    robot.timestamp = ftime::now();
     robot.robotId = (int)robotID;
     robot.teamId = "A"; // according to worldModel, ok to leave on A even for simulated team B thanks to database separation
 
@@ -203,3 +246,92 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData,
         throw std::runtime_error("Error writing ROBOT_STATE to RtDB");
     }
 }
+
+void RTDBgameDataAdapter::publishScene(const GameData& gameData) const
+{
+    TRACE_FUNCTION("");
+
+    // convert to SimulationScene
+    SimulationScene scene;
+    auto now = ftime::now();
+
+    // robots and opponents
+    for (auto& teampair: gameData.team)
+    {
+        const auto teamID = teampair.first;
+        auto &targetRobots = (teamID == TeamID::A) ? scene.robots : scene.opponents;
+        for (auto& robotpair: gameData.team.at(teamID))
+        {
+            SimulationSceneRobot r;
+            r.robotId = 1 + (int)robotpair.first;
+            Position2D pos = robotpair.second.getPosition();
+            r.position = pose(pos.x, pos.y, pos.phi);
+            Velocity2D vel = robotpair.second.getVelocity();
+            r.velocity = pose(vel.x, vel.y, vel.phi);
+            targetRobots.push_back(r);
+        }
+    }
+
+    // ball
+    {
+        SimulationSceneBall b;
+        Point3D pos = gameData.ball.getPosition();
+        Vector3D vel = gameData.ball.getVelocity();
+        b.position.x = pos.x;
+        b.position.y = pos.y;
+        b.position.z = pos.z; // TODO #14
+        b.velocity.x = vel.x;
+        b.velocity.y = vel.y;
+        b.velocity.z = vel.z;
+        scene.balls.push_back(b);
+    }
+
+    // there are never any extra obstacles at simworld initializatoin
+
+    // write to RTDB
+    auto rtdbConnection = getRTDBConnection();
+    rtdbConnection->put(SIMULATION_SCENE, &scene);
+}
+
+bool RTDBgameDataAdapter::checkUpdatedScene(SimulationScene &scene)
+{
+    TRACE_FUNCTION("");
+    // interface to client (simworld): to notify new scene
+    std::lock_guard<std::mutex> l(g_mutex_sim);
+    if (_sceneUpdated)
+    {
+        _sceneUpdated = false; // reset flag
+        auto rtdbConnection = getRTDBConnection();
+        SimulationScene tmpScene;
+        int r = rtdbConnection->get(SIMULATION_SCENE, &tmpScene);
+        TRACE("r=%d", r);
+        tprintf("got new SimulationScene, r=%d", r);
+        if (r == RTDB2_SUCCESS)
+        {
+            scene = tmpScene;
+            return true;
+        }
+    }
+    return false;
+}
+
+void RTDBgameDataAdapter::monitorScene()
+{
+    TRACE_FUNCTION("");
+
+    // Prevent race condition with other init time RTDB connections being created
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    while (true)
+    {
+        auto rtdbConnection = getRTDBConnection();
+        rtdbConnection->waitForPut(SIMULATION_SCENE);
+        {
+            std::lock_guard<std::mutex> l(g_mutex_sim);
+            // raise a flag to signal main thread
+            tprintf("raising the flag");
+            _sceneUpdated = true;
+        }
+    }
+}
+

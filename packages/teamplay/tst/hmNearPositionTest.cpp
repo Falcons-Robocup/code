@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -38,7 +38,7 @@ public:
     parameterMap_t _parameters;
 };
 
-TEST_F(hmNearPositionTest, generateJPG)
+TEST_F(hmNearPositionTest, functionalTest)
 {
     _hmNearPosition.precalculate();
     
@@ -48,10 +48,8 @@ TEST_F(hmNearPositionTest, generateJPG)
     
     auto optimum = _hmNearPosition.getOptimum();
 
-    EXPECT_EQ(1.0, optimum.x);
-    EXPECT_EQ(6.0, optimum.y);
-    
-    _hmNearPosition.generateJPG("tst_hmNearPosition");
+    EXPECT_EQ(1.0, optimum._center.x);
+    EXPECT_EQ(6.0, optimum._center.y);
 }
 
 

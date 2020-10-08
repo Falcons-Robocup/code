@@ -1,0 +1,6 @@
+ioBoard: {PortName: /dev/ttyS0}
+rosdistro: 'jade'
+roslaunch:
+    uris: {host_koekwaus__52598: 'http://koekwaus:52598/'}
+rosversion: '1.11.21'
+run_id: e4a58b40-2b72-11e7-a4af-8851fbcb5b61

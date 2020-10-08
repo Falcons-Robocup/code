@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -172,6 +172,11 @@ bool Robot::canKickBall (const Point3D& ballPosition) const
     return retval;
 }
 
+bool Robot::hasBall() const
+{
+    return _hasBall;
+}
+
 bool Robot::hasBallHandlersEnabled() const
 {
     if (_ballHandlingModule == BallHandlingModule::PRESENT)
@@ -209,6 +214,20 @@ void Robot::recalculatePosition (const float dt)
     _position.transform_acs2fcs(_playingDirection == PlayingDirection::LEFT_TO_RIGHT);
     _position.update(getVelocityFCS(), dt);
     _position.transform_fcs2acs(_playingDirection == PlayingDirection::LEFT_TO_RIGHT);
+}
+
+void Robot::recalculateBallPossession(const Point3D& ballPosition)
+{
+    if (_hasBall)
+    {
+        // can only lose ball possession when ballHandlers are disabled
+        _hasBall = _ballHandlersEnabled;
+    }
+    else
+    {
+        // can only gain ball possession when ballHandlers are enabled and when ball is in the correct position
+        _hasBall = (_ballHandlersEnabled && canGrabBall(ballPosition));
+    }
 }
 
 void Robot::setBallHandlingModuleAbsent()

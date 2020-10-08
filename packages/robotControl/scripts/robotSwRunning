@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Check if software is running on real robot. 
+# 
+
+
+
+np=`processList | grep " $CONTEXTKEY " | wc -l`
+if [ $np -lt 5 ]; then
+    # a few processes are always running
+    exit 1
+fi
+exit 0
+

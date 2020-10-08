@@ -325,6 +325,7 @@ void multiCamRemote::floorPrintText(size_t index, Scalar color) {
 	locListSt locs = multRecv->getLocList(index);
 	statsSt stats = multRecv->getStats(index);
 
+	char tmpbuf[256];
 	char buf[256];
 	char *bufp = buf;
 	int line = 25;
@@ -372,37 +373,41 @@ void multiCamRemote::floorPrintText(size_t index, Scalar color) {
 		float camValAvg = raspi.camValAverage;
 		if (camValAvg < (camValAvgOther * 0.7)) { // 30 % lower
 			// the camera value for this camera significant lower then of the other camera's
-			sprintf(bufp, "%s cam val %2u TOO DARK", bufp, raspi.camValAverage);
+			sprintf(tmpbuf, " cam val %2u TOO DARK", raspi.camValAverage);
+            strcat(bufp, tmpbuf);
 			colorTmp = colorError;
 		} else if (camValAvg > (camValAvgOther * 1.5)) { // 50 % higher (if one camera is lower then the average over the other camera's is significantly lower)
 			// the camera value for this camera significant higher then of the other camera's
-			sprintf(bufp, "%s cam val %2u TOO BRIGHT", bufp, raspi.camValAverage);
+			sprintf(tmpbuf, " cam val %2u TOO BRIGHT", raspi.camValAverage);
+            strcat(bufp, tmpbuf);
 			colorTmp = colorError;
 		}
 
 		if ((raspi.rebootReceivedAge > 0) && (raspi.rebootReceivedAge < 60)) {
-			sprintf(bufp, "%s REBOOT %2u", bufp, raspi.rebootReceivedAge);
+			sprintf(tmpbuf, " REBOOT %2u", raspi.rebootReceivedAge);
+            strcat(bufp, tmpbuf);
 			colorTmp = colorError;
 		}
 
 		if (raspi.cpuTemp >= 70) {
-			sprintf(bufp, "%s cpu temp", bufp);
+			strcat(bufp, " cpu temp");
 			colorTmp = colorError;
 		}
 
 		if (raspi.cmosTemp > 57) {
-			sprintf(bufp, "%s cmos %2u", bufp, raspi.cmosTemp);
+			sprintf(tmpbuf, " cmos %2u", raspi.cmosTemp);
+            strcat(bufp, tmpbuf);
 			colorTmp = colorError;
 		}
 
 		// normal load is between 1.7 and 3.7 (the cpuLoad is in fixed point)
 		if ((raspi.cpuLoad < (1.7 * 32)) || (raspi.cpuLoad > (uint8_t) (3.7 * 32))) {
-			sprintf(bufp, "%s cpu load", bufp);
+			strcat(bufp, " cpu load");
 			colorTmp = colorError;
 		}
 
 		if ((raspi.cpuUptime < 60) || (raspi.anaApplUptime < 10)) {
-			sprintf(bufp, "%s cpu uptime", bufp);
+			strcat(bufp, " cpu uptime");
 			colorTmp = colorError;
 		}
 
@@ -426,27 +431,27 @@ void multiCamRemote::floorPrintText(size_t index, Scalar color) {
 		bool softTempLimitOccured = (((raspi.cpuStatus >> 7) & 0x1) == 1);
 
 		if (underVoltage) {
-			sprintf(bufp, "%s VOLT", bufp);
+			strcat(bufp, " VOLT");
 		} else if (underVoltageOccured) {
-			sprintf(bufp, "%s volt", bufp);
+			strcat(bufp, " volt");
 		}
 
 		if (frequencyCapped) {
-			sprintf(bufp, "%s FREQ", bufp);
+			strcat(bufp, " FREQ");
 		} else if (frequencyCappedOccured) {
-			sprintf(bufp, "%s freq", bufp);
+			strcat(bufp, " freq");
 		}
 
 		if (throttling) {
-			sprintf(bufp, "%s THROT", bufp);
+			strcat(bufp, " THROT");
 		} else if (throttlingOccured) {
-			sprintf(bufp, "%s throt", bufp);
+			strcat(bufp, " throt");
 		}
 
 		if (softTempLimit) {
-			sprintf(bufp, "%s SOFT TEMP", bufp);
+			strcat(bufp, " SOFT TEMP");
 		} else if (softTempLimitOccured) {
-			sprintf(bufp, "%s soft temp", bufp);
+			strcat(bufp, " soft temp");
 		}
 
 		if (raspi.cpuStatus != 0) {

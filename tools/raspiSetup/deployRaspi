@@ -7,11 +7,15 @@
 
 set -e
 
-# runRaspi script is likely in use on raspi, move to other name instead of overwriting 
-mv runRaspi tmp/runRaspi_`date +%Y-%m-%d_%H:%M:%S`
+if [ -f runRaspi ]; then
+   # runRaspi script is likely in use on raspi, move to other name instead of overwriting 
+   mv runRaspi tmp/runRaspi_`date +%Y-%m-%d_%H:%M:%S`
+fi
 
-# killMostRaspi might be in use when copy is ongoing
-mv killMostRaspi tmp/killMostRaspi_`date +%Y-%m-%d_%H:%M:%S`
+if [ -f killMostRaspi ]; then
+   # killMostRaspi might be in use when copy is ongoing
+   mv killMostRaspi tmp/killMostRaspi_`date +%Y-%m-%d_%H:%M:%S`
+fi
 
 tar mxzf cam*Dir.tgz
 rm -f cam*Dir.tgz

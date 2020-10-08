@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Stop the software on real robot. 
+# 
+
+
+
+# check if on real robot
+if ! robotIsReal ; then
+    echo "ERROR: this script is intended for running on an actual robot"
+    exit 1
+fi
+
+# stop
+jobStopAll
+
+# kill any robotCLI instances
+pkill robotCLI
+

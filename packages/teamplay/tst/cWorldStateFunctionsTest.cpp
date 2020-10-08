@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #include "gtest/gtest.h"
 
 /* Include trace utility */
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
 
 // Bring in my package's API, which is what I'm testing
 #include "int/cWorldStateFunctions.hpp"
@@ -272,24 +272,22 @@ TEST(WorldStateFunctions, getClosestTeammember_WhenNoRobotSet_ShouldThrow)
     // Arrange
     teamplay::robotStore::getInstance().clear();
 
-    double x,y;
     // Act
-    EXPECT_ANY_THROW(cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false));
+    EXPECT_ANY_THROW(cWorldStateFunctions::getInstance().getClosestTeammember(false));
 }
 
 
-TEST(WorldStateFunctions, getClosestTeammember_WhenNoTeammembersPresent_ShouldReturnFalse)
+TEST(WorldStateFunctions, getClosestTeammember_WhenNoTeammembersPresent_ShouldReturnEmptyOptional)
 {
     // Arrange
     teamplay::robotStore::getInstance().clear();
     teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot());
 
-    double x,y;
     // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
+    auto result = cWorldStateFunctions::getInstance().getClosestTeammember(false);
 
     // Assert
-    EXPECT_FALSE(result);
+    EXPECT_FALSE((bool)result);
 }
 
 // Test fixture that sets up a second team member with id 8 and position x=6.0, y=7.0
@@ -297,8 +295,8 @@ TEST(WorldStateFunctions, getClosestTeammember_WhenNoTeammembersPresent_ShouldRe
 class WorldStateFunctions_WhenOneOtherRobotPresent : public ::testing::Test {
 protected:
 
-    WorldStateFunctions_WhenOneOtherRobotPresent() 
-{
+    WorldStateFunctions_WhenOneOtherRobotPresent()
+    {
         // Start with a clean robot store
         teamplay::robotStore::getInstance().clear();
 
@@ -307,46 +305,33 @@ protected:
 
         // Define one teammate with different id, role and location
         teamplay::robotStore::getInstance().addTeammate(teamplay::robot(8, treeEnum::DEFENDER_MAIN, Position2D(6.0, 7.0, 0.0), Velocity2D()));
-}
+    }
 };
 
-TEST_F(WorldStateFunctions_WhenOneOtherRobotPresent, getClosestTeammember_ShouldReturnTrue)
+TEST_F(WorldStateFunctions_WhenOneOtherRobotPresent, getClosestTeammember_ShouldReturnValidOptional)
 {
     // Arrange
     // Done in test fixture
 
-    double x,y;
     // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
+    auto result = cWorldStateFunctions::getInstance().getClosestTeammember(false);
 
     // Assert
-    EXPECT_TRUE(result);
+    EXPECT_TRUE((bool)result);
 }
 
-TEST_F(WorldStateFunctions_WhenOneOtherRobotPresent, getClosestTeammember_xValueSetToTeammatePosition)
+TEST_F(WorldStateFunctions_WhenOneOtherRobotPresent, getClosestTeammember_ReturnClosestRobot)
 {
     // Arrange
     // Done in test fixture
 
-    double x,y;
     // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
+    auto result = cWorldStateFunctions::getInstance().getClosestTeammember(false);
 
     // Assert
-    EXPECT_EQ(6.0, x);
-}
-
-TEST_F(WorldStateFunctions_WhenOneOtherRobotPresent, getClosestTeammember_yValueSetToTeammatePosition)
-{
-    // Arrange
-    // Done in test fixture
-
-    double x,y;
-    // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
-
-    // Assert
-    EXPECT_EQ(7.0, y);
+    ASSERT_TRUE((bool)result);
+    EXPECT_EQ(6.0, result->getLocation().x) << "Wrong x position";
+    EXPECT_EQ(7.0, result->getLocation().y) << "Wrong y position";
 }
 
 // Test fixture that sets up three other team members: 8 (x=6.0, y=7.0), 15 (x=1.0, y=3.0) and 20 (x=7.0, y=6.0)
@@ -374,38 +359,25 @@ TEST_F(WorldStateFunctions_WhenMultipleOtherRobotsPresent, getClosestTeammember_
     // Arrange
     // Done in test fixture
 
-    double x,y;
     // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
+    auto result = cWorldStateFunctions::getInstance().getClosestTeammember(false);
 
     // Assert
-    EXPECT_TRUE(result);
+    EXPECT_TRUE((bool)result);
 }
 
-TEST_F(WorldStateFunctions_WhenMultipleOtherRobotsPresent, getClosestTeammember_xValueSetToClosestTeammatePosition)
+TEST_F(WorldStateFunctions_WhenMultipleOtherRobotsPresent, getClosestTeammember_ReturnClosestRobot)
 {
     // Arrange
     // Done in test fixture
 
-    double x,y;
     // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
+    auto result = cWorldStateFunctions::getInstance().getClosestTeammember(false);
 
     // Assert
-    EXPECT_EQ(1.0, x);
-}
-
-TEST_F(WorldStateFunctions_WhenMultipleOtherRobotsPresent, getClosestTeammember_yValueSetToClosestTeammatePosition)
-{
-    // Arrange
-    // Done in test fixture
-
-    double x,y;
-    // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
-
-    // Assert
-    EXPECT_EQ(3.0, y);
+    ASSERT_TRUE((bool)result);
+    EXPECT_EQ(1.0, result->getLocation().x) << "Wrong x position";
+    EXPECT_EQ(3.0, result->getLocation().y) << "Wrong y position";
 }
 
 // Test fixture that sets up one other team member at coordinate x=1.0,y=1.0
@@ -414,7 +386,7 @@ class WorldStateFunctions_WhenTeamMemberAtExactSameLocation : public ::testing::
 protected:
 
     WorldStateFunctions_WhenTeamMemberAtExactSameLocation()
-{
+    {
         // Start with a clean robot store
         teamplay::robotStore::getInstance().clear();
 
@@ -423,7 +395,7 @@ protected:
 
         // Define one teammate with different ids and role but same location
         teamplay::robotStore::getInstance().addTeammate(teamplay::robot(8,  treeEnum::DEFENDER_MAIN,   Position2D(1.0, 1.0, 0.0), Velocity2D()));
-}
+    }
 };
 
 TEST_F(WorldStateFunctions_WhenTeamMemberAtExactSameLocation, getClosestTeammember_ShouldReturnTrue)
@@ -431,38 +403,25 @@ TEST_F(WorldStateFunctions_WhenTeamMemberAtExactSameLocation, getClosestTeammemb
     // Arrange
     // Done in test fixture
 
-    double x,y;
     // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
+    auto result = cWorldStateFunctions::getInstance().getClosestTeammember(false);
 
     // Assert
-    EXPECT_TRUE(result);
+    EXPECT_TRUE((bool)result);
 }
 
-TEST_F(WorldStateFunctions_WhenTeamMemberAtExactSameLocation, getClosestTeammember_xValueSetToClosestTeammatePosition)
+TEST_F(WorldStateFunctions_WhenTeamMemberAtExactSameLocation, getClosestTeammember_ReturnClosestRobot)
 {
     // Arrange
     // Done in test fixture
 
-    double x,y;
     // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
+    auto result = cWorldStateFunctions::getInstance().getClosestTeammember(false);
 
     // Assert
-    EXPECT_EQ(1.0, x);
-}
-
-TEST_F(WorldStateFunctions_WhenTeamMemberAtExactSameLocation, getClosestTeammember_yValueSetToClosestTeammatePosition)
-{
-    // Arrange
-    // Done in test fixture
-
-    double x,y;
-    // Act
-    bool result = cWorldStateFunctions::getInstance().getClosestTeammember(x,y, false);
-
-    // Assert
-    EXPECT_EQ(1.0, y);
+    ASSERT_TRUE((bool)result);
+    EXPECT_EQ(1.0, result->getLocation().x) << "Wrong x position";
+    EXPECT_EQ(1.0, result->getLocation().y) << "Wrong y position";
 }
 
 // ======================
@@ -794,7 +753,10 @@ TEST(TestSuiteWorldStateFunctionsgetObstructingObstaclesInPath, TestObstructing1
 
     double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     // set other bot location(s) and stuff
     teamplay::obstacleStore::getInstance().clear();
@@ -824,7 +786,10 @@ TEST(TestSuiteWorldStateFunctionsgetObstructingObstaclesInPath, TestObstructing2
 
     double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     // set other bot location(s) and stuff
     teamplay::obstacleStore::getInstance().clear();
@@ -853,7 +818,10 @@ TEST(TestSuiteWorldStateFunctionsgetObstructingObstaclesInPath, TestObstructing3
 
     double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     // set other bot location(s) and stuff
     teamplay::obstacleStore::getInstance().clear();
@@ -885,7 +853,10 @@ TEST(TestSuiteWorldStateFunctionsgetObstructingObstaclesInPath, ReceivingTeammem
 
     double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     // Clean the robot store and define one teammate
     teamplay::robotStore::getInstance().clear();
@@ -913,9 +884,11 @@ TEST(TestSuiteWorldStateFunctionsisPassToClosestTeammemberBlocked, Teammember1)
     // Bot1 @0,2
     // Radius ball = 0.125
 
-    double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     teamplay::robotStore::getInstance().clear();
     teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(0.0, 0.0, 0.0), Velocity2D()));
@@ -939,9 +912,11 @@ TEST(TestSuiteWorldStateFunctionsisPassToClosestTeammemberBlocked, Teammember2)
     // Bot1 @0,7
     // Radius ball = 0.125
 
-    double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     teamplay::robotStore::getInstance().clear();
     teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(0.0, 0.0, 0.0), Velocity2D()));
@@ -966,9 +941,11 @@ TEST(TestSuiteWorldStateFunctionsisPassToFurthestDefenderBlocked, test1)
     // Add obstacle @0,1
     // Radius ball = 0.125
 
-    double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     teamplay::robotStore::getInstance().clear();
     teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(0.0, 2.0, 0.0), Velocity2D()));
@@ -994,9 +971,11 @@ TEST(TestSuiteWorldStateFunctionsisPassToFurthestDefenderBlocked, test2)
     // Add obstacle @4,1
     // Radius ball = 0.125
 
-    double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     teamplay::robotStore::getInstance().clear();
     teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(4.0, 2.0, 0.0), Velocity2D()));
@@ -1020,9 +999,11 @@ TEST(TestSuiteWorldStateFunctionsisLobShotOnGoalBlocked, Opponent1)
     // Bot1 @0,1
     // Radius ball = 0.125
 
-    double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     teamplay::robotStore::getInstance().clear();
     teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(0.0, 0.0, 0.0), Velocity2D()));
@@ -1049,9 +1030,11 @@ TEST(TestSuiteWorldStateFunctionsisPathToBallBlocked, PathBlocked_test1)
     // Bot1 @0,4 --> robot is obstructing path ball<>robot
     // Radius ball = 0.125
 
-    double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     teamplay::robotStore::getInstance().clear();
     teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(0.0, 0.0, 0.0), Velocity2D()));
@@ -1077,9 +1060,11 @@ TEST(TestSuiteWorldStateFunctionsisPathToBallBlocked, PathBlocked_test2)
     // Bot1 @3,3 --> robot is NOT obstructing path ball<>robot
     // Radius ball = 0.125
 
-    double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
-    teamplay::configurationStore::getConfiguration().setShootPathWidth(0.25);
+
+    configTeamplay config;
+    config.shooting.shootPathWidth = 0.25;
+    teamplay::configurationStore::getConfiguration().update(config);
 
     teamplay::robotStore::getInstance().clear();
 
@@ -1102,7 +1087,9 @@ TEST(TestSuiteWorldStateFunctionsDefendingStrategyOnTest, defendingStrategyTest)
 {
     // Setup; set setDefendingStrategy to true
 
-    teamplay::configurationStore::getConfiguration().setDefendingStrategy(true);
+    configTeamplay config;
+    config.strategy.defendingStrategy = true;
+    teamplay::configurationStore::getConfiguration().update(config);
     std::map<std::string, std::string> params;
     bool retval = defendingStrategyOn(params);
 
@@ -1114,33 +1101,11 @@ TEST(TestSuiteWorldStateFunctionsDefendingStrategyOnTest, defendingStrategyTest2
 {
     // Setup; set setDefendingStrategy to false
 
-    teamplay::configurationStore::getConfiguration().setDefendingStrategy(false);
+    configTeamplay config;
+    config.strategy.defendingStrategy = false;
+    teamplay::configurationStore::getConfiguration().update(config);
     std::map<std::string, std::string> params;
     bool retval = defendingStrategyOn(params);
-
-    // Verification
-    EXPECT_TRUE(retval == false);
-}
-
-TEST(TestSuiteWorldStateFunctionsDribbleStrategyOnTest, dribbleStrategyTest)
-{
-    // Setup; set setDribbleStrategy to true
-
-    teamplay::configurationStore::getConfiguration().setDribbleStrategy(true);
-    std::map<std::string, std::string> params;
-    bool retval = dribbleStrategyOn(params);
-
-    // Verification
-    EXPECT_TRUE(retval == true);
-}
-
-TEST(TestSuiteWorldStateFunctionsDribbleStrategyOnTest, dribbleStrategyTest2)
-{
-    // Setup; set setDribbleStrategy to false
-
-    teamplay::configurationStore::getConfiguration().setDribbleStrategy(false);
-    std::map<std::string, std::string> params;
-    bool retval = dribbleStrategyOn(params);
 
     // Verification
     EXPECT_TRUE(retval == false);
@@ -1184,78 +1149,6 @@ TEST(TestSuiteWorldStateFunctionsisOpponentHalfReachable, OpponentHalfReachable_
     EXPECT_TRUE(isOpponentHalfReachable(params));
 }
 
-TEST(TestSuiteWorldStateFunctionsShotThresholdReached, ShotThreshold_test1)
-{
-    // Setup
-    // Update WorldModel administration
-    // TESTCASE: OWN @0,4
-    // shotThreshold = 7.5
-    // distance to shotThreshold is 9-5.5-4 = -0.5m > yes shotThreshold reached
-
-    teamplay::configurationStore::getConfiguration().setShotThreshold(5.5);
-
-    teamplay::robotStore::getInstance().clear();
-    teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(0.0, 4.0, 0.0), Velocity2D()));
-
-    // Execution
-    std::map<std::string, std::string> params;
-    EXPECT_TRUE(shotThresholdReached(params));
-}
-
-TEST(TestSuiteWorldStateFunctionsShotThresholdReached, ShotThreshold_test2)
-{
-    // Setup
-    // Update WorldModel administration
-    // TESTCASE: OWN @0,3
-    // shotThreshold = 7.5
-    // distance to shotThreshold is 9-5.5-3 = 0.5m > yes shotThreshold reached
-
-    teamplay::configurationStore::getConfiguration().setShotThreshold(5.5);
-
-    teamplay::robotStore::getInstance().clear();
-    teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(0.0, 3.0, 0.0), Velocity2D()));
-
-    // Execution
-    std::map<std::string, std::string> params;
-    EXPECT_FALSE(shotThresholdReached(params));
-}
-
-TEST(TestSuiteWorldStateFunctionsShotThresholdReachable, ShotThreshold_test3)
-{
-    // Setup
-    // Update WorldModel administration
-    // TESTCASE: OWN @0,3
-    // shotThreshold = 7.5
-    // distance to shotThreshold is 9-5.5-4 = -0.5m > yes shotThreshold reachable
-
-    teamplay::configurationStore::getConfiguration().setShotThreshold(5.5);
-
-    teamplay::robotStore::getInstance().clear();
-    teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(0.0, 3.0, 0.0), Velocity2D()));
-
-    // Execution
-    std::map<std::string, std::string> params;
-    EXPECT_TRUE(shotThresholdReachable(params));
-}
-
-TEST(TestSuiteWorldStateFunctionsShotThresholdReachable, ShotThreshold_test4)
-{
-    // Setup
-    // Update WorldModel administration
-    // TESTCASE: OWN @0,0
-    // shotThreshold = 7.5
-    // distance to shotThreshold is 9-5.5-0 = 3.5m > no shotThreshold not reachable
-
-    teamplay::configurationStore::getConfiguration().setShotThreshold(5.5);
-
-    teamplay::robotStore::getInstance().clear();
-    teamplay::robotStore::getInstance().addOwnRobot(teamplay::robot(1, treeEnum::ATTACKER_MAIN, Position2D(0.0, 0.0, 0.0), Velocity2D()));
-
-    // Execution
-    std::map<std::string, std::string> params;
-    EXPECT_FALSE(shotThresholdReachable(params));
-}
-
 TEST(TestSuiteWorldStateFunctionsClosestAttackerToOppGoal, closestAttToOppGoal_test1)
 {
     // Setup
@@ -1271,12 +1164,12 @@ TEST(TestSuiteWorldStateFunctionsClosestAttackerToOppGoal, closestAttToOppGoal_t
     teamplay::robotStore::getInstance().addTeammate(teamplay::robot(3, treeEnum::ATTACKER_ASSIST, Position2D(0.0, 7.0, 0.0), Velocity2D()));
 
     // Execution
-    double x,y;
-    cWorldStateFunctions::getInstance().getClosestAttackerToOpponentGoal(x,y);
+    auto result = cWorldStateFunctions::getInstance().getClosestAttackerToOpponentGoal();
 
     // Verification
-    EXPECT_FLOAT_EQ( 0.0f, x);
-    EXPECT_FLOAT_EQ( 7.0f, y);
+    ASSERT_TRUE((bool)result);
+    EXPECT_EQ(0.0, result->getLocation().x) << "Wrong x position";
+    EXPECT_EQ(7.0, result->getLocation().y) << "Wrong y position";
 }
 
 

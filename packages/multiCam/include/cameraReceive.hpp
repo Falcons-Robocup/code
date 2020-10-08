@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -101,9 +101,6 @@ public:
 	cv::Mat getCameraFrame(size_t ii);
 
 	double getRecvDeltaTime(size_t camIndex);
-	double getBallReceiveTime(size_t camIndex) {
-		return ballReceiveTime[camIndex];
-	}
 
 	uint32_t getAnaFrameCounter(size_t camIndex);
 	uint16_t getAnaApplUptime(size_t camIndex);

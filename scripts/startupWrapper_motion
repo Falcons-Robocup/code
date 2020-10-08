@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Used in processMapping to start the right process for HAL / Motion
+# The process to start is different for the old robots and R7+
+# 
+# EKPC 2019-07-02 Creation
+# 
+
+if [ ${TURTLE5K_ROBOTNUMBER} -gt 6 ]; then
+    # R7 and up
+    # do nothing
+    echo "NoOp"
+    read -n 1 -r -p "Keeping process alive by waiting for input..." key
+else
+    #R1 - R6
+    processStart ${CONTEXTKEY} halMotors
+fi  
+

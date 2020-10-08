@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,8 +18,8 @@
 #ifndef CCONFIGMOTIONPLANNING_HPP_
 #define CCONFIGMOTIONPLANNING_HPP_
 
-#include <dynamic_reconfigure/server.h>
-#include <motionPlanning/MotionPlanningNodeConfig.h>
+#include "FalconsRtDB2.hpp"
+#include "ConfigRTDBAdapter.hpp"
 
 
 class cConfigMotionPlanningData
@@ -28,12 +28,10 @@ public:
     cConfigMotionPlanningData();
     ~cConfigMotionPlanningData();
 
-private:
-    boost::shared_ptr< dynamic_reconfigure::Server<motionPlanning::MotionPlanningNodeConfig> > _srv;
-    dynamic_reconfigure::Server<motionPlanning::MotionPlanningNodeConfig>::CallbackType _f;
+    ConfigMotionPlanning getConfiguration();
 
-    void loadConfigYaml();
-    void reconfig_cb(motionPlanning::MotionPlanningNodeConfig &config, uint32_t level);
+private:
+    ConfigRTDBAdapter<ConfigMotionPlanning>* _configAdapter;
 };
 
 

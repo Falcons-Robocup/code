@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,8 @@
 #ifndef CMOTIONPLANNER_HPP_
 #define CMOTIONPLANNER_HPP_
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
+#include "PathPlanningClient.hpp"
 #include "int/cAllActions.hpp"
 #include "int/cQueryInterface.hpp"
 
@@ -27,7 +28,7 @@
 class cMotionPlanner
 {
 public:
-    cMotionPlanner(cWorldModelInterface *wm, cRTDBOutputAdapter *rtdbOutput);
+    cMotionPlanner(MP_WorldModelInterface *wm, PathPlanningClient *pp, MP_RTDBOutputAdapter *rtdbOutput);
     ~cMotionPlanner();
     
     // set a the action (either continue current action or start a new one)
@@ -38,36 +39,34 @@ public:
         if (noAction())
         {
             TRACE("first action");
-            initiateAction((cAbstractAction *)(new T()));
+            initiateAction((MP_AbstractAction *)(new T()));
         }
         else if (!checkActionEqual(typeid(action).name()))
         {
             TRACE("changing action");
             clearAction();
-            initiateAction((cAbstractAction *)(new T()));
+            initiateAction((MP_AbstractAction *)(new T()));
         }
         // else do nothing: running action remains alive
     }
     
     // set the parameters of current action
     void setActionParameters(std::vector<std::string> const &params);
-    void setActionId(int id);
     
     // execute current action
     actionResult execute();
     
     // interface getters (needed for relaying forbidden areas & suppressing ballhandlers)
-    cRTDBOutputAdapter *getRTDBOutput();
+    MP_RTDBOutputAdapter *getRTDBOutput();
     const cQueryInterface& getQI();
 
 private:
     // current action and modifiers
-    cAbstractAction *_action = NULL;
-    int _actionId = 0;
+    MP_AbstractAction *_action = NULL;
     bool noAction();
     bool checkActionEqual(std::string name);
     void clearAction();
-    void initiateAction(cAbstractAction * action);
+    void initiateAction(MP_AbstractAction * action);
     
     // interfaces
     cInterfaces _interfaces;

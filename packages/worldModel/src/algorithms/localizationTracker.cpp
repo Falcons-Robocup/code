@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,22 +17,22 @@
  */
 
 #include "int/algorithms/localizationTracker.hpp"
-#include "int/configurators/localizationConfigurator.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 
 #include <algorithm>
 
 
-localizationTracker::localizationTracker()
+localizationTracker::localizationTracker(const WorldModelConfig* wmConfig)
 {
+    _wmConfig = wmConfig;
     _id = 0;
     _lastPokeTimestamp = 0.0;
     _lastVisionTimestamp = 0.0;
     _visionConfidence = 0.0;
     _creationTimestamp = 0.0;
-    _trackerTimeout = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::trackerTimeout);
+    _trackerTimeout = _wmConfig->getConfiguration().localization.trackerTimeout;
 }
 
 localizationTracker::~localizationTracker()
@@ -109,7 +109,7 @@ float localizationTracker::getPositionScore(Position2D const &positionA, Positio
     float dx = positionA.x - positionB.x;
     float dy = positionA.y - positionB.y;
     float dtheta = project_angle_mpi_pi(positionA.phi - positionB.phi);
-    float score = fabs(dx) + fabs(dy) + fabs(dtheta) * localizationConfigurator::getInstance().get(localizationConfiguratorFloats::errorRatioRadianToMeter);
+    float score = fabs(dx) + fabs(dy) + fabs(dtheta) * _wmConfig->getConfiguration().localization.errorRatioRadianToMeter;
     return score;
 }
 
@@ -135,9 +135,9 @@ double localizationTracker::getLastPokeTimestamp() const
 float localizationTracker::getTrackerScore(double timestampNow)
 {
     // get configurables
-    float scoreAgeScale = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::scoreAgeScale);
-    float scoreActivityScale = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::scoreActivityScale);
-    float scoreFreshScale = localizationConfigurator::getInstance().get(localizationConfiguratorFloats::scoreFreshScale);
+    float scoreAgeScale = _wmConfig->getConfiguration().localization.scoreAgeScale;
+    float scoreActivityScale = _wmConfig->getConfiguration().localization.scoreActivityScale;
+    float scoreFreshScale = _wmConfig->getConfiguration().localization.scoreFreshScale;
     // calculate partial scores, each in [0, 1], higher is better
     float ageScore = std::min(1.0, (_lastVisionTimestamp - _creationTimestamp) / scoreAgeScale);
     float freshScore = 1.0 - std::min(1.0, (timestampNow - _lastVisionTimestamp) / scoreFreshScale);

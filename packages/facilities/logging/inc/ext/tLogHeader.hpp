@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,7 +23,7 @@ struct tLogHeader
     std::string hostname;
     rtime       creation;
     bool        compression;
-    float       duration;
+    float       duration; // Deprecated. Do not use.
     std::string filename;
     int         frequency;
     

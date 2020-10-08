@@ -1,229 +1,243 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 3.5.1)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
+project(Teamplay)
 
-#set(ROS_BUILD_TYPE Debug)
-set(ROS_BUILD_TYPE Release)
+find_package(Boost COMPONENTS system thread filesystem REQUIRED QUIET)
+find_package(Facilities)
+find_package(WorldModel)
+find_package(MotionPlanning)
+find_package(PathPlanning)
 
-rosbuild_init()
 
 #set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+include_directories("include")
 
 # Add link library for finding OpenCV libs
 link_directories(/usr/local/lib)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
-
-#add dynamic reconfigure api
-rosbuild_find_ros_package(dynamic_reconfigure)
-include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-gencfg()
-
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++11 -Wall -Werror")
 
-rosbuild_add_library(tpactions   src/actions/cAbstractAction.cpp
-                               src/actions/cActionSuccess.cpp
-                               src/actions/cActionStop.cpp
-                               src/actions/cActionShoot.cpp
-                               src/actions/cActionPass.cpp
-                               src/actions/cActionMove.cpp
-                               src/actions/cActionPositionBeforePOI.cpp
-                               src/actions/cActionPositionBehindPOI.cpp
-                               src/actions/cActionPositionForOppSetpiece.cpp
-                               src/actions/cActionPositionForOwnSetpiece.cpp
-                               src/actions/cActionGetBall.cpp
-                               src/actions/cActionInterceptBall.cpp
-                               src/actions/cActionGoalKeeper.cpp
-                               src/actions/cActionMoveToFreeSpot.cpp
-                               src/actions/cActionAvoidPOI.cpp
-                               src/actions/cActionDefendPenaltyArea.cpp
-                               src/actions/cActionTurnAwayFromOpponent.cpp
-                               src/actions/cActionDefendAttackingOpponent.cpp
-                               src/actions/cActionDribbleForPass.cpp
-                               src/actions/cActionDribbleForShot.cpp
-                               )
+add_library(tpactions   src/actions/cAbstractAction.cpp
+                        src/actions/cActionSuccess.cpp
+                        src/actions/cActionStop.cpp
+                        src/actions/cActionShoot.cpp
+                        src/actions/cActionPass.cpp
+                        src/actions/cActionMove.cpp
+                        src/actions/cActionPositionBeforePOI.cpp
+                        src/actions/cActionPositionBehindPOI.cpp
+                        src/actions/cActionPositionForOppSetpiece.cpp
+                        src/actions/cActionPositionForOwnSetpiece.cpp
+                        src/actions/cActionGetBall.cpp
+                        src/actions/cActionInterceptBall.cpp
+                        src/actions/cActionGoalKeeper.cpp
+                        src/actions/cActionMoveToFreeSpot.cpp
+                        src/actions/cActionAvoidPOI.cpp
+                        src/actions/cActionDefendPenaltyArea.cpp
+                        src/actions/cActionTurnAwayFromOpponent.cpp
+                        src/actions/cActionDefendAttackingOpponent.cpp
+                        src/actions/cActionDribble.cpp
+                        )
 
 target_link_libraries(tpactions yaml-cpp worldModelInterface tpworldStateFunctions tpstores rtdbOutputAdapter)
 
-rosbuild_add_library(tprules     src/rules/ruleAvoidAreas.cpp
-                               src/rules/ruleSetpieceExecuteFinished.cpp
-                               src/rules/ruleStimulatePassing.cpp
-                               src/utilities/timer.cpp
-                               )
+add_library(tprules     src/rules/ruleAvoidAreas.cpp
+                        src/rules/ruleSetpieceExecuteFinished.cpp
+                        src/rules/ruleStimulatePassing.cpp
+                        src/utilities/timer.cpp
+                        )
 
-target_link_libraries(tprules tpstores)
+# RtDButils for rtime (timer.cpp)
+target_link_libraries(tprules tpstores Tracing falconsGeometry RtDButils FTime)
 
-rosbuild_add_library(tpconfigAdapter  src/adapters/configuration/cConfigHeightmaps.cpp
-                                    src/adapters/configuration/cConfigInterceptBall.cpp
-                                    src/adapters/configuration/cConfigRules.cpp
-                                    src/adapters/configuration/cConfigShooting.cpp
-                                    src/adapters/configuration/cConfigStrategy.cpp
-                                    )
+add_library(tpconfigAdapter src/adapters/ConfigAdapter.cpp)
+target_link_libraries(tpconfigAdapter diagnostics)
 
-rosbuild_add_library(tpdecisionTree  src/cDecisionTree.cpp)
+add_library(tpdecisionTree  src/cDecisionTree.cpp)
 target_link_libraries(tpdecisionTree tpworldStateFunctions tpactions tpstores)
 
-rosbuild_add_library(tpgameStateManager   src/gameStateManager.cpp
-                                           src/gameStateTransitionTable.cpp
-                                           src/types/gameState.cpp
-                                           )
+add_library(tpgameStateManager   src/gameStateManager.cpp
+                                 src/gameStateTransitionTable.cpp
+                                 src/types/gameState.cpp
+                                 )
 target_link_libraries(tpgameStateManager tprules tpstores yaml-cpp)
 
-rosbuild_add_library(tpstores   src/heightmaps/abstractHeightMap.cpp
-                              src/heightmaps/hmAvoidBall.cpp
-                              src/heightmaps/hmAvoidObstacles.cpp
-                              src/heightmaps/hmAvoidTeamMates.cpp
-                              src/heightmaps/hmBetweenPoiAndClosestObstacle.cpp
-                              src/heightmaps/hmCloseToBallClaimedLocation.cpp
-                              src/heightmaps/hmCloseToOwnPos.cpp
-                              src/heightmaps/hmInFrontOfOppGoal.cpp
-                              src/heightmaps/hmNearObstacles.cpp
-                              src/heightmaps/hmNearOwnGoal.cpp
-                              src/heightmaps/hmNearPosition.cpp
-                              src/heightmaps/hmObstaclesBlockingTeammates.cpp
-                              src/heightmaps/hmObstaclesBlockingBall.cpp
-                              src/heightmaps/hmObstaclesBlockingOppGoal.cpp
-                              src/stores/ballStore.cpp
-                              src/stores/configurationStore.cpp
-                              src/stores/diagnosticsStore.cpp
-                              src/stores/fieldDimensionsStore.cpp
-                              src/stores/gameStateStore.cpp
-                              src/stores/heightMapStore.cpp
-                              src/stores/obstacleStore.cpp
-                              src/stores/robotStore.cpp
-                              src/types/ball.cpp
-                              src/types/configuration.cpp
-                              src/types/diagnostics.cpp
-                              src/types/fieldDimensions.cpp
-                              src/types/gameState.cpp
-                              src/types/obstacle.cpp
-                              src/types/robot.cpp
-                              src/types/role.cpp
-                              )
-target_link_libraries(tpstores  Environment opencv_highgui rtdbOutputAdapter)
+add_library(tpstores   src/heightmaps/abstractHeightMap.cpp
+                       src/heightmaps/hmAvoidBall.cpp
+                       src/heightmaps/hmAvoidObstacles.cpp
+                       src/heightmaps/hmAvoidTeamMates.cpp
+                       src/heightmaps/hmBetweenPoiAndClosestObstacle.cpp
+                       src/heightmaps/hmCloseToBallClaimedLocation.cpp
+                       src/heightmaps/hmCloseToOwnPos.cpp
+                       src/heightmaps/hmInFrontOfOppGoal.cpp
+                       src/heightmaps/hmNearObstacles.cpp
+                       src/heightmaps/hmNearOwnGoal.cpp
+                       src/heightmaps/hmNearPosition.cpp
+                       src/heightmaps/hmObstaclesBlockingTeammates.cpp
+                       src/heightmaps/hmObstaclesBlockingBall.cpp
+                       src/heightmaps/hmObstaclesBlockingOppGoal.cpp
+                       src/stores/ballStore.cpp
+                       src/stores/configurationStore.cpp
+                       src/stores/diagnosticsStore.cpp
+                       src/stores/fieldDimensionsStore.cpp
+                       src/stores/gameStateStore.cpp
+                       src/stores/heightMapStore.cpp
+                       src/stores/obstacleStore.cpp
+                       src/stores/robotStore.cpp
+                       src/types/ball.cpp
+                       src/types/configuration.cpp
+                       src/types/diagnostics.cpp
+                       src/types/fieldDimensions.cpp
+                       src/types/gameState.cpp
+                       src/types/obstacle.cpp
+                       src/types/robot.cpp
+                       src/types/role.cpp
+                       )
+target_link_libraries(tpstores
+                      Environment
+                      opencv_highgui
+                      rtdbOutputAdapter
+                      diagnostics
+                      falconsGeometry)
+if(DEFINED ENV{OPENCV_VERSION})
+    if(NOT $ENV{OPENCV_VERSION} LESS 3)
+        target_link_libraries(tpstores opencv_imgcodecs)
+    endif()
+endif()
 
-rosbuild_add_library(teamplayControlInterface src/cTeamplayControlInterface.cpp src/adapters/RtdbAdapterControlOverride.cpp)
+add_library(teamplayControlInterface src/cTeamplayControlInterface.cpp src/adapters/RtdbAdapterControlOverride.cpp)
+target_link_libraries(teamplayControlInterface FalconsTypes)
 
-rosbuild_add_library(worldModelInterface  src/cWorldModelInterface.cpp)
-target_link_libraries(worldModelInterface tpstores)
+add_library(worldModelInterface  src/cWorldModelInterface.cpp)
+target_link_libraries(worldModelInterface tpstores tprules)
 
-rosbuild_add_library(objectPath  src/cObjectPath.cpp)
+add_library(objectPath  src/cObjectPath.cpp)
 target_link_libraries(objectPath tpstores)
 
-rosbuild_add_library(tpworldStateFunctions  src/cWorldStateFunctions.cpp)
+add_library(tpworldStateFunctions  src/cWorldStateFunctions.cpp)
 target_link_libraries(tpworldStateFunctions worldModelInterface tprules tpstores rtdbInputAdapter)
 
-rosbuild_add_library(rtdbInputAdapter  src/adapters/cRTDBInputAdapter.cpp)
+add_library(rtdbInputAdapter  src/adapters/cRTDBInputAdapter.cpp)
 target_link_libraries(rtdbInputAdapter tpstores mpClient worldModelInterface)
 
-rosbuild_add_library(rtdbOutputAdapter  src/adapters/cRTDBOutputAdapter.cpp)
+add_library(rtdbOutputAdapter  src/adapters/cRTDBOutputAdapter.cpp)
+target_link_libraries(rtdbOutputAdapter FalconsTypes)
 
-rosbuild_add_library(rtdbAdapterRefboxSignals src/adapters/cRtdbAdapterRefboxSignals.cpp)
+add_library(rtdbAdapterRefboxSignals src/adapters/cRtdbAdapterRefboxSignals.cpp)
+target_link_libraries(rtdbAdapterRefboxSignals FalconsTypes)
 
+add_library(tpHeightmapVisualizer src/heightmaps/heightmapVisualizer.cpp)
+target_link_libraries(tpHeightmapVisualizer tpstores rtdbInputAdapter tpconfigAdapter opencv_imgproc)
 
-# TESTERS
+## TESTERS
 # WorldStateFunctions
-rosbuild_add_gtest(cWorldStateFunctionsTest tst/cWorldStateFunctionsTest.cpp TIMEOUT 5)
-target_link_libraries(cWorldStateFunctionsTest worldModelInterface tpworldStateFunctions Environment)
-
-# ActionMove
-#rosbuild_add_gtest(actionMoveTest tst/cActionMoveTest.cpp TIMEOUT 5)
-#target_link_libraries(actionMoveTest gmock tpactions)
-
-# ActionShoot
-#rosbuild_add_gtest(actionShootTest tst/cActionShootTest.cpp TIMEOUT 5)
-#target_link_libraries(actionShootTest gmock tpactions)
-
-# ActionStop
-#rosbuild_add_gtest(actionStopTest tst/cActionStopTest.cpp TIMEOUT 5)
-#target_link_libraries(actionStopTest gmock tpactions)
+add_executable(cWorldStateFunctionsTest tst/cWorldStateFunctionsTest.cpp)
+target_link_libraries(cWorldStateFunctionsTest worldModelInterface tpworldStateFunctions gtest)
+add_test(cWorldStateFunctionsTest cWorldStateFunctionsTest)
+set_tests_properties(cWorldStateFunctionsTest PROPERTIES TIMEOUT 5)
 
 # GameState Tester
-rosbuild_add_gtest(gameStateTest tst/gameStateTest.cpp TIMEOUT 5)
-target_link_libraries(gameStateTest tpgameStateManager)
+add_executable(gameStateTest tst/gameStateTest.cpp)
+target_link_libraries(gameStateTest tpgameStateManager gtest)
+add_test(gameStateTest gameStateTest)
+set_tests_properties(gameStateTest PROPERTIES TIMEOUT 5)
 
 # GameStateTransitionTable Tester
-rosbuild_add_gtest(gameStateTransitionTableTest tst/gameStateTransitionTableTest.cpp TIMEOUT 5)
-target_link_libraries(gameStateTransitionTableTest tpgameStateManager)
+add_executable(gameStateTransitionTableTest tst/gameStateTransitionTableTest.cpp)
+target_link_libraries(gameStateTransitionTableTest tpgameStateManager gtest)
+add_test(gameStateTransitionTableTest gameStateTransitionTableTest)
+set_tests_properties(gameStateTransitionTableTest PROPERTIES TIMEOUT 5)
 
 # AbstractHeightMap Tester
-rosbuild_add_gtest(abstractHeightMapTest tst/abstractHeightMapTest.cpp TIMEOUT 1)
-target_link_libraries(abstractHeightMapTest tpstores)
+add_executable(abstractHeightMapTest tst/abstractHeightMapTest.cpp)
+target_link_libraries(abstractHeightMapTest tpstores gtest)
+add_test(abstractHeightMapTest abstractHeightMapTest)
+set_tests_properties(abstractHeightMapTest PROPERTIES TIMEOUT 1)
 
 # HeightMapStore Tester
-rosbuild_add_gtest(heightMapStoreTest tst/heightMapStoreTest.cpp TIMEOUT 1)
-target_link_libraries(heightMapStoreTest tpstores)
+add_executable(heightMapStoreTest tst/heightMapStoreTest.cpp)
+target_link_libraries(heightMapStoreTest tpstores gtest)
+add_test(heightMapStoreTest heightMapStoreTest)
+set_tests_properties(heightMapStoreTest PROPERTIES TIMEOUT 1)
+
+# HeightmapVisualizer Tester
+add_executable(heightmapVisualizerTest tst/heightmapVisualizerTest.cpp)
+target_link_libraries(heightmapVisualizerTest tpHeightmapVisualizer opencv_imgproc opencv_highgui opencv_core opencv_imgcodecs gtest)
+add_test(heightmapVisualizerTest heightmapVisualizerTest)
+set_tests_properties(heightmapVisualizerTest PROPERTIES TIMEOUT 10)
 
 # HeightMap hmBetweenPoiAndClosestObstacle Tester
-rosbuild_add_gtest(hmBetweenPoiAndClosestObstacleTest tst/hmBetweenPoiAndClosestObstacleTest.cpp TIMEOUT 1)
-target_link_libraries(hmBetweenPoiAndClosestObstacleTest tpstores)
+add_executable(hmBetweenPoiAndClosestObstacleTest tst/hmBetweenPoiAndClosestObstacleTest.cpp)
+target_link_libraries(hmBetweenPoiAndClosestObstacleTest tpstores gtest)
+add_test(hmBetweenPoiAndClosestObstacleTest hmBetweenPoiAndClosestObstacleTest)
+set_tests_properties(hmBetweenPoiAndClosestObstacleTest PROPERTIES TIMEOUT 1)
 
 # HeightMap hmInFrontOfOppGoal Tester
-rosbuild_add_gtest(hmInFrontOfOppGoalTest tst/hmInFrontOfOppGoalTest.cpp TIMEOUT 1)
-target_link_libraries(hmInFrontOfOppGoalTest tpstores)
+add_executable(hmInFrontOfOppGoalTest tst/hmInFrontOfOppGoalTest.cpp)
+target_link_libraries(hmInFrontOfOppGoalTest tpstores gtest)
+add_test(hmInFrontOfOppGoalTest hmInFrontOfOppGoalTest)
+set_tests_properties(hmInFrontOfOppGoalTest PROPERTIES TIMEOUT 1)
 
 # HeightMap hmNearPosition Tester
-rosbuild_add_gtest(hmNearPositionTest tst/hmNearPositionTest.cpp TIMEOUT 1)
-target_link_libraries(hmNearPositionTest tpstores)
+add_executable(hmNearPositionTest tst/hmNearPositionTest.cpp)
+target_link_libraries(hmNearPositionTest tpstores gtest)
+add_test(hmNearPositionTest hmNearPositionTest)
+set_tests_properties(hmNearPositionTest PROPERTIES TIMEOUT 1)
 
 # ObjectPath Tester
-rosbuild_add_gtest(cObjectPathTest tst/cObjectPathTest.cpp TIMEOUT 1)
-target_link_libraries(cObjectPathTest objectPath)
+add_executable(cObjectPathTest tst/cObjectPathTest.cpp)
+target_link_libraries(cObjectPathTest objectPath gtest)
+add_test(cObjectPathTest cObjectPathTest)
+set_tests_properties(cObjectPathTest PROPERTIES TIMEOUT 1)
 
 # ObstacleStore Tester
-rosbuild_add_gtest(obstacleStoreTest tst/obstacleStoreTest.cpp TIMEOUT 1)
-target_link_libraries(obstacleStoreTest tpstores)
+add_executable(obstacleStoreTest tst/obstacleStoreTest.cpp)
+target_link_libraries(obstacleStoreTest tpstores gtest)
+add_test(obstacleStoreTest obstacleStoreTest)
+set_tests_properties(obstacleStoreTest PROPERTIES TIMEOUT 1)
 
 # RobotStore Tester
-rosbuild_add_gtest(robotStoreTest tst/robotStoreTest.cpp TIMEOUT 1)
-target_link_libraries(robotStoreTest tpstores)
+add_executable(robotStoreTest tst/robotStoreTest.cpp)
+target_link_libraries(robotStoreTest tpstores gtest)
+add_test(robotStoreTest robotStoreTest)
+set_tests_properties(robotStoreTest PROPERTIES TIMEOUT 1)
 
 # RuleAvoidAreas Tester
-rosbuild_add_gtest(ruleAvoidAreasTest tst/ruleAvoidAreasTest.cpp TIMEOUT 1)
-target_link_libraries(ruleAvoidAreasTest gmock tprules tpstores)
+add_executable(ruleAvoidAreasTest tst/ruleAvoidAreasTest.cpp)
+target_link_libraries(ruleAvoidAreasTest gmock tprules tpstores gtest)
+add_test(ruleAvoidAreasTest ruleAvoidAreasTest)
+set_tests_properties(ruleAvoidAreasTest PROPERTIES TIMEOUT 1)
 
 # RuleSetPieceExecuteFinished Tester
-rosbuild_add_gtest(ruleSetpieceExecuteFinishedTest tst/ruleSetpieceExecuteFinishedTest.cpp TIMEOUT 1)
-target_link_libraries(ruleSetpieceExecuteFinishedTest gmock tprules tpstores)
+add_executable(ruleSetpieceExecuteFinishedTest tst/ruleSetpieceExecuteFinishedTest.cpp)
+target_link_libraries(ruleSetpieceExecuteFinishedTest gmock tprules tpstores gtest)
+add_test(ruleSetpieceExecuteFinishedTest ruleSetpieceExecuteFinishedTest)
+set_tests_properties(ruleSetpieceExecuteFinishedTest PROPERTIES TIMEOUT 1)
 
 # RuleStimulatePassing Tester
-rosbuild_add_gtest(ruleStimulatePassingTest tst/ruleStimulatePassingTest.cpp TIMEOUT 1)
-target_link_libraries(ruleStimulatePassingTest tprules tpstores)
+add_executable(ruleStimulatePassingTest tst/ruleStimulatePassingTest.cpp)
+target_link_libraries(ruleStimulatePassingTest tprules tpstores gtest)
+add_test(ruleStimulatePassingTest ruleStimulatePassingTest)
+set_tests_properties(ruleStimulatePassingTest PROPERTIES TIMEOUT 1)
 
 # Timer tester
-rosbuild_add_gtest(timerTest tst/timerTest.cpp src/utilities/timer.cpp TIMEOUT 1)
-target_link_libraries(timerTest)
-rosbuild_link_boost(timerTest system filesystem)
+add_executable(timerTest tst/timerTest.cpp src/utilities/timer.cpp)
+target_link_libraries(timerTest ${Boost_LIBRARIES} gtest Tracing RtDButils FTime)
+add_test(timerTest timerTest)
+set_tests_properties(timerTest PROPERTIES TIMEOUT 1)
 
 # Tree tester
-rosbuild_add_gtest(cTreeTesterTest tst/cTreeTester.cpp TIMEOUT 5)
-target_link_libraries(cTreeTesterTest tpdecisionTree tpworldStateFunctions)
-rosbuild_link_boost(cTreeTesterTest system)
+add_executable(cTreeTesterTest tst/cTreeTester.cpp)
+target_link_libraries(cTreeTesterTest tpdecisionTree tpworldStateFunctions ${Boost_LIBRARIES} gtest)
+add_test(cTreeTesterTest cTreeTesterTest)
+set_tests_properties(cTreeTesterTest PROPERTIES TIMEOUT 5)
 
-# TOOLS
-# TODO: need to be adapted to RTDB
-#rosbuild_add_executable(liveTuningTool  tools/liveTuningTool.cpp)
-#target_link_libraries(liveTuningTool    tpconfigAdapter tpstores)
-#rosbuild_link_boost(liveTuningTool      system)
-
-#rosbuild_add_executable(standaloneTuningTool  tools/standaloneTuningTool.cpp)
-#target_link_libraries(standaloneTuningTool    tpconfigAdapter tpstores)
-#rosbuild_link_boost(standaloneTuningTool      system)
 
 # MAIN 
-rosbuild_add_executable(teamplay_main  src/main.cpp)
+add_executable(teamplay_main  src/main.cpp)
 target_link_libraries(teamplay_main tpconfigAdapter
                                     rtdbInputAdapter
                                     rtdbOutputAdapter
@@ -232,13 +246,13 @@ target_link_libraries(teamplay_main tpconfigAdapter
                                     rtdbAdapterRefboxSignals 
                                     tpgameStateManager 
                                     tpdecisionTree
-                                    tpactions)
-rosbuild_link_boost(teamplay_main system thread)
+                                    tpactions
+                                    ${Boost_LIBRARIES}
+                                    Tracing
+                                    rtdb2
+                                    diagnostics
+                                    EnvironmentField
+                                    falconsGeometry
+                                    PathPlanning
+                                    mpClient)
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})

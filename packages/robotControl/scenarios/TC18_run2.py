@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -64,50 +64,105 @@ def TC18_run2():
     # teleport ball to 0,0 # manually type in simulator
     robot.move(0, -1, phiY)
     robot.getBall()
-    for parcours in range(0,3): # TODO: real run: 3 or 6 times, waiting for response rule committee;
-        # initially went diagonally in between obstacles (TC18_run2_diagonal.py); robot struggles to find a path in between --> go straight in between, also easier to ensure we don't dribble more than 3m
-        TargetX = -1.5
-        TargetY = 1.1
-        robot.move(TargetX, TargetY, phiY)
-        _moveBack()
-        TargetX = -1.5
-        TargetY = 2.9
-        robot.move(TargetX, TargetY, phiY)
-        _moveBack()
-        for i in range(0,3):
-            TargetX = TargetX * -1
-            robot.move(TargetX, TargetY, phiY)
-            _moveBack()
-            TargetY = TargetY + 1.8
-            robot.move(TargetX, TargetY, phiY)
-            _moveBack()
-        # now we should be at 1.5, 8.3; move a bit away from the goal before crossing the field
-        robot.move(1.5, 8, phiX)
-        robot.move(-1.5, 8, phiX)
-        _moveBack() # now we dribble for 3.3 meter, assume nobody will notice
-        TargetX = -1.5
-        TargetY = 6.5
-        robot.move(TargetX , TargetY, phiMY)
-        _moveBack()
-        for i in range(0,3):
-            TargetX = TargetX * -1
-            robot.move(TargetX, TargetY, phiMY)
-            _moveBack()
-            TargetY = TargetY - 1.8
-            robot.move(TargetX, TargetY, phiMY)
-            _moveBack()
-        robot.move(-1.5, 1.1, phiY) # move to starting position
-        _moveBack()
-    print "Step 1 parcours finished, starting step 2 backward dribble \n"
-    robot.move(-1.5, 0, phiY) # make sure we are angled correctly so we don't dribble backward out of the field
-    ownPos = robot.ownPosition()
-    TargetX = ownPos.x
-    TargetY = ownPos.y
-    phi = ownPos.Rz
+    robot.move(-1.2, 2.3,1.57)
+    robot.move(-0.9, 2.3,1.57)
+    _moveBack()	
     for i in range(0,3):
-        robot.setVelocity(0, -1, 0, 2)
+    #sequence starts here
+        robot.move(-0.9, 2.3, 1.1)
+        robot.move(0.9, 3.5, 1.1)
+        robot.move(0.9, 3.5, 1.57)
+        robot.move(0.9, 4.1, 1.57)
         _moveBack()
-        sleep(1) # after getball wait to ensure we really have the ball before driving backwards
-    print "Step 2 backward dribble finished \n"
+        robot.move(0.9, 4.1,2.67)
+        robot.move(-0.9, 5.3,2.67)
+        robot.move(-0.9, 5.3,1.57)
+        robot.move(-0.9, 5.9,1.57)
+        _moveBack()
+        robot.move(-0.9, 5.9,1.1)
+        robot.move(0.9, 7.1,1.1)
+        robot.move(0.9, 7.1,1.57)
+        robot.move(0.9, 7.7,1.57)
+        _moveBack()
+        robot.move(0.9, 8.2,1.57)
+        robot.move(0.9, 8.2,3.14)
+        robot.move(-0.9, 8.2,3.14)
+        robot.move(-0.9, 8.2,4.71)
+        robot.move(-0.9, 7.1,4.71)
+        _moveBack()
+        robot.move(-0.9, 7.1,5.81)
+        robot.move(0.9, 5.9,5.81)
+        robot.move(0.9, 5.9,4.71)
+        robot.move(0.9, 5.3,4.71)
+        _moveBack()
+        robot.move(0.9, 5.3,3.61)
+        robot.move(-0.9, 4.1,3.61)
+        robot.move(-0.9, 4.1,4.71)
+        robot.move(-0.9, 3.5,4.71)
+        _moveBack()
+        robot.move(-0.9, 3.5,5.81)
+        robot.move(0.9, 2.3,5.81)
+        robot.move(0.9, 2.3,4.71)
+        robot.move(0.9, 1.7,4.71)
+        _moveBack()
+        robot.move(0.9, 1.1,4.71)
+        robot.move(0.9, 1.1,3.14)
+        robot.move(-0.9, 1.1,3.14)
+        robot.move(-0.9, 1.1,1.57)
+        robot.move(-0.9, 2.3,1.57)
+        _moveBack()
+    #x = -1.5
+    #y = 1.1
+    #robot.move(-1.5,1.1,phiY)
+    #_moveBack()
+    #robot.move(-1.5,2.9,phiY)
+    #robot.move(1.5,2.9,phiY)
+    #robot.move(1.5,4.7,phiY)
+   # _moveBack()
+#    for parcours in range(0,1): # TODO: real run: 3 or 6 times, waiting for response rule committee;
+#        # initially went diagonally in between obstacles (TC18_run2_diagonal.py); robot struggles to find a path in between --> go straight in between, also easier to ensure we don't dribble more than 3m
+#        TargetX = -1.5
+#        TargetY = 1.1
+#        robot.move(TargetX, TargetY, phiY)
+#        _moveBack()
+#        TargetX = -1.5
+#        TargetY = 2.9
+#        robot.move(TargetX, TargetY, phiY)
+#        _moveBack()
+#        for i in range(0,3):
+#            TargetX = TargetX * -1
+#            robot.move(TargetX, TargetY, phiY)
+#            _moveBack()
+#            TargetY = TargetY + 1.8
+#            robot.move(TargetX, TargetY, phiY)
+#            _moveBack()
+#        # now we should be at 1.5, 8.3; move a bit away from the goal before crossing the field
+#        robot.move(1.5, 8, phiX)
+#        robot.move(-1.5, 8, phiX)
+#        _moveBack() # now we dribble for 3.3 meter, assume nobody will notice
+#        TargetX = -1.5
+#        TargetY = 6.5
+#        robot.move(TargetX , TargetY, phiMY)
+#        _moveBack()
+#        for i in range(0,3):
+#            TargetX = TargetX * -1
+#            robot.move(TargetX, TargetY, phiMY)
+#            _moveBack()
+#            TargetY = TargetY - 1.8
+#            robot.move(TargetX, TargetY, phiMY)
+#            _moveBack()
+#        robot.move(-1.5, 1.1, phiY) # move to starting position
+#        _moveBack()
+#    print "Step 1 parcours finished, starting step 2 backward dribble \n"
+#    robot.move(-1.5, 0, phiY) # make sure we are angled correctly so we don't dribble backward out of the field
+#    ownPos = robot.ownPosition()
+#    TargetX = ownPos.x
+#    TargetY = ownPos.y
+#    phi = ownPos.Rz
+#    for i in range(0,3):
+#        robot.setVelocity(0, -1, 0, 2)
+#        _moveBack()
+#        sleep(1) # after getball wait to ensure we really have the ball before driving backwards
+#    print "Step 2 backward dribble finished \n"
 
 

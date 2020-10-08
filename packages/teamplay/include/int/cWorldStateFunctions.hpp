@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,6 +18,8 @@
 
 #ifndef CWORLDSTATEFUNCTIONS_HPP_
 #define CWORLDSTATEFUNCTIONS_HPP_
+
+#include <set>
 
 #include <boost/optional.hpp>
 
@@ -48,6 +50,7 @@ bool isGoalkickSetPiece (const std::map<std::string, std::string> &params);
 bool isCornerSetPiece (const std::map<std::string, std::string> &params);
 bool isFreekickSetPiece (const std::map<std::string, std::string> &params);
 bool isThrowinSetPiece (const std::map<std::string, std::string> &params);
+bool isParkingSetPiece (const std::map<std::string, std::string> &params);
 
 bool within1mOfBall(const std::map<std::string, std::string> &params);
 bool doesTeamHaveBall(const std::map<std::string, std::string> &params);
@@ -74,6 +77,7 @@ bool isBallApproachingRobot(const std::map<std::string, std::string> &params);
 bool isPassApproachingRobot(const std::map<std::string, std::string> &params);
 bool isOpponentHalfReachable(const std::map<std::string, std::string> &params);
 
+bool isInScoringPosition(const std::map<std::string, std::string> &params);
 bool isShotOnGoalBlocked(const std::map<std::string, std::string> &params);
 bool isLobShotOnGoalBlocked(const std::map<std::string, std::string> &params);
 bool isPassToClosestTeammemberBlocked(const std::map<std::string, std::string> &params);
@@ -86,15 +90,12 @@ bool doesAssistantHaveBall(const std::map<std::string, std::string> &params);
 bool allRobotsActive(const std::map<std::string, std::string> &params);
 
 bool defendingStrategyOn(const std::map<std::string, std::string> &params);
-bool dribbleStrategyOn(const std::map<std::string, std::string> &params);
 bool multipleOpponentsOnOwnHalf(const std::map<std::string, std::string> &params);
 bool isAnAttackerOnOppHalf(const std::map<std::string, std::string> &params);
 
 /*
  * Worldstate functions only used is test scripts, but useful for future use
  */
-bool shotThresholdReached(const std::map<std::string, std::string> &params);
-bool shotThresholdReachable(const std::map<std::string, std::string> &params);
 bool isBallInOwnPenaltyArea(const std::map<std::string, std::string> &params);
 bool isBallInOpponentPenaltyArea(const std::map<std::string, std::string> &params);
 bool isPathToBallBlocked(const std::map<std::string, std::string> &params);
@@ -110,60 +111,64 @@ teamplay::robot getRobotClosestToPoint(const teamplay::robots& robots, const Poi
 
 class cWorldStateFunctions
 {
-	public:
-		static cWorldStateFunctions& getInstance()
-		{
-			static cWorldStateFunctions instance; // Guaranteed to be destroyed.
-												  // Instantiated on first use.
-			return instance;
-		}
+public:
+    static cWorldStateFunctions& getInstance()
+    {
+        static cWorldStateFunctions instance; // Guaranteed to be destroyed.
+                                                // Instantiated on first use.
+        return instance;
+    }
 
-		// ball related
-		boost::optional<float> ballDistance(const robotNumber &robotID);
+    // ball related
+    boost::optional<float> ballDistance(const robotNumber &robotID);
 
-		// team related
-		bool isMemberInArea(areaName area, bool includeOwnRobot, bool includeGoalie);
-		bool getClosestTeammember(double &target_x, double &target_y, bool includeGoalie);
-		bool getClosestAttacker(areaName area, double &target_x, double &target_y);
-		void getClosestAttackerToOpponentGoal(double &target_x, double &target_y);
-		void getClosestDefender(double &target_x, double &target_y);
-		void getClosestDefenderToOpponentGoal(double &target_x, double &target_y);
-		void getClosestMemberToLocationXY(double location_x, double location_y, bool includeOwnRobot, bool includeGoalie, bool &foundMember, uint8_t &robotID);
+    // team related
+    bool isMemberInArea(areaName area, bool includeOwnRobot, bool includeGoalie);
+    boost::optional<teamplay::robot> getClosestTeammember(bool includeGoalie) const;
+    boost::optional<teamplay::robot> getClosestTeammemberToOpponentGoal(const std::set<treeEnum> &withRole) const;
+    boost::optional<teamplay::robot> getClosestAttacker(boost::optional<teamplay::fieldArea> area = boost::none) const;
+    boost::optional<teamplay::robot> getClosestAttackerToOpponentGoal() const;
+    boost::optional<teamplay::robot> getClosestDefender() const;
+    boost::optional<teamplay::robot> getClosestDefenderToOpponentGoal() const;
+    boost::optional<teamplay::robot> getClosestTeammemberToLocationXY(
+        Point2D location, bool includeOwnRobot, bool includeGoalie, const std::set<treeEnum> &withRole = {}) const;
 
-		// opponent related
-		bool getClosestOpponent(float &target_x, float &target_y);
-		bool getPotentialOpponentAttacker(float &target_x, float &target_y);
-		bool getClosestOpponentToLocationXY(float &target_x, float &target_y, float location_x, float location_y);
-		bool getSecondClosestOpponentToLocationXY(float &target_x, float &target_y, float location_x, float location_y);
-		void getObstructingObstaclesInPath(const Point2D robotPos, const Point2D targetPos, const float radiusObjectMeters, std::vector<robotLocation> &obstacles);
-		bool getPreferredShootXYOfGoal(float &target_x, float &target_y);
+    // opponent related
+    bool getClosestOpponent(float &target_x, float &target_y);
+    bool getPotentialOpponentAttacker(float &target_x, float &target_y);
+    bool getClosestOpponentToLocationXY(float &target_x, float &target_y, float location_x, float location_y);
+    bool getSecondClosestOpponentToLocationXY(float &target_x, float &target_y, float location_x, float location_y);
+    void getObstructingObstaclesInPath(const Point2D robotPos, const Point2D targetPos, const float radiusObjectMeters, std::vector<robotLocation> &obstacles);
+    bool getPreferredShootXYOfGoal(float &target_x, float &target_y);
 
-		Position2D getLocationOfRobot(const robotNumber &robotID);
+    Position2D getLocationOfRobot(const robotNumber &robotID);
 
-		robotNumber getRobotID();
-		void setRobotID(const robotNumber &robotID);
+    robotNumber getRobotID();
+    void setRobotID(const robotNumber &robotID);
 
-		void setRobotRole(const robotNumber &robotID, const treeEnum &role);
-		treeEnum getRobotRole(const robotNumber &robotID);
+    void setRobotRole(const robotNumber &robotID, const treeEnum &role);
+    treeEnum getRobotRole(const robotNumber &robotID);
 
-		boost::optional<robotNumber> getRobotWithRole(const treeEnum &role);
+    boost::optional<robotNumber> getRobotWithRole(const treeEnum &role);
 
-		boost::optional<Position2D> getPos2DFromStr(const std::map<std::string, std::string> &parameters, std::string &param);
-		boost::optional<Position2D> getPositionOfPOI(const std::string POI) const;
+    boost::optional<Position2D> getPos2DFromStr(const std::map<std::string, std::string> &parameters, std::string &param);
+    boost::optional<Position2D> getPositionOfPOI(const std::string POI) const;
 
 
-	private:
-		robotNumber _robotID;
+private:
+    cWorldStateFunctions();
+    cWorldStateFunctions(cWorldStateFunctions const&) = delete;
+    cWorldStateFunctions(cWorldStateFunctions &&) = delete;
+    cWorldStateFunctions operator=(cWorldStateFunctions const&) = delete;
+    cWorldStateFunctions operator=(cWorldStateFunctions &&) = delete;
+    ~cWorldStateFunctions() = default;
 
-		~cWorldStateFunctions();
-		cWorldStateFunctions();
-		cWorldStateFunctions(cWorldStateFunctions const&); // Don't Implement
-		void operator=(cWorldStateFunctions const&);	   // Don't implement
+    robotNumber _robotID;
 
-		float _fieldWidth, _fieldLength;
-		float _positionMargin;
+    float _fieldWidth, _fieldLength;
+    float _positionMargin;
 
-		std::map<robotNumber, treeEnum> _robotRoles;
+    std::map<robotNumber, treeEnum> _robotRoles;
 };
 
-#endif /* CWORLDSTATEFUNCTIONS_HPP_ */
+#endif // CWORLDSTATEFUNCTIONS_HPP_

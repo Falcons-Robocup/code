@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,8 +26,9 @@
 #include "cLogFileReader.hpp"
 #include "cLogFileWriter.hpp"
 #include "cLogger.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
+#include "FalconsRtDB2.hpp"
 
 cAbstractStimulator::cAbstractStimulator()
 {
@@ -68,57 +69,33 @@ bool cAbstractStimulator::mergeStimFrame(tLogFrame &frame, tLogFrame const &newF
     // TODO: refactor so this is not needed, move into rtdb package
     RtDB2Frame f1 = convertFrameLog2Rtdb(frame);
     RtDB2Frame f2 = convertFrameLog2Rtdb(newFrame);
-    std::vector<RtDB2FrameItem> newItems = f1.items;
-    int countSame = 0, countChanged = 0, countAdd = 0;
-    for (auto itNew = f2.items.begin(); itNew != f2.items.end(); ++itNew)
+
+    std::vector<RtDB2FrameItem> newItems = f2.items;
+    for (auto itOld = f1.items.begin(); itOld != f1.items.end(); ++itOld)
     {
-        auto newItem = *itNew;
-        // check if item in newFrame is also present in frame
-        bool found = false;
-        auto itOld = f1.items.begin();
-        for (; !found && (itOld != f1.items.end()); ++itOld)
+        bool replaced = false;
+        for (auto itNew = f2.items.begin(); itNew != f2.items.end(); ++itNew)
         {
             if ((itOld->agent == itNew->agent) && (itOld->key == itNew->key))
             {
-                found = true;
+                // item has been replaced no need to add
+                replaced = true;
                 break;
-                // we will refer to itOld
             }
         }
-        if (found)
+
+        if(!replaced)
         {
-            // item in newFrame is also present in frame -> check if it is the same
-            // (this normally holds for most items -- TODO count and show some stats?)
-            bool same = (itOld->data == itNew->data);
-            if (same)
-            {
-                //tprintf("same    agent=%d key='%s'", itNew->agent, itNew->key.c_str());
-                countSame++;
-                // nothing to do, item was not touched by new software, it can remain as is in the frame
-            }
-            else
-            {
-                // stimulated software produced new data, so overwrite
-                //int n = (int)itNew->data.size();
-                //tprintf("changed agent=%d key='%s' n=%d", itNew->agent, itNew->key.c_str(), n);
-                countChanged++;
-                newItem.timestamp = itOld->timestamp; // leave original timestamp intact
-                newItems.push_back(newItem);
-            }
-        }
-        else
-        {
-            //tprintf("add     agent=%d key='%s'", itNew->agent, itNew->key.c_str());
-            countAdd++;
-            // TODO: is this appropriate? newest logger call might pick up items which would normally be outdated ... how to properly solve this?
-            newItem.timestamp = t;
-            newItems.push_back(newItem);
+            newItems.push_back(*itOld);
         }
     }
     
     // convert result
-    //tprintf("age=%.3fs counts: #new=%d, #same=%d, #change=%d, #add=%d", frame.age, (int)newItems.size(), countSame, countChanged, countAdd);
     frame = convertFrameRtdb2Log(frame.age, newItems);
+
+    RtDB2Frame f3;
+    f3.items = newItems;
+
     return true;
 }
 
@@ -147,15 +124,13 @@ void cAbstractStimulator::run()
     tLogFrame frame;
     int numFramesWritten = 0;
     rtime t = t0;
+
     while (inputLog.getFrame(frame))
     {
         // check against time boundaries
         float age = frame.age;
         t = t0 + age;
-        if (t > _tEnd)
-        {
-            break;
-        }
+        
         if (t >= _tStart)
         {
             // write to RTDB, preserving original timestamps
@@ -175,7 +150,7 @@ void cAbstractStimulator::run()
             
             // make new frame by taking the original one and replacing relevant content with new data
             tLogFrame newFrame;
-            bool r = logger.makeFrame(newFrame);
+            bool r = logger.makeFrame(newFrame, t);
             if (r == false)
             {
                 fprintf(stderr, "failed to create frame, age=%.3fs\n", age); fflush(stderr);

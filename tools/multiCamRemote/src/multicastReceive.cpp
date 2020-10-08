@@ -108,7 +108,7 @@ multicastReceive::multicastReceive() {
 	struct passwd *pw = getpwuid(getuid());
 	string configFile("");
 	configFile.append(pw->pw_dir);
-	configFile.append("/falcons/code/packages/multiCam/multiCam.yaml");
+	configFile.append("/falcons/code/config/multiCam.yaml");
 	printf("INFO      : multicastSend uses configuration file: %s\n", configFile.c_str());
 	cv::FileStorage fs(configFile, cv::FileStorage::READ);
 

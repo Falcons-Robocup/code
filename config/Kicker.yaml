@@ -1,0 +1,2 @@
+leverMaxHeight  : 205   # Used to clip leverHeight between 0 and leverMaxHeight
+leverSpeed      : 50 

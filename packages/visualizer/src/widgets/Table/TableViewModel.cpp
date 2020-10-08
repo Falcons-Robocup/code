@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,7 +18,7 @@
 
 #include <boost/range/adaptor/map.hpp>
 #include <sstream>
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include <QMetaType>
 #include "tracing.hpp"
 

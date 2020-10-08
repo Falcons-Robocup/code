@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,15 +18,21 @@
 
 #include "int/cMotionPlanner.hpp"
 #include "cDiagnostics.hpp"
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
+#include "int/adapters/configuration/cConfigMotionPlanningData.hpp"
 
 using namespace std;
 
-cMotionPlanner::cMotionPlanner(cWorldModelInterface *wm, cRTDBOutputAdapter *rtdbOutput)
+cConfigMotionPlanningData* _cfg;
+
+cMotionPlanner::cMotionPlanner(MP_WorldModelInterface *wm, PathPlanningClient *pp, MP_RTDBOutputAdapter *rtdbOutput)
 {
     //setAction(STOP);
     _interfaces.wm = wm;
+    _interfaces.pp = pp;
     _interfaces.rtdbOutput = rtdbOutput;
+
+    _cfg = new cConfigMotionPlanningData();
 
     _queryInterface.connect(wm);
 
@@ -36,6 +42,7 @@ cMotionPlanner::cMotionPlanner(cWorldModelInterface *wm, cRTDBOutputAdapter *rtd
 
 cMotionPlanner::~cMotionPlanner()
 {
+    delete _cfg;
 }
 
 bool cMotionPlanner::noAction()
@@ -68,7 +75,7 @@ void cMotionPlanner::clearAction()
     TRACE("<");
 }
 
-void cMotionPlanner::initiateAction(cAbstractAction *action)
+void cMotionPlanner::initiateAction(MP_AbstractAction *action)
 {
     TRACE("> actionPtr=%p", _action);
     _action = action;
@@ -85,11 +92,6 @@ void cMotionPlanner::setActionParameters(std::vector<std::string> const &params)
     TRACE("<");
 }
 
-void cMotionPlanner::setActionId(int id)
-{
-    _actionId = id;
-}
-
 actionResult cMotionPlanner::execute()
 {
     TRACE_FUNCTION("");
@@ -97,10 +99,13 @@ actionResult cMotionPlanner::execute()
     TRACE("> actionPtr=%p", _action);
     // update worldModel
     _interfaces.wm->update();
+
+    // update config
+    _action->setConfig( _cfg->getConfiguration() );
+
     // execute current action
     assert(_action != NULL);
     actionResult result;
-    result.id = _actionId;
     result.result = _action->execute();
 
     // Write ACTION_RESULT to RTDB

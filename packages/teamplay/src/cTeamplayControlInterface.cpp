@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,7 +21,7 @@
 #include <boost/algorithm/string.hpp>
 #include "int/cTeamplayControlInterface.hpp"
 #include "int/types/cDecisionTreeTypes.hpp"
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
 
 cTeamplayControlInterface::cTeamplayControlInterface()
 {
@@ -45,10 +45,10 @@ void cTeamplayControlInterface::setOverrideResult(tpOverrideResult const &overri
 void cTeamplayControlInterface::reset(tpOverrideState &overrideState)
 {
     overrideState.active = false;
-    overrideState.id = 0;
     overrideState.level = tpOverrideLevelEnum::INVALID;
     overrideState.treeValue = treeEnum::INVALID;
-    overrideState.action = tpActionEnum::INVALID;
+    overrideState.tpAction = tpActionEnum::INVALID;
     overrideState.params.clear();
+    overrideState.mpAction.action = actionTypeEnum::UNKNOWN;
 }
 

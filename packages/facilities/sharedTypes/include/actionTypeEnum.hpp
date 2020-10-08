@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -33,7 +33,8 @@ enum class actionTypeEnum
     GET_BALL,
     TURN_AWAY_FROM_OPPONENT,
     KEEPER_MOVE,
-    KICK
+    KICK,
+    INTERCEPT_BALL
 };
 
 SERIALIZE_ENUM(actionTypeEnum);

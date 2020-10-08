@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,7 +25,7 @@ cAbstractPathPlanning::cAbstractPathPlanning(cPathPlanningMain* main)
     TRACE(">");
     _main = main;
     _dt = 0.0; // Recalculated every iteration due to event-based pathPlanning.
-    _prevTimestamp = rtime::now();
+    _prevTimestamp = ftime::now();
     _prev_vel = Velocity2D();
     TRACE("<");
 }
@@ -87,9 +87,10 @@ void cAbstractPathPlanning::computeDt()
     TRACE_FUNCTION("");
     // Compute new _dt
 
-    rtime time_now = rtime::now(); // TODO this is not simulator- and test-friendly, better to move timestamping outside
+    //rtime time_now = ftime::now(); // TODO this is not simulator- and test-friendly, better to move timestamping outside
 
-    _dt = double(time_now - _prevTimestamp);
+    //_dt = double(time_now - _prevTimestamp);
+    _dt = 1.0 / 30.0;
 
     // If pathplanning is not used (e.g., robot is stopped), _dt is not recomputed
     // The next time pathplanning is triggered, _dt will be very large (seconds).
@@ -102,5 +103,5 @@ void cAbstractPathPlanning::computeDt()
         _main->_prev_vel = Velocity2D();
     }
 
-    _prevTimestamp = time_now;
+    //_prevTimestamp = time_now;
 }

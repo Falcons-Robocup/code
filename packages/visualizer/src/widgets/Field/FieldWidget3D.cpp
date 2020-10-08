@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -9,23 +9,20 @@
  
  NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
  ***/ 
- #include <vtkSphereSource.h>
-#include <vtkTextActor.h>
-#include <vtkAlgorithm.h>
+ #include <vtkAlgorithm.h>
 #include <vtkAlgorithmOutput.h>
-#include <vtkOrientationMarkerWidget.h>
-#include <vtkTextActor.h>
-#include <vtkPoints.h>
-#include <vtkPolygon.h>
 #include <vtkCellArray.h>
+#include <vtkOrientationMarkerWidget.h>
+#include <vtkPoints.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
-
-// cam feed background prototyping (#435)
-#include <vtkJPEGReader.h> 
+#include <vtkPolygon.h>
+#include <vtkSphereSource.h>
+#include <vtkTextActor.h>
 
 // Internal:
 #include "int/widgets/Field/FieldWidget3D.h"
+#include "int/widgets/Field/FieldVideoActor.h"
 #include "int/widgets/Field/Annotation/RobotLabel.h"
 #include "int/widgets/Field/Annotation/CollisionBalloon.h"
 #include "int/ConfigurationManager.h"
@@ -37,13 +34,13 @@
 #include "vector3d.hpp"
 #include "cEnvironmentField.hpp" // field dimensions
 
-/* 
+/*
 * ========================================
 *           constructor/destructor
-* ======================================== 
+* ========================================
 */
 
-FieldWidget3D::FieldWidget3D(QWidget *parent) 
+FieldWidget3D::FieldWidget3D(QWidget *parent)
   : QVTKWidget(parent),
     Widget()
 {
@@ -55,7 +52,7 @@ FieldWidget3D::FieldWidget3D(QWidget *parent)
     _mainRenderer->SetLayer(0);
 
     _annotationRenderer = vtkRenderer::New();
-    _annotationRenderer->SetLayer(1);    
+    _annotationRenderer->SetLayer(1);
 
     _renderWindow->SetNumberOfLayers(2);
     _renderWindow->AddRenderer(_mainRenderer);
@@ -84,7 +81,7 @@ FieldWidget3D::FieldWidget3D(QWidget *parent)
     {
         addBallActor();
     }
-    
+
     // Create quite some obstacle actors
     for (int i = 1; i <= 20 * _NR_OF_ROBOTS_PER_TEAM; ++i)
     {
@@ -97,6 +94,8 @@ FieldWidget3D::FieldWidget3D(QWidget *parent)
     {
         addShootTargetActor(i);
     }
+
+    addTechnicalTeamAreaActor();
 
     resetZoomPanRotate();
 
@@ -164,17 +163,17 @@ void FieldWidget3D::saveState()
     // Save camera position
     vtkCamera* camera = _mainRenderer->GetActiveCamera();
     double d[4];
-    camera->GetPosition(d); 
+    camera->GetPosition(d);
     settings.setValue("fieldWidget/cameraPosition/x", d[0]);
     settings.setValue("fieldWidget/cameraPosition/y", d[1]);
     settings.setValue("fieldWidget/cameraPosition/z", d[2]);
 
-    camera->GetFocalPoint(d); 
+    camera->GetFocalPoint(d);
     settings.setValue("fieldWidget/cameraFocalPoint/x", d[0]);
     settings.setValue("fieldWidget/cameraFocalPoint/y", d[1]);
     settings.setValue("fieldWidget/cameraFocalPoint/z", d[2]);
 
-    camera->GetViewUp(d); 
+    camera->GetViewUp(d);
     settings.setValue("fieldWidget/cameraViewUp/x", d[0]);
     settings.setValue("fieldWidget/cameraViewUp/y", d[1]);
     settings.setValue("fieldWidget/cameraViewUp/z", d[2]);
@@ -203,10 +202,10 @@ void FieldWidget3D::restoreState()
     }
 }
 
-/* 
+/*
 * ========================================
 *           protected
-* ======================================== 
+* ========================================
 */
 
 
@@ -227,10 +226,10 @@ void FieldWidget3D::reloadSettings()
     }
 };
 
-/* 
+/*
 * ========================================
 *           public Q_SLOTS
-* ======================================== 
+* ========================================
 */
 
 void FieldWidget3D::resetZoomPanRotate()
@@ -260,13 +259,51 @@ void FieldWidget3D::resetZoomPanRotate()
 void FieldWidget3D::flip(bool flip)
 {
     _flipField = flip;
+
+    fieldVideoActor->setFieldFlip(flip);
+
     resetZoomPanRotate();
 }
 
-/* 
+void FieldWidget3D::switchHeightmapToNone(void)
+{
+    _heightmapName = CompositeHeightmapName::INVALID;
+}
+
+void FieldWidget3D::switchHeightmapToDefendAttackingOpponent(void)
+{
+    _heightmapName = CompositeHeightmapName::DEFEND_ATTACKING_OPPONENT;
+}
+
+void FieldWidget3D::switchHeightmapToDribble(void)
+{
+    _heightmapName = CompositeHeightmapName::DRIBBLE;
+}
+
+void FieldWidget3D::switchHeightmapToMoveToFreeSpot(void)
+{
+    _heightmapName = CompositeHeightmapName::MOVE_TO_FREE_SPOT;
+}
+
+void FieldWidget3D::switchHeightmapToPositionForOppSetpiece(void)
+{
+    _heightmapName = CompositeHeightmapName::POSITION_FOR_OPP_SETPIECE;
+}
+
+void FieldWidget3D::switchHeightmapToPositionForOwnSetpiece(void)
+{
+    _heightmapName = CompositeHeightmapName::POSITION_FOR_OWN_SETPIECE;
+}
+
+void FieldWidget3D::switchHeightmapForRobot(int robotId)
+{
+    _robotID = robotId;
+}
+
+/*
 * ========================================
 *           private Q_SLOTS
-* ======================================== 
+* ========================================
 */
 
 void FieldWidget3D::render()
@@ -279,14 +316,8 @@ void FieldWidget3D::render()
 
     _renderMutex.unlock();
 
-    // cam feed prototype (#435)
-    if (cfEnabled)
-    {
-        cfRender();
-    }
-
     cleanup();
-    
+
     WRITE_TRACE;
 }
 
@@ -294,7 +325,7 @@ void FieldWidget3D::cleanup()
 {
     // time after which actor should be hidden
     double timeout = 0.12; // TODO magic, make configurable?
-    
+
     // Make obstacle actors invisible that have not moved in the last few render steps
     int countVisibleObstacles = 0;
     for (auto it = _obstacleMapping.begin(); it != _obstacleMapping.end(); /* no increment */ )
@@ -311,10 +342,10 @@ void FieldWidget3D::cleanup()
             ++it;
             ++countVisibleObstacles;
         }
-        
+
     }
     TRACE("#obstAct=%d #obstMap=%d #obstVis=%d", (int)_obstacleActors.size(), (int)_obstacleMapping.size(), countVisibleObstacles);
-    
+
     int countVisibleForbiddenAreas = 0;
     for (auto it = _forbiddenAreaMapping.begin(); it != _forbiddenAreaMapping.end(); /* no increment */ )
     {
@@ -350,7 +381,7 @@ void FieldWidget3D::cleanup()
             ++it;
             ++countVisibleBalls;
         }
-        
+
     }
     TRACE("#ballAct=%d #ballMap=%d #ballVis=%d", (int)_ballActors.size(), (int)_ballMapping.size(), countVisibleBalls);
 
@@ -374,10 +405,10 @@ void FieldWidget3D::cleanup()
     TRACE("#speedAct=%d #speedMap=%d #speedVis=%d", (int)_projectSpeedActors.size(), (int)_projectSpeedMapping.size(), countVisibleProjectSpeeds);
 }
 
-/* 
+/*
 * ========================================
 *           public
-* ======================================== 
+* ========================================
 */
 
 vtkSmartPointer<RobotVisualization> FieldWidget3D::getTeamRobot(uint8_t robotId)
@@ -387,10 +418,20 @@ vtkSmartPointer<RobotVisualization> FieldWidget3D::getTeamRobot(uint8_t robotId)
     return _teamActors[robotId];
 }
 
-/* 
+void FieldWidget3D::setLogTimeStamp(double t)
+{
+    _timestamp = t;
+}
+
+void FieldWidget3D::setClockTick(double elapsedTime, double actualTime)
+{
+    fieldVideoActor->updateImage(actualTime, _heightmapName, _robotID);
+}
+
+/*
 * ========================================
 *           private
-* ======================================== 
+* ========================================
 */
 
 void FieldWidget3D::clear()
@@ -424,6 +465,8 @@ void FieldWidget3D::clear()
         _projectSpeedActors[i]->VisibilityOff();
     }
 
+    _technicalTeamAreaActor->VisibilityOff();
+
     for (size_t i = 0; i < _gaussianObstacleActors.size(); i++)
     {
         _gaussianObstacleActors[i]->VisibilityOff();
@@ -435,7 +478,7 @@ void FieldWidget3D::addFieldActors()
     TRACE("addFieldActors");
     double greenR = 0.278, greenG = 0.64, greenB = 0.196;
 
-    // Get field dimensions 
+    // Get field dimensions
     float _FIELD_LENGTH = cEnvironmentField::getInstance().getLength();
     float _FIELD_WIDTH = cEnvironmentField::getInstance().getWidth();
     poiInfo poi;
@@ -465,53 +508,21 @@ void FieldWidget3D::addFieldActors()
     planeSrc->SetPoint2(0, _FIELD_LENGTH + 2.0, 0);
     planeSrc->Update();
 
-    vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    planeMapper->SetInputData(planeSrc->GetOutput());
-    this->_field = vtkActor::New();
-    this->_field->SetMapper(planeMapper);
-    this->_field->GetProperty()->SetColor(greenR, greenG, greenB);
-    this->_field->GetProperty()->SetOpacity(1.0);
-    this->_field->SetPosition(-_FIELD_WIDTH / 2 - 1.0, -_FIELD_LENGTH / 2 - 1.0, -0.02);
-    this->_field->GetProperty()->SetAmbient(1);
-    this->_field->GetProperty()->SetDiffuse(0);
-    this->_field->GetProperty()->SetSpecular(0);
-    this->update();
+    // vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    // planeMapper->SetInputData(planeSrc->GetOutput());
+    // this->_field = vtkActor::New();
+    // this->_field->SetMapper(planeMapper);
+    // this->_field->GetProperty()->SetColor(greenR, greenG, greenB);
+    // this->_field->GetProperty()->SetOpacity(1.0);
+    // this->_field->SetPosition(-_FIELD_WIDTH / 2 - 1.0, -_FIELD_LENGTH / 2 - 1.0, -0.02);
+    // this->_field->GetProperty()->SetAmbient(1);
+    // this->_field->GetProperty()->SetDiffuse(0);
+    // this->_field->GetProperty()->SetSpecular(0);
+    // this->update();
+    // _mainRenderer->AddActor(_field);
 
-    if (!cfEnabled)
-    {
-        _mainRenderer->AddActor(_field);
-    }
-    else
-    {
-        // JFEI: experimenting with camera background (ticket #435), for now just a static jpg
-
-        vtkSmartPointer<vtkJPEGReader> jpegReader = vtkSmartPointer<vtkJPEGReader>::New();
-        std::string filename = "/home/robocup/sample_image.jpeg";
-        if (jpegReader->CanReadFile(filename.c_str()))
-        {
-            TRACE("read jpg");
-            jpegReader->SetFileName(filename.c_str());
-            jpegReader->Update();
-            cfImageData = jpegReader->GetOutput();        
-            
-            // Create an image actor to display the image
-            TRACE("create image actor");
-            cfImageActor = vtkSmartPointer<vtkImageActor>::New();
-            cfImageActor->SetInputData(cfImageData);
-            
-            TRACE("re-init cam");
-            // set (guess) initial camera position
-            vtkCamera* camera = _mainRenderer->GetActiveCamera();
-            camera->SetPosition(-9, -15, 3);
-            camera->SetViewUp(0,0,1);
-            
-            // finish
-            TRACE("add actor");
-            _mainRenderer->AddActor(cfImageActor);
-            TRACE("cfImageActor added");
-        }
-        
-    }    
+    fieldVideoActor = vtkSmartPointer<FieldVideoActor>::New();
+    _mainRenderer->AddActor(fieldVideoActor);
 
     // Draw playing direction arrow in a lighter color.
     vtkSmartPointer<vtkPoints> arrowPoints = vtkSmartPointer<vtkPoints>::New();
@@ -635,7 +646,7 @@ void FieldWidget3D::addFieldActors()
 
 void FieldWidget3D::addGoalActors()
 {
-    // Get field dimensions 
+    // Get field dimensions
     double _FIELD_LENGTH = cEnvironmentField::getInstance().getLength();
     double post = cEnvironmentField::getInstance().getGoalPostWidth();
 
@@ -712,7 +723,7 @@ void FieldWidget3D::addRobotActor(uint8_t robotId)
 
     vtkSmartPointer<RobotLabel> label = vtkSmartPointer<RobotLabel>::New();
     label->initialize(robotId, _annotationRenderer, _teamActors[robotId]);
-    _annotationRenderer->AddActor(label);    
+    _annotationRenderer->AddActor(label);
 }
 
 void FieldWidget3D::addObstacleActor()
@@ -748,7 +759,7 @@ void FieldWidget3D::setObstaclePosition(PositionVelocity& posvel, ObjectId id)
             }
         }
     }
-    
+
     // update the actor
     if (actorIndex < 0)
     {
@@ -762,6 +773,20 @@ void FieldWidget3D::setObstaclePosition(PositionVelocity& posvel, ObjectId id)
         // reposition actor
         _obstacleActors[actorIndex]->VisibilityOn();
         _obstacleActors[actorIndex]->setPosition(posvel);
+    }
+}
+
+void FieldWidget3D::addTechnicalTeamAreaActor()
+{
+    _technicalTeamAreaActor = vtkSmartPointer<TechnicalTeamAreaVisualization>::New();
+    _mainRenderer->AddActor(_technicalTeamAreaActor);
+}
+
+void FieldWidget3D::updateTechnicalTeamArea()
+{
+    if (_technicalTeamAreaActor != NULL)
+    {
+        _technicalTeamAreaActor->update();
     }
 }
 
@@ -910,7 +935,7 @@ void FieldWidget3D::setBallPosition(PositionVelocity& posvel, ObjectId id, float
             }
         }
     }
-    
+
     // update the actor
     if (actorIndex < 0)
     {
@@ -941,7 +966,7 @@ void FieldWidget3D::setBallPosition(PositionVelocity& posvel, ObjectId id, float
         }
         _ballActors[actorIndex]->setOpacity(1.0 - age);
     }
-    
+
     // TODO: why had old ball updater this unlock mutex, but obstacle not? _renderMutex.unlock();
 }
 
@@ -1075,82 +1100,30 @@ void FieldWidget3D::renderDotAddActor(vtkRenderer* renderer, float x, float y, b
 void traceActor(vtkImageActor *actor, std::string name = "")
 {
     double d[6];
-    actor->GetPosition(d); 
+    actor->GetPosition(d);
     TRACE("%s GetPosition %6.2f %6.2f %6.2f", name.c_str(), d[0], d[1], d[2]);
-    actor->GetBounds(d); 
+    actor->GetBounds(d);
     TRACE("%s GetBounds %6.2f %6.2f %6.2f %6.2f %6.2f %6.2f", name.c_str(), d[0], d[1], d[2], d[3], d[4], d[5]);
-    actor->GetOrientation(d); 
+    actor->GetOrientation(d);
     TRACE("%s GetOrientation %6.2f %6.2f %6.2f %6.2f", name.c_str(), d[0], d[1], d[2], d[3]);
-    actor->GetScale(d); 
+    actor->GetScale(d);
     TRACE("%s GetScale %6.2f %6.2f %6.2f", name.c_str(), d[0], d[1], d[2]);
-    actor->GetOrigin(d); 
+    actor->GetOrigin(d);
     TRACE("%s GetOrigin %6.2f %6.2f %6.2f", name.c_str(), d[0], d[1], d[2]);
 }
 
 void traceCam(vtkCamera *camera, std::string name = "")
 {
     double d[4];
-    camera->GetPosition(d); 
+    camera->GetPosition(d);
     TRACE("%s GetPosition %6.2f %6.2f %6.2f", name.c_str(), d[0], d[1], d[2]);
-    camera->GetFocalPoint(d); 
+    camera->GetFocalPoint(d);
     TRACE("%s GetFocalPoint %6.2f %6.2f %6.2f", name.c_str(), d[0], d[1], d[2]);
-    camera->GetViewUp(d); 
+    camera->GetViewUp(d);
     TRACE("%s GetViewUp %6.2f %6.2f %6.2f", name.c_str(), d[0], d[1], d[2]);
-    double *d2 = camera->GetOrientation(); 
+    double *d2 = camera->GetOrientation();
     TRACE("%s GetOrientation %6.2f %6.2f %6.2f %6.2f", name.c_str(), d2[0], d2[1], d2[2], d2[3]);
 }
-
-void FieldWidget3D::cfRender()
-{
-    TRACE("cfRender");
-    // debug: current camera position
-    traceCam(_mainRenderer->GetActiveCamera(), "vtkCam");
-
-    // debug: image feed position
-    traceActor(cfImageActor, "cfImage");
-    
-    // assuming the VTK camera has the same position and focal point as the real camera,
-    // we can draw the camera feed behind the field (say 10m) with the proper scaling
-    // then actors will always be drawn correctly on top of it
-    // this requires a few parameters to be tuned once per camera mount (see camFeedParams.h)
-
-    // until we have sliders, we just load from some file
-    //cfParams.load("/home/robocup/pars.txt");
-    
-    // set camera position
-    vtkCamera* camera = _mainRenderer->GetActiveCamera();
-    Vector3D vecCam(cfParams.camPositionX, cfParams.camPositionY, cfParams.camPositionZ);
-    camera->SetPosition(vecCam.x, vecCam.y, vecCam.z);
-    camera->SetViewUp(0, 0, 1);
-    camera->ParallelProjectionOff();
-    camera->SetViewAngle(cfParams.viewAngle);
-    
-    // set image at center 
-    cfImageActor->SetPosition(0, 0, 0); 
-
-    // put image straight up, facing camera
-    cfImageActor->SetOrientation(90, 0, 0);
-    double angle = 180 + atan2(-vecCam.x, vecCam.y) * 180 / M_PI;
-    cfImageActor->RotateY(angle);
-
-    // tilt backwards
-    double camDist = sqrt(vecCam.x * vecCam.x + vecCam.y * vecCam.y);
-    angle = -atan2(vecCam.z, camDist) * 180 / M_PI;
-    cfImageActor->RotateX(angle);
-
-    // translate to background and center the image
-    double *imgCenter = cfImageActor->GetCenter();
-    Vector3D vecCenter(imgCenter[0], imgCenter[1], imgCenter[2]);
-    Vector3D vecOffset(cfParams.camOffsetX, cfParams.camOffsetY, cfParams.camOffsetZ);
-    Vector3D vecBack = -vecCam;
-    vecBack.Normalize();
-    vecBack *= cfParams.backgroundDistance;
-    vecBack -= (vecCenter + vecOffset);
-    cfImageActor->SetPosition(vecBack.x, vecBack.y, vecBack.z);
-    
-    // rotate the image to align up-vectors
-    cfImageActor->RotateZ(cfParams.upCorrection);
-}    
 
 
 void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_local, bool show_measurements)
@@ -1176,7 +1149,7 @@ void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_lo
     std::vector<diagMeasurement>::iterator it_meas = measurements.begin();
 
     while(it_obs != obstacles.end())
-    {        
+    {
         (*it_act)->VisibilityOn();
         (*it_act)->setValue(it_obs->gaussian2d);
         (*it_act)->setColor(0.0, 0.0, 1.0);
@@ -1188,7 +1161,7 @@ void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_lo
     if(show_measurements)
     {
         while(it_meas != measurements.end())
-        {        
+        {
             (*it_act)->VisibilityOn();
             (*it_act)->setValue(it_meas->gaussian2d);
             (*it_act)->setColor(1.0, 0.0, 0.0);
@@ -1203,5 +1176,5 @@ void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_lo
         (*it_act)->VisibilityOff();
         it_act++;
     }
-    
+
 }

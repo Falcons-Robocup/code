@@ -1,14 +1,8 @@
-peripheralsInterface/motors: {
-    Kp : 8000,
-    Ki : 2000,
-    Kd : 0,
-    iTh : 5,
-    iMax : 3283,
-    PwmMax : 500,
-    PwmMaxDeltaSize : 147704
-} 
-rosdistro: 'groovy'
-roslaunch:
-    uris: {host_localhost__52279: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}
-rosversion: '1.9.55'
-run_id: d837e3c8-6813-11e4-acf7-00197e8a14ee
+motorPlotEnabled    : False         # Enable Data Dump for plotting
+Kp                  : 8000          # P-value of PID (max=65536)                                              
+Ki                  : 2000          # I-value of PID (max=65536)
+Kd                  : 0             # D-value of PID (max=65536)
+iTh                 : 5             # Threshold of using I (iMin) -- (max=65536)
+iMax                : 3283          # Limits the maximum I value (max=100000)
+PwmMax              : 500           # PWM Maximum power (max=648)
+PwmMaxDeltaSize     : 147704        # PWM maximum step size per cycle (2.5ms, 400Hz, max=648<<16)

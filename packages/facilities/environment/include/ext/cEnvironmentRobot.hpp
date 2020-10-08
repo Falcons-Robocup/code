@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -43,7 +43,7 @@ class cEnvironmentRobot
 			~cEnvironmentRobot();
 			cEnvironmentRobot(cEnvironmentRobot const&); // Don't Implement
 			void operator=(cEnvironmentRobot const&);	   // Don't implement
-			void getJSON();
+			void getConfig();
 			float _radius, _radiusMargin;
 };
 

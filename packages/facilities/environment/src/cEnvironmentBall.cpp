@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,17 +17,16 @@
  */
 
 #include <ext/cEnvironmentCommon.hpp>
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 
 #include "ext/cEnvironmentBall.hpp"
-#include "json.h"
 using namespace std;
 
 
 cEnvironmentBall::cEnvironmentBall()
 {
-	getJSON();
+	getConfig();
 }
 
 cEnvironmentBall::~cEnvironmentBall()
@@ -40,50 +39,26 @@ float cEnvironmentBall::getRadius()
 	return _radius;
 };
 
-/*! read the JSON file(s) as part of constructing phase and fill the private class members containing the values
+/*! read the YAML file(s) as part of constructing phase and fill the private class members containing the values
  *
  */
-void cEnvironmentBall::getJSON()
+void cEnvironmentBall::getConfig()
 {
 	try
 	{
 
-		Json::Value root,ball;
+        // ballValues( <radius, 0.15>, ... )
+        std::vector< std::pair<std::string,std::string> > ballValues;
+        environmentCommon::readYAML("ball", ballValues);
 
-		bool parsedSuccess = environmentCommon::readJSON( root);
-
-
-		if(!parsedSuccess)
-		{
-			TRACE("Invalid JSON format read from cEnvironment.json file");
-		    throw;
-		}
-
-		if( ! root.isMember("ball"))
-		{
-			TRACE("Cannot read ball information from cEnvironment.json file");
-		    throw;
-		}
-		else
-		{
-			ball = root.get("ball", "ERROR");
-		}
-
-		if( ball.isMember("radius") )
-		{
-			// if the supplied value does not match the expected format force ERROR by offering invalid type as default as well
-			_radius = ball.get("radius", "ERROR").asFloat();
-		}
-		else
-		{
-			TRACE("JSON format issue with the JSON field 'ball.radius'");
-			throw;
-		}
+        // Find <radius, 0.15> in ballValues using key "radius"
+        auto radiusPair = std::find_if( ballValues.begin(), ballValues.end(), KeyEquals("radius") ); 
+        _radius = std::stof( radiusPair->second );
 
 	} catch (exception &e)
 	{
-    	printf("Invalid JSON format!");
-    	TRACE("Invalid JSON format for reading environment field inputs");
+    	printf("Invalid YAML format!");
+    	TRACE("Invalid YAML format for reading environment field inputs");
 		throw e;
 	}
 }

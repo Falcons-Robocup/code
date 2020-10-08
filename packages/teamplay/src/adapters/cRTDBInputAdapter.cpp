@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,7 +22,7 @@
 #include "int/worldModelInfo.hpp"
 #include "cDiagnostics.hpp"
 
-#include "FalconsCommon.h" //getRobotNumber(), getTeamChar()
+#include "falconsCommon.hpp" //getRobotNumber(), getTeamChar()
 #include "tracing.hpp"
 
 cRTDBInputAdapter::cRTDBInputAdapter()
@@ -44,84 +44,17 @@ void cRTDBInputAdapter::waitForRobotState(void (*iterateTeamplayFuncPtr) (void))
     }
 }
 
-behTreeReturnEnum cRTDBInputAdapter::getActionResult(int id)
+void cRTDBInputAdapter::getWorldModelData()
 {
-    TRACE_FUNCTION("");
-    T_ACTION_RESULT actionResult;
-    int r = 0;
-
-    // race conditions ...
-    // we cannot simply do GET because it might be that the PUT by motionPlanning not yet occurred
-    // we cannot simply do WAIT_FOR_PUT because it might be that the PUT by motionPlanning already occurred
-    // we have to make sure the ACTION_RESULT here matches with the sent ACTION, otherwise teamplay will behave erratically or even hang
-    // so an action ID was added and here we inspect it
-    actionResult.id = -1; // initialize before looping
-    int iteration = 0;
-    while (true)
-    {
-        iteration++;
-        if (iteration > 1000)
-        {
-            TRACE_WARNING_TIMEOUT(1.0, "motionPlanning did not return action %d", id);
-            return behTreeReturnEnum::FAILED; // hang in mp?
-        }
-        r = _rtdb->get(ACTION_RESULT, &actionResult);
-        if (r != RTDB2_SUCCESS)
-        {
-            TRACE_WARNING_TIMEOUT(1.0, "rtdb/mp failure %d", id);
-            return behTreeReturnEnum::FAILED; // something wrong with RTDB, or motionPlanning not yet initialized
-        }
-        if (actionResult.id == id)
-        {
-            //tprintf("OK result=%d", actionResult.result);
-            break; // success: we got what we were looking for
-        }
-        if (actionResult.id > id)
-        {
-            TRACE_WARNING_TIMEOUT(1.0, "getActionResult(%d) sync failure", id);
-            return behTreeReturnEnum::FAILED; // our result got lost, somehow motionPlanning proceeded with evaluating next action (!?)
-        }
-        // otherwise: sleep and try again, motionPlanning is still busy
-        tprintf("actionresult usleep id=%d", actionResult.id);
-        usleep(100);
-    }
-
-    behTreeReturnEnum result = behTreeReturnEnum::RUNNING;
-    if (r == RTDB2_SUCCESS)
-    {
-        switch (actionResult.result)
-        {
-            case actionResultTypeEnum::INVALID:
-            {
-                result = behTreeReturnEnum::INVALID;
-                break;
-            }
-            case actionResultTypeEnum::PASSED:
-            {
-                result = behTreeReturnEnum::PASSED;
-                break;
-            }
-            case actionResultTypeEnum::FAILED:
-            {
-                result = behTreeReturnEnum::FAILED;
-                break;
-            }
-            case actionResultTypeEnum::RUNNING:
-            {
-                result = behTreeReturnEnum::RUNNING;
-                break;
-            }
-        }
-    }
-    return result;
+    getWorldModelData(_myRobotId);
 }
 
-void cRTDBInputAdapter::getWorldModelData()
+void cRTDBInputAdapter::getWorldModelData(const int robotID)
 {
     TRACE_FUNCTION("");
 
     // poke worldModel to update
-    _wmClient.update();
+    _wmClient.update(robotID);
 
     // convert data to teamplay::worldModelInfo
     // TODO: replace all this type duplications and conversions with direct gets on wmClient
@@ -129,6 +62,7 @@ void cRTDBInputAdapter::getWorldModelData()
 
     // convert own robot position and velocity
     // TODO use robot.status, it is not part of teamplay::worldModelInfoOwnRobot - see ticket timmel:#614
+    wmInfo.ownRobot.number = robotID;
     wmInfo.ownRobot.position = _wmClient.getPosition();
     wmInfo.ownRobot.velocity = _wmClient.getVelocity();
 
@@ -138,7 +72,7 @@ void cRTDBInputAdapter::getWorldModelData()
     for (int agentId = 1; agentId <= MAX_ROBOTS; ++agentId)
     {
         robotState robot;
-        if (_wmClient.getRobotState(robot, agentId))
+        if (_wmClient.getRobotState(robot, agentId, robotID))
         {
             if (robot.hasBall)
             {
@@ -148,7 +82,7 @@ void cRTDBInputAdapter::getWorldModelData()
                 wmInfo.ballPossession.ballClaimedLocation.y = robot.ballAcquired.y;
             }
 
-            if (agentId != getRobotNumber() && robot.status == robotStatusEnum::INPLAY)
+            if (agentId != robotID && robot.status == robotStatusEnum::INPLAY)
             {
                 robotLocation loc;
                 loc.position = geometry::Pose2D(robot.position.x, robot.position.y, robot.position.Rz);
@@ -194,11 +128,6 @@ void cRTDBInputAdapter::getWorldModelData()
 
     // store
     cWorldModelInterface::getInstance().store(wmInfo);
-}
-
-cMotionPlanningClient& cRTDBInputAdapter::getMPClient()
-{
-    return _mpClient;
 }
 
 std::string cRTDBInputAdapter::getRole(const int robotID)

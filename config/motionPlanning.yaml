@@ -1,42 +1,27 @@
-MotionPlanningNode: {
-  getBall_obstacleThreshold : 3.0,
-  getBall_ballSpeedThreshold : 0.35,
-  getBall_ballSpeedScaling : 0.6,
-
-  interceptBall_obstacleThreshold : 3.0,
-  interceptBall_ballSpeedThreshold : 0.35,
-  interceptBall_ballSpeedScaling : 0.6,
-
-  keeperMove_YMaxOffset : 0.3,  # distance "out of the goal"
-  keeperMove_XGoalpostOffset : 0.45, # distance from the goalpost (sideways/X direction)
-  keeperMove_XYThreshold : 0.03,
-
-  moveToTarget_XYThreshold : 0.03,
-  moveToTarget_PhiThreshold : 0.01,
-
-  passToTarget_aimSettleTime : 0.2,
-  passToTarget_accuracy : 0.05, # keep trying, optimize for short pass
-  passToTarget_timeout : 1.0,
-  passToTarget_coarseAngle : 0.5,
-  passToTarget_disableBhDelay : 0.1, # for (short) passes, if tuned agressively, ballHandling will cause either small bump or reduce pass power
-  passToTarget_sleepAfterShoot : 0.3,
-
-  shootAtTarget_aimSettleTime : 0.1,
-  shootAtTarget_accuracy : 0.2,
-  shootAtTarget_timeout : 0.6,
-  shootAtTarget_coarseAngle : 0.5,
-  shootAtTarget_disableBhDelay : 0.0,
-  shootAtTarget_sleepAfterShoot : 0.3,
-
-  turnAwayFromOpponent_PhiThreshold : 0.01,
-} 
-
-rosdistro: 'groovy
-
-  '
-roslaunch:
-  uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}
-rosversion: '1.9.55
-
-  '
-run_id: d837e3c8-6813-11e4-acf7-00197e8a14ee
+getBallConfig:
+    obstacleThreshold:      3.0
+    ballSpeedThreshold:     0.35
+    ballSpeedScaling:       0.6
+interceptBallConfig:
+    obstacleThreshold:      3.0
+    ballSpeedThreshold:     0.35
+    ballSpeedScaling:       0.6
+    captureRadius:          2.1
+    activeIntercept:        False
+keeperMoveConfig:
+    yMaxOffset:             0.3   # distance "out of the goal"
+    xGoalpostOffset:        0.45  # distance from the goalpost (sideways/X direction)
+passToTargetConfig:
+    aimSettleTime:          0.2
+    accuracy:               0.05  # keep trying, optimize for short pass
+    timeout:                1.0
+    coarseAngle:            0.5
+    disableBhDelay:         0.1   # for (short) passes, if tuned agressively, ballHandling will cause either small bump or reduce pass power
+    sleepAfterShoot:        0.3
+shootAtTargetConfig:
+    aimSettleTime:          0.1
+    accuracy:               0.2
+    timeout:                0.6
+    coarseAngle:            0.5
+    disableBhDelay:         0.0
+    sleepAfterShoot:        0.3

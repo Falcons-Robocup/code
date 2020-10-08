@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,18 +20,18 @@
 #define CACTIONPASS_HPP_
 
 #include "int/actions/cAbstractAction.hpp"
+#include "int/types/cActionTypes.hpp"
 #include "int/types/configuration.hpp"
 
 class cActionPass : public cAbstractAction
 {
 public:
     cActionPass();
-    ~cActionPass();
 
     behTreeReturnEnum execute(const std::map<std::string, std::string> &parameters);
 
 private:
-
+    behTreeReturnEnum executePassType(const shootEnum pass_type);
 };
 
 #endif /* CACTIONSHOOT_HPP_ */

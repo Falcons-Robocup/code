@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,6 +20,7 @@
 #ifndef MOTIONSETPOINT_HPP_
 #define MOTIONSETPOINT_HPP_
 
+#include "actionTypeEnum.hpp"
 #include "vec3d.hpp"
 
 #include "RtDB2.h" // required for serialization
@@ -30,7 +31,7 @@ struct motionSetpoint
     actionTypeEnum     action;
     vec3d              position; // could be interpreted as a pose (in case of move) or vec3d (when shooting)
     bool               slow;
-    
+
     SERIALIZE_DATA(action, position, slow);
     // we might extend this (for instance with target velocity) - dont use SERIALIZE_DATA_FIXED
 };

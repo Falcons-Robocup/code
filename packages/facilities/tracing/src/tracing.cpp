@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -11,12 +11,18 @@
  ***/ 
  #include <cstdarg>
 #include <boost/algorithm/string.hpp> // for boost::is_any_of and boost::split
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
+#include <chrono>
 
 #include "tracing.hpp"
+
+static boost::mutex _mtx;
 
 static std::string* componentName = 0;
 static int sliceCounter = 1;
@@ -25,7 +31,7 @@ static int sliceCounter = 1;
 static bool hotFlush = false;
 
 // Copied from FalconsCommon.cpp
-std::string exec(const char* cmd) {
+std::string execCmd(const char* cmd) {
     boost::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
     if (!pipe) return "ERROR";
     char buffer[128];
@@ -38,6 +44,16 @@ std::string exec(const char* cmd) {
     return result;
 }
 
+std::string get_timestamp_as_string()
+{
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&in_time_t), "%Y%m%d_%H%M%S"); // 20200530_141105
+    return ss.str();
+}
+
 // This class determines the (static) traceOutputFile on first run
 InitTraceClass::InitTraceClass(bool _hotFlush)
 {
@@ -46,9 +62,9 @@ InitTraceClass::InitTraceClass(bool _hotFlush)
     // If no tracing file determined yet, do this now.
     if (traceOutputFile.compare("") == 0)
     {
-        std::string tracingFileStr = exec("getTracingFilename.py");
+        std::string tracingFileStr = execCmd("getTracingFilename.py");
         std::cout << "getTracingFilename output: '" << tracingFileStr << "'" << std::endl;
-        std::string newestLogdir = exec("newest_logdir.py");
+        std::string newestLogdir = execCmd("newest_logdir.py");
 
         std::ostringstream ss;
         ss << newestLogdir << "/" << tracingFileStr << ".json";
@@ -87,36 +103,45 @@ SliceTraceClass::SliceTraceClass()
     // 2. If filesize too large:
     if (fileSize > (1024 * 1024 * 10)) // 10MB
     {
+        _mtx.lock();
+
+        // 2a. Determine timestamp
+        std::string timestampStr = get_timestamp_as_string();
+
         // 2a. Close the file
         mtr_shutdown();
 
-        // 2b. Move file: trace_A1_pp_2.json -> trace_A1_pp_2.json.slice0
-        std::string cmd = "mv " + traceOutputFile + " " + traceOutputFile + ".slice" + std::to_string(sliceCounter);
-        exec(cmd.c_str());
+        // 2b. Move file: trace_A1_pp_2.json -> trace_A1_pp_2.json.20200530_141105.slice0
+        std::string cmd = "mv " + traceOutputFile + " " + traceOutputFile + "." + timestampStr + ".slice" + std::to_string(sliceCounter);
+        execCmd(cmd.c_str());
 
         // 2c. Start new traceOutputFile
         mtr_init(traceOutputFile.c_str());
 
         // 2d. Asynchronously compress the slice -> trace_A1_pp_2.json.slice0.tar.gz
-        boost::thread compressSliceThread = boost::thread(boost::bind(&SliceTraceClass::compressSlice, this));
+        boost::thread compressSliceThread = boost::thread(boost::bind(&SliceTraceClass::compressSlice, this, timestampStr));
+        compressSliceThread.detach();
+    
+        _mtx.unlock();
     }
 }
 
-void SliceTraceClass::compressSlice()
+void SliceTraceClass::compressSlice(std::string timestampStr)
 {
     // Extract filename from traceOutputFile
     // /var/tmp/falcons_control_20190623_155454/trace_A1_pp_2.json -> trace_A1_pp_2.json
     std::string filenameExclDir = traceOutputFile;
     filenameExclDir.replace(0, traceDir.size() + 1, ""); // '+1' to remove '/'
 
-    // Tar the slice
-    std::string compressedFilename = traceOutputFile + ".slice" + std::to_string(sliceCounter) + ".tar.gz";
-    std::string cmd = "tar -czf " + compressedFilename + " --directory=" + traceDir + " " + filenameExclDir + ".slice" + std::to_string(sliceCounter);
-    exec(cmd.c_str());
+    // Tar the slice:
+    // trace_A1_pp_2.json.20200530_141105.slice0 -> trace_A1_pp_2.json.20200530_141105.slice0.tar.gz
+    std::string compressedFilename = traceOutputFile + "." + timestampStr + ".slice" + std::to_string(sliceCounter) + ".tar.gz";
+    std::string cmd = "tar -czf " + compressedFilename + " --directory=" + traceDir + " " + filenameExclDir + "." + timestampStr + ".slice" + std::to_string(sliceCounter);
+    execCmd(cmd.c_str());
 
     // Remove the file that was just compressed
-    cmd = "rm " + traceOutputFile + ".slice" + std::to_string(sliceCounter);
-    exec(cmd.c_str());
+    cmd = "rm " + traceOutputFile + "." + timestampStr + ".slice" + std::to_string(sliceCounter);
+    execCmd(cmd.c_str());
 
     sliceCounter++;
 }
@@ -150,8 +175,18 @@ TraceClass& TraceClass::operator()(const char* format, ...)
 
 TraceClass& TraceClass::operator<<(const std::string& msg)
 {
-   _msg += msg;
-   return *this;
+    _msg += msg;
+    return *this;
+}
+
+std::string sanitize(std::string const &s)
+{
+    // work around an annoying limitation ... generated tracing json cannot handle nested " quotes
+    std::string tmp = s;
+    boost::replace_all(tmp, "\"", "'");
+    // in case a newline is part of the string, resulting json becomes invalid
+    boost::replace_all(tmp, "\n", " ");
+    return tmp;
 }
 
 void TraceClass::traceMsg(const std::string& msg)
@@ -177,7 +212,7 @@ void TraceClass::traceMsg(const std::string& msg)
     std::ostringstream str;
     str << *componentName << "/" << filename;
 
-    MTR_INSTANT_S(_fileName, _functionName, "msg", msg.c_str());
+    MTR_INSTANT_S(_fileName, _functionName, "msg", sanitize(msg).c_str());
 
     if (hotFlush)
     {

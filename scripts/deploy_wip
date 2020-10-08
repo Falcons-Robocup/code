@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Coen Tempelaars, June 2019
 
@@ -6,8 +6,8 @@
 
 
 import argparse
-import exceptions
 import os
+import falconspy
 import subprocess
 
 
@@ -19,7 +19,7 @@ def parse_arguments():
     parser.add_argument("files", nargs='*',
             help="list of files with absolute or relative paths, for example: *.json /tmp/*.py ../config.txt")
     parser.add_argument("-r", "--robots",   type=str, default="r1,r2,r3,r4,r5,r6,r7",
-            help="comma separated list of robots, for example: r1,r6,r3")
+            help="comma separated list of robots, for example: -r r1,r6,r3")
     return parser.parse_args()
 
 
@@ -33,11 +33,11 @@ def make_paths_absolute(paths):
 def get_work_in_progress(dryrun):
     files = list()
     command = "git status --porcelain | grep -E '^ M|^A |^AM|^M |^RM|^MM' | awk '{print $NF}'"
-    repository = "/home/robocup/falcons/code"
-    output = subprocess.check_output(command, shell=True, cwd=repository)
+    repository = falconspy.FALCONS_CODE_PATH
+    output = subprocess.check_output(command, shell=True, cwd=repository).decode()
     for line in output.splitlines():
         files.append(os.path.join(repository, line))
-    repository = "/home/robocup/falcons/teamplayData"
+    repository = falconspy.FALCONS_TPDATA_PATH
     output = subprocess.check_output(command, shell=True, cwd=repository)
     for line in output.splitlines():
         files.append(os.path.join(repository, line))
@@ -48,10 +48,10 @@ def is_alive(hostname, dryrun):
     command = "ping -W 1 -c 1 {0} >/dev/null 2>/dev/null".format(hostname)
 
     if dryrun:
-        print "Would have executed: %s" % command
+        print("Would have executed: %s" % command)
         return True
     else:
-        print "Executing: %s" % command
+        print("Executing: %s" % command)
         return (os.system(command) == 0)
 
 
@@ -59,9 +59,9 @@ def upload(abspath, robot, dryrun):
     command = "scp {0} {1}:{0}".format(abspath, robot)
 
     if dryrun:
-        print "Would have executed: %s" % command
+        print("Would have executed: %s" % command)
     else:
-        print "Executing: %s" % command
+        print("Executing: %s" % command)
         result = os.system(command)
         if result != 0:
             raise RuntimeError("Failed to upload {0} to robot {1}".format(abspath, robot))
@@ -89,6 +89,6 @@ if __name__ == '__main__':
             upload(file, robot, config.dryrun)
 
     if config.dryrun:
-        print "Would have uploaded {0} files to {1} robots".format(len(files), len(robots))
+        print("Would have uploaded {0} files to {1} robots".format(len(files), len(robots)))
     else:
-        print "Upload successful. Uploaded {0} files to {1} robots".format(len(files), len(robots))
+        print("Upload successful. Uploaded {0} files to {1} robots".format(len(files), len(robots)))

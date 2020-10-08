@@ -1,87 +1,64 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Used in tracing to figure out which file name to use.
 # This script is not supposed to be run standalone!
-#
-# Process tree typically looks like this (ps axf):
-#  3219 pts/26   S      0:00          |   |   \_ /bin/bash /home/robocup/falcons/code/packages/processManager/processStart A0 diagRecvNew
-#  3236 pts/26   S      0:00          |   |       \_ /bin/bash /home/robocup/falcons/code/packages/coachCommands/outputwrapper2 /var/tmp/falcons_control_20160225_193846 rosrun diagnostics diagCoachListener
-#  3241 pts/26   Sl     0:00          |   |           \_ /home/robocup/falcons/code/packages/facilities/diagnostics/bin/diagCoachListener
-#  3262 pts/26   S      0:00          |   |               \_ sh -c getProcessId
-#  3263 pts/26   S      0:00          |   |                   \_ /bin/bash /home/robocup/falcons/code/scripts/getProcessId
-#
-# so we need to traverse a few parents up, then get the last word, in this case 'diagRecvNew'.
-# 
 
 # EKPC 2018-09-13 Creation
 
 import os
 import subprocess
+import re
+
+### NOTE: If a process is logged as "unknown", please check that the process is started with 'processStart A0 <proc>'
+
 
 if __name__ == "__main__":
     pid = os.getpid()
 
-    fallBack = False
-    psOutput = ""
-    i = 0
-    while "processStart" not in psOutput:
+    # pstree -pls <PID>
+    # ->
+    # systemd(1)---systemd(982)---gnome-terminal-(1678)---bash(2115)---processStart(2940)---restartWrapper(2954)---outputwrapper2(2956)---teamplay_main(3017)
 
-        if int(pid) == 0:
-            print "unknown_0"
-            exit()
-       
-        # Grab parent process ID of this PID until we have the processStart
-        cmd = "ps -h -p%s -o ppid,cmd" % (pid) 
-        try:
-            psOutput = subprocess.check_output(cmd, shell=True).strip()
-        except:
-            print "unknown_%s" % (pid)
-            exit()
-        #print psOutput
+    # Get the PID of processStart
+    cmd = "pstree -pls %d" % (pid)
+    psTreeOutput = str(subprocess.check_output(cmd, shell=True)).strip()
 
-        pid = psOutput.split(" ")[0]
-        #print "new pid:", pid
+    psOutput = " "
 
-        i += 1
-        if i > 10:
-            fallBack = True
+    for process in psTreeOutput.split("---"):
+        if "processStart" in process:
+
+            # process == processStart(2940)
+            # get PID
+            p = re.compile("\(([0-9]+)\)")
+            ppid = p.search(process).group(1) # 2940
+
+            # ps --no-headers <PID>
+            # ->
+            # 2940 pts/1    S+     0:00 /bin/bash /home/robocup/falcons/code/packages/processManager/processStart tp
+            cmd = "ps --no-headers %s" % (ppid)
+            psOutput = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+
             break
 
+
     # Grab last word from psOutput
-    #print psOutput.split(" ")
+    #print(psOutput.split(" "))
     componentName = psOutput.split(" ")[-1]
     teamAndRobotID = psOutput.split(" ")[-2]
     
     # sanity checks, it may be that processStart was not used, or ...
+    fallBack = False
     if len(teamAndRobotID) > 2:
         fallBack = True
     if len(teamAndRobotID) == 2:
         if teamAndRobotID[0] not in "AB":
             fallBack = True
+
+    # if fallBack needed, print unknown
     if fallBack:
-        print "trace_A0_unknown"
+        print("trace_A0_unknown")
     else:
         # legacy behavior
-        print "trace_%s_%s" % (teamAndRobotID, componentName)
+        print("trace_%s_%s" % (teamAndRobotID, componentName))
 
-#function getPpid
-#{
-#    stat=($(</proc/$1/stat))
-#    ppid=${stat[3]}  
-#    echo $ppid
-#}
-#
-#pid=$$
-#maxdepth=6
-#for i in `seq 1 $maxdepth` ; do
-#    pid=$(getPpid $pid)
-#    pattern=`printf "^robocup %6d " $pid`
-#    output=`ps -ef | grep "processStart " | grep -v "grep processStart" | grep "$pattern" | awk '{print $NF}'`
-#    if [ ! -z "$output" ]; then
-#        echo $output
-#        exit 0
-#    fi
-#done
-#
-#echo "unknown$$"
-#

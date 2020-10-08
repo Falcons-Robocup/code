@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,7 +29,7 @@ bool GameData::anyRobotHasBall() const
         for (const auto& robotpair: teampair.second)
         {
             const auto& robot = robotpair.second;
-            if (robot.canKickBall(ball.getPosition()))
+            if (robot.hasBall())
             {
                 result = true;
             }
@@ -85,7 +85,7 @@ boost::optional<TeamID> GameData::getTeamWithBall() const
         for (const auto& robotpair: teampair.second)
         {
             const auto& robot = robotpair.second;
-            if (robot.canKickBall(ball.getPosition()))
+            if (robot.hasBall())
             {
                 result = teampair.first;
             }
@@ -103,7 +103,7 @@ boost::optional<RobotID> GameData::getRobotWithBall(const TeamID teamID) const
     for (const auto& robotpair: team.at(teamID))
     {
         const auto& robot = robotpair.second;
-        if (robot.canKickBall(ball.getPosition()))
+        if (robot.hasBall())
         {
             result = robotpair.first;
         }

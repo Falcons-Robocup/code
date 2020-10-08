@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,7 +16,7 @@
  *      Author: Coen Tempelaars
  */
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 #include "int/types/obstacle.hpp"
 

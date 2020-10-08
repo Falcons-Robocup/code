@@ -1,30 +1,15 @@
 #!/bin/bash
 #
-# Unittests: component level rosmake -t (using GoogleTestFramework).
+# Unittests: component level tests (using GoogleTestFramework).
+
 
 
 # make a new logdir
 createLogdir
 
-# start a roscore 
-processStopAll
-processStart roscore &
-
-# re-use the registered list of components in falconsbuild.sh
-# note that most components don't have an explicit test suite
-
-rosmake --test-only `package_list | grep -v teamplay | grep -v simulation` 
+# run tests
+fmake --test-only
 retval=$?
-
-# stop roscore silently 
-# TODO did not succeed in making it silent ...
-(
-    processStop roscore
-    processStopAll
-) >/dev/null 2>&1 
-
-# only on buildserver: keep track of state and post a comment to commit in Gitlab when state changes
-processBuildServerResult UNITTESTS $retval
 
 # exit
 exit $retval

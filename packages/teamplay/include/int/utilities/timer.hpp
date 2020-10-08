@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,6 +19,8 @@
 #ifndef TIMER_HPP_
 #define TIMER_HPP_
 
+#include "FalconsRtDB2.hpp" // for rtime
+
 namespace teamplay
 {
 
@@ -29,9 +31,11 @@ public:
 
     virtual void reset();
     virtual bool hasElapsed( const double nrOfSeconds ) const;
+    virtual bool hasStarted() const;
 
 private:
-    struct timeval _start_time;
+    rtime _start_time;
+    bool _has_started;
 
 };
 

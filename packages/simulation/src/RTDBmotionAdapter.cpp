@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -32,23 +32,12 @@ Velocity2D RTDBMotionAdapter::getVelocity (const TeamID& teamID, const RobotID& 
 {
     TRACE_FUNCTION("");
     T_ROBOT_VELOCITY_SETPOINT robotVelocitySetpoint;
-    int ageMs = 0;
     auto robotNumber = getRobotNumber(robotID);
     auto rtdbConnection = getRTDBConnection(teamID, robotID);
-    auto r = rtdbConnection->get(ROBOT_VELOCITY_SETPOINT, &robotVelocitySetpoint, ageMs, robotNumber);
+    auto r = rtdbConnection->get(ROBOT_VELOCITY_SETPOINT, &robotVelocitySetpoint, robotNumber);
     if (r != RTDB2_SUCCESS)
     {
         throw std::runtime_error("Error getting ROBOT_VELOCITY_SETPOINT from RtDB");
-    }
-    if (ageMs >= MAXIMUM_AGE_MS)
-    {
-        //throw std::runtime_error("ROBOT_VELOCITY_SETPOINT data from RtDB is too old");
-        // with current execution architecture, it is very possible / likely for setpoint to grow old
-        // so we should not throw an error, instead apply a kind of inertia/watchdog: zero velocity
-        // (otherwise, behavior in simulation would be that robot would continue to drift off forever with its last small nonzero setpoint
-        robotVelocitySetpoint.x = 0.0;
-        robotVelocitySetpoint.y = 0.0;
-        robotVelocitySetpoint.Rz = 0.0;
     }
     tprintf("get ROBOT_VELOCITY_SETPOINT [%s %s] robotVelocity=[%6.2f, %6.2f, %6.2f]",
                       enum2str(teamID), enum2str(robotID),
@@ -65,17 +54,12 @@ Kicker RTDBMotionAdapter::getKickerData (const TeamID& teamID, const RobotID& ro
 {
     TRACE_FUNCTION("");
     T_KICKER_SETPOINT kickerSetpoint;
-    int ageMs = 0;
     auto robotNumber = getRobotNumber(robotID);
     auto rtdbConnection = getRTDBConnection(teamID, robotID);
-    auto r = rtdbConnection->get(KICKER_SETPOINT, &kickerSetpoint, ageMs, robotNumber);
+    auto r = rtdbConnection->get(KICKER_SETPOINT, &kickerSetpoint, robotNumber);
     if (r != RTDB2_SUCCESS)
     {
         throw std::runtime_error("Error getting KICKER_SETPOINT from RtDB");
-    }
-    if (ageMs >= MAXIMUM_AGE_MS)
-    {
-        throw std::runtime_error("KICKER_SETPOINT data from RtDB is too old");
     }
     tprintf("get KICKER_SETPOINT [%s %s] kickerHeight=%6.2f kickerPower=%6.2f",
             enum2str(teamID), enum2str(robotID),
@@ -88,17 +72,12 @@ bool RTDBMotionAdapter::hasBallHandlersEnabled (const TeamID& teamID, const Robo
 {
     TRACE_FUNCTION("");
     T_BALLHANDLERS_SETPOINT ballhandlersSetpoint;
-    int ageMs = 0;
     auto robotNumber = getRobotNumber(robotID);
     auto rtdbConnection = getRTDBConnection(teamID, robotID);
-    auto r = rtdbConnection->get(BALLHANDLERS_SETPOINT, &ballhandlersSetpoint, ageMs, robotNumber);
+    auto r = rtdbConnection->get(BALLHANDLERS_SETPOINT, &ballhandlersSetpoint, robotNumber);
     if (r != RTDB2_SUCCESS)
     {
         throw std::runtime_error("Error getting BALLHANDLERS_SETPOINT from RtDB");
-    }
-    if (ageMs >= MAXIMUM_AGE_MS)
-    {
-        throw std::runtime_error("BALLHANDLERS_SETPOINT data from RtDB is too old");
     }
     tprintf("get BALLHANDLERS_SETPOINT [%s %s] enabled=%s",
             enum2str(teamID), enum2str(robotID),

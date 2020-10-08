@@ -1,27 +1,70 @@
-BallHandlingNode: {
-  AngleSetpoint: 0.8,
-  BallPossessionAngleThresholdOff: 0.2,
-  BallPossessionAngleThresholdOn: 0.6,
-  ArmLiftedAngleThreshold: 0.4,
-  BallPossessionTimeInterval: 300,
+# note: angles are in fractions, where 0.0 is down and 1.0 is up
+angleSetpoint:               0.8 # ball control setpoint angle
+armLiftedAngleThreshold:     0.4 # threshold when to consider an arm 'lifted' (used in feedForward and extraPull)
+ballPossession:
+    angleThresholdOn:        0.6 # angle where ball is seen as detected
+    angleThresholdOff:       0.2 # angle where ball is seen as no longer detected
+    minimumTimeUp:           0.1 # time in sec. after which ball possession becomes true after both arms go up
+feedForward:
+    enabledWithoutBall:      false # enabling it would probably negatively affect ball acceptance
+    enabledWithBall:         true # prevent losing the ball while dribbling
+    factorX:                 10.0 # tuning parameters, multiplier to current robot velocity feedback
+    factorY:                 -10.0
+    factorRz:                4.0
+extraPull: # tricks to suck in a ball which is not fully in yet (only one arm 'lifted')
+    enabledWithoutBall:      true # functionality is meant this, to increase the chance/speed of a partial ball possession becoming full ball possession
+    enabledWithBall:         false # enabling would not help much, in fact maybe cause problems
+    setpointVelocity:        60 # extra velocity in rad/s to apply
 
-  EnableRobotVelocityFeedForward: True,
-  DisableRobotVelocityFeedForwardWhenNoBallPossession: True,
-  XFeedForwardVelocityFactor: 10.0,
-  YFeedForwardVelocityFactor: -10.0,
-  ThetaFeedForwardVelocityFactor: 4.0,
-
-  EnableExtraPullForceWhenSingleArmUp: True,
-  DisableExtraPullForceWhenBallPossession: True,
-  ExtraPullForceVelocity: 60.0
-} 
-rosdistro: 'groovy
-
-  '
-roslaunch:
-  uris: {host_localhost__52278: 'http://localhost:52278/', host_localhost__32819: 'http://localhost:32819/'}
-rosversion: '1.9.55
-
-  '
-run_id: d837e3c8-6813-11e4-acf7-00197e8a14ee
+# to calculate between angles in fractions and sensor values, calibration is required of the (nonlinear!) sensors
+calibration: 
+-   robotId: 1 # keeper is not equipped with ballHandlers
+    leftArm:
+        down:  0
+        up:    0
+    rightArm:
+        down:  0
+        up:    0
+-   robotId: 2
+    leftArm:
+        down:  3056
+        up:    3970
+    rightArm:
+        down:  3008
+        up:    3877
+-   robotId: 3
+    leftArm:
+        down:  2875
+        up:    3773
+    rightArm:
+        down:  2959
+        up:    3817
+-   robotId: 4
+    leftArm:
+        down:  2321
+        up:    3174
+    rightArm:
+        down:  2492
+        up:    3306
+-   robotId: 5
+    leftArm:
+        down:  2665
+        up:    3629
+    rightArm:
+        down:  2576
+        up:    3678
+-   robotId: 6
+    leftArm:
+        down:  2632
+        up:    3509
+    rightArm:
+        down:  2697
+        up:    3735
+-   robotId: 7
+    leftArm:
+        down:  1287
+        up:    1770
+    rightArm:
+        down:  1673
+        up:    2133
 

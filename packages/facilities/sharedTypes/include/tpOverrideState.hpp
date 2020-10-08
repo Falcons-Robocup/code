@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -28,13 +28,13 @@
 struct tpOverrideState
 {
     bool                     active;
-    int                      id;
     tpOverrideLevelEnum      level;
-    treeEnum                 treeValue;
-    tpActionEnum             action;
-    std::map< std::string, std::string> params;
+    treeEnum                 treeValue;         // Used when level={GAMESTATE,ROLE,BEHAVIOR}
+    tpActionEnum             tpAction;          // Used when level=TP_ACTION
+    std::map< std::string, std::string> params; // Used when level={GAMESTATE,ROLE,BEHAVIOR,TP_ACTION}
+    action                   mpAction;          // Used when level=MP_ACTION
     
-    SERIALIZE_DATA(active, id, level, treeValue, action, params);
+    SERIALIZE_DATA(active, level, treeValue, tpAction, params, mpAction);
 };
 
 

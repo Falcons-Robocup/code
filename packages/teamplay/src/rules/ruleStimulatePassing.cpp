@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,7 +18,7 @@
 
 #include "int/rules/ruleStimulatePassing.hpp"
 #include "int/stores/configurationStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
 
 namespace teamplay {
 
@@ -43,16 +43,8 @@ void ruleStimulatePassing::robotClaimsBall(const int robot_id)
 
 bool ruleStimulatePassing::isRuleValid() const
 {
-    if (teamplay::configurationStore::getConfiguration().isRuleStimulatePassingEnabled())
-    {
-        TRACE("Rule stimulate passing is enabled. Number of robots that claimed ball is ") << std::to_string(_robotsThatClaimedBall.size());
-        return (_robotsThatClaimedBall.size() >= 2);
-    }
-    else
-    {
-        TRACE("Rule stimulate passing is disabled. Always return true.");
-        return true;
-    }
+    TRACE("Number of robots that claimed ball is ") << std::to_string(_robotsThatClaimedBall.size());
+    return (_robotsThatClaimedBall.size() >= 2);
 }
 
 } /* namespace teamplay */

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,6 +16,7 @@
 #define MULTICAM_HPP
 
 #include "ballDetection.hpp"
+#include "obstacleDetection.hpp"
 #include "cameraReceive.hpp"
 #include "camSysReceive.hpp"
 #include "configurator.hpp"
@@ -36,15 +37,15 @@ class multiCamLibrary
 {
 private:
     configurator *conf;
-    ballDetection *cyanDet;
-    ballDetection *magentaDet;
+    obstacleDetection *cyanDet;
+    obstacleDetection *magentaDet;
     ballDetection *ballDet[4];
     ballDetection *ballFarDet[4];
     cameraReceive *camAnaRecv;
     camSysReceive *camSysRecv;
     determinePosition *detPos;
-    deWarper *dewarp[4];
-    ballDetection *obstDet[4];
+    Dewarper *dewarp[4];
+    obstacleDetection *obstDet[4];
     linePointDetection *linePoint;
     localization *loc;
     multicastSend *multSend;

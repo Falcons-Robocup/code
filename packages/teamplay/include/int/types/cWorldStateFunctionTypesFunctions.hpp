@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -41,6 +41,7 @@ std::map<worldStateFunctionEnum, worldstateFunctionType> worldStateFunctionMappi
             (worldStateFunctionEnum::IS_FREEKICK_SETPIECE, boost::bind(&isFreekickSetPiece, _1))
             (worldStateFunctionEnum::IS_CORNER_SETPIECE, boost::bind(&isCornerSetPiece, _1))
             (worldStateFunctionEnum::IS_THROWIN_SETPIECE, boost::bind(&isThrowinSetPiece, _1))
+            (worldStateFunctionEnum::IS_PARKING_SETPIECE, boost::bind(&isParkingSetPiece, _1))
             (worldStateFunctionEnum::WITHIN_1M_OF_BALL, boost::bind(&within1mOfBall, _1))
             (worldStateFunctionEnum::DOES_TEAM_HAVE_BALL, boost::bind(&doesTeamHaveBall, _1))
             (worldStateFunctionEnum::DOES_OWN_ROBOT_HAVE_BALL, boost::bind(&doesOwnRobotHaveBall, _1))
@@ -65,6 +66,7 @@ std::map<worldStateFunctionEnum, worldstateFunctionType> worldStateFunctionMappi
             (worldStateFunctionEnum::IS_BALL_APPROACHING_ROBOT, boost::bind(&isBallApproachingRobot, _1))
             (worldStateFunctionEnum::IS_PASS_APPROACHING_ROBOT, boost::bind(&isPassApproachingRobot, _1))
             (worldStateFunctionEnum::IS_OPPONENT_HALF_REACHABLE, boost::bind(&isOpponentHalfReachable, _1))
+            (worldStateFunctionEnum::IS_IN_SCORING_POSITION, boost::bind(&isInScoringPosition, _1))
             (worldStateFunctionEnum::IS_SHOT_ON_GOAL_BLOCKED, boost::bind(&isShotOnGoalBlocked, _1))
             (worldStateFunctionEnum::IS_LOB_SHOT_ON_GOAL_BLOCKED, boost::bind(&isLobShotOnGoalBlocked, _1))
             (worldStateFunctionEnum::IS_PASS_TO_CLOSEST_TEAMMEMBER_BLOCKED, boost::bind(&isPassToClosestTeammemberBlocked, _1))
@@ -76,29 +78,9 @@ std::map<worldStateFunctionEnum, worldstateFunctionType> worldStateFunctionMappi
             (worldStateFunctionEnum::DOES_ASSISTANT_HAVE_BALL, boost::bind(&doesAssistantHaveBall, _1))
             (worldStateFunctionEnum::ALL_ROBOTS_ACTIVE, boost::bind(&allRobotsActive, _1))
             (worldStateFunctionEnum::DEFENDING_STRATEGY_ON, boost::bind(&defendingStrategyOn, _1))
-            (worldStateFunctionEnum::DRIBBLE_STRATEGY_ON, boost::bind(&dribbleStrategyOn, _1))
             (worldStateFunctionEnum::MULTIPLE_OPPONENTS_ON_OWN_HALF, boost::bind(&multipleOpponentsOnOwnHalf, _1))
             (worldStateFunctionEnum::IS_AN_ATTACKER_ON_OPP_HALF, boost::bind(&isAnAttackerOnOppHalf, _1))
-            (worldStateFunctionEnum::SHOT_THRESHOLD_REACHED, boost::bind(&shotThresholdReached, _1))
-            (worldStateFunctionEnum::SHOT_THRESHOLD_REACHABLE, boost::bind(&shotThresholdReachable, _1))
             ;
 
-/*
- // looked useful but is not used
-static worldStateFunctionEnum worldStateFunctionStrToEnum(const std::string enumString)
-{
-    try
-    {
-        const worldStateFunctionEnum retVal = worldStateFunctionMappingStrToEnum.at(enumString);
-        return retVal;
-    }
-    catch (std::exception &e)
-    {
-        TRACE_ERROR("Caught exception: %s. enumString: %s", e.what(), enumString.c_str());
-        std::cout << "Caught exception: " << e.what() << std::endl;
-    }
-    return worldStateFunctionEnum::INVALID;
-}
-*/
 
 #endif /* CWORLDSTATEFUNCTIONTYPESFUNCTIONS_HPP_ */

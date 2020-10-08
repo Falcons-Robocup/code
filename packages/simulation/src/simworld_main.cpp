@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -25,8 +25,6 @@
 #include "int/simworld.hpp"
 #include "tracing.hpp"
 
-const static int PERIOD_MS = (1000 / SIMULATION_FREQUENCY);
-
 
 int main(int argc, char **argv)
 {
@@ -38,16 +36,18 @@ int main(int argc, char **argv)
         Simworld simworld;
         simworld.initialize();
 
-        while(true)
-        {
-            std::chrono::system_clock::time_point timePoint =
-                    std::chrono::system_clock::now() + std::chrono::milliseconds(PERIOD_MS);
+        // control will:
+        // - waitForPut SIMULATION_TICK
+        // - advance simulation world by one tick
+        // - advance the simulated timestamp
+        // - publish new ROBOT_STATE
+        std::thread simworldControlThread = std::thread(&Simworld::control, &simworld);
 
-            simworld.control();
-            WRITE_TRACE;
-
-            std::this_thread::sleep_until(timePoint);
-        }
+        // loop will:
+        // - get simulation tick frequency (e.g., 20hz)
+        // - sleep to maintain 20hz frequency
+        // - put SIMULATION_TICK
+        simworld.loop();
     }
     catch(std::exception& e)
     {

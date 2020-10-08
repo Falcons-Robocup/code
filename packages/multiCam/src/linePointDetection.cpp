@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,9 +23,9 @@
 //  - receive the line points from the camera boards (typical. 400 in total)
 //    - each camera provides the line point as x and y in pixels related to that camera
 //    - typical x value would 10 to 350 and y value would be 10 to 400
-//  - deWarp the line points (camera pixels to meters)
-//    - the deWarp function uses a lookup table that has been calibrated in advance
-//  - map the deWarped line points of all cameras in the linePointField
+//  - dewarp the line points (camera pixels to meters)
+//    - the dewarp function uses a lookup table that has been calibrated in advance
+//  - map the dewarped line points of all cameras in the linePointField
 //    - the linePointField typically would have a size of 800x800 pixels and represents
 //      an area of 5x5 meters on the soccer field
 //  - select a number (e.g. 100) of pixels in a homogeneous way from the linePointField
@@ -51,7 +51,7 @@
 using namespace cv;
 using namespace std;
 
-linePointDetection::linePointDetection(cameraReceive *camRecv, configurator *conf, deWarper *dewarp[4],
+linePointDetection::linePointDetection(cameraReceive *camRecv, configurator *conf, Dewarper *dewarp[4],
         preprocessor *prep) {
     this->camRecv = camRecv;
     this->conf = conf;
@@ -140,8 +140,15 @@ angleRadiusSt linePointDetection::cartesianToPolarLongAxis(size_t cam, linePoint
         int16_t yFieldTmp = 0;
 
         // convert from camera dimensions (pixels) to field dimensions (meters)
-        dewarp[cam]->transform(cartesian.xBegin, cartesian.yBegin, yField, xFieldBegin); // closest by pixel, use this yField to calculate angle
-        dewarp[cam]->transform(cartesian.xEnd, cartesian.yBegin, yFieldTmp, xFieldEnd); // do not use yField, use this one to calculate the width
+        bool ok = dewarp[cam]->transformFloor(cartesian.xBegin, cartesian.yBegin, yField, xFieldBegin); // closest by pixel, use this yField to calculate angle
+        if (ok)
+        {
+            ok = dewarp[cam]->transformFloor(cartesian.xEnd, cartesian.yBegin, yFieldTmp, xFieldEnd); // do not use yField, use this one to calculate the width
+        }
+        if (!ok)
+        {
+            polar.valid = false; // outside calibration range, reject
+        }
 
         // TODO: add checker for bogus values
         // TODO: figure out why width needs to be very large for far away points
@@ -215,9 +222,16 @@ angleRadiusSt linePointDetection::cartesianToPolarShortAxis(size_t cam, linePoin
         int16_t yFieldBegin = 0;
         int16_t yFieldEnd = 0;
 
-        // convert from camera dimensions (pixels) to field dimensions (meters)
-        dewarp[cam]->transform(cartesian.xBegin, cartesian.yBegin, yFieldBegin, xField);
-        dewarp[cam]->transform(cartesian.xBegin, cartesian.yEnd, yFieldEnd, xFieldTmp);
+        // convert from camera dimensions (pixels) to field dimensions (millimeters)
+        bool ok = dewarp[cam]->transformFloor(cartesian.xBegin, cartesian.yBegin, yFieldBegin, xField);
+        if (ok)
+        {
+            ok = dewarp[cam]->transformFloor(cartesian.xBegin, cartesian.yEnd, yFieldEnd, xFieldTmp);
+        }
+        if (!ok)
+        {
+            polar.valid = false; // outside calibration range, reject
+        }
 
         yField = round((yFieldBegin + yFieldEnd) / 2.0);
 

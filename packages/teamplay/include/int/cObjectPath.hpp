@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -19,7 +19,7 @@
 #ifndef COBJECTPATH_HPP_
 #define COBJECTPATH_HPP_
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/segment.hpp>

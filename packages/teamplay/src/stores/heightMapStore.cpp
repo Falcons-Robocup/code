@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -34,7 +34,11 @@
 #include "int/heightmaps/hmObstaclesBlockingTeammates.hpp"
 
 #include "int/stores/configurationStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "int/stores/robotStore.hpp"
+#include "cDiagnostics.hpp"
+#include "tracing.hpp"
+
+#include "falconsCommon.hpp"
 
 using namespace teamplay;
 
@@ -64,6 +68,10 @@ void heightMapStore::precalculateAll()
     {
         try
         {
+            std::ostringstream msg;
+            msg << kv.second->getFilename();
+            TRACE_SCOPE("CALC_HEIGHTMAP", msg.str().c_str());
+
             kv.second->precalculate();
         }
         catch (std::exception& e)
@@ -85,7 +93,7 @@ std::vector<std::string> heightMapStore::getDescriptions() const
     return descriptions;
 }
 
-abstractHeightMap heightMapStore::combineHeightmaps( const tpActionEnum& action, const parameterMap_t& params ) const
+abstractHeightMap heightMapStore::combineHeightmaps( const CompositeHeightmapName& name, const parameterMap_t& params ) const
 {
     abstractHeightMap sum;
 
@@ -93,7 +101,7 @@ abstractHeightMap heightMapStore::combineHeightmaps( const tpActionEnum& action,
     {
         try
         {
-            float factor = configurationStore::getConfiguration().getHeightMapFactorForAction(action, kv.first);
+            float factor = configurationStore::getConfiguration().getHeightmapFactor(name, kv.first);
 
             if (factor > 0.0)
             {
@@ -111,24 +119,65 @@ abstractHeightMap heightMapStore::combineHeightmaps( const tpActionEnum& action,
     return sum;
 }
 
-Point2D heightMapStore::getOptimum( const tpActionEnum& action, const parameterMap_t& params ) const
+Point2D heightMapStore::getOptimum( const CompositeHeightmapName& name, const parameterMap_t& params ) const
 {
     TRACE("Combine heightmaps and find optimum");
 
-    auto sum = combineHeightmaps(action, params);
+    auto sum = combineHeightmaps(name, params);
 
-    TRACE("Found optimum at x: ") << std::to_string(sum.getOptimum().x)
-        << ", y: "  << std::to_string(sum.getOptimum().y);
+    TRACE("Found optimum at x: ") << std::to_string(sum.getOptimum()._center.x)
+        << ", y: "  << std::to_string(sum.getOptimum()._center.y);
 
-    return sum.getOptimum();
+    return sum.getOptimum()._center;
 }
 
-void heightMapStore::generateJPG( const tpActionEnum& action, const std::string& filename, const parameterMap_t& params ) const
+Point2D heightMapStore::getOptimum( const CompositeHeightmapName& name, const parameterMap_t& params, const float tolerance ) const
 {
-    auto sum = combineHeightmaps(action, params);
-
-    if (teamplay::configurationStore::getConfiguration().getHeightMapsGeneratePictures())
+    Point2D optimalLocation;
+    
+    TRACE("Combine heightmaps and find optimum with tolerance: %3.1f", tolerance);
+    
+    auto sum = combineHeightmaps(name, params);
+    auto optimum = sum.getOptimum();
+    auto own_location = robotStore::getInstance().getOwnRobot().getLocation();
+    
+    if (calc_distance(optimum._center, own_location) < heightMapValues::RESOLUTION)
     {
-        sum.generateJPG(filename);
+        TRACE("Optimal location is near own location");
+        optimalLocation = own_location;
     }
+    else
+    {
+        try
+        {
+            auto valueAtOptimalLocation = optimum.getValue();
+            auto valueAtOwnLocation = sum.getFieldAtCoordinate(own_location).getValue();
+            TRACE("Value at optimal location: %4.3f", valueAtOptimalLocation);
+            TRACE("Value at own location: %4.3f", valueAtOwnLocation);
+            if ((valueAtOptimalLocation - valueAtOwnLocation) <= tolerance)
+            {
+                optimalLocation = own_location;
+            }
+            else
+            {
+                optimalLocation = optimum._center;
+            }
+        }
+        catch (std::exception&)
+        {
+            TRACE("Own location (%3.3f, %3.3f) is outside the heightmap", own_location.x, own_location.y);
+            optimalLocation = optimum._center; // ignore the exception and return the calculated optimum
+        }
+    }
+    
+    return optimalLocation;
+}
+
+cv::Mat heightMapStore::generateOpenCVMatrix( const CompositeHeightmapName& name ) const
+{
+    parameterMap_t params;
+    params["POI"] = "ball";  // Not so nice to hard code this parameter, but good enough for now
+    auto sum = combineHeightmaps(name, params);
+    auto image = sum.generateOpenCVMatrix();
+    return image;
 }

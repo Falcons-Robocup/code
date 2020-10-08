@@ -1,8 +1,0 @@
-int8 COORD_TYPE_ROBOT = 0
-int8 COORD_TYPE_FIELD = 1
-
-geometry_msgs/Vector3 vel
-int8 coord_type
-rosMsgs/t_polygon2D[] forbiddenAreas
----
-

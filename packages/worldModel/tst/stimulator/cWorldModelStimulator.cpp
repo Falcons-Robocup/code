@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,7 +21,8 @@
 #include <cstdio>
 
 // other Falcons packages
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
+#include "tracing.hpp"
 
 // internal includes
 #include "cWorldModelStimulator.hpp"
@@ -32,6 +33,7 @@ cWorldModelStimulator::cWorldModelStimulator(int agentId, std::string inputFile,
     _outputFile = outputFile;
     _agentId = agentId; // TODO I think we can strip this -- script sets env, wm knows itself which agent it is
     _component = "worldModel";
+    INIT_TRACE;
 }
 
 cWorldModelStimulator::~cWorldModelStimulator()

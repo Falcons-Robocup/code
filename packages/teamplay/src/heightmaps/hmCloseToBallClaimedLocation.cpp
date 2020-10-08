@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,10 +18,10 @@
 
 #include "int/heightmaps/hmCloseToBallClaimedLocation.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "int/stores/ballStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "tracing.hpp"
 
 using namespace teamplay;
 
@@ -45,6 +45,10 @@ void hmCloseToBallClaimedLocation::precalculate()
                 if (distanceToBallClaimedLocation > 3.0)  // TODO: this range should be read from teamplayRules.yaml
                 {
                     _heightMap(i, j).setValue(heightMapValues::MIN);
+                }
+                else
+                {
+                    _heightMap(i, j).setValue(heightMapValues::NEUTRAL);
                 }
             }
         }

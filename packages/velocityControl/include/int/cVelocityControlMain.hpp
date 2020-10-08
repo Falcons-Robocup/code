@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -26,7 +26,7 @@
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 #include "int/cVelocityControlTypes.hpp"
 #include "int/cVelocityControlData.hpp"

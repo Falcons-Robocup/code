@@ -6,10 +6,6 @@
 # 
 
 
-cd /home/robocup/falcons/code
-if [ -z "`imageStatus`" ]; then
-    git rev-parse --abbrev-ref HEAD
-else
-    imageStatus
-fi
+cd $FALCONS_CODE_PATH
+git rev-parse --abbrev-ref HEAD
 

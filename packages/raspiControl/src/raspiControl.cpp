@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -152,7 +152,7 @@ void raspiControl::camControlSetup() {
 	PLL_OP_MPY = PLL_OP_MPY_DEFAULT; // 0x030c-0x030d
 
 	string clockConfig = "camera clock";
-	namedWindow(clockConfig, CV_WINDOW_NORMAL);
+	namedWindow(clockConfig, cv::WINDOW_NORMAL);
 	createTrackbar("EXCK_FREQ", clockConfig, &EXCK_FREQ, 0x8000); // 0x012a, 0x012b
 	createTrackbar("VTPXCK_DIV", clockConfig, &VTPXCK_DIV, 10); // 0x0301, 5 bits, but only values 4, 5, 8 and 10 are allowed
 	createTrackbar("VTSYCK_DIV", clockConfig, &VTSYCK_DIV, 3); // 0x03O3, 2 bits, but only value 1 is allowed
@@ -172,7 +172,7 @@ void raspiControl::camControlSetup() {
 	blackLevel = BLACK_LEVEL;
 
 	string cameraConfig = "camera config";
-	namedWindow(cameraConfig, CV_WINDOW_NORMAL);
+	namedWindow(cameraConfig, cv::WINDOW_NORMAL);
 	createTrackbar("reset", cameraConfig, &cameraReset, 1); // 0x0103
 	createTrackbar("verbose", cameraConfig, &cameraVerbose, 1);
 	createTrackbar("test pattern", cameraConfig, &testPattern, 9);
@@ -196,7 +196,7 @@ void raspiControl::camControlSetup() {
 	}
 
 	string sizeConfig = "dimensions";
-	namedWindow(sizeConfig, CV_WINDOW_NORMAL);
+	namedWindow(sizeConfig, cv::WINDOW_NORMAL);
 	createTrackbar("lines", sizeConfig, &lines, 3000);
 	createTrackbar("pixels", sizeConfig, &pixels, 4000);
 	createTrackbar("p offset cam0", sizeConfig, &pixelsOffset[0], 32);
@@ -221,7 +221,7 @@ void raspiControl::camControlSetup() {
 	linePixelsMin = LINE_PIXELS_MIN;
 
 	string lineConfig = "lines";
-	namedWindow(lineConfig, CV_WINDOW_NORMAL);
+	namedWindow(lineConfig, cv::WINDOW_NORMAL);
 	createTrackbar("line value min", lineConfig, &lineValMin, 255);
 	createTrackbar("line saturation max", lineConfig, &lineSatMax, 255);
 	createTrackbar("line trans max", lineConfig, &lineTransferPixelsMax, 32);
@@ -257,7 +257,7 @@ void raspiControl::camControlSetup() {
 #endif
 
 	string ballConfig = "ballsNearby";
-	namedWindow(ballConfig, CV_WINDOW_NORMAL);
+	namedWindow(ballConfig, cv::WINDOW_NORMAL);
 	createTrackbar("ball val min", ballConfig, &ballValMin, 255);
 	createTrackbar("ball sat min", ballConfig, &ballSatMin, 255);
 	createTrackbar("ball hue min", ballConfig, &ballHueMin, 255);
@@ -267,7 +267,7 @@ void raspiControl::camControlSetup() {
 	createTrackbar("ball false pix", ballConfig, &ballFalsePixelsMax, 255);
 
 	string ballFarConfig = "ballsFar";
-	namedWindow(ballFarConfig, CV_WINDOW_NORMAL);
+	namedWindow(ballFarConfig, cv::WINDOW_NORMAL);
 	createTrackbar("ballFar val min", ballFarConfig, &ballFarValMin, 255);
 	createTrackbar("ballFar sat min", ballFarConfig, &ballFarSatMin, 255);
 	createTrackbar("ballFar hue min", ballFarConfig, &ballFarHueMin, 255);
@@ -291,7 +291,7 @@ void raspiControl::camControlSetup() {
 	floorHueMax = FLOOR_HUE_MAX;
 
 	string floorConfig = "floor";
-	namedWindow(floorConfig, CV_WINDOW_NORMAL);
+	namedWindow(floorConfig, cv::WINDOW_NORMAL);
 	createTrackbar("floor val min", floorConfig, &floorValMin, 255);
 	createTrackbar("floor sat min", floorConfig, &floorSatMin, 255);
 	createTrackbar("floor hue min", floorConfig, &floorHueMin, 255);
@@ -311,7 +311,7 @@ void raspiControl::camControlSetup() {
 	obstaclePixelsMin = OBSTACLE_PIXELS_MIN;
 
 	string obstacleConfig = "obstacle";
-	namedWindow(obstacleConfig, CV_WINDOW_NORMAL);
+	namedWindow(obstacleConfig, cv::WINDOW_NORMAL);
 	createTrackbar("obst val max", obstacleConfig, &obstacleValMax, 255);
 	createTrackbar("obst sat max", obstacleConfig, &obstacleSatMax, 255);
 	createTrackbar("obst floor win", obstacleConfig, &obstacleFloorWindowSize, 32);
@@ -331,7 +331,7 @@ void raspiControl::grabControlSetup() {
 	grabberBlueGain = GRABBER_BLUE_GAIN;
 
 	string grabberConfig = "grabber";
-	namedWindow(grabberConfig, CV_WINDOW_NORMAL);
+	namedWindow(grabberConfig, cv::WINDOW_NORMAL);
 	createTrackbar("red gain", grabberConfig, &grabberRedGain, 300);
 	createTrackbar("blue gain", grabberConfig, &grabberBlueGain, 300);
 }

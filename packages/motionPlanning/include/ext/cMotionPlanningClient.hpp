@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -29,7 +29,7 @@
 #include "cRtDBClient.hpp"
 #include "FalconsRtDB2.hpp"
 
-#include "FalconsCommon.h" // TODO fix type dealing abuse, use geometry package
+#include "falconsCommon.hpp" // TODO fix type dealing abuse, use geometry package
 
 #include "cWorldModelClient.hpp"
 
@@ -40,6 +40,7 @@ class cMotionPlanningClient : public cRtDBClient
     cMotionPlanningClient();
     ~cMotionPlanningClient();
 
+    T_ACTION_RESULT executeAction(const T_ACTION actionData);
     double getTimeToBall(const uint8_t robotID);
 
   private:

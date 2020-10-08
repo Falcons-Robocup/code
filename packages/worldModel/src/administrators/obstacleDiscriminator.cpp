@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -23,7 +23,7 @@
 // TODO remove debugging variable:
 //static int measurement_counter = 0;
 
-const static double MIN_ACCEPTED_CONFIDENCE = 0.4;
+const static double MIN_ACCEPTED_CONFIDENCE = 0.4; // TODO make configurable
 
 
 static diagGaussian2D createDiagnosticsGaussian(Gaussian2D gaussian2D)
@@ -149,6 +149,10 @@ std::vector<GaussianObstacle>::iterator obstacleDiscriminator::addGaussianMeasur
 //    Vector2D mean = measurement.gaussianPosition.getGaussian2D().getMean();
 //    Matrix22 covariance = measurement.gaussianPosition.getGaussian2D().getCovariance();
 //    printf("M:([%f,%f],[[%f,%f],[%f,%f]]),\n", mean.x, mean.y, covariance.matrix[0][0], covariance.matrix[0][1], covariance.matrix[1][0], covariance.matrix[1][1]);
+#ifdef DEBUG
+    Vector2D pos = measurement.gaussianPosition.getGaussian2D().getMean();
+    tprintf("NEW  pos=(%6.2f,%6.2f)", pos.x, pos.y)
+#endif
 
     std::vector<GaussianObstacle>::iterator insertedObstacle;
     if(bestMatch != gaussianObstacles.end())
@@ -181,6 +185,10 @@ void obstacleDiscriminator::removeLostObstacles()
 
         if(maxCovariance > maxAllowedVariance)
         {
+#ifdef DEBUG
+            Vector2D pos = it->gaussianPosition.getGaussian2D().getMean();
+            tprintf("LOST pos=(%6.2f,%6.2f)", pos.x, pos.y)
+#endif
             it = gaussianObstacles.erase(it);
         }
         else
@@ -192,7 +200,7 @@ void obstacleDiscriminator::removeLostObstacles()
 
 void obstacleDiscriminator::removeObstaclesOutsideField()
 {
-    double boundaryHalfLength = 9.0;
+    double boundaryHalfLength = 9.0; // TODO use cEnvironmentField, do this filtering at administrator level, not down here, and allow configurable margins for instance when taking a throwin. Note that referee often walks outside the lines, we should at least attempt to avoid him/her ...
     double boundaryHalfWidth = 6.0;
 
     for(auto it=gaussianObstacles.begin(); it!=gaussianObstacles.end();)
@@ -201,6 +209,10 @@ void obstacleDiscriminator::removeObstaclesOutsideField()
 
         if( (!it->isTeammember) && ((std::abs(pos.x) > boundaryHalfWidth) || (std::abs(pos.y) > boundaryHalfLength)) )
         {
+#ifdef DEBUG
+            Vector2D pos = it->gaussianPosition.getGaussian2D().getMean();
+            tprintf("OUT  pos=(%6.2f,%6.2f)", pos.x, pos.y)
+#endif
             it = gaussianObstacles.erase(it);
         }
         else
@@ -287,6 +299,13 @@ void obstacleDiscriminator::convertGaussianObstaclesToOutputObstacles()
         if(confidence >= MIN_ACCEPTED_CONFIDENCE && !it->isTeammember)
         {
             obstacles.push_back(obstacle);
+#ifdef DEBUG
+            tprintf("GOOD pos=(%6.2f,%6.2f) conf=%.1f", pos.x, pos.y, confidence)
+        }
+        else
+        {
+            tprintf("BAD  pos=(%6.2f,%6.2f) conf=%.1f", pos.x, pos.y, confidence)
+#endif
         }
 
 //        Matrix22 cov = it->gaussianPosition.getGaussian2D().getCovariance();

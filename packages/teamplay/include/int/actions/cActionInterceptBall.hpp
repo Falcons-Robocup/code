@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,17 +20,16 @@
 #define CACTIONINTERCEPTBALL_HPP_
 
 #include "int/actions/cAbstractAction.hpp"
+#include "position2d.hpp"
 
 class cActionInterceptBall : public cAbstractAction
 {
-	public:
-		cActionInterceptBall();
-		~cActionInterceptBall();
+public:
+    cActionInterceptBall();
 
-		behTreeReturnEnum execute(const std::map<std::string, std::string> &parameters);
+    behTreeReturnEnum execute(const std::map<std::string, std::string> &parameters);
 
-	private:
-
+private:
 };
 
 #endif /* CACTIONINTERCEPTBALL_HPP_ */

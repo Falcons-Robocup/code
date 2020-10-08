@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -13,7 +13,6 @@
 #include <GL/glut.h>
 #include <signal.h>
 #include <string>
-#include <ros/ros.h>
 
 #include "tracing.hpp"
 
@@ -25,22 +24,9 @@ using namespace std;
 
 QApplication* application = NULL;
 
-void closeApplication(int sig)
-{
-    if (sig == SIGINT)
-    {
-        if (application != NULL)
-        {
-            ros::shutdown();
-            application->closeAllWindows();
-        }
-    }
-}
-
 int main(int argc, char *argv[])
 {
     string nodename = "visualizer";
-    ros::init(argc, argv, nodename);
 
     INIT_TRACE;
 
@@ -68,14 +54,6 @@ int main(int argc, char *argv[])
     printf("setStyle fusion\n"); fflush(stdout);
     TRACE("setStyle fusion");
     application->setStyle("fusion");
-
-    // Override default ROS SIGINT handler
-    // Must be done after first NodeHandle is created.
-    if (signal(SIGINT, closeApplication) == SIG_ERR)
-    {
-        cerr << nodename + " :: Register SIGINT Error" << endl;
-        return 1;
-    }
 
     // Starting gui loop
     TRACE("start gui loop");

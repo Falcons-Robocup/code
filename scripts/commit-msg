@@ -42,7 +42,7 @@ fi
 
 # construct list of packages
 allowed=""
-for d in ~/falcons/code/* ~/falcons/code/packages/facilities ; do
+for d in ./* packages/facilities ; do
     if [ -d $d ]; then
         for w in `cd $d; ls` ; do
             if [ -d $d/$w ]; then

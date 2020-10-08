@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,11 +18,11 @@
 
 #include "int/actions/cActionShoot.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "int/stores/configurationStore.hpp"
 #include "int/stores/diagnosticsStore.hpp"
 #include "int/cWorldStateFunctions.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 #include "int/types/cActionTypes.hpp"
 #include "int/stores/fieldDimensionsStore.hpp"
 #include "int/stores/robotStore.hpp"
@@ -85,9 +85,8 @@ behTreeReturnEnum cActionShoot::execute(const std::map<std::string, std::string>
                     }
                     else
                     {
-                        float shootHeight = 0.7; // TODO make configurable
                         TRACE("INFO: cActionShoot: SHOOT_TOWARDS_GOAL");
-                        result = shoot(shootTarget.x, shootTarget.y, shootHeight);
+                        result = shoot(shootTarget);
                     }
                     break;
                 }

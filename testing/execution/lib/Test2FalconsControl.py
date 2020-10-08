@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import sys, os
 import time, datetime
@@ -30,19 +30,19 @@ class Test2FalconsControl(object):
         
     def execute_control(self, s):
         s = str(s)
-        print "execute_control", s
+        print("execute_control %s" % s)
         if s.startswith("activate"):
             w = s.split()
             s = "activate " + w[1][4] + w[2]
         simCommand(s)
 
     def initialize_simulator(self, myteam = "teamA"):
-        print "initialize_simulator"
+        print("initialize_simulator")
         simInit()
         time.sleep(3)
 
     def shutdown_simulator(self):
-        print "shutdown_simulator"
+        print("shutdown_simulator")
         simStop()
         time.sleep(3)
 
@@ -106,9 +106,9 @@ class Test2FalconsControl(object):
         dx = abs(x - check_x)
         dy = abs(y - check_y)
         xy_error = math.sqrt(dx*dx + dy*dy)
-        print "xy position error  : %6.2f" % (xy_error)
+        print("xy position error  : %6.2f" % (xy_error))
         if (xy_error > XYTOL):
-            print msg
+            print(msg)
             raise Exception("position mismatch")
 
     def verify_position(self, num_seconds, robot_number, team_name, position, pos_type):
@@ -135,10 +135,10 @@ class Test2FalconsControl(object):
                 dy = abs(y - check_y)
                 xy_error = math.sqrt(dx*dx + dy*dy)
                 phi_error = FalconsMath.phidiff(robot.phi, check_phi)
-                print "xy position error  : %6.2f" % (xy_error)
-                print "phi position error : %6.2f" % (phi_error)
+                print("xy position error  : %6.2f" % (xy_error))
+                print("phi position error : %6.2f" % (phi_error))
                 if (xy_error > XYTOL) or (phi_error > PHITOL):
-                    print msg
+                    print(msg)
                     raise Exception("position mismatch")
                 return  
         raise Exception("robot %d not found" % robot_number)

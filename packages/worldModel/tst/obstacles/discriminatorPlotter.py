@@ -1,5 +1,5 @@
 """ 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -124,7 +124,7 @@ def load_obstacles(num_obstacles):
     i = 0
     while i<num_obstacles:
         line = blocking_read_line()
-        print line.strip('\n')
+        print(line.strip('\n'))
         if(line.startswith('M:')):
             line = line[2:]
             coords.append(coord_from_input(line))
@@ -194,7 +194,7 @@ def input_loop(video_file_name, video_offset):
     while True:
         line = non_blocking_read_line()
         if line != '':    
-            #print line.strip('\n')
+            #print(line.strip('\n'))
             if(line.startswith('Measurements:')):
                 pass;                
                 #measurements = load_obstacles(read_int(line))                           
@@ -205,7 +205,7 @@ def input_loop(video_file_name, video_offset):
             elif(line.startswith('t=')):
                 latest_timestamp = read_time(line)
             elif(line.startswith('2019')):
-                print line.strip('\n')
+                print(line.strip('\n'))
         #else:  
         if data_count % 100 == 0:
             background = video_reader.get_frame(latest_timestamp) 

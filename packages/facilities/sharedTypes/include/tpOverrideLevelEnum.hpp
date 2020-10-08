@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -27,7 +27,8 @@ enum class tpOverrideLevelEnum
     GAMESTATE,
     ROLE,
     BEHAVIOR,
-    ACTION,
+    TP_ACTION,
+    MP_ACTION,
     DISABLED
 };
 

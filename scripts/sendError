@@ -3,5 +3,5 @@
 
 
 errMsg="$@"
-rosrun diagnostics sendEvent ERROR "$errMsg"
+frun diagnostics sendEvent ERROR "$errMsg"
 

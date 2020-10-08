@@ -7,6 +7,10 @@
 #
 
 
+# TODO: wtf is not yet updated for supporting any-username and any-repo-location
+# TODO: rewrite to python? option to also apply fixes, versus dry-run?
+
+
 function errorExit
 {
     echo
@@ -26,37 +30,82 @@ if [ -z "$TURTLE5K_ROBOTNUMBER" ]; then
 fi
 
 
+echo -n "cleaning RTDB tmp folders... "
+if ! rtdbClear ; then
+    errorExit "failed -> check permissions and remove the folders manually"
+fi
+echo "OK"
+
+echo -n "cleaning /tmp and /var/tmp artefacts... "
+if ! tmpClear ; then
+    errorExit "failed -> check permissions and remove items manually"
+fi
+echo "OK"
+
+echo -n "checking logdir... "
+d=`newest_logdir.py`
+if [ -z "$d" ]; then
+    errorExit 'no logdir found' "try the following command to fix:\ncreateLogdir"
+fi
+if ! touch "$d" ; then
+    errorExit "something is wrong with permissions of logdir '$d'"
+fi
+echo "OK"
+
+# TODO: check shared memory? (ipcs, ipcrm) -- it can happen that stuff remains active after switching user
+
 echo -n "checking GIT repositories... "
-d=/home/robocup/falcons/code
+d=${FALCONS_PATH}
+if [ -z "$d" ]; then
+    errorExit "missing environment variable: FALCONS_PATH"
+fi
+d=${FALCONS_CODE_PATH}
+if [ -z "$d" ]; then
+    errorExit "missing environment variable: FALCONS_CODE_PATH"
+fi
 if [ ! -d $d ]; then
     errorExit "did not find code repository at $d"
 fi
-d=/home/robocup/falcons/data
+d=${FALCONS_DATA_PATH}
+if [ -z "$d" ]; then
+    errorExit "missing environment variable: FALCONS_DATA_PATH"
+fi
 if [ ! -d $d ]; then
     errorExit "did not find data repository at $d"
 fi
-d=/home/robocup/falcons/teamplayData
+d=${FALCONS_TPDATA_PATH}
+if [ -z "$d" ]; then
+    errorExit "missing environment variable: FALCONS_TPDATA_PATH"
+fi
 if [ ! -d $d ]; then
     errorExit "did not find teamplayData repository at $d"
 fi
 # Check for branch consistency between code and teamplayData
-if [ -f $TURTLEROOT/scripts/checkGitBranchConsistency.sh ]; then
-    . $TURTLEROOT/scripts/checkGitBranchConsistency.sh
+if [ -f $FALCONS_CODE_PATH/scripts/checkGitBranchConsistency.sh ]; then
+    . $FALCONS_CODE_PATH/scripts/checkGitBranchConsistency.sh
     check_git_branches
     if [ $? != 0 ]; then
-        errorExit "the code.git branch and the teamplayData.git branch are not compatible"
+        echo "WARNING: the code.git branch and the teamplayData.git branch are not compatible"
     fi
 fi
 # Check git config url
 for repo in code data teamplayData ; do
-    git_config=/home/robocup/falcons/$repo/.git/config
+    git_config=$FALCONS_PATH/$repo/.git/config
     git_url="ssh://git@git.falcons-robocup.nl:2222/falcons/$repo.git"
     grep $git_url $git_config > /dev/null 2>&1
     if [ $? = 1 ]; then
-        errorExit "git config url is wrong" "change the 'url' in '$git_config' to:\n$git_url"
+        echo ""
+        echo "WARNING: git is apparently configured anonymously (http) for repo $repo"
+        # not a fatal error: after setup.sh on a fresh laptop no user/key is assigned yet
+        echo "see script switchGitFromHttpToSSH.py and wiki GIT-Setup"
+        echo
     fi
 done
-echo "OK"
+# Check git configured user
+if [ "$onRobot" = 0 ]; then
+    ${FALCONS_CODE_PATH}/scripts/setLaptopUser --check || errorExit 'no git user is configured' "try the following command to fix:\nsetLaptopUser"
+    echo "OK"
+fi
 
 echo -n "checking wifi... "
 # note: with Ubuntu 16.04 upgrade, we typically get 'wlo1' as adapter name on devlaptop, but something like 'wl2ps0' on robot
@@ -71,7 +120,7 @@ fi
 
 if [ $WIFI_ONLINE = 1 ]; then
     echo -n "checking if data repo is in sync with remote/upstream... "
-    d=/home/robocup/falcons/data
+    d=${FALCONS_DATA_PATH}
     cd $d
     GIT_LOCAL_REVISION_ID="$(git rev-parse HEAD)"
     GIT_REMOTE_REVISION_ID="$(git ls-remote $(git rev-parse --abbrev-ref '@{u}' | tr '/' ' ') | cut --fields=1)"
@@ -83,7 +132,7 @@ fi
 
 if [ $WIFI_ONLINE = 1 ]; then
     echo -n "checking if external submodule catapult in data repo is updated... "
-    if [ ! -f /home/robocup/falcons/data/external/catapult/README.md ]; then
+    if [ ! -f ${FALCONS_DATA_PATH}/external/catapult/README.md ]; then
         errorExit 'not updated' "try the following command to fix:\ncd ~/falcons/data ; git submodule update --init ; cd -"
     fi
     echo "OK"
@@ -91,7 +140,7 @@ fi
 
 if [ "$onRobot" = 0 ]; then
     echo -n "checking GIT hooks... "
-    d=/home/robocup/falcons/code
+    d=${FALCONS_CODE_PATH}
     if [ ! -L "$d/.git/hooks/pre-commit" ]; then
         errorExit "missing hook" "run the following command to fix:\ncd ~/falcons/code/.git/hooks ; ln -s ../../scripts/pre-commit ; cd -"
     fi
@@ -104,7 +153,7 @@ fi
 if [ $WIFI_ONLINE = 1 ]; then
     echo -n "checking installed ubuntu packages... "
     MISSING_PACKAGES=""
-    for p in $(cat /home/robocup/falcons/code/config/apt_packages) ; do
+    for p in $(cat ${FALCONS_CODE_PATH}/config/apt_packages) ; do
         o=$(apt-cache policy $p | grep Installed)
         if [ "$o" = "  Installed: (none)" -o -z "$o" ]; then
             MISSING_PACKAGES="$MISSING_PACKAGES $p"
@@ -114,32 +163,34 @@ if [ $WIFI_ONLINE = 1 ]; then
         errorExit "found some missing packages" "run the following command to fix:\nsudo apt-get update ; sudo apt-get install -y$MISSING_PACKAGES"
     fi
     echo "OK"
-    echo -n "checking installed pip packages... "
-    current_pip_packages=$(pip list 2>/dev/null | awk '{print $1}')
-    MISSING_PACKAGES=""
-    for p in $(cat /home/robocup/falcons/code/config/pip_packages) ; do
-        echo "$current_pip_packages" | grep -qi "^$p$"
-        if [ $? != 0 ]; then
-            MISSING_PACKAGES="$MISSING_PACKAGES $p"
+    for pipcommand in pip3 ; do
+        echo -n "checking installed ${pipcommand} packages... "
+        current_pip_packages=$(${pipcommand} list 2>/dev/null | awk '{print $1}')
+        MISSING_PACKAGES=""
+        for p in $(cat ${FALCONS_CODE_PATH}/config/${pipcommand}_packages) ; do
+            echo "$current_pip_packages" | grep -qi "^$p$"
+            if [ $? != 0 ]; then
+                MISSING_PACKAGES="$MISSING_PACKAGES $p"
+            fi
+        done
+        if [ ! -z "$MISSING_PACKAGES" ]; then
+            errorExit "found some missing packages" "run the following command to fix:\n${pipcommand} install$MISSING_PACKAGES"
         fi
+        echo "OK"
     done
-    if [ ! -z "$MISSING_PACKAGES" ]; then
-        errorExit "found some missing packages" "run the following command to fix:\nsudo pip install$MISSING_PACKAGES"
-    fi
-    echo "OK"
 fi
 
 echo -n "checking ripgrep (rg)... "
-if [ ! -L /usr/local/bin/rg ]; then
-    errorExit "ripgrep (rg) not installed" "run the following command to fix:\nsudo ln -s /home/robocup/falcons/data/external/ripgrep/rg2017 /usr/local/bin/rg"
+if [ ! -f /snap/bin/rg ]; then
+    errorExit "ripgrep (rg) not installed" "run the following command to fix:\nsudo snap install ripgrep --classic"
 fi
 echo "OK"
 
 if [ "$onRobot" = 1 ]; then
     echo -n "checking routing tables... "
-    expectedRouting=/home/robocup/falcons/code/config/expectedRoutingWireless
+    expectedRouting=${FALCONS_CODE_PATH}/config/expectedRoutingWireless
     if [ $WIFI_ONLINE = 0 ]; then
-        expectedRouting=/home/robocup/falcons/code/config/expectedRoutingWired
+        expectedRouting=${FALCONS_CODE_PATH}/config/expectedRoutingWired
     fi
     route -n > /var/tmp/currentRouting
     if ! diff -B /var/tmp/currentRouting $expectedRouting > /dev/null ; then
@@ -152,33 +203,58 @@ if [ "$onRobot" = 1 ]; then
 fi
 
 echo -n "checking nm config... "
-if [ ! -f /etc/NetworkManager/system-connections/Falcons_A_a ]; then
+if [ ! -f /etc/NetworkManager/system-connections/Falcons_A_a.nmconnection ]; then
     errorExit "Falcons_A_a not configured in NetworkManager"
     # TODO check that Falcons_A_a is not configured with automatic DHCP
 fi
 echo "OK"
 
 echo -n "checking rtdb-related requirements... "
-/home/robocup/falcons/code/packages/facilities/rtdb3/setup.sh -v || errorExit "something wrong with rtdb installation" "run the following command to fix:\nroscd rtdb3 ; ./setup.sh"
-# TODO merge these python dependencies into rtdb3/setup.sh, once logging is merged in
-if [ ! -f /usr/local/lib/python2.7/dist-packages/shm-1.2.2.egg-info ]; then
-    errorExit "Python package shm not installed" "run the following command to fix:\ncd /home/robocup/falcons/data/external/shm-python/shm-1.2.2 ; sudo python setup.py install"
-fi
+${FALCONS_CODE_PATH}/packages/facilities/rtdb/setup.sh -v || errorExit "something wrong with rtdb installation" "run the following command to fix:\ncd packages/facilities/rtdb ; ./setup.sh"
+# TODO merge these python dependencies into rtdb/setup.sh, once logging is merged in
+#if [ ! -f /usr/local/lib/python2.7/dist-packages/shm-1.2.2.egg-info ]; then
+#    errorExit "Python package shm not installed" "run the following command to fix:\ncd ${FALCONS_DATA_PATH}/external/shm-python/shm-1.2.2 ; sudo python setup.py install"
+#fi
+#if [ ! -f /usr/local/lib/python2.7/dist-packages/zstd.so ]; then
+#    errorExit "Python package zstd not installed" "run the following command to fix:\nsudo pip install zstd"
+#fi
+#if [ ! -d /usr/local/lib/python2.7/dist-packages/npyscreen ]; then
+#    errorExit "Python package npyscreen not installed" "run the following command to fix:\nsudo pip install npyscreen"
+#fi
+#if [ ! -d /home/robocup/.local/lib/python2.7/site-packages/CherryPy-17.4.2.dist-info ]; then
+#    if [ ! -d /usr/local/lib/python2.7/dist-packages/cherrypy ]; then
+#        errorExit "Python package cherrypy not installed" "run the following command to fix:\nsudo pip install CherryPy==17.4.2"
+#    fi
+#fi
+#if [ -d /usr/local/lib/python2.7/dist-packages/more_itertools-7.2.0.egg-info ]; then
+#    errorExit "Python package more_itertools is the wrong version (should be 5.0.0 instead of 7.2.0)" "run the following command to fix:\nsudo pip install more-itertools==5.0.0"
+#fi
 echo "OK"
 
+# TODO: is this still needed? if so, put it in setup.sh?
 echo -n "checking tracing-related requirements... "
-/home/robocup/falcons/code/packages/facilities/tracing/setup.sh -v || errorExit "something wrong with tracing installation" "run the following command to fix:\nroscd tracing ; ./setup.sh"
+${FALCONS_CODE_PATH}/packages/facilities/tracing/setup.sh -v || errorExit "something wrong with tracing installation" "run the following command to fix:\nroscd tracing ; ./setup.sh"
 echo "OK"
+
+# this seems not needed anymore for ubuntu20 / cmake -- TODO remove
+#echo -n "checking if gtest and gmock are properly installed..."
+#if [ ! -f /usr/lib/libgtest.a ]; then
+#    errorExit "/usr/lib/libgtest.a not found" "run the following to fix:\ncd /usr/src/gtest ; sudo cmake CMakeLists.txt ; sudo make ; sudo cp lib/*.a /usr/lib"
+#fi
+#if [ ! -f /usr/lib/libgmock.a ]; then
+#    errorExit "/usr/lib/libgmock.a not found" "run the following to fix:\ncd /usr/src/gmock ; sudo cmake CMakeLists.txt ; sudo make ; sudo cp lib/*.a /usr/lib"
+#fi
+
 
 if [ "$onRobot" = 1 ]; then
     echo -n "checking disk usage... "
-    /home/robocup/falcons/code/scripts/diskCleanup -v || errorExit "disk too full" "run the following command to fix:\nsudo -E /home/robocup/falcons/code/scripts/diskCleanup"
+    ${FALCONS_CODE_PATH}/scripts/diskCleanup --check || errorExit "disk too full" "run the following command to fix:\ndiskCleanup"
     echo "OK"
 fi
 
 if [ "$onRobot" = 1 ]; then
     echo -n "checking wifi disable trigger... "
-    src=/home/robocup/falcons/code/scripts/triggerOnEthernetChange
+    src=${FALCONS_CODE_PATH}/scripts/triggerOnEthernetChange
     tgt=/etc/NetworkManager/dispatcher.d/99-disable-wireless-when-wired
     needCopy=0
     if [ ! -f $tgt ]; then # clean robot install: no hook registered yet
@@ -197,13 +273,13 @@ if [ "$onRobot" = 1 ]; then
     echo "OK"
 fi
 
-echo -n "checking rosunit path in ros config... "
-# grep config file and look for error generating line, evaluate outcome
-rosunit_ok="$(grep "bin/rosunit" /opt/ros/kinetic/share/rosunit/cmake/rosunit-extras.cmake | grep -v "^#" | grep "PYTHON_EXECUTABLE" | wc -l)"
-if [[ $rosunit_ok -gt 0 ]]; then
-    errorExit "Please open /opt/ros/kinetic/share/rosunit/cmake/rosunit-extras.cmake file and remove PYTHON_EXECUTABLE from line containing bin/rosunit"
-fi
-echo "OK"
+#echo -n "checking rosunit path in ros config... "
+## grep config file and look for error generating line, evaluate outcome
+#rosunit_ok="$(grep "bin/rosunit" /opt/ros/kinetic/share/rosunit/cmake/rosunit-extras.cmake | grep -v "^#" | grep "PYTHON_EXECUTABLE" | wc -l)"
+#if [[ $rosunit_ok -gt 0 ]]; then
+#    errorExit "Please open /opt/ros/kinetic/share/rosunit/cmake/rosunit-extras.cmake file and remove PYTHON_EXECUTABLE from line containing bin/rosunit"
+#fi
+#echo "OK"
 
 echo "Restart terminal if any error still exists..."
 

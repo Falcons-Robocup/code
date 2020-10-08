@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,14 +20,14 @@
 #include <cstdarg>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp>
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "tracing.hpp"
 
 using namespace diagnostics;
 
 EventHandler::EventHandler(eventSeverityEnum severity, const char* fileName, const int lineNr, const char* functionName)
 {
-    _event.timeStamp = rtime::now();
+    _event.timeStamp = ftime::now();
     _event.severity = severity;
     _event.fileName = fileName;
     _event.lineNumber = lineNr;
@@ -107,7 +107,7 @@ void EventHandler::dispatch()
 
 void EventHandler::cleanupOldEvents(T_EVENT_LIST &events)
 {
-    rtime tNow = rtime::now();
+    rtime tNow = ftime::now();
     const float timeout = 1.0;
     for (auto it = events.begin(); it != events.end(); )
     {

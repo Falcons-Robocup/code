@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -16,14 +16,143 @@
  *      Author: Erik Kouters
  */
 
+#include "tracing.hpp"
+#include "cDiagnostics.hpp" // TRACE_ERROR
+
+#include "int/cMotionPlanner.hpp"
+
 #include "ext/cMotionPlanningClient.hpp"
+
+#include "../../include/int/MP_WorldModelInterface.hpp"
+#include "PathPlanningClient.hpp"
+#include "int/cAllActions.hpp"
+
+cMotionPlanner* _motionPlanner;
+MP_WorldModelInterface* _wmInterface;
+PathPlanningClient* _ppClient;
+MP_RTDBOutputAdapter* _rtdbOutput;
+
 
 cMotionPlanningClient::cMotionPlanningClient()
 {
+
+    try
+    {
+        _wmInterface = new MP_WorldModelInterface();
+        _rtdbOutput = new MP_RTDBOutputAdapter();
+        _ppClient = new PathPlanningClient();
+        _motionPlanner = new cMotionPlanner(_wmInterface, _ppClient, _rtdbOutput);
+
+    }
+    catch (std::exception &e)
+    {
+        std::cerr << "Error occurred:" << e.what() << std::endl;
+        TRACE_ERROR("Error occurred: %s", e.what());
+    }
 }
 
 cMotionPlanningClient::~cMotionPlanningClient()
 {
+    delete _wmInterface;
+    delete _ppClient;
+    delete _motionPlanner;
+}
+
+T_ACTION_RESULT cMotionPlanningClient::executeAction(const T_ACTION actionData)
+{
+    TRACE_FUNCTION("");
+
+    tprintf("executeAction %s position=[%6.2f, %6.2f, %6.2f] slow=%d bh=%d",
+        enum2str(actionData.action), actionData.position.x, actionData.position.y, actionData.position.z, actionData.slow, actionData.ballHandlersEnabled);
+
+    std::vector<std::string> params;
+    switch(actionData.action)
+    {
+        case actionTypeEnum::MOVE:
+        {
+            _motionPlanner->setAction(MP_ActionMoveToTarget());
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.z)); // Rz actually
+            params.push_back(boost::lexical_cast<std::string>((int)actionData.slow));
+            params.push_back(boost::lexical_cast<std::string>((int)actionData.ballHandlersEnabled));
+            break;
+        }
+        case actionTypeEnum::KICK:
+        {
+            _motionPlanner->setAction(MP_ActionKick());
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
+            break;
+        }
+        case actionTypeEnum::PASS:
+        {
+            _motionPlanner->setAction(MP_ActionPassToTarget());
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
+            break;
+        }
+        case actionTypeEnum::SHOOT:
+        {
+            _motionPlanner->setAction(MP_ActionShootAtTarget());
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.z));
+            params.push_back("SHOOT");
+            break;
+        }
+        case actionTypeEnum::LOB:
+        {
+            _motionPlanner->setAction(MP_ActionShootAtTarget());
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.z));
+            params.push_back("LOB");
+            break;
+        }
+        case actionTypeEnum::STOP:
+        {
+            _motionPlanner->setAction(MP_ActionStop());
+            params.push_back(boost::lexical_cast<std::string>((int)actionData.ballHandlersEnabled));
+            break;
+        }
+        case actionTypeEnum::GET_BALL:
+        {
+            _motionPlanner->setAction(MP_ActionGetBall());
+            params.push_back(boost::lexical_cast<std::string>((int)actionData.slow));
+            break;
+        }
+        case actionTypeEnum::TURN_AWAY_FROM_OPPONENT:
+        {
+            _motionPlanner->setAction(MP_ActionTurnAwayFromOpponent());
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
+            params.push_back(boost::lexical_cast<std::string>((int)actionData.slow));
+            break;
+        }
+        case actionTypeEnum::KEEPER_MOVE:
+        {
+            _motionPlanner->setAction(MP_ActionKeeperMove());
+            params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
+            break;
+        }
+        case actionTypeEnum::INTERCEPT_BALL:
+        {
+            _motionPlanner->setAction(MP_ActionInterceptBall());
+            params.push_back(boost::lexical_cast<std::string>((int)actionData.slow));
+            break;
+        }
+        default:
+        {
+            throw std::runtime_error("Unknown enum value received from RTDB ActionData");
+            break;
+        }
+    }
+    _motionPlanner->setActionParameters(params);
+
+    T_ACTION_RESULT actionResult = _motionPlanner->execute();
+    tprintf("             executeAction RESULT result=%s", enum2str(actionResult.result));
+    return actionResult;
 }
     
 double cMotionPlanningClient::getTimeToBall(const uint8_t robotID)

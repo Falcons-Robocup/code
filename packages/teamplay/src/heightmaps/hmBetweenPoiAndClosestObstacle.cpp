@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -18,14 +18,14 @@
 
 #include "int/heightmaps/hmBetweenPoiAndClosestObstacle.hpp"
 
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 #include "polygon2D.hpp"
 
 #include "int/stores/ballStore.hpp"
 #include "int/stores/fieldDimensionsStore.hpp"
 #include "int/stores/obstacleStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 #include "tracing.hpp"
 
 using namespace teamplay;
@@ -105,6 +105,10 @@ abstractHeightMap hmBetweenPoiAndClosestObstacle::refine(const parameterMap_t& p
                 if (polygon.pointExistsInPolygon(_heightMap(i, j)._center))
                 {
                     _heightMap(i, j).setValue(heightMapValues::MAX);
+                }
+                else
+                {
+                    _heightMap(i, j).setValue(heightMapValues::NEUTRAL);
                 }
             }
         }

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -17,11 +17,11 @@
  */
 
 #include "int/cBallHandlingInterface.hpp"
-#include "FalconsRtDB2.hpp" // for rtime
+#include "ftime.hpp"
 
 void cBallHandlingInterface::tick()
 {
-    rtime timeNow = rtime::now(); // TODO this is not simulator- and test-friendly, better to move timestamping outside
+    rtime timeNow = ftime::now(); // TODO this is not simulator- and test-friendly, better to move timestamping outside
     if (_isSuppressed && (double(timeNow) >= double(_enableTimestamp)))
     {
         enableBallHandlers();
@@ -33,7 +33,7 @@ void cBallHandlingInterface::suppress(float timeout)
 {
     disableBallHandlers();
     _isSuppressed = true;
-    rtime timeNow = rtime::now(); // TODO this is not simulator- and test-friendly, better to move timestamping outside
+    rtime timeNow = ftime::now(); // TODO this is not simulator- and test-friendly, better to move timestamping outside
     _enableTimestamp = timeNow + timeout;
 }
 

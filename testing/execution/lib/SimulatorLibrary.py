@@ -1,7 +1,7 @@
 import roslib
 import subprocess
 
-roslib.load_manifest('rtdb3')
+import falconspy
 
 from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
 

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -15,46 +15,74 @@
  *  Created on: Jan 13, 2018
  *      Author: Jan Feitsma
  */
- 
- 
+
+
 #ifndef DEWARP_HPP_
 #define DEWARP_HPP_
 
 
 #include <string>
+#include <map>
 #include <vector>
 #include <tuple>
 #include "opencv2/core/core.hpp"
 
 
-class deWarper
+class Dewarper
 {
-     
-  public:
-    deWarper();
-    ~deWarper();
-    
+
+public:
+    // robotId and camera have to be provided to figure out the calibration file(s)
+    // if flag is set, automatically newest calibration files will be downloaded / used
+    // based on provided timestamp, which is default taken to be 'newest'
+    Dewarper(int robotId, int cam, bool autoUpdate = true, double timestamp = 1e99);
+    ~Dewarper();
+
     // init time
-    void loadCSV(std::string const &filename); // load config file with samples
-    void calculate(); // after loading the samples, this function should be called to construct the lookup table
+    void readBIN(std::string const &filename); // read from binary file
 
     // run time
-    cv::Mat transform(cv::Mat const &input) const; // transform an image
-    void transform(uint16_t xPixel, uint16_t yPixel, int16_t &xField, int16_t &yField) const; // transform one pixel
 
-    // test utilities
-    bool verify() const; // sanity check on pixel transform on measurement samples
-    float cacheSize() const; // memory consumption in MB
-    void plotHoles() const; // check for gaps in calibration area (interpolate might miss some pixels)
-    void writeBIN(std::string const &filename); // write to binary file
-    void readBIN(std::string const &filename); // read from binary file
-    
-  private:
-    cv::Mat _reverseLookupX, _reverseLookupY; // cache for cv::remap to achieve fast transform
-    cv::Mat _forwardLookupX, _forwardLookupY; // cache for direct pixel transform
-    std::vector<std::tuple<int, int, float, float, bool>> _samples; // pixel to field + valid bool
-    int _gridRows, _gridCols;
-    int _pixelRows, _pixelCols;
+    // 'floor' transformation is designed for localization (white pixels)
+    // it might also be used for obstacles (since we can safely assume these are not flying)
+    // it should NOT be used for balls, instead see 'front' transformation
+    // input: pixel location
+    // output: success boolean and RCS coordinates in mm if successful
+    bool transformFloor(uint16_t xPixel, uint16_t yPixel, int16_t &xField, int16_t &yField) const;
+
+    // 'front' transformation is designed for balls
+    // it basically takes out the intrinsic lens warp, so correct angles can be calculated
+    // even when balls are airborne (which is often)
+    // but it also corrects for small mounting tilts
+    // this might also be used for obstacles, although floor transformation might be better?
+    // input: pixel location
+    // output: success boolean and spherical angles in radians
+    bool transformFront(uint16_t xPixel, uint16_t yPixel, float &azimuth, float &elevation) const;
+
+    // (test) utilities
+    bool rangeCheck(uint16_t xPixel, uint16_t yPixel) const;
+    std::vector<cv::Point> calcIsolineAzimuth(float az, int stride = 1);
+    std::vector<cv::Point> calcIsolineElevation(float el, int stride = 1);
+
+private:
+    int _pixelRows, _pixelCols; // size of lookup tables, allowed range for input pixels
+    cv::Mat _floorLookupX, _floorLookupY; // lookup table for Floor transformation: pixel to int RCS offset (x,y) in mm
+    cv::Mat _frontLookupAz, _frontLookupEl; // lookup table for Front transformation: pixel to float angles (az,el)
+
+    // with these calibrated fisheye matrices K and D, we could inline
+    // correct the distortion in the diagnostics viewers using cv::fisheye::undistortImage
+    // but for that, we need to upgrade to OpenCV3 - TODO
+    cv::Matx33d _K;
+    cv::Vec4d _D;
+
+    // floor perspective homography, stored in calibration file but not used
+    cv::Mat _Hf;
+
+    // helpers
+    void updateCalibrationFiles();
+    std::string selectCalibrationFile(int robotId, int cam, double timestamp);
+    std::map<std::string, std::vector<cv::Point>> _isolineCache; // isolines are expensive to calculate and never change
+
 };
 
 #endif /* DEWARP_HPP_ */

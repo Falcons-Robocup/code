@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# Used in robotControl to start the right process for the HW buttons
+# The process to start is different for the old robots and R7+
+# 
+# EKPC 2019-07-02 Creation
+# 
+
+if [ ${TURTLE5K_ROBOTNUMBER} -gt 6 ]; then
+    # R7 and up
+    processStart ${CONTEXTKEY} mcbInterface &
+else
+    #R1 - R6
+    processStart ${CONTEXTKEY} halIoBoard &
+fi  
+

@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,13 +22,15 @@
 
 #include "int/cShootPlanningInterface.hpp"
 #include "int/cPathPlanningInterface.hpp"
-#include "int/cWorldModelInterface.hpp"
 #include "int/cBallHandlingInterface.hpp"
+#include "PathPlanningClient.hpp"
+#include "MP_WorldModelInterface.hpp"
 
 struct cInterfaces
 {
-    cWorldModelInterface *wm;
-    cRTDBOutputAdapter *rtdbOutput;
+    MP_WorldModelInterface *wm;
+    PathPlanningClient *pp;
+    MP_RTDBOutputAdapter *rtdbOutput;
 };
 
 #endif /* CINTERFACES_HPP_ */

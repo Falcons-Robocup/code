@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -21,7 +21,7 @@
 
 #include <vector>
 #include <string>
-#include "FalconsCommon.h"
+#include "falconsCommon.hpp"
 
 class cForbiddenAreaType
 {

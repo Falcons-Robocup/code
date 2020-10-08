@@ -1,0 +1,136 @@
+<script src="jquery/jquery-3.4.1.min.js"></script>
+
+<script>
+function findGetParameter(parameterName)
+{
+    var result = null,
+        tmp = [];
+    var items = location.search.substr(1).split("&");
+    for (var index = 0; index < items.length; index++) {
+        tmp = items[index].split("=");
+        if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+    }
+    return result;
+}
+
+function includeJavascriptFile(filename)
+{
+   var head = document.getElementsByTagName('head')[0];
+
+   var script = document.createElement('script');
+   script.src = filename;
+   script.type = 'text/javascript';
+
+   head.appendChild(script)
+}
+</script>
+
+<div id="toolboxContainer"></div>
+<xml xmlns="http://www.w3.org/1999/xhtml" id="workspaceBlocks" style="display:none"></xml>
+
+<script src="google-blockly/blockly_compressed.js"></script>
+<script src="google-blockly/blocks_compressed.js"></script>
+<script src="google-blockly/python_compressed.js"></script>
+
+<script src="google-blockly/msg/js/en.js"></script>
+
+<div id="editor" style="height: 768px; width: 100%;"></div>
+
+<div id="robotNrContainer">
+    Execute blocks on Robot number: <input type="text" value="1" id="robotNr" name="robotNr"/>
+</div>
+<input type="button" value="Execute Scenario" id="runBtn"/><br/>
+<textarea id="pythoncode" name="pythoncode" rows="4" cols="50" style="display:block"></textarea>
+
+<div>
+<button id="exportBlockly">Export Blocks to File</button> 
+<button id="importBlockly">Import Blocks from File</button> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="?env=simple">Go to Simple Blockly</a>
+&nbsp;&nbsp;
+<a href="?env=advanced">Go to Advanced Blockly</a>
+</div>
+
+<div id="stopRobotContainer" style="display:none">
+    <input type="button" id="stopRobot" style="height:100px;width:200px;background-color:#FF0000;font-size:24px;" value="STOP ROBOT" />
+</div>
+<div id="robotStoppedContainer" style="display:none">
+    Robot has stopped
+</div>
+
+<script>
+
+///// "Execute Scenario" on click
+// When "Execute Scenario" is clicked, submit the scenario in the background
+$("#runBtn").click( function() {
+    $.post( "cmd", { robotNr: $("#robotNr").val(), pythoncode: $("#pythoncode").val() } )
+       .done( function( data ) {
+
+          // data contains the Python scenario as executed on the server
+          //alert( data );
+
+          // Display "STOP ROBOT" button
+          $("#stopRobotContainer").attr("style", "display:block");
+          // Hide "Robot has stopped"
+          $("#robotStoppedContainer").attr("style", "display:none");
+    });
+});
+
+///// "STOP ROBOT" on click
+$("#stopRobot").click( function() {
+    // Request url "stopScenario"
+    $.post( "stopScenario", { robotNr: $("#robotNr").val() } )
+        .done( function(data) {
+
+          // Hide "STOP ROBOT"
+          $("#stopRobotContainer").attr("style", "display:none");
+
+          // Display "Robot has stopped"
+          $("#robotStoppedContainer").html("Robot " + data + " has stopped");
+          $("#robotStoppedContainer").attr("style", "display:block");
+    });
+});
+
+// Update "Execute Scenario" button when robot ID is changed in the input box
+$( "#robotNr" ).change( function() {
+    $("#runBtn").attr("value", "Execute Scenario on Robot " + $( "#robotNr" ).val() );
+});
+
+// If on localhost, choose which robot to apply the blockly scenario to.
+// If not on localhost, robotNr should be set to the last character of the hostname (r3 or 172.16.74.53 => 3)
+if (location.hostname != "localhost" && location.hostname != "127.0.0.1")
+{
+    // Assuming on a robot -> Hide the input box for robotNr, fill in the robotNr from the hostname (URL)
+    var hostname = location.hostname;
+    var robotNr = hostname.charAt(hostname.length-1); 
+    $("#robotNrContainer").attr("style", "display:none");
+    $("#robotNr").val( robotNr );
+}
+
+// Now trigger the name update by initializing on the current Robot nr
+$( "#robotNr" ).trigger("change");
+
+
+////// Include workspace, blockdef and blockstubs for 'simple' or 'advanced'.
+var blocklyEnv = findGetParameter('env');
+if (blocklyEnv == 'advanced')
+{
+    includeJavascriptFile('advanced/workspace.js');
+    includeJavascriptFile('advanced/blocks_wm/blockdef_WM.js');
+    includeJavascriptFile('advanced/blocks_wm/blockstubs_WM.js');
+    includeJavascriptFile('advanced/blocks_tp/blockdef_TP.js');
+    includeJavascriptFile('advanced/blocks_tp/blockstubs_TP.js');
+    includeJavascriptFile('advanced/blocks_motion/blockdef_Motion.js');
+    includeJavascriptFile('advanced/blocks_motion/blockstubs_Motion.js');
+    includeJavascriptFile('advanced/blocks_pos/blockdef_pos.js');
+    includeJavascriptFile('advanced/blocks_pos/blockstubs_pos.js');
+    includeJavascriptFile('advanced/blocks_system/blockdef_Sys.js');
+    includeJavascriptFile('advanced/blocks_system/blockstubs_Sys.js');
+}
+else
+{
+    includeJavascriptFile('simple/workspace.js');
+    includeJavascriptFile('simple/blockdef.js');
+    includeJavascriptFile('simple/blockstubs.js');
+}
+</script>

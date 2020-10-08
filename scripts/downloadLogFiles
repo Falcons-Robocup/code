@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Coen Tempelaars, April 2018
 
@@ -34,10 +34,10 @@ def is_alive(hostname, dryrun):
     command = "ping -W 1 -c 1 %s >/dev/null 2>/dev/null" % hostname
 
     if dryrun:
-        print "Would have executed: %s" % command
+        print("Would have executed: %s" % command)
         return True
     else:
-        print "Executing: %s" % command
+        print("Executing: %s" % command)
         return (os.system(command) == 0)
 
 
@@ -51,9 +51,9 @@ class Robot:
 
     def safe_execute(self, command):
         if self.config.dryrun:
-            print "Would have executed: %s" % command
+            print("Would have executed: %s" % command)
         else:
-            print "Executing: %s" % command
+            print("Executing: %s" % command)
             result = os.system(command)
             if result != 0:
                 raise RuntimeError("Failed to execute command: %s" % command)
@@ -91,6 +91,6 @@ if __name__ == '__main__':
             robot.cleanup_packed_logfiles()
 
     if not config.dryrun:
-        print "Downloading complete. Got files:"
+        print("Downloading complete. Got files:")
         for f in files:
-            print "", f
+            print(f)

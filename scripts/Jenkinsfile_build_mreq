@@ -1,0 +1,174 @@
+
+pipeline {
+
+    agent any
+
+    environment {
+        WORKDIR="${env.WORKSPACE}"
+    }
+
+    parameters {
+
+        choice(
+            name: 'DOCKER_UBUNTU_BASE_VERSION',
+            choices: ["2004", "1604"],
+            description: 'Docker Ubuntu base version'
+        )
+
+        string(
+            name: 'DOCKER_FALCONS_IMAGE_TAG',
+            defaultValue: 'falcons_build_2004:latest',
+            description: 'Docker falcons tag'
+        )
+
+    }
+
+    triggers {
+
+        //cron('H H/2 * * *')
+
+        gitlab(
+            triggerOnPush: false,
+            triggerOnMergeRequest: true,
+            branchFilterType: 'All',
+            secretToken: "6eedcd3ff4a02cbb79361fb83d602935"
+        )
+
+    }
+
+    options {
+
+        timestamps()
+
+        buildDiscarder logRotator(
+            artifactDaysToKeepStr: '',
+            artifactNumToKeepStr: '',
+            daysToKeepStr: '14',
+            numToKeepStr: '50'
+        )
+
+        gitLabConnection('gitlab-falcons')
+
+        gitlabBuilds(builds: ['Build container', 'Clone Teamplay&Data repos', 'Build&Test Falcons Code'])
+
+    }
+
+    stages {
+
+        stage('Build container') {
+            steps {
+                dir("falcons/code") {
+                    script {
+                        String branch = "${env.GIT_BRANCH}".split('/')[1]
+
+                        gitlabCommitStatus(
+                            name: 'Build container',
+                            builds: [[projectId: 'falcons/code', revisionHash: branch]]
+                        ) {
+                            // we need to checkout the branch to be able to do the diff
+                            try {
+                                // if the branch was never checked-out, we also need to create a local branch
+                                def status = sh(script: "git checkout -b " + branch + " ${env.GIT_BRANCH}", returnStatus: true)
+                            } catch(err) {
+                                // if the local branch was already created, just check-out
+                                echo "Ignore checkout error: Branch already exists localy, Just checking-out!"
+                                def status = sh(script: "git checkout " + branch, returnStatus: true)
+                            }
+
+                            def dockerfile_changes = sh(script: "git diff --name-only ${env.GIT_COMMIT} ${env.GIT_PREVIOUS_SUCCESSFUL_COMMIT} | grep Dockerfile_${DOCKER_UBUNTU_BASE_VERSION} | wc -l", returnStdout: true).trim()
+
+                            if (dockerfile_changes.toInteger() != 0) {
+                                build job: 'Falcons_build_docker_image',
+                                parameters: [
+                                    string(name: 'DOCKER_UBUNTU_BASE_VERSION', value: "${params.DOCKER_UBUNTU_BASE_VERSION}"),
+                                    string(name: 'DOCKER_FALCONS_IMAGE_TAG', value: "${params.DOCKER_FALCONS_IMAGE_TAG}")
+                                ],
+                                propagate: true,
+                                wait: true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Clone Teamplay&Data repos') {
+            steps {
+                script {
+                    String branch = "${env.GIT_BRANCH}".split('/')[1]
+
+                    gitlabCommitStatus(
+                        name: 'Clone Teamplay&Data repos',
+                        builds: [[projectId: 'falcons/code', revisionHash: branch]]
+                    ) {
+
+                        // clone the data repo
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: '*/master']],
+                            doGenerateSubmoduleConfigurations: false,
+                            extensions: [
+                                [$class: 'CheckoutOption', timeout: 30],
+                                [$class: 'CloneOption', noTags: true, reference: '', shallow: true, timeout: 30],
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: 'falcons/data']
+                            ],
+                            submoduleCfg: [],
+                            userRemoteConfigs: [
+                                [credentialsId: '15c67f80-3a80-4c70-8964-a395988c4b8a', url: 'ssh://git@git.falcons-robocup.nl:2222/falcons/data.git']
+                            ]
+                        ])
+
+                        // clone the temaplayData repo
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: '*/integration']],
+                            doGenerateSubmoduleConfigurations: false,
+                            extensions: [
+                                [$class: 'CheckoutOption', timeout: 30],
+                                [$class: 'CloneOption', noTags: true, reference: '', shallow: true, timeout: 30],
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: 'falcons/teamplayData']
+                            ],
+                            submoduleCfg: [],
+                            userRemoteConfigs: [
+                                [credentialsId: '15c67f80-3a80-4c70-8964-a395988c4b8a', url: 'ssh://git@git.falcons-robocup.nl:2222/falcons/teamplayData.git']
+                            ]
+                        ])
+                    }
+                }
+            }
+        }
+
+        stage('Build&Test Falcons Code') {
+            agent {
+                docker {
+                    image "${params.DOCKER_FALCONS_IMAGE_TAG}"
+                    args  "-v ${WORKDIR}:/home/robocup:rw,z -w /home/robocup"
+                }
+            }
+
+            steps {
+                script {
+                    String branch = "${env.GIT_BRANCH}".split('/')[1]
+
+                    gitlabCommitStatus(
+                        name: 'Build&Test Falcons Code',
+                        builds: [[projectId: 'falcons/code', revisionHash: branch]]
+                    ) {
+                        if (params.DOCKER_UBUNTU_BASE_VERSION == "16.04") {
+                            sh 'sudo rosdep init && rosdep update'
+                        }
+
+                        sh '/bin/bash -c "source /home/robocup/falcons/code/scripts/runBuildServerQueue"'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+
+}

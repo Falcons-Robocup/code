@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -41,26 +41,6 @@ TEST_F(AGame, ConsistsOfFiveRobotsPerTeam)
 {
     EXPECT_EQ(5, gameData.team[TeamID::A].size());
     EXPECT_EQ(5, gameData.team[TeamID::B].size());
-}
-
-TEST_F(AGame, NoRobotHasBall)
-{
-    EXPECT_FALSE(gameData.anyRobotHasBall());
-    EXPECT_EQ(boost::none, gameData.getTeamWithBall());
-    EXPECT_EQ(boost::none, gameData.getRobotWithBall(TeamID::A));
-    EXPECT_EQ(boost::none, gameData.getRobotWithBall(TeamID::B));
-}
-
-TEST_F(AGame, OneRobotHasBall)
-{
-    gameData.team[TeamID::A][RobotID::r1].setPosition(Position2D(-3.0, -5.0,  0.5 * M_PI));
-    gameData.team[TeamID::A][RobotID::r1].setBallHandlingModulePresent();
-    gameData.ball.setLocation(Point2D(-3.0, -4.8));
-
-    EXPECT_TRUE(gameData.anyRobotHasBall());
-    EXPECT_EQ(TeamID::A, gameData.getTeamWithBall());
-    EXPECT_EQ(RobotID::r1, gameData.getRobotWithBall(TeamID::A));
-    EXPECT_EQ(boost::none, gameData.getRobotWithBall(TeamID::B));
 }
 
 TEST_F(AGame, NoRobotIsMoving)

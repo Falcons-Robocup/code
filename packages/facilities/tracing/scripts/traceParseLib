@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+
+import argparse
+import subprocess
+import tarfile
+import fileinput
+import os
+import json
+from datetime import datetime
+
+import TracingFacility
+
+def traceObjectToHTML(traceObj):
+
+    # Write traceObj to temporary trace file in /var/tmp/
+    tmpTraceFile = "/var/tmp/tmptracefile"
+    with open(tmpTraceFile, "wb") as f:
+        json.dump(traceObj, f)
+
+    # Convert JSON trace to HTML
+    print("Converting trace to HTML...")
+    cmd = "/home/robocup/falcons/data/external/catapult/tracing/bin/trace2html %s --output=%s.html" % (tmpTraceFile, tmpTraceFile)
+    subprocess.call(cmd, shell=True)
+
+    print("Done. Open with the following command:")
+    print("google-chrome %s.html" % (tmpTraceFile))
+
+def traceObjectToText(traceObj):
+
+    # Write traceObj to temporary file in /var/tmp/
+    tmpTraceFile = "/var/tmp/tmptracefile"
+    print("Writing to", tmpTraceFile)
+    with open(tmpTraceFile, "wb") as f:
+
+        for traceEntry in traceObj["traceEvents"]:
+
+            # Skip "End" phase trace entries
+            if traceEntry["ph"] == "E":
+                continue
+
+            # old format:
+            # {"cat":"/home/robocup/falcons/code/packages/pathPlanning/src/adapters/cRTDBInputAdapter.cpp","pid":10300,"tid":362239936,"ts":1561299196996054,"ph":"B","name":"void cRTDBInputAdapter::getForbiddenAreas()","args":{"msg":""}},
+
+            # Write with the following format:
+            # timestamp filename:lineNr functionName threadID msg
+            ts = datetime.fromtimestamp(float(traceEntry["ts"]) / 1000000.0)
+
+            # lineNr is not known.
+            try:
+                if "msg" in list(traceEntry["args"].keys()):
+                    entryLine = "%s %s:0 %s %s %s\n" % (ts.strftime("%Y-%m-%d %H:%M:%S.%f"), traceEntry["cat"], traceEntry["name"], traceEntry["tid"], traceEntry["args"]["msg"])
+                else:
+                    entryLine = "%s %s:0 %s %s\n" % (ts.strftime("%Y-%m-%d %H:%M:%S.%f"), traceEntry["cat"], traceEntry["name"], traceEntry["tid"])
+            except KeyError as e:
+                print("Error: Expected key %s in '%s'" % (e, traceEntry))
+                exit(1)
+            f.write(entryLine.encode())
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='This Library finds the processes in a specific Logging directory. Given a Logging directory and process, all tracing slices are read from file. ')
+    parser.add_argument('-t', '--text', action='store_true', help='generate textfile trace instead of the visual HTML page')
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument('-p', '--path', help='the path to read the tracing from. Default: Choose a log dir')
+    group2.add_argument('-r', '--robot', help='the robot to download the tracing from. Will SSH to the robot and prompt which log dir to use. Example: -r r3')
+    args = parser.parse_args()
+
+
+
+    ### logdir is the directory in which the tracing files are located
+    # e.g., /var/tmp/falcons_control_20190623_145815
+    if args.path:
+        logdir = args.path
+    else:
+        logdir = TracingFacility.promptLogdir(args.robot)
+
+
+
+    # Read the contents of the logging directory
+    # If args.robot, read the contents of the logging directory on the robot using ssh
+    # e.g., [ /var/tmp/falcons_control_20190623_145815/trace_A1_pp.json.20200530_152205.slice1.tar.gz, ... ]
+    traceFiles = TracingFacility.getTraceFilesFromLogDir(logdir, args.robot)
+
+
+
+    # Parse the processes from the traceFiles
+    # e.g., [ trace_A1_tp, trace_A1_wm, trace_A1_vc ]
+    processes = TracingFacility.getProcessesFromTraceFiles(traceFiles)
+
+
+
+    # Prompt processes to parse
+    # e.g.,
+    # 1,2,3 => [ trace_A1_tp, trace_A1_wm, trace_A1_vc ]
+    processesToParse = TracingFacility.promptProcessesToParse(processes)
+
+
+    # Prompt the timestamp ('20:39:05' or 'all')
+    ts = TracingFacility.promptTimestamp(traceFiles)
+    
+
+    # Find all traceFiles that meet 'processesToParse' and timestamp 'ts'
+    traceFilesToParse = TracingFacility.filterTraceFiles(traceFiles, processesToParse, ts)
+
+
+    # Download the traceFilesToParse from robot if needed
+    if args.robot:
+        traceFilesToParse = TracingFacility.downloadTraceFilesFromRobot(traceFilesToParse, args.robot)
+
+
+    # traceFilesToParse now contains the to-be-parsed traceFiles on the local machine
+    traceObjMerged = TracingFacility.constructJsonObjectFromTraceFiles(traceFilesToParse)
+
+    # Convert json to HTML or human readable text
+    if args.text:
+        traceObjectToText(traceObjMerged)
+    else:
+        traceObjectToHTML(traceObjMerged)
+

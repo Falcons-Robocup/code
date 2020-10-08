@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -22,6 +22,7 @@
 #include "abstractConfigAdapter.hpp"
 #include "abstractGameDataAdapter.hpp"
 #include "abstractMotionAdapter.hpp"
+#include "abstractTimeAdapter.hpp"
 #include "arbiter.hpp"
 #include "simworldGameData.hpp"
 
@@ -31,15 +32,31 @@ public:
 
     void initialize();
     void control();
+    void loop();
 
 protected:
     AbstractConfigAdapter* _configAdapter;
     AbstractGameDataAdapter* _gameDataAdapter;
     AbstractMotionAdapter* _motionAdapter;
+    AbstractTimeAdapter* _timeAdapter;
 
 private:
     Arbiter _arbiter;
     SimworldGameData _simworldGameData;
+
+    rtime _simulationTime;
+    int _sizeTeamA;
+    int _sizeTeamB;
+
+    // The number of updates/recalculations of the simulated world per second
+    int _tickFrequency;
+
+    // The number of seconds to advance time in a single update (tick)
+    double _tick_stepsize_s;
+
+    // The number of milliseconds to sleep inbetween triggering a simulated robot
+    // = (1000 / _tickFrequency) / (numRobots + arbiter)
+    int _sleeptime_ms;
 };
 
 #endif /* SIMWORLD_HPP_ */

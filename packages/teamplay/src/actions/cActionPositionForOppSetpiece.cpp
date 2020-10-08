@@ -1,5 +1,5 @@
  /*** 
- 2014 - 2019 ASML Holding N.V. All Rights Reserved. 
+ 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
  
  NOTICE: 
  
@@ -20,7 +20,7 @@
 
 #include "int/stores/heightMapStore.hpp"
 #include "int/stores/robotStore.hpp"
-#include "int/utilities/trace.hpp"
+#include "cDiagnostics.hpp"
 
 
 using namespace teamplay;
@@ -56,7 +56,7 @@ behTreeReturnEnum cActionPositionForOppSetpiece::execute(const std::map<std::str
         specific_parameters["POI"] = "ball";
 
         // Get optimal location from heightmap
-        auto optimum = heightMapStore::getInstance().getOptimum(tpActionEnum::POSITION_FOR_OPP_SETPIECE, specific_parameters);
+        auto optimum = heightMapStore::getInstance().getOptimum(CompositeHeightmapName::POSITION_FOR_OPP_SETPIECE, specific_parameters);
 
         // Compute target positions
         Position2D targetPos;
