@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2020 Jan Feitsma (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * statistics.cpp
  *
  *  Created on: 2019-02-24
@@ -20,6 +11,7 @@
 #include "statistics.hpp"
 #include "tprintf.hpp"
 #include <boost/thread/thread.hpp>
+#include <numeric>
 
 
 boost::mutex g_mutex_rtdb;
@@ -48,13 +40,14 @@ std::string TransmitStatistics::report()
     return buffer;
 }
 
-void ReceiveStatistics::update(int numBytes, int packetId)
+void ReceiveStatistics::update(int numBytes, int packetId, double dt)
 {
     boost::mutex::scoped_lock l(g_mutex_rtdb);
     _counter++;
     _totalBytes += numBytes;
     _packetsLost += (packetId - _lastReceivedId - 1);
     _lastReceivedId = packetId;
+    _timeDeltas.push_front(dt);
 }
 
 std::string ReceiveStatistics::report()
@@ -65,6 +58,15 @@ std::string ReceiveStatistics::report()
     float elapsed = double(t - _lastReportTime);
     float bandWidth = (_totalBytes - _lastReportBytes) / 1024.0 / elapsed;
     int packetsLost = _packetsLost;
+    if (_timeDeltas.size() > TIME_DELTAS_BUFFER_SIZE)
+    {
+        _timeDeltas.resize(TIME_DELTAS_BUFFER_SIZE);
+    }
+    double avgTimeDelta = 0.0;
+    if (_timeDeltas.size())
+    {
+        avgTimeDelta = accumulate(_timeDeltas.begin(), _timeDeltas.end(), 0.0) / _timeDeltas.size(); 
+    }
     // reset for next calculation
     _lastReportTime = t;
     _lastReportBytes = _totalBytes;
@@ -83,6 +85,8 @@ std::string ReceiveStatistics::report()
     {
         rpt += "   ";
     }
+    sprintf(buffer, " %5.1fms", 1e3 * avgTimeDelta);
+    rpt += buffer;
     return rpt;
 }
 

@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Jan Feitsma (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * RTDBOutputAdapter.cpp
  *
  *  Created on: Oct 27, 2018
@@ -34,16 +25,16 @@ RTDBOutputAdapter::~RTDBOutputAdapter()
 {
 }
 
-void RTDBOutputAdapter::setVelocity(actionResultTypeEnum const &status, robotVelocity const &robotVelocitySetpoint)
+void RTDBOutputAdapter::setSubtarget(actionResultTypeEnum const &status, robotPosVel const &robotPosVelSetpoint)
 {
     TRACE_FUNCTION("");
 
     if (_verbose)
     {
-        tprintf("put result=%-8s  ROBOT_VELOCITY_SETPOINT=[%6.2f, %6.2f, %6.2f]", enum2str(status), robotVelocitySetpoint.x, robotVelocitySetpoint.y, robotVelocitySetpoint.Rz);
+        tprintf("put result=%-8s  ROBOT_POSVEL_SETPOINT=( pos=[%6.2f, %6.2f, %6.2f], vel=[%6.2f, %6.2f, %6.2f], motionType=%s )", enum2str(status), robotPosVelSetpoint.position.x, robotPosVelSetpoint.position.y, robotPosVelSetpoint.position.Rz, robotPosVelSetpoint.velocity.x, robotPosVelSetpoint.velocity.y, robotPosVelSetpoint.velocity.Rz, enum2str(robotPosVelSetpoint.motionType));
     }
 
-    _rtdb->put(ROBOT_VELOCITY_SETPOINT, &robotVelocitySetpoint);
+    _rtdb->put(ROBOT_POSVEL_SETPOINT, &robotPosVelSetpoint);
 }
 
 void RTDBOutputAdapter::setDiagnostics(diagPathPlanning const &diagnostics)

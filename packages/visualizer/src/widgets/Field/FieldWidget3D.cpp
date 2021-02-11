@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- #include <vtkAlgorithm.h>
+// Copyright 2016-2020 Diana Koenraadt (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+#include <vtkAlgorithm.h>
 #include <vtkAlgorithmOutput.h>
 #include <vtkCellArray.h>
 #include <vtkOrientationMarkerWidget.h>
@@ -97,6 +88,10 @@ FieldWidget3D::FieldWidget3D(QWidget *parent)
 
     addTechnicalTeamAreaActor();
 
+    _trueBallActor = vtkSmartPointer<BallVisualization>::New();
+    _mainRenderer->AddActor(_trueBallActor);
+    _trueBallActor->VisibilityOff();
+
     resetZoomPanRotate();
 
     // Start timers
@@ -146,6 +141,8 @@ FieldWidget3D::~FieldWidget3D()
     _gaussianObstacleActors.clear();
 
     _ballActors.clear();
+
+    _mainRenderer->RemoveActor(_trueBallActor);
 
     for (size_t i = 0; i < _eventHandlers.size(); i++)
     {
@@ -1126,16 +1123,22 @@ void traceCam(vtkCamera *camera, std::string name = "")
 }
 
 
-void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_local, bool show_measurements)
+void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_local, bool show_obstacle_measurements, bool show_balls_measurements)
 {
     std::vector<diagObstacle>& obstacles = worldmodel_local.gaussianObstacleDiscriminatorData.obstacles;
-    std::vector<diagMeasurement>& measurements = worldmodel_local.gaussianObstacleDiscriminatorData.measurements;
+    std::vector<diagMeasurement>& obs_meas = worldmodel_local.gaussianObstacleDiscriminatorData.measurements;
+    std::vector<diagBall>& balls = worldmodel_local.gaussianBallDiscriminatorData.balls;
+    std::vector<diagMeasurement3D>& ball_meas = worldmodel_local.gaussianBallDiscriminatorData.measurements;
+
 
     unsigned int obstacle_count = obstacles.size();
-    unsigned int measurement_count = measurements.size();
+    unsigned int measurement_count = obs_meas.size();
+    unsigned int ball_count = balls.size();
+    unsigned int ball_measurement_count = ball_meas.size();
     unsigned int actor_count = _gaussianObstacleActors.size();
 
-    int missing_actors = std::max(0u, (obstacle_count+measurement_count)-actor_count);
+    // each ball has a position and velocity, so two gaussians are drawn
+    int missing_actors = std::max(0u, (obstacle_count+measurement_count+(2*ball_count)+ball_measurement_count)-actor_count);
 
     for(int i=0; i<missing_actors; i++)
     {
@@ -1146,7 +1149,9 @@ void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_lo
 
     std::vector<vtkSmartPointer<GaussianVisualization>>::iterator it_act = _gaussianObstacleActors.begin();
     std::vector<diagObstacle>::iterator it_obs = obstacles.begin();
-    std::vector<diagMeasurement>::iterator it_meas = measurements.begin();
+    std::vector<diagMeasurement>::iterator it_meas = obs_meas.begin();
+    std::vector<diagBall>::iterator it_ball = balls.begin();
+    std::vector<diagMeasurement3D>::iterator it_ball_meas = ball_meas.begin();
 
     while(it_obs != obstacles.end())
     {
@@ -1158,16 +1163,70 @@ void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_lo
         it_obs++;
     }
 
-    if(show_measurements)
+    if(show_obstacle_measurements)
     {
-        while(it_meas != measurements.end())
-        {
-            (*it_act)->VisibilityOn();
+        while(it_meas != obs_meas.end())
+        {        
+            (*it_act)->VisibilityOn();            
             (*it_act)->setValue(it_meas->gaussian2d);
             (*it_act)->setColor(1.0, 0.0, 0.0);
 
             it_act++;
             it_meas++;
+        }
+    }
+
+    bool show_balls = true;
+    if(show_balls)
+    {
+        while(it_ball != balls.end())
+        {
+            if(!it_ball->blacklisted || show_balls_measurements) // only show blacklisted balls if show_balls_measurements is active
+            {
+                (*it_act)->VisibilityOn();
+                (*it_act)->setValue(it_ball->position);
+
+                if(it_ball->bestBall)
+                {
+                    (*it_act)->setColor(1.0, 1.0, 0.5);
+                }
+                else if(!it_ball->blacklisted)
+                {
+                    (*it_act)->setColor(1.0, 1.0, 0.0);
+                }
+                else 
+                {
+                    (*it_act)->setColor(0.1, 0.1, 0.1);   
+                }
+                it_act++;
+            }                
+
+            // diagGaussian2D draw_velocity;
+            // draw_velocity.mean = it_ball->position.mean;
+            // draw_velocity.covariance = it_ball->velocity.covariance;
+            // draw_velocity.covariance.matrix[0][0] *= 0.01;
+            // draw_velocity.covariance.matrix[0][1] *= 0.01;
+            // draw_velocity.covariance.matrix[1][0] *= 0.01;
+            // draw_velocity.covariance.matrix[1][1] *= 0.01;
+
+            // (*it_act)->VisibilityOn();
+            // (*it_act)->setValue(draw_velocity);
+            // (*it_act)->setColor(0.0, 1.0, 1.0);
+            // it_act++;
+
+            it_ball++;
+        }
+    }
+
+    if(show_balls_measurements)
+    {
+        while(it_ball_meas != ball_meas.end())
+        {
+            (*it_act)->VisibilityOn();
+            (*it_act)->setValue(it_ball_meas->gaussian3d);
+            (*it_act)->setColor(0.8, 0.25, 0.0);
+            it_act++;
+            it_ball_meas++;
         }
     }
 
@@ -1177,4 +1236,22 @@ void FieldWidget3D::updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_lo
         it_act++;
     }
 
+}
+
+void FieldWidget3D::updateTrueBall(T_DIAG_TRUE_BALL& true_ball)
+{
+    _trueBallActor->VisibilityOn();
+    PositionVelocity posvel;
+    posvel.x = true_ball.x;
+    posvel.y = true_ball.y;
+    posvel.z = true_ball.z;
+    _trueBallActor->setPosition(posvel);
+    _trueBallActor->setColor(CYAN, 0.5);
+    _trueBallActor->setOpacity(0.25);
+
+    // setClockTick calls this same function, but is synchronized to the coach time
+    // this leads to a delay on MATCH_STATE compared to the robots time
+    // when analyzing the log of a specific robot, this signals is synchronized to
+    // that robots time, leading to a more accurate image
+    fieldVideoActor->updateImage(true_ball.timestamp.toDouble(), _heightmapName, _robotID);
 }

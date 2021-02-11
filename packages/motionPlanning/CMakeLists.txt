@@ -56,10 +56,10 @@ target_link_libraries(mpClient ${Boost_LIBRARIES})
 
 
 # TESTERS
-# cQueryInterface
-add_executable(cQueryInterfaceTest tst/cQueryInterfaceTest.cpp)
-target_link_libraries(cQueryInterfaceTest mpInterfaces gtest)
-add_test(cQueryInterfaceTest cQueryInterfaceTest)
-set_tests_properties(cQueryInterfaceTest PROPERTIES TIMEOUT 1)
+# cQueryInterface -- disabled for now, see ticket #122
+#add_executable(cQueryInterfaceTest tst/cQueryInterfaceTest.cpp)
+#target_link_libraries(cQueryInterfaceTest mpInterfaces gtest)
+#add_test(cQueryInterfaceTest cQueryInterfaceTest)
+#set_tests_properties(cQueryInterfaceTest PROPERTIES TIMEOUT 1)
 
 

@@ -1,15 +1,6 @@
-""" 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- """ 
- #!/usr/bin/env python3
+# Copyright 2020 Jan Feitsma (Falcons)
+# SPDX-License-Identifier: Apache-2.0
+#!/usr/bin/env python3
 #
 # Python library for on-robot commands.
 
@@ -130,63 +121,67 @@ class RobotLibrary():
         logging.info("shutting down ...")
         self.shutdown()
 
-    def move(self, x, y, phi, slow=False, usePPtol=False, xyTol=0.05, rzTol=0.02):
-        bh = self._rci.getBallHandlersEnabled() # maintain current state
-        self._rci.setMotionPlanningAction("MOVE", x, y, phi, slow, bh)
-        # pathPlanning tolerances are typically configured a bit too tight for smooth testing
-        # robot may take a highly-varying amount of time until converged (can be quick, or never...)
-        # -> use more relaxed tolerances here, unless explicitly requested ('usePPtol')
-        if usePPtol:
-            self._rci.blockUntilTPOverridePassedOrFailed()
-        else:
-            # block, continuously evaluate delta position with given tolerances
-            # use delta position as reported in pp diagnostics
-            # (alternative: temporarily re-configure pathPlanning?)
-            # (alternative: import WorldState library?)
-            done = False
-            while not done:
-                sleep(1.0 / 30)
-                if self._shutdown:
-                    break
-                done = False
-                ppDetails = self._rci._robotControl._rtdbGet("DIAG_PATHPLANNING")
-                if ppDetails != None:
-                    deltaPosition = ppDetails.value['distanceToSubTargetRCS']
-                    deltaX = deltaPosition[0]
-                    deltaY = deltaPosition[1]
-                    deltaRz = deltaPosition[2]
-                    done = abs(deltaX) < xyTol and abs(deltaY) < xyTol and abs(deltaRz) < rzTol
+    def stop(self):
+        self._rci.setMotionPlanningAction("STOP", 0.0, 0.0, 0.0, "NORMAL", False)
         self._rci.clearStimulation()
-        # prevent possible last nonzero setpoint causing robot to drift (watchdog)
         self._rci.setRobotVelocity(0.0, 0.0, 0.0)
+
+    def enableBallHandlers(self):
+        self._rci.setBallHandlers(True)
+
+    def disableBallHandlers(self):
+        self._rci.setBallHandlers(False)
+
+    def velocitySetpoint(self, vx, vy, vphi, duration):
+        self._rci.setRobotPosVel("VEL_ONLY", 0.0, 0.0, 0.0, vx, vy, vphi, "NORMAL")
+        # next line was old style, before VC was split out of PP, so no acc limiter:
+        #self._rci.setRobotVelocity(0.0, 0.0, 0.0)
+        sleep(duration)
+        self.stop()
+
+    def move(self, x, y, phi, motionType="NORMAL"):
+        # TODO: is there still a use case to overrule (pp) tolerance limits?
+        # pathPlanning tolerances might be configured a bit too tight for smooth testing
+        bh = self._rci.getBallHandlersEnabled() # maintain current state
+        self._rci.setMotionPlanningAction("MOVE", x, y, phi, motionType, bh)
+        self._rci.blockUntilTPOverridePassedOrFailed()
+        self.stop()
 
     def getBall(self):
         self._rci.setTeamplayAction("GET_BALL", {})
         self._rci.blockUntilTPOverridePassedOrFailed()
-        self._rci.clearStimulation()
+        self.stop()
 
     def interceptBall(self):
         self._rci.setTeamplayAction("INTERCEPT_BALL", {})
         self._rci.blockUntilTPOverridePassedOrFailed()
-        self._rci.clearStimulation()
+        self.stop()
 
     def passTo(self, x, y):
-        self._rci.setMotionPlanningAction("PASS", x, y, 0.0, False, True)
+        self._rci.setMotionPlanningAction("PASS", x, y, 0.0, "NORMAL", True)
         self._rci.blockUntilTPOverridePassedOrFailed()
-        self._rci.clearStimulation()
+        self.stop()
 
     def shootAt(self, x, y, z):
-        self._rci.setMotionPlanningAction("SHOOT", x, y, z, False, True)
+        self._rci.setMotionPlanningAction("SHOOT", x, y, z, "NORMAL", True)
         self._rci.blockUntilTPOverridePassedOrFailed()
-        self._rci.clearStimulation()
+        self.stop()
 
     def lobShotAt(self, x, y, z):
-        self._rci.setMotionPlanningAction("LOB", x, y, z, False, True)
+        self._rci.setMotionPlanningAction("LOB", x, y, z, "NORMAL", True)
         self._rci.blockUntilTPOverridePassedOrFailed()
-        self._rci.clearStimulation()
+        self.stop()
 
     def kick(self, power, height=0.0):
-        self._rci.setMotionPlanningAction("KICK", power, height, 0.0, False, True)
+        self._rci.setMotionPlanningAction("KICK", power, height, 0.0, "NORMAL", True)
+        self._rci.blockUntilTPOverridePassedOrFailed()
+        self.stop()
+
+    def keeper(self):
+        self.behavior("B_GOALKEEPER")
+
+    def behavior(self, behaviorName, params={}):
+        self._rci.setTeamplayBehavior(args[0], params)
         self._rci.blockUntilTPOverridePassedOrFailed()
         self._rci.clearStimulation()
 
@@ -206,21 +201,19 @@ class RobotLibrary():
             if mode in ['h', 'help', '?']:
                 printHelp()
             elif mode in ['stop']:
-                self._rci.setMotionPlanningAction("STOP", 0.0, 0.0, 0.0, False, False)
+                self.stop()
             elif mode in ['bh']:
                 if len(args) == 1:
                     if str(args[0]) == "on":
-                        self._rci.setBallHandlers(True)
+                        self.enableBallHandlers()
                     if str(args[0]) == "off":
-                        self._rci.setBallHandlers(False)
+                        self.disableBallHandlers()
             elif mode in ['velocity']:
                 vx = float(args[0])
                 vy = float(args[1])
                 vphi = float(args[2])
-                t = float(args[3])
-                self._rci.setRobotVelocity(vx, vy, vphi)
-                sleep(t)
-                self._rci.setRobotVelocity(0.0, 0.0, 0.0)
+                duration = float(args[3])
+                self.velocitySetpoint(vx, vy, vphi, duration)
             elif mode in ['move', 'target']:
                 x = float(args[0])
                 y = float(args[1])
@@ -264,7 +257,7 @@ class RobotLibrary():
                     height = float(args[1])
                 self.kick(power, height)
             elif mode in ['keeper']:
-                self._rci.setTeamplayBehavior("B_GOALKEEPER", {})
+                self.keeper()
             elif mode in ['behavior']:
                 # allow parameters as key=value strings, for instance 'role=defenderMain'
                 params = {}
@@ -273,9 +266,7 @@ class RobotLibrary():
                         kv = s.split("=")
                         if len(kv) == 2:
                             params[kv[0]] = kv[1]
-                self._rci.setTeamplayBehavior(args[0], params)
-                self._rci.blockUntilTPOverridePassedOrFailed()
-                self._rci.clearStimulation()
+                self.behavior(args[0], params)
             elif mode in ['listscenarios']:
                 print("Loaded scenarios are:")
                 print(listScenarios())
@@ -330,7 +321,7 @@ class RobotLibrary():
                 self._rci.setRobotVelocity(item.value[1][0], item.value[1][1], item.value[1][2])
 
                 if item.value[4] > 0:
-                    self._rci.setMotionPlanningAction("KICK", item.value[4], item.value[3], 0.0, False, True)
+                    self._rci.setMotionPlanningAction("KICK", item.value[4], item.value[3], 0.0, "NORMAL", True)
                     self._rci.blockUntilTPOverridePassedOrFailed()
                     self._rci.clearStimulation()
                 action = item.value[5] # blocking actions
@@ -344,7 +335,7 @@ class RobotLibrary():
                     pass
                 elif action == "shootAtGoal":
                     goalPos = EnvironmentField.cEnvironmentField.getInstance().getFieldPOI( EnvironmentField.P_OPP_GOALLINE_CENTER )
-                    self._rci.setMotionPlanningAction("SHOOT", goalPos.x, goalPos.y, 0.7, False, True)
+                    self._rci.setMotionPlanningAction("SHOOT", goalPos.x, goalPos.y, 0.7, "NORMAL", True)
                     self._rci.blockUntilTPOverridePassedOrFailed()
                     self._rci.clearStimulation()
 

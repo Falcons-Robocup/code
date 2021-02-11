@@ -7,22 +7,27 @@ find_package(Facilities)
 # using shared_ptr
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror")
 
-#set the default path for built executables to the "bin" directory
-#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-#include_directories(${PROJECT_SOURCE_DIR} include)
+# Create library libFalconsTypes
+set(LIBRARY_TARGET_NAME FalconsTypes)
+add_library(${LIBRARY_TARGET_NAME} src/objectMeasurement.cpp src/uniqueObjectID.cpp)
 
-#Create library libFalconsTypes
-add_library(FalconsTypes src/objectMeasurement.cpp src/uniqueObjectID.cpp)
 
-add_custom_target(
-    enum2str ALL
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/generateEnums.py -v -i ${CMAKE_CURRENT_SOURCE_DIR}/include -o ${CMAKE_CURRENT_SOURCE_DIR}/include/generated_enum2str.hpp -p ${CMAKE_CURRENT_SOURCE_DIR}/src/sharedTypes.py
-    BYPRODUCTS generated_enum2str.hpp sharedTypes.py
-    COMMENT "Generating code from enums"
+# setup the code generation build hook command
+# reading material: https://crascit.com/2017/04/18/generated-sources-in-cmake-builds/
+# the generated artefacts are now also stored in the build/ tree (FALCONS_CODEGEN_FOLDER)
+add_custom_command(
+    OUTPUT  ${FALCONS_CODEGEN_FOLDER}/generated_enum2str.hpp ${FALCONS_CODEGEN_FOLDER}/sharedTypes.py
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/generateEnums.py -i ${CMAKE_CURRENT_SOURCE_DIR}/include -o ${FALCONS_CODEGEN_FOLDER}/generated_enum2str.hpp -p ${FALCONS_CODEGEN_FOLDER}/sharedTypes.py
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp
 )
 
-add_dependencies(FalconsTypes enum2str)
+# define a custom dummy target to let everything else depend on (via FalconsTypes)
+add_custom_target(enum2str
+    ALL
+    DEPENDS ${FALCONS_CODEGEN_FOLDER}/generated_enum2str.hpp
+    DEPENDS ${FALCONS_CODEGEN_FOLDER}/sharedTypes.py
+    COMMENT "Generating code from enums"
+)
+add_dependencies(${LIBRARY_TARGET_NAME} enum2str)
 

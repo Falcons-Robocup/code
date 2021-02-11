@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Jan Feitsma (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * PathPlanningData.cpp
  *
  *  Created on: July, 2019
@@ -32,17 +23,8 @@ void PathPlanningData::reset()
     resultStatus = actionResultTypeEnum::INVALID;
     deltaPositionFcs = Position2D(0.0, 0.0, 0.0);
     deltaPositionRcs = Position2D(0.0, 0.0, 0.0);
-    resultVelocityRcs = Velocity2D(0.0, 0.0, 0.0);
-    accelerationRcs = pose();
-    pidState = diagPIDstate();
-    for (int dof = 0; dof < 3; ++dof)
-    {
-        isAccelerating[dof] = false;
-        accelerationClipping[dof] = false;
-        deadzone[dof] = false;
-    }
     done = false;
-    slow = false;
+    motionType = motionTypeEnum::INVALID;
     stop = false;
 }
 
@@ -50,21 +32,25 @@ void PathPlanningData::traceInputs()
 {
     TRACE_FUNCTION("");
     TRACE("robotPos=[%6.2f, %6.2f, %6.2f] robotVel=[%6.2f, %6.2f, %6.2f]", robot.position.x, robot.position.y, robot.position.Rz, robot.velocity.x, robot.velocity.y, robot.velocity.Rz);
-    TRACE("stop=%d targetPos=[%6.2f, %6.2f, %6.2f] slow=%d", stop, target.pos.x, target.pos.y, target.pos.Rz, slow);
+    TRACE("stop=%d targetPos=[%6.2f, %6.2f, %6.2f] motionType=%s", stop, target.pos.x, target.pos.y, target.pos.Rz, enum2str(motionType));
 }
 
 void PathPlanningData::traceOutputs()
 {
     TRACE_FUNCTION("");
-    if (path.size())
+
+    auto subtarget = path.begin();
+    if (subtarget != path.end())
     {
-        auto subtarget = path.at(0);
-        TRACE("result=%-8s  ROBOT_VELOCITY_SETPOINT=[%6.2f, %6.2f, %6.2f] subTargetPos=[%6.2f, %6.2f, %6.2f]", enum2str(resultStatus), resultVelocityRcs.x, resultVelocityRcs.y, resultVelocityRcs.phi, subtarget.pos.x, subtarget.pos.y, subtarget.pos.Rz);
+        TRACE("result=%-8s  ROBOT_POSVEL_SETPOINT=( pos=[%6.2f, %6.2f, %6.2f], vel=[%6.2f, %6.2f, %6.2f], motionType=%s )", enum2str(resultStatus), subtarget->pos.x, subtarget->pos.y, subtarget->pos.Rz, subtarget->vel.x, subtarget->vel.y, subtarget->vel.Rz, enum2str(motionType));
     }
     else
     {
-        TRACE("result=%-8s  ROBOT_VELOCITY_SETPOINT=[%6.2f, %6.2f, %6.2f] subTargetPos=NONE", enum2str(resultStatus), resultVelocityRcs.x, resultVelocityRcs.y, resultVelocityRcs.phi);
+        std::string err = "No subtarget defined in PathPlanning. `path` in PathPlanningData must always result in a wayPoint.";
+        TRACE(err.c_str());
+        throw std::runtime_error(err.c_str());
     }
+    
 }
 
 void PathPlanningData::insertSubTarget(Position2D const &pos, Velocity2D const &vel)
@@ -73,8 +59,8 @@ void PathPlanningData::insertSubTarget(Position2D const &pos, Velocity2D const &
     // only insert if subtarget is sufficiently far away
     Position2D deltaPositionFcsLocal = pos - currentPositionFcs;
     deltaPositionFcsLocal.phi = project_angle_mpi_pi(deltaPositionFcsLocal.phi);
-    bool xyFar = deltaPositionFcsLocal.xy().size() >= currentLimits.toleranceXY;
-    bool RzFar = fabs(deltaPositionFcsLocal.phi) >= currentLimits.toleranceRz;
+    bool xyFar = deltaPositionFcsLocal.xy().size() >= config.deadzone.toleranceXY;
+    bool RzFar = fabs(deltaPositionFcsLocal.phi) >= config.deadzone.toleranceRz;
     TRACE("xyFar=%d RzFar=%d", xyFar, RzFar);
     if (xyFar || RzFar)
     {
@@ -135,39 +121,3 @@ Position2D PathPlanningData::getSubTarget() const
     }
     return result;
 }
-
-void PathPlanningData::configureLimits()
-{
-    currentLimits.enabled = config.limits.enabled;
-    currentLimits.maxDecX = config.limits.common.maxDecX;
-    currentLimits.maxDecY = config.limits.common.maxDecY;
-    currentLimits.maxDecRz = config.limits.common.maxDecRz;
-    currentLimits.toleranceXY = config.limits.common.toleranceXY;
-    currentLimits.toleranceRz = config.limits.common.toleranceRz;
-    currentLimits.accThresholdX = config.limits.common.accThresholdX;
-    currentLimits.accThresholdY = config.limits.common.accThresholdY;
-    currentLimits.accThresholdRz = config.limits.common.accThresholdRz;
-    auto specificLimits = (robot.hasBall ? config.limits.withBall : config.limits.withoutBall);
-    currentLimits.maxVelX = specificLimits.maxVelX;
-    currentLimits.maxVelYforward = specificLimits.maxVelYforward;
-    currentLimits.maxVelYbackward = specificLimits.maxVelYbackward;
-    currentLimits.maxVelRz = specificLimits.maxVelRz;
-    currentLimits.maxAccX = specificLimits.maxAccX;
-    currentLimits.maxAccYforward = specificLimits.maxAccYforward;
-    currentLimits.maxAccYbackward = specificLimits.maxAccYbackward;
-    currentLimits.maxAccRz = specificLimits.maxAccRz;
-    if (slow)
-    {
-        float f = config.slowFactor;
-        currentLimits.maxVelX *= f;
-        currentLimits.maxVelYforward *= f;
-        currentLimits.maxVelYbackward *= f;
-        currentLimits.maxVelRz *= f;
-        currentLimits.maxAccX *= f;
-        currentLimits.maxAccYforward *= f;
-        currentLimits.maxAccYbackward *= f;
-        currentLimits.maxAccRz *= f;
-    }
-    TRACE("limits have been configured to: %s", tostr(currentLimits).c_str());
-}
-

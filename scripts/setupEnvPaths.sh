@@ -24,6 +24,8 @@ export RTDB_CONFIG_PATH=$FALCONS_CONFIG_PATH
 
 # register python paths
 export PYTHONPATH=$PYTHONPATH:$FALCONS_CODE_PATH/packages/facilities/environment/pymodule # to access C++ field environment library
+export PYTHONPATH=$PYTHONPATH:$FALCONS_CODE_PATH/packages/facilities/rtdb/python # to access rtdb2
+export PYTHONPATH=$PYTHONPATH:$FALCONS_CODE_PATH/testing/execution/lib # to access robot framework libraries
 export PYTHONPATH=$PYTHONPATH:$FALCONS_SCRIPTS_PATH
 
 # register shell paths

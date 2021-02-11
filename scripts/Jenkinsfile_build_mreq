@@ -114,7 +114,7 @@ pipeline {
                             ],
                             submoduleCfg: [],
                             userRemoteConfigs: [
-                                [credentialsId: '15c67f80-3a80-4c70-8964-a395988c4b8a', url: 'ssh://git@git.falcons-robocup.nl:2222/falcons/data.git']
+                                [credentialsId: '15c67f80-3a80-4c70-8964-a395988c4b8a', url: 'ssh://git@gitlab/falcons/data.git']
                             ]
                         ])
 
@@ -130,7 +130,7 @@ pipeline {
                             ],
                             submoduleCfg: [],
                             userRemoteConfigs: [
-                                [credentialsId: '15c67f80-3a80-4c70-8964-a395988c4b8a', url: 'ssh://git@git.falcons-robocup.nl:2222/falcons/teamplayData.git']
+                                [credentialsId: '15c67f80-3a80-4c70-8964-a395988c4b8a', url: 'ssh://git@gitlab/falcons/teamplayData.git']
                             ]
                         ])
                     }

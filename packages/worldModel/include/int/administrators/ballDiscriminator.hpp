@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2016-2020 Tim Kouters (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * ballDiscriminator.hpp
  *
  *  Created on: Sep 6, 2016
@@ -22,23 +13,24 @@
 
 #include <vector>
 
+#include "int/administrators/IballDiscriminator.hpp"
 #include "diagWorldModel.hpp"
-
+#include "ballMeasurement.hpp"
 #include "int/administrators/ballTracker.hpp"
 #include "int/types/ball/ballType.hpp"
 
-class ballDiscriminator
+class ballDiscriminator : public IballDiscriminator
 {
     public:
     	ballDiscriminator(const WorldModelConfig& wmConfig);
-    	~ballDiscriminator();
+    	virtual ~ballDiscriminator();
 
-    	void addMeasurement(const ballMeasurement &measurement);
-    	void performCalculation(rtime const timeNow, Vector2D const &pos);
+    	virtual void addMeasurement(const ballMeasurement& measurement);
+    	virtual void performCalculation(rtime timeNow, const Vector2D& pos);
 
-    	std::vector<ballClass_t> getBalls() const;
-        void getMeasurementsToSync(std::vector<ballMeasurement> &measurements);
-        void fillDiagnostics(diagWorldModel &diagnostics);
+    	virtual std::vector<ballClass_t> getBalls() const;
+        virtual void getMeasurementsToSync(std::vector<ballMeasurement>& measurements);
+        virtual void fillDiagnostics(diagWorldModel& diagnostics);
 
     private:
         const float MAX_BALL_HEIGHT = 5.0;
@@ -54,7 +46,6 @@ class ballDiscriminator
         bool ignoreHighVision(const ballMeasurement &measurement);
     	void selectGoodBalls(rtime const timeNow);
     	void traceTrackers(rtime const timeNow, bool all = false);
-
 };
 
 #endif /* BALLDISCRIMINATOR_HPP_ */

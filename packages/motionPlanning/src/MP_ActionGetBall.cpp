@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Erik Kouters (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * cActionGetBall.cpp
  *
  *  Created on: Feb 3, 2018
@@ -47,7 +38,7 @@ using namespace std;
 
 void MP_ActionGetBall::unpackParameters()
 {
-    _slow = bool(boost::lexical_cast<int>(_params.at(0)));
+    _motionType = (motionTypeEnum)(boost::lexical_cast<int>(_params.at(0)));
 }
 
 void MP_ActionGetBall::getCfg()
@@ -70,7 +61,6 @@ void MP_ActionGetBall::initialize()
     // face ball
     _target = _R;
     faceBall();
-    _motionProfile = cMotionProfileType::NORMAL;
 }
 
 void MP_ActionGetBall::analyzeGeometry()
@@ -78,34 +68,8 @@ void MP_ActionGetBall::analyzeGeometry()
     // analyze ball movement
     Velocity2D ballVelocity(_wm->ballVelocity().x, _wm->ballVelocity().y, 0);
     _ballMovingFastEnough = (vectorsize(Vector2D(ballVelocity.x, ballVelocity.y)) > _ballSpeedThreshold);
-    
-    // TODO: determine if a sprint is needed
-    _needToSprint = false;
 
     // roadmap: detect if ball is bouncing, if so, adjust depth D on the ball line
-}
-
-void MP_ActionGetBall::determineMotionProfile()
-{
-    _motionProfile = cMotionProfileType::NORMAL;
-    if (_slow)
-    {
-        _motionProfile = cMotionProfileType::SLOW;
-    }
-    else
-    {
-        bool obstacleCloseBy = false;
-        if ((_wm->numObstacles() > 0) && (_wm->closestObstacleDistance() < _obstacleThreshold))
-        {
-            obstacleCloseBy = true;
-        }
-        bool canSprint = !obstacleCloseBy;
-        if (canSprint && _needToSprint)
-        {
-            _motionProfile = cMotionProfileType::FAST;
-        }
-        // TODO: finetune further for accuracy: if closeby enough and ball does not move too fast, then do not sprint
-    }
 }
 
 void MP_ActionGetBall::faceBall()
@@ -134,7 +98,7 @@ actionResultTypeEnum MP_ActionGetBall::execute()
         // notify pathPlanning to reset, to clear diagnostics and to prevent setpoint drift (watchdog)
         // (this might actually have been contributing to the rotation-on-intercept issue we have been seeing)
         // TODO: check if this works OK for self-pass
-        return setMotionSetpointAndCalculate(actionTypeEnum::STOP, Position2D(), true);
+        return setMotionSetpointAndCalculate(actionTypeEnum::STOP, Position2D(), motionTypeEnum::NORMAL);
     }
     if (_wm->teamHasBall())
     {
@@ -158,9 +122,6 @@ actionResultTypeEnum MP_ActionGetBall::execute()
         // analyze the situation
         analyzeGeometry();
         
-        // determine motion profile normal/slow/sprint
-        determineMotionProfile();
-        
         // choose what kind of move to do: getBall or getBallOnVector
         if (_ballMovingFastEnough)
         {
@@ -181,6 +142,6 @@ actionResultTypeEnum MP_ActionGetBall::execute()
     // execute the move
     faceBall();
     TRACE("target (%.2f, %.2f, %.2f)", _target.x, _target.y, _target.phi);
-    return setMotionSetpointAndCalculate(actionTypeEnum::MOVE, _target, _slow);
+    return setMotionSetpointAndCalculate(actionTypeEnum::MOVE, _target, _motionType);
 }
 

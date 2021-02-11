@@ -279,7 +279,7 @@ def startMonitor(robot):
 
 if __name__ == '__main__':
     # Argument parsing.
-    descriptionTxt = 'Start the multiCam software using a set of grabs, automating all relevant commands. If robot or timestamp argument is omitted, a prompt will help to select it.\n'
+    descriptionTxt = 'Start the multiCam software using a set of grabs, automating all relevant commands. If robot or timestamp argument is omitted, a prompt will help to select it.\n\nTo learn more about grabs, check the wiki page:\nhttps://git.falcons-robocup.nl/falcons/code/-/wikis/diagnostics/grabs\n'
     exampleTxt = 'Examples:\n   testGrabs.py\n   testGrabs.py -r 5 -t 20191219_210335 -v -M\n'
     parser     = argparse.ArgumentParser(description=descriptionTxt, epilog=exampleTxt, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-r', '--robot', help='robot ID to use', type=int)
@@ -313,5 +313,3 @@ if __name__ == '__main__':
         startMonitor(robot)
     t.run(robot, grabs, block=True)
     t.shutdown()
-
-

@@ -1,25 +1,17 @@
-""" 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- """ 
- #!/usr/bin/python
+# Copyright 2020 Jan Feitsma (Falcons)
+# SPDX-License-Identifier: Apache-2.0
+#!/usr/bin/python
 
 
 import os, sys
 import argparse
-import analyze_lib
 from collections import OrderedDict
+import falconspy
 from ball_data import BallData
 from plot_balls import BallPlotter, PlotBrowser, NUMROBOTS
-import falconspy
+import analyze_lib
 from rdlLib import RDLFile
+import rtdb2tools
 
 
 def parse_arguments():
@@ -29,7 +21,7 @@ See also plot_balls_live.py which updates live during playback.
 """
     exampleTxt = ""
     parser     = argparse.ArgumentParser(description=descriptionTxt, epilog=exampleTxt, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-a', '--agent', help='agent ID to use', type=int, default=analyze_lib.rtdb2tools.guessAgentId())
+    parser.add_argument('-a', '--agent', help='agent ID to use', type=int, default=rtdb2tools.guessAgentId())
     parser.add_argument("-t", "--timestamp", type=float, required=True, help="timestamp of interest (age relative to start of log)")
     parser.add_argument("-w", "--timewindow", type=float, default=0.001, help="time window in seconds around given timestamp")
     parser.add_argument('rdlfile', help='extract data from RDL file instead of live RTDB', default=None, nargs='?')
@@ -45,7 +37,6 @@ class RDLBallPlotter():
         self.fieldPlots.defaultLegendLoc = 'lower right'
         self.timelinePlots.defaultLegendLoc = 'lower right'
         for age in dataAdapter.data.keys():
-            print "AGE", age
             balldata = dataAdapter.data[age]
             p = BallPlotter(show=False) # figure construction managed by PlotBrowser
             p.plot(balldata)
@@ -83,7 +74,7 @@ class RDLBallDataAdapter():
             if frame.age > ageList[c]:
                 bd = BallData()
                 key2function = {}
-                #key2function["BALL_CANDIDATES_FCS"] = bd.feedBallCandidates
+                key2function["BALL_CANDIDATES_FCS"] = bd.feedBallCandidates
                 # it is not useful anymore to look at BALL_CANDIDATES_FCS,
                 # since the plotter now browses through a few timestamps of tracker-associated data, 
                 # instead of plotting point clouds from entire time ranges at once
@@ -91,11 +82,11 @@ class RDLBallDataAdapter():
                 key2function["DIAG_WORLDMODEL_LOCAL"] = bd.feedBallDiagnostics
                 # feed the items
                 for agent in range(0, NUMROBOTS+1):
-                    if frame.data.has_key(agent):
+                    if agent in frame.data:
                         agentData = frame.data[agent]
                         for key in key2function.keys():
                             akey = str((agent, key))
-                            if agentData.has_key(key) and latestData.has_key(akey):
+                            if key in agentData and akey in latestData:
                                 key2function[key](latestData[akey])
                                 del latestData[akey] # prevent item being copied into next BallData
                 # store
@@ -107,11 +98,11 @@ class RDLBallDataAdapter():
             # update latestData
             if(frame.age >= timestamp - timewindow - 1.0 and frame.age <= timestamp + timewindow):
                 for agent in range(0, NUMROBOTS+1):
-                    if frame.data.has_key(agent):
+                    if agent in frame.data:
                         agentData = frame.data[agent]
                         # feed the items
                         for key in keys:
-                            if agentData.has_key(key):
+                            if key in agentData:
                                 akey = str((agent, key))
                                 latestData[akey] = agentData[key]
 

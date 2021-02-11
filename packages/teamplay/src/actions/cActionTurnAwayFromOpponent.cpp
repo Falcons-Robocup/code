@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2018-2020 Erik Kouters (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * cActionTurnAwayFromOpponent.cpp
  *
  *  Created on: Apr 28, 2018
@@ -36,7 +27,7 @@ cActionTurnAwayFromOpponent::cActionTurnAwayFromOpponent()
         ("motionProfile", std::make_pair(std::vector<std::string>{defaultMotionProfiles}, true))
         ;
 
-    _intention.action = actionTypeEnum::MOVE;
+    _intention.action = actionTypeEnum::TURN_AWAY_FROM_OPPONENT;
 }
 
 cActionTurnAwayFromOpponent::~cActionTurnAwayFromOpponent()
@@ -61,15 +52,6 @@ behTreeReturnEnum cActionTurnAwayFromOpponent::execute(const std::map<std::strin
         std::string targetStr("target");
         boost::optional<Position2D> target = getPos2DFromStr(parameters, targetStr);
 
-        // [Optional] parameter "motionProfile" defines with which profile to move with (e.g., normal play or more careful during a setpiece)
-        std::string motionProfileStr("motionProfile");
-        std::string motionProfileValue = "normal";
-        auto paramValPair = parameters.find(motionProfileStr);
-        if (paramValPair != parameters.end())
-        {
-            motionProfileValue = paramValPair->second;
-        }
-
         if (target)
         {
             Position2D targetPos = *target;
@@ -83,7 +65,7 @@ behTreeReturnEnum cActionTurnAwayFromOpponent::execute(const std::map<std::strin
             if (!isCurrentPosValid())
             {
                 // Move towards the center, while maintaining angle and motion profile
-                moveTo(0.0, 0.0, motionProfileValue);
+                moveTo(0.0, 0.0);
                 return behTreeReturnEnum::RUNNING;
             }
 
@@ -92,7 +74,7 @@ behTreeReturnEnum cActionTurnAwayFromOpponent::execute(const std::map<std::strin
                 return behTreeReturnEnum::FAILED;
             }
 
-            result = turnAwayFromOpponent(targetPos.x, targetPos.y, motionProfileValue);
+            result = turnAwayFromOpponent(targetPos.x, targetPos.y);
             return result;
         }
 

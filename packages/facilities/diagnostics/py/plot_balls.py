@@ -1,15 +1,6 @@
-""" 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- """ 
- #!/usr/bin/python
+# Copyright 2020 Jan Feitsma (Falcons)
+# SPDX-License-Identifier: Apache-2.0
+#!/usr/bin/python
 
 import time, datetime
 import traceback
@@ -90,19 +81,17 @@ class BallPlotter():
         xf = -event.ydata
         yf = event.xdata
         ax = event.inaxes
-        print "click at (x,y) = (%.2f,%.2f)" % (xf, yf)
+        print("click at (x,y) = ({.2f},{.2f})".format(xf, yf))
         d2 = np.sqrt((xf - df['x'].values)**2 + (yf - df['y'].values)**2)
         minDist = d2[np.argmin(d2)]
         if minDist < 1.0: # otherwise don't print
             # dump all details to stdout
             v = df.loc[np.argmin(d2)]
-            print v
             # highlight the tracker by placing a label on current position
             details = what + ': ' + str(v.trackerId) + '\nrobot: ' + str(v.robotId)
             ax.text(event.xdata, event.ydata, details)
 
     def refreshPlots(self):
-        print "REFRESH"
         if self.fieldPlot == None:
             self.fieldPlot = FieldPlot() # autozoom
         if self.timelinePlot == None:
@@ -110,7 +99,6 @@ class BallPlotter():
 
     def plot(self, balldata):
         self.balldata = balldata
-        print "plot start"
         # construct/clear figures if needed
         self.refreshPlots()
         # calculate plottables
@@ -178,13 +166,15 @@ class BallPlotter():
             if len(dfr):
                 plottables.append((name, robotId, dfr))
         # robot vision ball measurements
-        print "robot vision ball measurements"
+        #print "robot vision ball measurements"
         df = balldata.getBallMeasurements()
+        # TODO check if df is not empty
+        print(df.to_string())
         df['x'] = df['ballFcsX']
         df['y'] = df['ballFcsY']
         df['z'] = df['ballFcsZ']
         self.dataframeMeasurements = df
-        print df.to_string()
+        print(df.to_string())
         if len(df) > 0:
             df_empty = df.iloc[0:0]
             for robotId in range(0, NUMROBOTS+1):
@@ -192,8 +182,8 @@ class BallPlotter():
                 dfr = df[df['robotId'] == robotId].copy()
                 if len(dfr) == 0:
                     continue
-                print "robotId", robotId
-                print dfr.to_string()
+                #print "robotId", robotId
+                #print dfr.to_string()
                 # use FCS calculated ball positions
                 dfr['x'] = dfr['ballFcsX']
                 dfr['y'] = dfr['ballFcsY']
@@ -213,10 +203,10 @@ class BallPlotter():
                 dfr['y'] = dfr['cameraY']
                 addPlottable('posr', robotId, dfr)
         # robot worldModel ball tracking
-        print "robot worldModel ball tracking"
+        #print "robot worldModel ball tracking"
         df = balldata.getBallResults()
         self.dataframeResults = df
-        print df.to_string()
+        #print df.to_string()
         if len(df) > 0:
             df_empty = df.iloc[0:0]
             for robotId in range(0, NUMROBOTS+1):
@@ -224,15 +214,15 @@ class BallPlotter():
                 dfr = df[df['robotId'] == robotId].copy()
                 if len(dfr) == 0:
                     continue
-                print "robotId", robotId
-                print dfr.to_string()
+                #print "robotId", robotId
+                #print dfr.to_string()
                 # split low from high balls
                 dfr_low = dfr[dfr['z'] < highBallZ]
                 dfr_high = dfr[dfr['z'] >= highBallZ]
                 addPlottable('lbrr', robotId, dfr_low)
                 addPlottable('hbrr', robotId, dfr_high)
         # TODO associated and outlier-tagged measurement (via tracker diagnostics)
-        print "result plottables", len(plottables)
+        #print "result plottables", len(plottables)
         return plottables
 
         # TODO cleanup below

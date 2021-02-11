@@ -4,6 +4,7 @@ import argparse
 import subprocess
 import tarfile
 import fileinput
+import falconspy
 import os
 import json
 from datetime import datetime
@@ -14,12 +15,12 @@ def traceObjectToHTML(traceObj):
 
     # Write traceObj to temporary trace file in /var/tmp/
     tmpTraceFile = "/var/tmp/tmptracefile"
-    with open(tmpTraceFile, "wb") as f:
+    with open(tmpTraceFile, "w", encoding="utf8") as f:
         json.dump(traceObj, f)
 
     # Convert JSON trace to HTML
     print("Converting trace to HTML...")
-    cmd = "/home/robocup/falcons/data/external/catapult/tracing/bin/trace2html %s --output=%s.html" % (tmpTraceFile, tmpTraceFile)
+    cmd = falconspy.FALCONS_DATA_PATH + "/external/catapult_py3/tracing/bin/trace2html %s --output=%s.html" % (tmpTraceFile, tmpTraceFile)
     subprocess.call(cmd, shell=True)
 
     print("Done. Open with the following command:")
@@ -65,7 +66,9 @@ if __name__ == "__main__":
     group2.add_argument('-r', '--robot', help='the robot to download the tracing from. Will SSH to the robot and prompt which log dir to use. Example: -r r3')
     args = parser.parse_args()
 
-
+    # input check
+    if args.robot != None and args.robot[0] != 'r':
+        raise Exception("Robot hostname should start with the letter 'r'")
 
     ### logdir is the directory in which the tracing files are located
     # e.g., /var/tmp/falcons_control_20190623_145815

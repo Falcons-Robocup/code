@@ -21,7 +21,7 @@ imageName=
 imageServer=`imageServer`
 imageLocation=~/IMAGES
 # do not use option --exclude-vcs-ignore, it will filter too much (like some shared libraries)
-excludeOpts=" --exclude-vcs --exclude=wmTracking --exclude=*.jpg --exclude=build"
+excludeOpts=" --exclude-vcs --exclude=wmTracking --exclude=*.jpg"
 doUpload=0
 
 

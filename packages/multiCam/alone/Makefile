@@ -20,10 +20,10 @@ CFLAGS = -g3 -O3 -m64 -ansi -std=c++11 -Wall -Wextra -Wpedantic -Werror -DNOROS
 # ros make options:
 # CFLAGS = -std=c++11 -O3 -fPIC -W -Wall -Wno-unused-parameter -fno-strict-aliasing -DNOROS
 
-LDFLAGS = -pthread -L/usr/local/lib -L${HOME}/falcons/code/build/packages/facilities/common
-LDLIBS = -lalglib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio -lpthread -lFalconsCommon
+LDFLAGS = -pthread -L/usr/local/lib -L${HOME}/falcons/code/build/packages/facilities/common -L${HOME}/falcons/code/build/packages/facilities/tracing
+LDLIBS = -lalglib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio -lpthread -lFalconsCommon -lTracing -lboost_thread
 
-INC = -I../include -I../../facilities/filters/inc -I../../facilities/filters/inc/ext -I/usr/include/opencv4 -I../../../packages/facilities/common/include/ext
+INC = -I../include -I../../facilities/filters/inc -I../../facilities/filters/inc/ext -I/usr/include/opencv4 -I../../../packages/facilities/common/include/ext -I../../facilities/tracing/include/ext
 
 # building the filters external requires ros build dependency, solved by building filters locally (added to .o list)
 # BallDistanceEstimator uses common LinearInterpolator

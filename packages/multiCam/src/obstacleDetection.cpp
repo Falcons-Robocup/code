@@ -1,19 +1,12 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- // Jan Feitsma, december 2019
+// Copyright 2018-2020 Andre Pool (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+// Jan Feitsma, december 2019
 
 #include "obstacleDetection.hpp"
 
 #include <math.h>
+
+#include "tracing.hpp"
 
 using namespace std;
 using namespace cv;
@@ -138,6 +131,7 @@ void obstacleDetection::findClosestLineGroups() {
 // Note: The radius is measured from the closest yellow pixel, but because of the camera position, this
 // is roughly the same as the center of the obstacle.
 void obstacleDetection::update() {
+    TRACE_FUNCTION("");
 // get the pixels of the camera
     vector<linePointSt> cartesian;
 
@@ -161,6 +155,8 @@ void obstacleDetection::update() {
     obstaclePointListExportMutex.unlock();
 
 // construct "image" from received points
+    {
+    TRACE_SCOPE("CONSTRUCT_AND_EXPORT_OBSTACLE", "");
     exportMutex.lock();
     inRangeFrame = Mat::zeros(height, width, CV_8UC1);
     for (size_t ii = 0; ii < cartesian.size(); ii++) {
@@ -414,6 +410,7 @@ void obstacleDetection::update() {
     positionsRemoteViewer = positions;
     positionsRemoteViewerExportMutex.unlock();
     exportMutex.unlock();
+    }
 
     if (positions.size() > 0) {
 // Notify new ball position

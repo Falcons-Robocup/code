@@ -1,0 +1,12 @@
+[Unit]
+Description=Share basic information with nest
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=robocup
+Type=oneshot
+ExecStart=/home/robocup/falcons/code/scripts/shareLaptopInfo.py
+
+[Install]
+WantedBy=multi-user.target

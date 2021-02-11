@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2016-2020 Erik Kouters (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * cAbstractAction.hpp
  *
  *  Created on: Apr 30, 2016
@@ -59,7 +50,6 @@ static std::vector<std::string> defaultShootTypes { "shootTowardsGoal", "lobTowa
 // This list of values is part of the "default pass types" list: defaultPassTypes
 static std::vector<std::string> defaultPassTypes { "passTowardsNearestTeammember", "passTowardsNearestAttacker", "passTowardsFurthestAttacker", "passTowardsNearestAttackerOnOppHalf", "passTowardsTipInPosition", "passTowardsFurthestDefender" };
 // This list of values is part of the "motion profiles" defined by pathplanning.
-// TODO replace motionProfile with 'bool slow'
 static std::vector<std::string> defaultMotionProfiles { "normal", "setpiece" };
 
 class cAbstractAction
@@ -111,14 +101,14 @@ class cAbstractAction
         }
 
     protected:
-        behTreeReturnEnum moveTo(double x, double y, const std::string& motionProfile = "normal"); // TODO replace motionProfile with 'bool slow'
+        behTreeReturnEnum moveTo(double x, double y, const std::string& motionProfile = "normal");
         behTreeReturnEnum pass(float x, float y);
         behTreeReturnEnum shoot(const Point2D& target);
         behTreeReturnEnum lobShot (const Point2D& target);
         behTreeReturnEnum getBall(const std::string& motionProfile);
-        behTreeReturnEnum turnAwayFromOpponent(double x, double y, const std::string& motionProfile);
+        behTreeReturnEnum turnAwayFromOpponent(double x, double y);
         behTreeReturnEnum keeperMove(float x);
-        behTreeReturnEnum interceptBall(const std::string& motionProfile);
+        behTreeReturnEnum interceptBall();
         void stop();
         bool positionReached(double x, double y);
         bool positionReached(double x, double y, double xy_threshold);
@@ -140,6 +130,7 @@ class cAbstractAction
         void setForbiddenAreas();
         behTreeReturnEnum translateActionResultToTreeEnum(T_ACTION_RESULT actionResult);
         behTreeReturnEnum executeAction(T_ACTION const &actionData);
+        motionTypeEnum determineMotionType(const std::string& motionProfile);
 
 };
 

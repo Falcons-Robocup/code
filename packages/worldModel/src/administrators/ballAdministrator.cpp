@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2016-2020 Tim Kouters (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * ballAdministrator.cpp
  *
  *  Created on: Sep 6, 2016
@@ -20,12 +11,15 @@
 
 #include <algorithm>
 
+#include "int/administrators/ballDiscriminator.hpp"
+#include "int/administrators/gaussianBallDiscriminator.hpp"
+#include "int/administrators/gaussian3DBallDiscriminator.hpp"
+
 #include "cDiagnostics.hpp"
 #include "tracing.hpp"
 
 ballAdministrator::ballAdministrator(WorldModelConfig& wmConfig)
-    : _wmConfig(wmConfig),
-      _ballDiscriminator(wmConfig)
+    : _wmConfig(wmConfig)
 /*!
  * \brief Administrates ball measurements
  *
@@ -38,6 +32,21 @@ ballAdministrator::ballAdministrator(WorldModelConfig& wmConfig)
     _ownRobotID = getRobotNumber();
     _ballMeasurements.clear();
     _overruledBalls.clear();
+
+    int ballTrackerAlgorithm = wmConfig.getConfiguration().ballTracker.ballTrackerAlgorithm;
+    if(ballTrackerAlgorithm == 0)
+    {        
+        _ballDiscriminator = new ballDiscriminator(wmConfig);
+    }
+    else if(ballTrackerAlgorithm == 1)
+    {
+        _ballDiscriminator = new Gaussian3DBallDiscriminator();
+    }
+    else
+    {
+        TRACE_WARNING("Invalid ball tracker algorithm %d, using default option.", ballTrackerAlgorithm);
+        _ballDiscriminator = new ballDiscriminator(wmConfig);
+    }
 }
 
 ballAdministrator::~ballAdministrator()
@@ -46,7 +55,7 @@ ballAdministrator::~ballAdministrator()
  * No one fools Chuck Norris.
  */
 {
-
+    delete _ballDiscriminator;
 }
 
 void ballAdministrator::appendBallMeasurements(const std::vector<ballMeasurement> measurements)
@@ -62,7 +71,7 @@ void ballAdministrator::appendBallMeasurements(const std::vector<ballMeasurement
             if(it == _ballMeasurements.end())
             {
             	_ballMeasurements[itMeasurement->identifier] = (*itMeasurement);
-            	_ballDiscriminator.addMeasurement(*itMeasurement);
+            	_ballDiscriminator->addMeasurement(*itMeasurement);
             }
         }
     }
@@ -99,7 +108,7 @@ void ballAdministrator::getLocalBallMeasurements(std::vector<ballMeasurement> &m
         
         // note: wmSync buffer is rather small
         // so select only measurements which are not attributed to blacklisted trackers; also sort on decreasing tracker confidence
-        _ballDiscriminator.getMeasurementsToSync(measurements);
+        _ballDiscriminator->getMeasurementsToSync(measurements);
 
     }
     catch(std::exception &e)
@@ -122,7 +131,7 @@ void ballAdministrator::performCalculation(rtime const timeNow, Vector2D const &
         if (_overruledBalls.size() == 0)
         {
             cleanUpTimedOutBallMeasurements(timeNow);
-            _ballDiscriminator.performCalculation(timeNow, pos);
+            _ballDiscriminator->performCalculation(timeNow, pos);
         }
         else
         {
@@ -150,7 +159,7 @@ void ballAdministrator::getBalls(std::vector<ballClass_t> &balls)
     {
         if(_overruledBalls.empty())
         {
-            balls = _ballDiscriminator.getBalls();
+            balls = _ballDiscriminator->getBalls();
         }
         else
         {
@@ -219,6 +228,6 @@ void ballAdministrator::cleanUpTimedOutBallMeasurements(rtime const timeNow)
 
 void ballAdministrator::fillDiagnostics(diagWorldModel &diagnostics)
 {
-    _ballDiscriminator.fillDiagnostics(diagnostics);
+    _ballDiscriminator->fillDiagnostics(diagnostics);
 }
 

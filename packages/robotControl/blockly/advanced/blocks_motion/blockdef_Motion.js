@@ -10,10 +10,10 @@ Blockly.Blocks['motion_stop'] = {
   }
 };
 
-Blockly.Blocks['motion_movetoposition'] = {
+Blockly.Blocks['motion_teamplaymove'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("Move to");
+        .appendField("[Teamplay] Move to");
     this.appendValueInput("target")
         .setCheck("Position")
         .appendField("pos=");
@@ -25,15 +25,15 @@ Blockly.Blocks['motion_movetoposition'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour(230);
- this.setTooltip("moveToPosition ( [Position] pos, [Boolean] slow ) NOTE: Will always face ball");
+ this.setTooltip("teamplayMove ( [Position] pos, [Boolean] slow ) NOTE: Will always face ball");
  this.setHelpUrl("");
   }
 };
 
-Blockly.Blocks['motion_movetopose'] = {
+Blockly.Blocks['motion_motionplanningmove'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("moveToPose");
+        .appendField("[MotionPlanning] Move to");
     this.appendValueInput("pose")
         .setCheck("Pose")
         .appendField("pose=");
@@ -41,7 +41,68 @@ Blockly.Blocks['motion_movetopose'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour(230);
- this.setTooltip("moveToPose( [Pose] pose )");
+ this.setTooltip("motionPlanningMove( [Pose] pose )");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_velocitycontrolmove_pos_only'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("[VelocityControl] Move to");
+    this.appendValueInput("pose")
+        .setCheck("Pose")
+        .appendField("pose=");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+ this.setTooltip("velocityControlMove( [Pose] pose )");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_velocitycontrolmove_posvel'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("[VelocityControl] Move to");
+    this.appendValueInput("pose")
+        .setCheck("Pose")
+        .appendField("pose=");
+    this.appendDummyInput()
+        .appendField("with vx=")
+        .appendField(new Blockly.FieldNumber(0, -1, 1, 0.01), "vx")
+        .appendField("m/s, vy=")
+        .appendField(new Blockly.FieldNumber(0, -1, 1, 0.01), "vy")
+        .appendField("m/s, vRz=")
+        .appendField(new Blockly.FieldNumber(0, -2, 2, 0.01), "vRz")
+        .appendField("rad/s at target position");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+ this.setTooltip("velocityControlMove( [Pose] pose, [Int] vx, [Int] vy, [Int] vRz )");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_velocitycontrolmove_vel_only'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("[VelocityControl] Move with vx=")
+        .appendField(new Blockly.FieldNumber(0, -1, 1, 0.01), "vx")
+        .appendField("m/s, vy=")
+        .appendField(new Blockly.FieldNumber(0, -1, 1, 0.01), "vy")
+        .appendField("m/s, vRz=")
+        .appendField(new Blockly.FieldNumber(0, -2, 2, 0.01), "vRz")
+        .appendField("rad/s for")
+        .appendField(new Blockly.FieldNumber(1, 0, 5), "time")
+        .appendField("second(s)");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+ this.setTooltip("velocityControlMove( [Int] vx, [Int] vy, [Int] vRz )");
  this.setHelpUrl("");
   }
 };
@@ -49,19 +110,19 @@ Blockly.Blocks['motion_movetopose'] = {
 Blockly.Blocks['motion_robotvelocity'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("Move with vx=")
+        .appendField("[VelocityTransform] Move with vx=")
         .appendField(new Blockly.FieldNumber(0, -1, 1, 0.01), "vx")
         .appendField("m/s, vy=")
         .appendField(new Blockly.FieldNumber(0, -1, 1, 0.01), "vy")
-        .appendField("m/s, vphi=")
-        .appendField(new Blockly.FieldNumber(0, -2, 2, 0.01), "vphi")
+        .appendField("m/s, vRz=")
+        .appendField(new Blockly.FieldNumber(0, -2, 2, 0.01), "vRz")
         .appendField("rad/s for")
         .appendField(new Blockly.FieldNumber(1, 0, 5), "time")
         .appendField("second(s)");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour(230);
- this.setTooltip("RobotVelocity( [Int] vx, [Int] vy, [Int] vphi )");
+ this.setTooltip("RobotVelocity( [Int] vx, [Int] vy, [Int] vRz )");
  this.setHelpUrl("");
   }
 };
@@ -69,7 +130,7 @@ Blockly.Blocks['motion_robotvelocity'] = {
 Blockly.Blocks['motion_motorsvelocity'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("Set Motors Velocity to m1=")
+        .appendField("[PeripheralsInterface] Set Motors Velocity to m1=")
         .appendField(new Blockly.FieldNumber(0, -1, 1, 0.01), "vm1")
         .appendField("m/s, m2=")
         .appendField(new Blockly.FieldNumber(0, -1, 1, 0.01), "vm2")
@@ -112,3 +173,16 @@ Blockly.Blocks['motion_keeperframe'] = {
   }
 };
 
+Blockly.Blocks['motion_blockuntilvelocitysettled'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Block until RobotVelocity settled for ")
+        .appendField(new Blockly.FieldNumber(1.0, 0.1, 10.0, 0.01), "settleTime")
+        .appendField("second(s)");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+ this.setTooltip("BlockUntilVelocitySettled( [Float] settleTime )");
+ this.setHelpUrl("");
+  }
+};

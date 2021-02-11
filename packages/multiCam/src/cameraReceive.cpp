@@ -1,16 +1,9 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- // Copyright 2017-2019 Andre Pool
+// Copyright 2018-2020 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
+// Copyright 2017-2019 Andre Pool
+// SPDX-License-Identifier: Apache-2.0
+
+#include "tracing.hpp"
 
 #include "cameraReceive.hpp"
 
@@ -121,6 +114,7 @@ cameraReceive::cameraReceive(configurator *conf) {
 }
 
 void cameraReceive::block() {
+	TRACE_FUNCTION("Waiting for data...");
 	while (waitForData) {
 		usleep(100);
 	}
@@ -128,6 +122,8 @@ void cameraReceive::block() {
 }
 
 void cameraReceive::receive() {
+
+	TRACE_FUNCTION("");
 
 	while (true) {
 		// block until data received
@@ -223,6 +219,7 @@ void cameraReceive::receive() {
 				}
 
 			} else if ((rxPacket.id & 0x3f) == 2) { // ## line points from long axis camera ##
+				TRACE_SCOPE("cameraReceive::line_points_from_long_axis_camera", "");
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				{
 					lock_guard < mutex > lineMutex(linePointListLongAxisExportMutex); // lock the mutex
@@ -253,6 +250,7 @@ void cameraReceive::receive() {
 					linePointListLongAxisAge[camIndex] = 0; // used to determine if line points are valid and can be exported to line point detection
 				}
 			} else if ((rxPacket.id & 0x3f) == 6) { // ## line points from short axis camera ##
+				TRACE_SCOPE("cameraReceive::line_points_from_short_axis_camera", "");
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				{
 					lock_guard < mutex > lineMutex(linePointListShortAxisExportMutex); // lock the mutex
@@ -277,6 +275,7 @@ void cameraReceive::receive() {
 					linePointListShortAxisAge[camIndex] = 0; // used to determine if line points are valid and can be exported to line point detection
 				}
 			} else if ((rxPacket.id & 0x20) == 0x20) { // bit 5 is used to identify as camera frame packet = image
+				TRACE_SCOPE("cameraReceive::camera_frame_packet", "");
 				// the image does not fit in one packet, receive in multiple packets, use id to inform receiver
 				// which part of the image it received
 				uint8_t imagePart = rxPacket.id & 0x1f; // maximal size 32 parts
@@ -315,6 +314,7 @@ void cameraReceive::receive() {
 				}
 
 			} else if ((rxPacket.id & 0x3f) == 3) { // ## ball ##
+				TRACE_SCOPE("cameraReceive::ball", "");
 				struct timeval tv;
 				gettimeofday(&tv, NULL);
 				ballReceiveTime[camIndex] = 1.0 * tv.tv_sec + 0.000001 * tv.tv_usec;
@@ -346,6 +346,7 @@ void cameraReceive::receive() {
 				ballDetCondVar.notify_all(); // inform all 4 waiting threads new data is available (only the one with ballPointListValid = true will continue)
 
 			} else if ((rxPacket.id & 0x3f) == 7) { // ## ballFar ##
+				TRACE_SCOPE("cameraReceive::ball_far", "");
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				if (points > 0) {
 					printf("INFO      : cam %zu received %zu ballFar points\n", camIndex, points);
@@ -375,6 +376,7 @@ void cameraReceive::receive() {
 				ballFarDetCondVar.notify_all(); // inform all 4 waiting threads new data is available (only the one with ballFarPointListValid = true will continue)
 
 			} else if ((rxPacket.id & 0x3f) == 5) { // ## floor ##
+				TRACE_SCOPE("cameraReceive::floor", "");
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				// printf("INFO      : received %zu floor points\n", points);
 				{
@@ -401,6 +403,7 @@ void cameraReceive::receive() {
 				}
 
 			} else if ((rxPacket.id & 0x3f) == 4) { // ## obstacle ##
+				TRACE_SCOPE("cameraReceive::obstacle", "");
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				{
 					lock_guard < mutex > obstacleMutex(obstaclePointListExportMutex); // lock the mutex
@@ -434,6 +437,7 @@ void cameraReceive::receive() {
 }
 
 size_t cameraReceive::getLinePointsLongAxisAmount(size_t camIndex) {
+	TRACE_FUNCTION("");
 	if (camIndex >= 4) {
 		printf(
 				"ERROR     : tried to get the amount long axis line points from camera index %zu, while the index goes to 3",
@@ -447,6 +451,7 @@ size_t cameraReceive::getLinePointsLongAxisAmount(size_t camIndex) {
 }
 
 size_t cameraReceive::getLinePointsShortAxisAmount(size_t camIndex) {
+	TRACE_FUNCTION("");
 	if (camIndex >= 4) {
 		printf(
 				"ERROR     : tried to get the amount short axix line points from camera index %zu, while the index goes to 3",
@@ -460,6 +465,7 @@ size_t cameraReceive::getLinePointsShortAxisAmount(size_t camIndex) {
 }
 
 vector<linePointSt> cameraReceive::getLinePointsLongAxis(size_t camIndex) {
+	TRACE_FUNCTION("");
 	if (camIndex >= 4) {
 		printf("ERROR     : tried to get long axis line points from camera index %zu, while the index goes to 3",
 				camIndex);
@@ -487,6 +493,7 @@ vector<linePointSt> cameraReceive::getLinePointsLongAxis(size_t camIndex) {
 }
 
 vector<linePointSt> cameraReceive::getLinePointsShortAxis(size_t camIndex) {
+	TRACE_FUNCTION("");
 	if (camIndex >= 4) {
 		printf("ERROR     : tried to get short axis line points from camera index %zu, while the index goes to 3",
 				camIndex);
@@ -514,6 +521,7 @@ vector<linePointSt> cameraReceive::getLinePointsShortAxis(size_t camIndex) {
 }
 
 vector<linePointSt> cameraReceive::getAndClearBallPointsWait(size_t camIndex) {
+	TRACE_FUNCTION("");
 	// acquire mutex used to protect the ballPointList and ballPointListValid
 	std::unique_lock < std::mutex > myLock(ballPointListExportMutex);
 	// wait for data
@@ -541,6 +549,7 @@ vector<linePointSt> cameraReceive::getAndClearBallPointsWait(size_t camIndex) {
 }
 
 vector<linePointSt> cameraReceive::getAndClearBallFarPointsWait(size_t camIndex) {
+	TRACE_FUNCTION("");
 	// acquire mutex used to protect the ballFarPointList and ballFarPointListValid
 	std::unique_lock < std::mutex > myLock(ballFarPointListExportMutex);
 	// wait for data
@@ -568,6 +577,7 @@ vector<linePointSt> cameraReceive::getAndClearBallFarPointsWait(size_t camIndex)
 }
 
 vector<linePointSt> cameraReceive::getFloorPoints(size_t camIndex) {
+	TRACE_FUNCTION("");
 	if (camIndex >= 4) {
 		printf("ERROR     : tried to get floor points from camera index %zu, while the index goes to 3", camIndex);
 		exit(EXIT_FAILURE);
@@ -588,6 +598,7 @@ vector<linePointSt> cameraReceive::getFloorPoints(size_t camIndex) {
 
 // get the latest obstacle points, blocks until new obstacle points have been received
 vector<linePointSt> cameraReceive::getObstaclePointsWait(size_t camIndex) {
+	TRACE_FUNCTION("");
 	// acquire mutex used to protect the obstaclePointList and obstaclePointListValid
 	std::unique_lock < std::mutex > myLock(obstaclePointListExportMutex);
 	// wait for data

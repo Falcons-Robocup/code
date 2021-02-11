@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Jan Feitsma (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * diagWorldModelLocal.hpp
  *
  *  Created on: March, 2019
@@ -78,10 +69,31 @@ struct diagMatrix22
     SERIALIZE_DATA(matrix);
 };
 
+struct diagVector3D
+{
+    double x;
+    double y;
+    double z;
+    SERIALIZE_DATA(x, y, z);
+};
+
+struct diagMatrix33
+{
+    double matrix[3][3];
+    SERIALIZE_DATA(matrix);
+};
+
 struct diagGaussian2D
 {
     diagVector2D mean;
     diagMatrix22 covariance;
+    SERIALIZE_DATA(mean, covariance);
+};
+
+struct diagGaussian3D
+{
+    diagVector3D mean;
+    diagMatrix33 covariance;
     SERIALIZE_DATA(mean, covariance);
 };
 
@@ -90,6 +102,13 @@ struct diagMeasurement
     diagGaussian2D gaussian2d;
     uint8_t measurer_id;
     SERIALIZE_DATA(gaussian2d, measurer_id);
+};
+
+struct diagMeasurement3D
+{
+    diagGaussian3D gaussian3d;
+    uint8_t measurer_id;
+    SERIALIZE_DATA(gaussian3d, measurer_id);
 };
 
 struct diagObstacle
@@ -101,12 +120,41 @@ struct diagObstacle
     SERIALIZE_DATA(gaussian2d, isTeammember, robot_id);
 };
 
+struct diagConfidence
+{
+    double total_confidence;
+    double position_confidence;
+    double measurers_confidence;
+    double time_condifence;
+
+    SERIALIZE_DATA(total_confidence, position_confidence, measurers_confidence, time_condifence);
+};
+
+struct diagBall
+{
+    diagGaussian3D position;
+    diagGaussian3D velocity;
+    bool blacklisted;
+    bool bestBall;
+    diagConfidence confidence;
+    
+    SERIALIZE_DATA(position, velocity, blacklisted, bestBall, confidence);
+};
+
 struct diagGaussianObstacleDiscriminator
 {
     std::vector<diagMeasurement> measurements;
     std::vector<diagObstacle> obstacles;
 
     SERIALIZE_DATA(measurements, obstacles);
+};
+
+struct diagGaussianBallDiscriminator
+{
+    std::vector<diagMeasurement3D> measurements;
+    std::vector<diagBall> balls;
+
+    SERIALIZE_DATA(measurements, balls);
 };
 
 struct diagObstacleTracker
@@ -123,8 +171,9 @@ struct diagWorldModelLocal
     rtime timestamp;
     
     diagGaussianObstacleDiscriminator gaussianObstacleDiscriminatorData;
+    diagGaussianBallDiscriminator gaussianBallDiscriminatorData;
 
-    SERIALIZE_DATA(timestamp, localization, balls, obstacles, gaussianObstacleDiscriminatorData);
+    SERIALIZE_DATA(timestamp, localization, balls, obstacles, gaussianObstacleDiscriminatorData, gaussianBallDiscriminatorData);
     // TODO merge obstacles and gaussianObstacleDiscriminatorData (first was intended as placeholder for second)
     // TODO reuse stuff between balls and obstacles
 };

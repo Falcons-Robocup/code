@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2018-2020 Erik Kouters (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * rtdbKeys.hpp
  *
  *  Created on: Oct 23, 2018
@@ -37,6 +28,7 @@
 #define K_ACTION                                        "ACTION" // ACTION has naming conflict in Teamplay
 #define ACTION_RESULT                                   "ACTION_RESULT"
 #define MOTION_SETPOINT                                 "MOTION_SETPOINT"
+#define ROBOT_POSVEL_SETPOINT                           "ROBOT_POSVEL_SETPOINT"
 #define ROBOT_VELOCITY_SETPOINT                         "ROBOT_VELOCITY_SETPOINT"
 #define MOTOR_VELOCITY_SETPOINT                         "MOTOR_VELOCITY_SETPOINT"
 #define BALLHANDLERS_SETPOINT                           "BALLHANDLERS_SETPOINT"
@@ -61,6 +53,7 @@
 #define DIAG_WORLDMODEL_LOCAL                           "DIAG_WORLDMODEL_LOCAL"
 #define DIAG_TEAMPLAY                                   "DIAG_TEAMPLAY"
 #define DIAG_PATHPLANNING                               "DIAG_PATHPLANNING"
+#define DIAG_VELOCITYCONTROL                            "DIAG_VELOCITYCONTROL"
 #define DIAG_BALLHANDLING                               "DIAG_BALLHANDLING"
 #define DIAG_PERIPHERALSINTERFACE                       "DIAG_PERIPHERALSINTERFACE"
 #define DIAG_HEALTH_SLOW                                "DIAG_HEALTH_SLOW"
@@ -72,6 +65,7 @@
 #define CONFIG_WORLDMODEL                               "CONFIG_WORLDMODEL"
 #define CONFIG_HEARTBEATCOACH                           "CONFIG_HEARTBEATCOACH"
 #define CONFIG_PATHPLANNING                             "CONFIG_PATHPLANNING"
+#define CONFIG_VELOCITYCONTROL                          "CONFIG_VELOCITYCONTROL"
 #define CONFIG_BALLHANDLING                             "CONFIG_BALLHANDLING"
 #define CONFIG_MOTIONPLANNING                           "CONFIG_MOTIONPLANNING"
 #define CONFIG_SHOOTPLANNING                            "CONFIG_SHOOTPLANNING"
@@ -85,6 +79,8 @@
 #define SIMULATION_SCENE                                "SIMULATION_SCENE"
 #define SIMULATION_TIME                                 "SIMULATION_TIME"
 #define SIMULATION_TICK                                 "SIMULATION_TICK"
+#define DIAG_TRUE_BALL                                  "DIAG_TRUE_BALL"
+#define VISION_OBJECTS                                  "VISION_OBJECTS"
 
 // !!!!!!!!
 // NOTE: If you update this list, please also update the Wiki page: "Software Architecture" and keep things consistent

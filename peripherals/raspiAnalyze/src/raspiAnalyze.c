@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Andre Pool
+// Copyright 2018-2020 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
 
 #include <arpa/inet.h>
@@ -1779,13 +1779,15 @@ void* raspiColorDetection(void *arg) {
 				// do this only for cam0
 				int ballSatMinTmp = ballSatMin;
 				int ballHueMinTmp = ballHueMin;
+				int ballHueMaxTmp = ballHueMax;
 				if (xx < 100) { // some robot's might have a large possession x offset (because of the metal)
-					ballSatMinTmp = ballSatMin - 20; // TODO: quick hack
-					ballHueMinTmp = ballHueMin - 5; // TODO: quick hack, required to recognize ball in ball handler
+					ballSatMinTmp = ballSatMin - 30; // TODO: quick hack
+					ballHueMinTmp = ballHueMin - 7; // TODO: quick hack, required to recognize ball in ball handler
+					ballHueMaxTmp = ballHueMax + 15; // TODO: quick hack, required to recognize ball in ball handler
 				}
 				// the ball and ball far are not mutual exclusive
 				if ((value >= ballValMin) && ((int)saturation >= ballSatMinTmp) && (hue >= ballHueMinTmp)
-						&& (hue <= (int) ballHueMax)) {
+						&& (hue <= (int) ballHueMaxTmp)) {
 					colorDetectionBuffer[colorDetectionIndex] = DET_BALL;
 				}
 				if ((value >= ballFarValMin) && (saturation >= ballFarSatMin) && (hue >= (int) ballFarHueMin)

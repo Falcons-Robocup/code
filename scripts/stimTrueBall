@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# Stimulate trueball
+# 
+# LCBD 2020Q3
+
+
+# check input
+rdlInputFile=$1
+flip=$2
+
+if [ ! -f $rdlInputFile ]; then
+    echo "ERROR: require valid input RDL file"
+    exit 1
+fi
+
+if [ -z $flip ]; then
+    echo "ERROR: require flip input"
+    exit 1
+fi
+
+# consumes the first arguments so that any remaining arguments can be forwarded
+shift
+shift
+
+# automatically determine output file by applying '_stim' postfix
+rdlOutputFile=`echo $rdlInputFile | sed 's/\(.*\)\(r.\)\.rdl/\1tball_\2.rdl/'`
+agentId=`echo $rdlInputFile | sed 's/.*_r\(.\)\.rdl/\1/'`
+if [ -f $rdlOutputFile ]; then
+    rm $rdlOutputFile # containment for an feature/issue that cLogFileWriter opens with r/w, causing possible frame corruption at the end of file
+fi
+
+# create a logdir for tracing
+createLogdir
+
+# run
+echo "agentId=$agentId"
+sleep 5
+export TURTLE5K_ROBOTNUMBER=$agentId
+frun worldModel trueBallStimulator -a $agentId -i $rdlInputFile -o $rdlOutputFile -v 4 -f $flip "$@"
+
+exit 0
+

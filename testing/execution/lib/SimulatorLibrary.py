@@ -1,4 +1,3 @@
-import roslib
 import subprocess
 
 import falconspy
@@ -21,12 +20,12 @@ class SimulatorLibrary(object):
         expected = int(expected_str)
         if actual < expected:
             raise AssertionError("Score too low. Actual score: {0}  Expected minimum score: {1}".format(actual, expected))
-            
+
     def has_scored_once(self, team):
         rtdb = RtDB2Store(RTDB2_DEFAULT_PATH, False)
         actual_score = rtdb.get(0, "MATCH_STATE").value["goalsOwn"]
         if actual_score < 1:
             raise AssertionError("Not scored yet")
-            
+
     def success(self):
          return 'PASS'

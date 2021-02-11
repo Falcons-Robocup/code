@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- // Copyright 2014-2019 Andre Pool
+// Copyright 2018-2020 Andre Pool (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2014-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
 
 // The goal of the Line Point Detection is to provide a line points to fieldLut / Solver
@@ -44,6 +35,8 @@
 #include <math.h> // atan2
 #include <pwd.h>
 #include <stdio.h>
+
+#include "tracing.hpp"
 
 // amount of steps in the 360 degrees circle
 #define NRANGLES 100
@@ -269,6 +262,7 @@ angleRadiusSt linePointDetection::cartesianToPolarShortAxis(size_t cam, linePoin
 
 // collect the line points from the camera receiver and convert from Cartesian to Polar
 void linePointDetection::update() {
+	TRACE_FUNCTION("");
     linePointsPolar.clear();
     vector<linePointSt> cartesian;
 
@@ -282,7 +276,9 @@ void linePointDetection::update() {
     // points from cam0
     // TODO: start line point detection from averaged grabber sync from cam0 instead of
     // the receiving time of the long axis line points (which has quite some jitter)
+    TRACE("Starting sleep...");
     usleep(5000);
+    TRACE("Done sleeping");
 
     linePointListExportMutex.lock(); // lock the list used by the camera viewer
     // convert the long axis line points from the 4 camera's

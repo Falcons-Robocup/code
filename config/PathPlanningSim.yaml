@@ -1,13 +1,5 @@
 nominalFrequency:                         20
 numExtraSettlingTicks:                    1
-velocityControllers:
-    threshold:                            99.0 # effectively disable long-stroke, SPG is preferred for simulation
-    longStroke:
-        type:                             VelocitySetpointControllerTypeEnum:LINEAR
-        coordinateSystem:                 CoordinateSystemEnum:RCS
-    shortStroke:
-        type:                             VelocitySetpointControllerTypeEnum:SPG
-        coordinateSystem:                 CoordinateSystemEnum:RCS
 obstacleAvoidance:
     enabled:                              true
     robotRadius:                          0.26
@@ -38,50 +30,7 @@ forwardDriving:
         minimumDistance:                  0.9
     radiusRobotToBall:                    0.26
     applyLimitsToBall:                    false # false: simulate perfect ballHandling; true: probably more realistic
-limits:
-    enabled:                              true
-    withoutBall:
-        maxVelX:                          1.0
-        maxVelYforward:                   2.0
-        maxVelYbackward:                  2.0
-        maxVelRz:                         2.0
-        maxAccX:                          1.5
-        maxAccYforward:                   3.5
-        maxAccYbackward:                  3.5
-        maxAccRz:                         3.5
-    withBall:
-        maxVelX:                          0.5
-        maxVelYforward:                   1.5
-        maxVelYbackward:                  0.5
-        maxVelRz:                         4.0
-        maxAccX:                          1.0
-        maxAccYforward:                   3.0
-        maxAccYbackward:                  1.5
-        maxAccRz:                         6.0
-    common:
-        maxDecX:                          4.0
-        maxDecY:                          7.0
-        maxDecRz:                         7.0
-        toleranceXY:                      0.01
-        toleranceRz:                      0.001
-        accThresholdX:                    0.0
-        accThresholdY:                    0.0
-        accThresholdRz:                   0.0
-deadzone:                                 false
-setPointGenerator:
-    synchronizeRotation:                  true
-    weightFactorClosedLoop:               0.0  # simulation is perfect, so use open loop
-    latencyOffset:                        0.00
-    convergenceWorkaround:                true
-pid:
-    XY_P:                                 1.6
-    XY_I:                                 0.0
-    XY_D:                                 0.0
-    RZ_P:                                 3.5
-    RZ_I:                                 0.0
-    RZ_D:                                 0.0
-    maxI_XY:                              0.5
-    maxI_Rz:                              0.1
-    fadeI_XY:                             0.99
-    fadeI_Rz:                             0.99
-
+deadzone:
+    enabled:                              false
+    toleranceXY:                          0.01
+    toleranceRz:                          0.001

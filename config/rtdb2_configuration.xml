@@ -80,5 +80,6 @@
     <key id="JOYSTICK_CONTROL_7" shared="true"/>
     <key id="JOYSTICK_CONTROL_8" shared="true"/>
     <key id="JOYSTICK_CONTROL_9" shared="true"/>
+    <key id="DEBUG_TRUE_BALL" shared="false"/>
   </Keys>
 </RtDB2Configuration>

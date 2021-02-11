@@ -46,7 +46,7 @@ else
     OUTPUT_DIR=""
 fi
 
-$wrapper pybot -L TRACE $OUTPUT_DIR $testsuitedir
+$wrapper robot -L TRACE $OUTPUT_DIR $testsuitedir
 # Default outputs (unless running under Jenkins): 
 #   Output:  /home/robocup/output.xml
 #   Log:     /home/robocup/log.html

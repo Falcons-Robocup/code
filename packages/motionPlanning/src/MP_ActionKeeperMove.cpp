@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Erik Kouters (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * cActionKeeperMove.cpp
  *
  *  Created on: Apr 25, 2018
@@ -64,7 +55,7 @@ actionResultTypeEnum MP_ActionKeeperMove::execute()
     checkExtendKeeperFrame();
 
     // move by writing setpoint to RTDB and calling pathPlanning iteration
-    _result = setMotionSetpointAndCalculate(actionTypeEnum::MOVE, _targetPos, _slow);
+    _result = setMotionSetpointAndCalculate(actionTypeEnum::MOVE, _targetPos, _motionType);
 
     // wrap up
     return _result;
@@ -106,10 +97,16 @@ void MP_ActionKeeperMove::calculateSlow()
     // in case of a substitution / park, overrule slow motion profile
     // we don't want our fragile keeper bumping into things
 
-    poiInfo goalPostLeft = poiInfo();
-    cEnvironmentField::getInstance().getFieldPOI(P_OWN_GOALPOST_LEFT, goalPostLeft);
-    float goalLineY = goalPostLeft.y;
-    _slow = (_currentPos.y > goalLineY + 2.0);
+    areaInfo goalArea;
+    cEnvironmentField::getInstance().getFieldArea(areaName::A_OWN_GOALAREA_EXTENDED, goalArea); // EXTENDED includes the goal itself
+    if ( cEnvironmentField::getInstance().isPositionInArea(_currentPos.x, _currentPos.y, goalArea) )
+    {
+        _motionType = motionTypeEnum::NORMAL;
+    }
+    else
+    {
+        _motionType = motionTypeEnum::SLOW;
+    }
 }
 
 void MP_ActionKeeperMove::checkBallBehindKeeper()

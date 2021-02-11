@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- #ifndef FIELDWIDGET3D_H
+// Copyright 2016-2020 Diana Koenraadt (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+#ifndef FIELDWIDGET3D_H
 #define FIELDWIDGET3D_H
 
 #include <map>
@@ -86,6 +77,7 @@ public Q_SLOTS:
     virtual void onShootTargetChanged(uint8_t senderRobotId, SignalMode mode, PositionVelocity& posvel, bool aiming) override; // Shoot target according to one robot
     virtual void onProjectSpeedChanged(ObjectId id, SignalMode signalMode, linepoint2D& line) override; // projected speed vector according to one robot
     virtual void onGaussianObstacleUpdate(uint8_t senderRobotId, SignalMode signalMode, T_DIAG_WORLDMODEL_LOCAL& worldmodel_local) override;
+    virtual void onTrueBallUpdate(uint8_t senderRobotId, SignalMode signalMode, T_DIAG_TRUE_BALL& worldmodel_local) override;
 
     virtual void onPathPlanningInProgress(uint8_t senderRobotId, std::vector<PositionVelocity>& path) override;
 };
@@ -213,8 +205,11 @@ private:
 
     /* == Gaussian world model rendering == */
     std::vector<vtkSmartPointer<GaussianVisualization>> _gaussianObstacleActors;
-    void updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_local, bool show_measurements);
+    void updateWorldModelLocal(T_DIAG_WORLDMODEL_LOCAL& worldmodel_local, bool show_obstacle_measurements, bool show_balls_measurements);
 
+    /* == True ball rendering == */
+    vtkSmartPointer<BallVisualization> _trueBallActor;
+    void updateTrueBall(T_DIAG_TRUE_BALL& true_ball);
 
     /* == Generic rendering methods == */
     vtkSmartPointer<vtkActor> createLine(float x1, float y1, float z1, float x2, float y2, float z2);

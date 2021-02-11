@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Erik Kouters (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * cAbstractAction.cpp
  *
  *  Created on: Nov 17, 2017
@@ -60,10 +51,10 @@ float MP_AbstractAction::elapsed()
 
 void MP_AbstractAction::stopMoving()
 {
-    setMotionSetpointAndCalculate(actionTypeEnum::STOP, Position2D(), false, false);
+    setMotionSetpointAndCalculate(actionTypeEnum::STOP, Position2D(), motionTypeEnum::NORMAL, false);
 }
 
-actionResultTypeEnum MP_AbstractAction::setMotionSetpointAndCalculate(actionTypeEnum action, Position2D const &target, bool slow, bool autostop)
+actionResultTypeEnum MP_AbstractAction::setMotionSetpointAndCalculate(actionTypeEnum action, Position2D const &target, motionTypeEnum motionType, bool autostop)
 {
     if (_rtdbOutput == NULL)
     {
@@ -77,19 +68,16 @@ actionResultTypeEnum MP_AbstractAction::setMotionSetpointAndCalculate(actionType
     }
 
     // write motion setpoint to RTDB
-    _rtdbOutput->setMotionSetpoint(action, target, slow);
+    _rtdbOutput->setMotionSetpoint(action, target, motionType);
 
     // poke pathPlanning
     auto result = _pp->iterate();
-
-    // cleanup override
-    _pp->unsetRzLimitsOverride();
 
     // make sure to end with zero setpoint, to prevent drifting based on last nonzero
     // setpoint in combination with peripheralsInterface watchdog
     if (result != actionResultTypeEnum::RUNNING && autostop == true)
     {
-        _rtdbOutput->setMotionSetpoint(actionTypeEnum::STOP, Position2D(), false);
+        _rtdbOutput->setMotionSetpoint(actionTypeEnum::STOP, Position2D(), motionTypeEnum::NORMAL);
         (void)_pp->iterate(); // ignore result
     }
     return result;

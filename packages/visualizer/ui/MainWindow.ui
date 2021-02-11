@@ -612,7 +612,8 @@
      <addaction name="actionViewPathPlanningView"/>
      <addaction name="actionViewTeamplayView"/>
      <addaction name="actionViewGaussianWorldView"/>
-     <addaction name="actionViewGaussianMeasurementsView"/>
+     <addaction name="actionViewBallMeasurementsView"/>     
+     <addaction name="actionViewObstacleMeasurementsView"/>
     </widget>
     <widget class="QMenu" name="menuViewTeamRobot">
      <property name="title">
@@ -910,12 +911,20 @@
      <string>Gaussian World</string>
     </property>
    </action>
-   <action name="actionViewGaussianMeasurementsView">
+   <action name="actionViewBallMeasurementsView">
     <property name="checkable">
      <bool>true</bool>
     </property>
     <property name="text">
-     <string>Gaussian Measurements</string>
+     <string>Ball Measurements</string>
+    </property>
+   </action>
+   <action name="actionViewObstacleMeasurementsView">
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="text">
+     <string>Obstacle Measurements</string>
     </property>
    </action>
    <actiongroup name="actionHeightmapGroup">

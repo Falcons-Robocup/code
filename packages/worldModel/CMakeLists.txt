@@ -38,6 +38,9 @@ add_library(wmobjectTracking src/algorithms/objectMeasurementCache.cpp
 target_link_libraries(wmobjectTracking wmobjectType FalconsTypes)
 
 add_library(wmballTracking   src/administrators/ballDiscriminator.cpp
+                             src/administrators/gaussianBallDiscriminator.cpp
+                             src/administrators/gaussian3DBallDiscriminator.cpp
+                             src/administrators/gaussian3DPosVelObject.cpp
                              src/administrators/ballTracker.cpp
                              src/algorithms/objectTracking.cpp
                              )
@@ -46,6 +49,7 @@ target_link_libraries(wmballTracking wmfacilities)
 target_link_libraries(wmballTracking wmballTypes)
 target_link_libraries(wmballTracking wmobjectTracking)
 target_link_libraries(wmballTracking EnvironmentField)
+target_link_libraries(wmballTracking filters)
 
 add_library(wmobstacleTracking src/administrators/obstacleDiscriminator.cpp
                                src/administrators/obstacleTracker.cpp
@@ -107,6 +111,10 @@ target_link_libraries(worldModelNode libWorldModel ${Boost_LIBRARIES} Tracing di
 add_executable(worldModelStimulator tst/stimulator/mStimulator.cpp tst/stimulator/cWorldModelStimulator.cpp tst/stimulator/cAbstractStimulator.cpp)
 target_link_libraries(worldModelStimulator libWorldModel ${Boost_LIBRARIES} logging)
 # worldModelStimulator is not a test by itself - it is used as helper utility in testWmRDLsuite
+
+
+add_executable(trueBallStimulator tst/stimulator/mTrueBallStimulator.cpp tst/stimulator/cTrueBallStimulator.cpp tst/stimulator/cAbstractStimulator.cpp)
+target_link_libraries(trueBallStimulator libWorldModel ${Boost_LIBRARIES} logging opencv_core opencv_highgui opencv_imgproc opencv_videoio)
 
 ############### TESTERS ####################
 

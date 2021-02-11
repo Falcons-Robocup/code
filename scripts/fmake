@@ -122,6 +122,10 @@ def run(args):
 
     # build phase
     if do_build:
+        # determine options for make
+        make_opts = "-j" + str(args.jobs)
+        if args.verbose:
+            make_opts += " VERBOSE=1"
         # run cmake to (re-)generate makefiles
         commands.add("cmake", "..")
         for d in package_dirs:
@@ -129,7 +133,7 @@ def run(args):
             b = FALCONS_CODE_PATH + "/build/" + d
             commands.add("cd", b)
             # build
-            commands.add("make", "-j4")
+            commands.add("make", make_opts)
 
     # test phase
     if do_test:
@@ -166,6 +170,8 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--pre-clean', help='cleanup before build', action='store_true')
     parser.add_argument('-C', '--full-pre-clean', help='full cleanup before build (remove entire build/ directory)', action='store_true')
     parser.add_argument('-n', '--dry-run', help='print commands instead of executing them', action='store_true')
+    parser.add_argument('-j', '--jobs', help='number of parallel build jobs (threads) to run', type=int, default=4)
+    parser.add_argument('-v', '--verbose', help='call make with its verbose option, which is useful to debug include directories and such', action='store_true')
     parser.add_argument('-t', '--test', help='build and test packages', action='store_true')
     # NOTE: currently, building test targets is done by default - as optimization we could treat them separately?
     parser.add_argument('--test-only', help='only run tests', action='store_true')

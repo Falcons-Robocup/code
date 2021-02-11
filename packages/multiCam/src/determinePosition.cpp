@@ -1,27 +1,17 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- // Copyright 2014-2018 Andre Pool
+// Copyright 2018-2020 Andre Pool (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2014-2018 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
 
 #include "determinePosition.hpp"
-#ifndef NOROS
 #include "tracing.hpp"
-#endif
 
 using namespace cv;
 using namespace std;
 
 determinePosition::determinePosition(configurator *conf, linePointDetection *linePoint, preprocessor *prep,
         robotFloor *rFloor) {
+    TRACE_FUNCTION("");
     this->conf = conf;
     this->linePoint = linePoint;
     this->prep = prep;
@@ -47,6 +37,7 @@ determinePosition::determinePosition(configurator *conf, linePointDetection *lin
     // Create the solver
     // the default solver epsilon is 1e-06 and maxcount 5000
     for (unsigned int ii = 0; ii < numThreads; ii++) {
+        TRACE_SCOPE("createDownhillSolver", "");
         threads[ii].solverLUT = cv::optim::createDownhillSolver();
         // connect the function to the solver
         threads[ii].solverLUT->setFunction(LUT_ptr);
@@ -72,6 +63,7 @@ determinePosition::~determinePosition() {
 
 detPosSt determinePosition::optimizePosition(positionStDbl startPos, bool localSearch,
         cv::Ptr<cv::optim::DownhillSolver> solverLUT) {
+    TRACE_FUNCTION("");
     detPosSt result;
 
     // if needed update the criteria maximum counter from the configuration interface
@@ -142,6 +134,7 @@ detPosSt determinePosition::optimizePosition(positionStDbl startPos, bool localS
 }
 
 void* determinePosition::processOneLocation(void *id) {
+    TRACE_FUNCTION("");
     struct th *context = (struct th*) id;
     determinePosition *cls = context->classContext;
 
@@ -177,6 +170,7 @@ void* determinePosition::processOneLocation(void *id) {
 
 // function to create a random point on the field
 positionStDbl determinePosition::createRandomPosition(positionStDbl recentPos, bool useRecentPos) {
+    TRACE_FUNCTION("");
     positionStDbl pos;
     bool nearByPoint = true;
 //    int numTries = 0;
@@ -211,6 +205,7 @@ positionStDbl determinePosition::createRandomPosition(positionStDbl recentPos, b
 }
 
 void determinePosition::pointsToPosition() {
+    TRACE_FUNCTION("");
     if (conf->getManualMode()) {
         if (locList.size() < 1) { // at least one location should be available for  manual mode
             detPosSt newPos;
@@ -418,6 +413,7 @@ vector<detPosSt> determinePosition::getLocList() {
 // if such a candidate is available, take that candidate, otherwise do not provide a new localization candidate
 
 void determinePosition::goodEnough() {
+    TRACE_FUNCTION("");
 
     struct candidateSelectorSt {
         double error; // combined error of multiple variables e.g. xDelta, score, ..

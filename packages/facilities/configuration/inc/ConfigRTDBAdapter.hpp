@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Jan Feitsma (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * ConfigRTDBAdapter.hpp
  *
  *  Created on: December 2019
@@ -37,17 +28,19 @@ public:
     void load();
 
     // loadYAML will initialize from a YAML file, write it to RtDB, keep it in memory, and listen for configuration updates
-    void loadYAML(std::string const &yamlFile);
+    void loadYAML(std::string const &yamlFile, bool strict = true);
 
     void setConfigUpdateCallback( std::function<void()> func );
 
     bool get(T &config);
 
-private:
-    RtDB2 *_rtdb = NULL;
-    int _myRobotId = 0;
-    std::string _configKey;
+protected:
     T _config;
+    std::string _configKey;
+    RtDB2 *_rtdb = NULL;
+
+private:
+    int _myRobotId = 0;
     bool _updated = false;
     bool _verbose = false;
     bool _testmode = false;

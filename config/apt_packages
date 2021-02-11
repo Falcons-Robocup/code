@@ -30,3 +30,11 @@ libboost-filesystem-dev
 libboost-program-options-dev
 libjpeg-turbo-progs
 sshpass
+kst
+ntp
+ntpdate
+nedit
+iftop
+doxygen
+graphviz
+git

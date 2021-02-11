@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Jan Feitsma (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * cAbstractStimulator.cpp
  *
  *  Created on: Dec 2018
@@ -63,6 +54,36 @@ tLogFrame cAbstractStimulator::convertFrameRtdb2Log(float age, std::vector<RtDB2
     return result;
 }
 
+void cAbstractStimulator::remove_keys_from_frame(RtDB2Frame& frame, std::vector<std::string> keys)
+{
+    if(!keys.empty())
+    {
+        for (auto it = frame.items.begin(); it != frame.items.end();)
+        {
+            if(std::find(keys.begin(), keys.end(), it->key) != keys.end())
+            {
+                it = frame.items.erase(it);
+            }
+            else
+            {
+                it++;
+            }
+        }
+    }
+}
+
+void cAbstractStimulator::remove_keys_from_frame(tLogFrame& frame, std::vector<std::string> keys)
+{
+    if(!keys.empty())
+    {
+        RtDB2Frame rtdb_frame = convertFrameLog2Rtdb(frame);
+
+        remove_keys_from_frame(rtdb_frame, keys);
+
+        frame = convertFrameRtdb2Log(frame.age, rtdb_frame.items);
+    }
+}
+
 bool cAbstractStimulator::mergeStimFrame(tLogFrame &frame, tLogFrame const &newFrame, rtime const &t)
 {
     // convert tLogFrame (which is serialized and compressed) to RtDB2Frame (a bunch of items)
@@ -70,6 +91,10 @@ bool cAbstractStimulator::mergeStimFrame(tLogFrame &frame, tLogFrame const &newF
     RtDB2Frame f1 = convertFrameLog2Rtdb(frame);
     RtDB2Frame f2 = convertFrameLog2Rtdb(newFrame);
 
+    // Remove keys from new frame that should be overruled
+    remove_keys_from_frame(f2, _overruled_keys);
+
+    // merge frames
     std::vector<RtDB2FrameItem> newItems = f2.items;
     for (auto itOld = f1.items.begin(); itOld != f1.items.end(); ++itOld)
     {
@@ -92,9 +117,6 @@ bool cAbstractStimulator::mergeStimFrame(tLogFrame &frame, tLogFrame const &newF
     
     // convert result
     frame = convertFrameRtdb2Log(frame.age, newItems);
-
-    RtDB2Frame f3;
-    f3.items = newItems;
 
     return true;
 }
@@ -132,7 +154,10 @@ void cAbstractStimulator::run()
         t = t0 + age;
         
         if (t >= _tStart)
-        {
+        {            
+            // remove selected keys from existing frame
+            remove_keys_from_frame(frame, _deleted_keys);            
+
             // write to RTDB, preserving original timestamps
             putFrame(frame);
             if (_verbosity >= 4)
@@ -193,5 +218,17 @@ void cAbstractStimulator::setVerbosity(int v)
 {
     _verbosity = v;
 }
+
+void cAbstractStimulator::add_overruled_key(std::string key)
+{
+    _overruled_keys.push_back(key);
+}
+
+void cAbstractStimulator::add_deleted_key(std::string key)
+{
+    _deleted_keys.push_back(key);
+}
+
+
 
 

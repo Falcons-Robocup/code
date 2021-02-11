@@ -9,9 +9,7 @@
 # In order to enable or disable this script just change the execution
 # bits.
 #
-# 20150625 MKOE adapted to cope with the new m4 batterylog daemon, no crontab needed anymore
-# 20150625 MKOE add 'reboot'  to sudoers , don't need password for reboot
-# 20150707 MKOE moved the mkdir of log folder for battery log to here
+
 
 #======================================================================
 # set up the hosts file
@@ -21,18 +19,18 @@ echo "# This file is created during startup at:" `date` > /etc/hosts
 echo "# by rc.local, which should be a symlink to /home/robocup/falcons/code/config/rc.local" >> /etc/hosts
 echo "" >> /etc/hosts
 echo "127.0.0.1       localhost" >> /etc/hosts
-echo "# required for ros" >> /etc/hosts
 echo "127.0.1.1      " `hostname` >> /etc/hosts
 echo "" >> /etc/hosts
 echo "# rest of this file is from /home/robocup/falcons/code/config/hosts" >> /etc/hosts
 echo "" >> /etc/hosts
 
-# get current dir, typically /home/robocup/falcons/code/scripts
-DIR="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
-cat $DIR/../config/hosts >> /etc/hosts
+# get config dir, typically /home/robocup/falcons/code/config
+# but also support the situation where someone installs in his own user folder
+configfolder=`ls -1d /home/*/falcons/code/config | head -1` # typically single matching line
+cat $configfolder/hosts >> /etc/hosts
 
 #======================================================================
-# increase UDP receive buffer size (reduce packet drop mulitCam)
+# increase UDP receive buffer size (reduce packet drop multiCam)
 #======================================================================
 # on systems with 16GiB memory the max is 50000000 bytes and default is 212992 bytes
 # Increase default to 2MiB (=2097152)

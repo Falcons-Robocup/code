@@ -1,0 +1,92 @@
+nominalFrequency:                         30
+motionTypes:
+    NORMAL:
+        velocityControllers:
+            threshold:                            3.5
+            longStroke:
+                type:                             VelocitySetpointControllerTypeEnum:SPG
+                coordinateSystem:                 CoordinateSystemEnum:RCS
+            shortStroke:
+                type:                             VelocitySetpointControllerTypeEnum:PID
+                coordinateSystem:                 CoordinateSystemEnum:RCS
+        limits:
+            maxVelX:                          0.7 # was 1.9 in pp1
+            maxVelYforward:                   1.8 # was 1.9 in pp1
+            maxVelYbackward:                  1.3
+            maxVelRz:                         2.0
+            maxAccX:                          1.0 # was 1.6 in pp1
+            maxAccYforward:                   3.0 # was 1.6 in pp1
+            maxAccYbackward:                  2.0
+            maxAccRz:                         2.0
+            maxDecX:                         20.0 # was infinite in pp1
+            maxDecY:                         10.0 # was infinite in pp1
+            maxDecRz:                        60.0 # was infinite in pp1
+            accThresholdX:                    0.0
+            accThresholdY:                    0.0
+            accThresholdRz:                   0.0
+        setPointGenerator:
+            synchronizeRotation:                  false # true is good for motion crosstalk but not good for alwaysFacingBall since robot is choosing to rotate slow
+            weightFactorClosedLoop:               0.0
+            latencyOffset:                        0.0
+            convergenceWorkaround:                false
+        pid:
+            XY_P:                                 3.0
+            XY_I:                                 0.01
+            XY_D:                                 0.0
+            RZ_P:                                 6.0
+            RZ_I:                                 5.5
+            RZ_D:                                 0.3
+            maxI_XY:                              0.5
+            maxI_Rz:                              0.1
+            fadeI_XY:                             1.00
+            fadeI_Rz:                             0.98
+    WITH_BALL:
+        limits:
+            maxVelX:                          0.5
+            maxVelYforward:                   1.2
+            maxVelYbackward:                  0.5
+            maxVelRz:                         3.0
+            maxAccX:                          1.0
+            maxAccYforward:                   3.0
+            maxAccYbackward:                  1.5
+            maxAccRz:                         3.0
+    ACCURATE:
+        limits:
+            maxVelX:                          0.25
+            maxVelYforward:                   0.6
+            maxVelYbackward:                  0.25
+            maxVelRz:                         1.5
+            maxAccX:                          0.5
+            maxAccYforward:                   1.5
+            maxAccYbackward:                  0.75
+            maxAccRz:                         1.5
+    INTERCEPT:
+        limits:
+            maxVelX:                          0.7
+            maxVelYforward:                   1.8
+            maxVelYbackward:                  1.3
+            maxVelRz:                         2.0
+            maxAccX:                          1.0
+            maxAccYforward:                   3.0
+            maxAccYbackward:                  2.0
+            maxAccRz:                         2.0
+    SLOW:
+        limits:
+            maxVelX:                          0.25
+            maxVelYforward:                   0.6
+            maxVelYbackward:                  0.25
+            maxVelRz:                         1.5
+            maxAccX:                          0.5
+            maxAccYforward:                   1.5
+            maxAccYbackward:                  0.75
+            maxAccRz:                         1.5
+    SPRINT:
+        limits:
+            maxVelX:                          0.7
+            maxVelYforward:                   1.8
+            maxVelYbackward:                  1.3
+            maxVelRz:                         2.0
+            maxAccX:                          1.0
+            maxAccYforward:                   3.0
+            maxAccYbackward:                  2.0
+            maxAccRz:                         2.0

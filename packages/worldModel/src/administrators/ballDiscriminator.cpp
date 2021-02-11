@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2016-2020 Tim Kouters (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * ballDiscriminator.cpp
  *
  *  Created on: Sep 6, 2016
@@ -201,7 +192,7 @@ void ballDiscriminator::getMeasurementsToSync(std::vector<ballMeasurement> &meas
     }
 }
 
-void ballDiscriminator::traceTrackers(rtime const tcurr, bool all)
+void ballDiscriminator::traceTrackers(rtime tcurr, bool all)
 {
     TRACE_FUNCTION("");
     // for each good ball, show a line with details
@@ -253,7 +244,7 @@ std::vector<size_t> sort_indexes(const std::vector<T> &v)
     return idx;
 }
 
-void ballDiscriminator::selectGoodBalls(rtime const timeNow)
+void ballDiscriminator::selectGoodBalls(rtime timeNow)
 {
     TRACE_FUNCTION("");
     // reset
@@ -311,7 +302,7 @@ void ballDiscriminator::selectGoodBalls(rtime const timeNow)
     }
 }
 
-void ballDiscriminator::performCalculation(rtime const timeNow, Vector2D const &pos)
+void ballDiscriminator::performCalculation(rtime timeNow, Vector2D const &pos)
 {
     TRACE_FUNCTION("");
     try
@@ -358,7 +349,7 @@ void ballDiscriminator::performCalculation(rtime const timeNow, Vector2D const &
     }
 }
 
-void ballDiscriminator::ownBallsFirst(rtime const timeNow, Vector2D const &pos)
+void ballDiscriminator::ownBallsFirst(rtime timeNow, Vector2D const &pos)
 {
     TRACE_FUNCTION("");
     try
@@ -422,7 +413,7 @@ std::vector<ballClass_t> ballDiscriminator::getBalls() const
     }
 }
 
-void ballDiscriminator::removeTimedOutTrackers(rtime const timeNow)
+void ballDiscriminator::removeTimedOutTrackers(rtime timeNow)
 {
     try
     {

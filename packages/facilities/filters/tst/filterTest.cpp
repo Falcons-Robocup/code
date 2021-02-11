@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Jan Feitsma (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * filterTest.cpp
  *
  *  Created on: December 2019
@@ -235,6 +226,21 @@ TEST(filterTest, LeastSquaresInterpolator_range_selection)
     EXPECT_NEAR(f.evaluate(52.5), 155.86, 1.0);
     EXPECT_NEAR(f.evaluate(60.0), 173.78, 1.0);
     EXPECT_NEAR(f.evaluate(80.0), 234.07, 1.0); // linear extrapolation
+}
+
+TEST(filterTest, LeastSquaresInterpolator_fit_parabola)
+{
+    auto f = LeastSquaresInterpolator(2);
+    f.feed(1.0,  1.0);
+    f.feed(2.0,  4.0);
+    f.feed(3.0,  9.0);
+    f.feed(4.0, 16.0);
+
+    std::vector<double> coeffs = f.calculate_polynomial();
+
+    EXPECT_NEAR(coeffs[0], 0.0, 1e-6);
+    EXPECT_NEAR(coeffs[1], 0.0, 1e-6);
+    EXPECT_NEAR(coeffs[2], 1.0, 1e-6);
 }
 
 int main(int argc, char **argv)

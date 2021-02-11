@@ -12,6 +12,7 @@ ballTracker:
         outlierNSigma:                  3.0  
         outlierMaxIter:                 4    
         outlierIterFraction:            0.10 
+    ballTrackerAlgorithm:               1
     useOwnHighVision:                   False
     useFriendlyHighVision:              False
     confidenceOmniPref:                 True 

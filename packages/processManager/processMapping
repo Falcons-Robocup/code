@@ -27,7 +27,8 @@ refboxRelay         $FALCONS_BUILD_DIR/packages/refbox/refboxRelay
 simworld            $FALCONS_BUILD_DIR/packages/simulation/sw
 sp                  $FALCONS_BUILD_DIR/packages/shootPlanning/shoot_planner
 tp                  $FALCONS_BUILD_DIR/packages/teamplay/teamplay_main
-vc                  $FALCONS_BUILD_DIR/packages/velocityControl/velocityControl
+vc                  $FALCONS_BUILD_DIR/packages/velocityControl/velocityControlNode
+vt                  $FALCONS_BUILD_DIR/packages/velocityTransform/velocityTransform
 multiCam            $FALCONS_BUILD_DIR/packages/multiCam/multiCamNode
 raspiSync           $FALCONS_BUILD_DIR/packages/raspiSync/raspiSync
 wm                  $FALCONS_BUILD_DIR/packages/worldModel/worldModelNode

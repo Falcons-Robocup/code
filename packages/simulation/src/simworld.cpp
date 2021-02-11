@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * simworld.cpp
  *
  *  Created on: Feb 2, 2019
@@ -95,7 +86,7 @@ void Simworld::initialize()
     {
         _tickFrequency = _configAdapter->getTickFrequency();
         _tick_stepsize_s = _configAdapter->getStepSizeMs() / 1000.0;
-        _sleeptime_ms = (1000 / _tickFrequency) / (_sizeTeamA + _sizeTeamB + 1);
+        _sleeptime_ms = (1000 / _tickFrequency) / (_sizeTeamA + _sizeTeamB + 2); // +1 for gameData, +1 for buffer to ensure we don't miss the simulation tick 
     }
     catch (std::exception& e) {
         std::cout << "Error obtaining tickFrequency and stepSize: " << e.what() << std::endl;
@@ -177,7 +168,7 @@ void Simworld::control()
             }
 
             _tick_stepsize_s = _configAdapter->getStepSizeMs() / 1000.0;
-            _sleeptime_ms = (1000 / _tickFrequency) / (_sizeTeamA + _sizeTeamB + 1);
+            _sleeptime_ms = (1000 / _tickFrequency) / (_sizeTeamA + _sizeTeamB + 2); // +1 for gameData, +1 for buffer to ensure we don't miss the simulation tick 
         }
         catch (std::exception& e) {
             std::cout << "Error obtaining tickFrequency and stepSize: " << e.what() << std::endl;
@@ -296,7 +287,10 @@ void Simworld::control()
             std::cout << "Error publishing non-robot game data: " << e.what() << std::endl;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(_sleeptime_ms));
+        {
+            TRACE_SCOPE("SLEEP_GAMEDATA", "");
+            std::this_thread::sleep_for(std::chrono::milliseconds(_sleeptime_ms));
+        }
 
         /* Publish the game data, per robot */
         for (auto& teampair: _simworldGameData.team)
@@ -313,7 +307,11 @@ void Simworld::control()
                     std::cout << "Error publishing robot game data team A: " << e.what() << std::endl;
                 }
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(_sleeptime_ms));
+                {
+                    /* Trace and sleep for this robot to spread robot computations over the available time */
+                    TRACE_SCOPE("SLEEP_ROBOT", "");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(_sleeptime_ms));
+                }
             }
         }
 

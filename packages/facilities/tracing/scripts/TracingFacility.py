@@ -1,19 +1,12 @@
-""" 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- """ 
- import tarfile
+# Copyright 2020 Erik Kouters (Falcons)
+# SPDX-License-Identifier: Apache-2.0
+import tarfile
 import subprocess
 from datetime import datetime
 import re
 import json
+import traceback
+import os
 
 remoteTraceFilesDir = "/var/tmp/remoteTraceFiles"
 
@@ -59,30 +52,36 @@ class TraceFile:
         return process
 
     def getTime(self):
-        # trace_A1_pp.json.20200530_152205.slice1.tar.gz
-        # =>
-        # 20200530_152205
-        tsStr = self.filename.split(".")[2]
-        
-        # 20200530_152205
-        # =>
-        # 152205
-        timeStr = tsStr.split("_")[1]
+        if "slice" in self.filename:
+            # trace_A1_pp.json.20200530_152205.slice1.tar.gz
+            # =>
+            # 20200530_152205
+            tsStr = self.filename.split(".")[2]
+            
+            # 20200530_152205
+            # =>
+            # 152205
+            timeStr = tsStr.split("_")[1]
 
-        return int(timeStr)
+            return int(timeStr)
+        else:
+            return 0
 
     def getSliceNr(self):
-        # trace_A1_pp.json.20200530_152205.slice112.tar.gz
-        # =>
-        # slice112
-        sliceStr = self.filename.split(".")[3]
+        if "slice" in self.filename:
+            # trace_A1_pp.json.20200530_152205.slice112.tar.gz
+            # =>
+            # slice112
+            sliceStr = self.filename.split(".")[3]
 
-        # slice112
-        # =>
-        # 112
-        sliceNrStr = sliceStr.replace("slice", "")
+            # slice112
+            # =>
+            # 112
+            sliceNrStr = sliceStr.replace("slice", "")
 
-        return int(sliceNrStr)
+            return int(sliceNrStr)
+        else:
+            return -1
 
     def distanceToTimestamp(self, ts):
         # ts = "HH:MM:SS"
@@ -152,7 +151,7 @@ def promptLogdir(robot):
 
     # If robot, SSH to robot to find logdirs
     if robot:
-        cmd = 'ssh %s "ls -1dt /var/tmp/falco* | head"' % (robot)
+        cmd = 'ssh robocup@%s "ls -1dt /var/tmp/falco* | head"' % (robot)
 
     logdirs = subprocess.check_output(cmd, shell=True).decode().split("\n")
 
@@ -179,7 +178,7 @@ def getTraceFilesFromLogDir(logDir, robot):
     cmd = "ls -tr %s/trace_*" % logDir
 
     if robot:
-        cmd = 'ssh %s "ls -tr %s/trace_*"' % (robot, logDir)
+        cmd = 'ssh robocup@%s "ls -tr %s/trace_*"' % (robot, logDir)
 
     logs = subprocess.check_output(cmd, shell=True).decode().split("\n")
 
@@ -197,14 +196,15 @@ def getTraceFilesFromLogDir(logDir, robot):
             # Remove this file
             cmd = "rm " + log
             if robot:
-                cmd = 'ssh %s "rm %s"' % (robot, log)
+                cmd = 'ssh robocup@%s "rm %s"' % (robot, log)
             subprocess.call(cmd, shell=True)
 
         else:
             try:
                 traceFile = TraceFile(log)
                 result.append( traceFile )
-            except:
+            except Exception:
+                traceback.print_exc()
                 pass
 
     return result
@@ -359,10 +359,10 @@ def downloadTraceFilesFromRobot(traceFiles, robot):
         os.mkdir(remoteTraceFilesDir)
 
     # Copy all remote trace files to local machine
-    traceFilesRemoteStr = ",".join([traceFile.filename for traceFile in traceFilesToParse])
+    traceFilesRemoteStr = ",".join([traceFile.filename for traceFile in traceFiles])
     traceFilesDir = traceFiles[0].directory
     # scp 'r6:/var/tmp/falcons_control_20190623_145815/{trace_A6_vc.json.20200530_151243.slice7.tar.gz,trace_A6_vc.json.20200530_151303.slice8.tar.gz}' /var/tmp/remoteTraceFiles
-    cmd = "scp '%s:%s/{%s}' %s" % (robot, traceFilesDir, traceFilesRemoteStr, remoteTraceFilesDir)
+    cmd = "scp 'robocup@%s:%s/{%s}' %s" % (robot, traceFilesDir, traceFilesRemoteStr, remoteTraceFilesDir)
     print("Copying files from robot '%s' to '%s':" % (robot, remoteTraceFilesDir))
     print(cmd)
     subprocess.call(cmd, shell=True)
@@ -374,7 +374,27 @@ def downloadTraceFilesFromRobot(traceFiles, robot):
     # Remove empty string
     logfiles = logfiles[0:-1]
 
-    return logfiles
+    result = []
+    for log in logfiles:
+        # As preprocessing step, remove any slice files that were compressed but not removed
+        # This is possible when the software is killed at the moment the `tar` command was running
+        # The `rm` command will then no longer be executed
+
+        # trace_A1_pp.json.20200530_152205.slice1 -> trace_A1_pp.json.20200530_152205.slice
+        if log[:-1].endswith(".slice"):
+            # Remove this file
+            cmd = "rm " + log
+            subprocess.call(cmd, shell=True)
+
+        else:
+            try:
+                traceFile = TraceFile(log)
+                result.append( traceFile )
+            except Exception:
+                traceback.print_exc()
+                pass
+
+    return result
 
 #----------------------
 
@@ -430,9 +450,19 @@ def constructJsonObjectFromTraceFiles(traceFiles):
     for traceFile in traceFiles:
         print("Parsing '%s'..." % (traceFile.filename))
         traceObj = constructJsonObjectFromTraceFile( traceFile )
+        traceObj = augmentTraceObjWithTimestamps(traceObj)
         result["traceEvents"].extend( traceObj["traceEvents"] )
 
     # Sort traceObj entries by timestamp to enforce chronological order
     result["traceEvents"].sort(key=lambda x: x["ts"])
 
     return result
+
+#----------------------
+
+def augmentTraceObjWithTimestamps(traceObj):
+
+    for traceEvent in traceObj["traceEvents"]:
+        ts = datetime.fromtimestamp( traceEvent["ts"] / 1E6 )
+        traceEvent["args"]["ts"] = ts.strftime("%Y-%m-%d %H:%M:%S.%f")
+    return traceObj

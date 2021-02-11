@@ -348,17 +348,73 @@
     <block type="tp_blockuntilpassedorfailed"></block>
     <block type="tp_action">
       <field name="action">STOP</field>
+      <value name="params">
+        <block type="tp_dictitem">
+          <value name="key">
+            <block type="text">
+              <field name="TEXT">role</field>
+            </block>
+          </value>
+          <value name="value">
+            <block type="text">
+              <field name="TEXT">attackerMain</field>
+            </block>
+          </value>
+        </block>
+      </value>
     </block>
     <block type="tp_behavior">
       <field name="behavior">B_ROBOT_STOP</field>
+      <value name="params">
+        <block type="tp_dictitem">
+          <value name="key">
+            <block type="text">
+              <field name="TEXT">role</field>
+            </block>
+          </value>
+          <value name="value">
+            <block type="text">
+              <field name="TEXT">attackerMain</field>
+            </block>
+          </value>
+        </block>
+      </value>
     </block>
     <block type="tp_setpiecebehavior">
       <field name="ownopp">OWN</field>
       <field name="setpiece">KICKOFF</field>
       <field name="prepexecutesearch">PREPARE</field>
+      <value name="params">
+        <block type="tp_dictitem">
+          <value name="key">
+            <block type="text">
+              <field name="TEXT">role</field>
+            </block>
+          </value>
+          <value name="value">
+            <block type="text">
+              <field name="TEXT">attackerMain</field>
+            </block>
+          </value>
+        </block>
+      </value>
     </block>
     <block type="tp_role">
       <field name="role">R_ROBOT_STOP</field>
+      <value name="params">
+        <block type="tp_dictitem">
+          <value name="key">
+            <block type="text">
+              <field name="TEXT">role</field>
+            </block>
+          </value>
+          <value name="value">
+            <block type="text">
+              <field name="TEXT">attackerMain</field>
+            </block>
+          </value>
+        </block>
+      </value>
     </block>
     <block type="tp_gamestate">
       <field name="inMatch">IN_MATCH</field>
@@ -366,32 +422,29 @@
       <field name="ownopp_f">OWN</field>
       <field name="setpiece">KICKOFF</field>
       <field name="prepexecute">PREPARE</field>
-    </block>
-    <block type="tp_parameters">
-      <mutation xmlns="http://www.w3.org/1999/xhtml" items="1"></mutation>
-      <value name="ADD0">
-        <block type="tp_dictitem" deletable="false" movable="false">
+      <value name="params">
+        <block type="tp_dictitem">
           <value name="key">
-            <block type="text" deletable="false" movable="false">
+            <block type="text">
               <field name="TEXT">role</field>
             </block>
           </value>
           <value name="value">
-            <block type="text" deletable="false" movable="false">
+            <block type="text">
               <field name="TEXT">attackerMain</field>
             </block>
           </value>
         </block>
       </value>
     </block>
-    <block type="tp_dictitem" deletable="false" movable="false">
+    <block type="tp_dictitem">
       <value name="key">
-        <block type="text" deletable="false" movable="false">
+        <block type="text">
           <field name="TEXT">role</field>
         </block>
       </value>
       <value name="value">
-        <block type="text" deletable="false" movable="false">
+        <block type="text">
           <field name="TEXT">attackerMain</field>
         </block>
       </value>
@@ -411,10 +464,10 @@
   </category>
   <category name="Motion" colour="#5b67a5">
     <block type="motion_stop"></block>
-    <block type="motion_movetoposition">
+    <block type="motion_teamplaymove">
       <field name="slow">False</field>
     </block>
-    <block type="motion_movetopose">
+    <block type="motion_motionplanningmove">
       <value name="pose">
         <block type="pos_createpose">
           <value name="x">
@@ -435,10 +488,61 @@
         </block>
       </value>
     </block>
+    <block type="motion_velocitycontrolmove_pos_only">
+      <value name="pose">
+        <block type="pos_createpose">
+          <value name="x">
+            <block type="math_number">
+              <field name="NUM">0</field>
+            </block>
+          </value>
+          <value name="y">
+            <block type="math_number">
+              <field name="NUM">0</field>
+            </block>
+          </value>
+          <value name="Rz">
+            <block type="math_number">
+              <field name="NUM">1.57</field>
+            </block>
+          </value>
+        </block>
+      </value>
+    </block>
+    <block type="motion_velocitycontrolmove_posvel">
+      <value name="pose">
+        <block type="pos_createpose">
+          <value name="x">
+            <block type="math_number">
+              <field name="NUM">0</field>
+            </block>
+          </value>
+          <value name="y">
+            <block type="math_number">
+              <field name="NUM">0</field>
+            </block>
+          </value>
+          <value name="Rz">
+            <block type="math_number">
+              <field name="NUM">1.57</field>
+            </block>
+          </value>
+        </block>
+      </value>
+      <field name="vx">0</field>
+      <field name="vy">0</field>
+      <field name="vRz">0</field>
+    </block>
+    <block type="motion_velocitycontrolmove_vel_only">
+      <field name="vx">0</field>
+      <field name="vy">0</field>
+      <field name="vRz">0</field>
+      <field name="time">1</field>
+    </block>
     <block type="motion_robotvelocity">
       <field name="vx">0</field>
       <field name="vy">0</field>
-      <field name="vphi">0</field>
+      <field name="vRz">0</field>
       <field name="time">1</field>
     </block>
     <block type="motion_motorsvelocity">
@@ -452,6 +556,9 @@
     </block>
     <block type="motion_keeperframe">
       <field name="direction">LEFT</field>
+    </block>
+    <block type="motion_blockuntilvelocitysettled">
+      <field name="settleTime">1.0</field>
     </block>
   </category>
   <category name="Position/Pose/Area" colour="#FFFF00">

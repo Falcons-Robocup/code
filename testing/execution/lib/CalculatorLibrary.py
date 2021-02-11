@@ -60,7 +60,7 @@ class CalculatorLibrary(object):
         """
         try:
             self.push_buttons(expression)
-        except CalculationError, err:
+        except (CalculationError, err):
             return str(err)
         else:
             raise AssertionError("'%s' should caused an error" % expression)

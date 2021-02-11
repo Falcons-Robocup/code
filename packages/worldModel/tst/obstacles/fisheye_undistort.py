@@ -1,15 +1,6 @@
-""" 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- """ 
- import sys
+# Copyright 2019-2020 lucas (Falcons)
+# SPDX-License-Identifier: Apache-2.0
+import sys
 import os
 import cv2
 import numpy as np
@@ -110,29 +101,40 @@ class FisheyeUndistort:
         return corners
 
 
-    def get_field_image(self, image, output_width):
-        
-        undistorted_img = self.undistort(image, output_width)
-        corners_on_image = self.find_corners(undistorted_img)
-
+    def get_corners_on_field(self, output_width):
         field_width = 18.0
         field_height = 12.0
         field_width_pixels = output_width        
         field_height_pixels = int(field_width_pixels * field_height / field_width)
         field_border_pixels = 20
 
+        corners_on_field = np.array([[field_border_pixels, field_border_pixels], 
+                                     [field_border_pixels+field_width_pixels, field_border_pixels], 
+                                     [field_border_pixels+field_width_pixels, field_border_pixels+field_height_pixels], 
+                                     [field_border_pixels, field_border_pixels+field_height_pixels]], np.float32)
+
+        return corners_on_field
+
+
+    def get_field_image(self, image, output_width):
+        
+        undistorted_img = self.undistort(image, output_width)
+        corners_on_image = self.find_corners(undistorted_img)
+
         if(corners_on_image != []):
             corners_on_image = np.array(corners_on_image, np.float32)
-            corners_on_field = np.array([[field_border_pixels, field_border_pixels], 
-                                         [field_border_pixels+field_width_pixels, field_border_pixels], 
-                                         [field_border_pixels+field_width_pixels, field_border_pixels+field_height_pixels], 
-                                         [field_border_pixels, field_border_pixels+field_height_pixels]], np.float32)
+            corners_on_field = self.get_corners_on_field(output_width)
 
             M = cv2.getPerspectiveTransform(corners_on_image, corners_on_field)
             self.last_M = M
         else:
             M = self.last_M
 
+        field_width = 18.0
+        field_height = 12.0
+        field_width_pixels = output_width        
+        field_height_pixels = int(field_width_pixels * field_height / field_width)
+        field_border_pixels = 20
         field_img = cv2.warpPerspective(undistorted_img, M, (field_width_pixels+2*field_border_pixels, field_height_pixels+2*field_border_pixels))
         return field_img
         
@@ -149,6 +151,11 @@ class FisheyeUndistort:
             except:
                 # If there was a failure set last_M to None so that debug is shown again
                 self.last_M = None
+
+        if self.last_M is None:
+            print("Corner detection failed, using reference corner values")
+            self.last_M = cv2.getPerspectiveTransform(np.array(self.get_reference_corner_positions(), np.float32), self.get_corners_on_field(output_width))
+            out_frame = self.get_field_image(frame, output_width)
 
         in_video.release()
 
@@ -204,7 +211,9 @@ class FisheyeUndistort:
         #corners = [[200, 192], [561, 207], [565, 438], [188, 447]] # 1600 x 1200
         #corners = [[101, 135], [645, 157], [651, 507], [ 84, 521]] # 4000 x 3000
         #corners = [[202, 194], [553, 217], [560, 443], [177, 452]] # 4000 x 3000
-        corners = [[147, 100], [759, 25], [723, 453], [184, 434]] # 4000 x 3000
+        #corners = [[147, 100], [759, 25], [723, 453], [184, 434]] # 4000 x 3000
+        #corners = [[ 98, 147],[621, 181],[653, 522],[ 40, 560]]
+        corners = [[136, 58],[768, 48],[689, 462],[163, 419]]
 
         return corners
 

@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2016-2020 Diana Koenraadt (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * FieldWidgetGameSignalSubscriber.h
  *
  *  Created on: May 15, 2016
@@ -54,6 +45,7 @@ void FieldWidgetGameSignalSubscriber::subscribe(GameSignalAdapter* gameSignalAda
     QObject::connect(gameSignalAdapter, SIGNAL(signalProjectSpeedChanged(ObjectId, SignalMode, linepoint2D&)), this, SLOT(onProjectSpeedChanged(ObjectId, SignalMode, linepoint2D&)));
 
     QObject::connect(gameSignalAdapter, SIGNAL(signalGaussianObstaclesUpdate(uint8_t, SignalMode, T_DIAG_WORLDMODEL_LOCAL&)), this, SLOT(onGaussianObstacleUpdate(uint8_t, SignalMode, T_DIAG_WORLDMODEL_LOCAL&)));
+    QObject::connect(gameSignalAdapter, SIGNAL(signalTrueBallUpdate(uint8_t, SignalMode, T_DIAG_TRUE_BALL&)), this, SLOT(onTrueBallUpdate(uint8_t, SignalMode, T_DIAG_TRUE_BALL&)));
 }
 
 void FieldWidgetGameSignalSubscriber::onTeamModeChanged()
@@ -108,12 +100,11 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
             result = true;
         }
 
-        if(_viewSignalMode == SignalMode::GAUSSIAN_WORLD || _viewSignalMode == SignalMode::GAUSSIAN_MEASUREMENTS)
+        if(_viewSignalMode == SignalMode::GAUSSIAN_WORLD || _viewSignalMode == SignalMode::OBSTABLE_MEASUREMENTS || _viewSignalMode == BALL_MEASUREMENTS)
         {
             if(_robotModeId == robotID)
             {
-                if( (signalMode == SignalMode::GAUSSIAN_WORLD) ||
-                    (dataType == DataType::BALLPOSITION)       ||
+                if( (signalMode == SignalMode::GAUSSIAN_WORLD) ||                    
                     (dataType == DataType::OBSTACLEPOSITION && signalMode == SignalMode::WORLD ))
                 {
                     result = true;
@@ -123,6 +114,11 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
             if(dataType == DataType::ROBOTPOSITION)
             {
                 result = true;
+            }
+
+            if (dataType == DataType::PATHPLANNINGPROGRESS)
+            {
+                return false;
             }
 
         }
@@ -169,18 +165,22 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
                 result = true;
             }
         }
-        else if (_viewSignalMode == SignalMode::GAUSSIAN_WORLD || _viewSignalMode == SignalMode::GAUSSIAN_MEASUREMENTS)
+        else if (_viewSignalMode == SignalMode::GAUSSIAN_WORLD || _viewSignalMode == SignalMode::OBSTABLE_MEASUREMENTS || _viewSignalMode == SignalMode::BALL_MEASUREMENTS)
         {
             if (signalMode == SignalMode::GAUSSIAN_WORLD)
             {
                 result = true;
             }
 
-            if( (dataType == DataType::BALLPOSITION)    ||
-                (dataType == DataType::ROBOTPOSITION)   ||
+            if( (dataType == DataType::ROBOTPOSITION)   ||
                 (dataType == DataType::OBSTACLEPOSITION && signalMode == SignalMode::WORLD ))
             {
                 result = true;
+            }
+
+            if (dataType == DataType::PATHPLANNINGPROGRESS)
+            {
+                return false;
             }
         }
         // For all other signalModes, we only want the active signalMode.
@@ -286,7 +286,12 @@ void FieldWidgetGameSignalSubscriber::onPathPlanningInProgress(uint8_t senderRob
     if (displayDataFilter(senderRobotId, SignalMode::PATHPLANNING, DataType::PATHPLANNINGPROGRESS))
     {
         TRACE(boost::str(boost::format("FieldWidgetGameSignalSubscriber::onPathPlanningInProgress(%1%)") % std::to_string(senderRobotId)).c_str());
+        _widget->getTeamRobot(senderRobotId)->setPathPlanningEnabled(true);
         _widget->getTeamRobot(senderRobotId)->setPath(path);
+    }
+    else
+    {
+        _widget->getTeamRobot(senderRobotId)->setPathPlanningEnabled(false);
     }
 }
 
@@ -324,8 +329,14 @@ void FieldWidgetGameSignalSubscriber::onGaussianObstacleUpdate(uint8_t senderRob
 {
     if (displayDataFilter(senderRobotId, signalMode, DataType::WORLDMODEL_LOCAL))
     {
-        bool show_measurements = (_viewSignalMode == SignalMode::GAUSSIAN_MEASUREMENTS);
+        bool show_obstacle_measurements = (_viewSignalMode == SignalMode::OBSTABLE_MEASUREMENTS);
+        bool show_ball_measurements = (_viewSignalMode == SignalMode::BALL_MEASUREMENTS);
 
-        _widget->updateWorldModelLocal(worldmodel_local, show_measurements);
+        _widget->updateWorldModelLocal(worldmodel_local, show_obstacle_measurements, show_ball_measurements);
     }
+}
+
+void FieldWidgetGameSignalSubscriber::onTrueBallUpdate(uint8_t senderRobotId, SignalMode signalMode, T_DIAG_TRUE_BALL& true_ball)
+{
+    _widget->updateTrueBall(true_ball);
 }

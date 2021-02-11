@@ -15,9 +15,9 @@ coachPart2Real   coachPart2Common commW wm heartbeatCoach
 coachPart2Sim    coachPart2Common simworld
 coachPart2Common visualizer logger rtdbSync # part 2: extra human interfacing (typically teamA)
 vision           multiCam raspiSync
-robotReal        robotCommon vision halMotion vc bh commW logger health wm blockly
+robotReal        robotCommon vision halMotion vt bh commW logger health wm blockly
 robotSim         robotCommon
-robotCommon      tp sp matchMode
+robotCommon      tp sp vc matchMode
 EOF
 ) | sed 's/#.*//' # filter comments, like these ;)
 

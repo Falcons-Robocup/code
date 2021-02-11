@@ -14,6 +14,9 @@ if [ ! -f $rdlInputFile ]; then
     exit 1
 fi
 
+# consumes the first argument so that any remaining arguments can be forwared
+shift
+
 # automatically determine output file by applying '_stim' postfix
 rdlOutputFile=`echo $rdlInputFile | sed 's/\.rdl/_stim.rdl/'`
 agentId=`echo $rdlInputFile | sed 's/.*_r\(.\)\.rdl/\1/'`
@@ -33,7 +36,7 @@ cp $configSrc $configTgt
 
 echo "agentId=$agentId"
 export TURTLE5K_ROBOTNUMBER=$agentId
-frun worldModel worldModelStimulator -a $agentId -i $rdlInputFile -o $rdlOutputFile -v 4
+frun worldModel worldModelStimulator -a $agentId -i $rdlInputFile -o $rdlOutputFile -v 4 "$@"
 
 # revert config
 mv $configBak $configTgt

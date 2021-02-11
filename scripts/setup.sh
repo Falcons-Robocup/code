@@ -4,12 +4,7 @@
 
 
 # do not silently continue when encountering an error
-set -e 
-
-# Poor man's argument parsing, which is sufficient for now
-if [[ "$*" == *"--skip-interactive"*     ]]; then
-    SKIP_INTERACTIVE=1
-fi
+set -e
 
 echo 'Adding your username to sudo list'
 sudo adduser $USER sudo
@@ -17,6 +12,42 @@ sudo adduser $USER sudo
 # allow robocup to run dmidecode without password use
 if ! sudo grep --quiet '/usr/sbin/dmidecode' /etc/sudoers; then
     echo '%robocup ALL=(ALL) NOPASSWD: /usr/sbin/dmidecode' | sudo EDITOR='tee -a' visudo
+fi
+
+if ! sudo grep --quiet '/sbin/reboot' /etc/sudoers; then
+    echo '%robocup ALL=(ALL) NOPASSWD: /sbin/reboot' | sudo EDITOR='tee -a' visudo
+fi
+
+if ! sudo grep --quiet '/sbin/poweroff' /etc/sudoers; then
+    echo '%robocup ALL=(ALL) NOPASSWD: /sbin/poweroff' | sudo EDITOR='tee -a' visudo
+fi
+
+if ! sudo grep --quiet '/sbin/poweroff' /etc/sudoers; then
+    echo '%robocup ALL=(ALL) NOPASSWD: /sbin/poweroff' | sudo EDITOR='tee -a' visudo
+fi
+
+if ! sudo grep --quiet '/sbin/ip' /etc/sudoers; then
+    echo '%robocup ALL=(ALL) NOPASSWD: /sbin/ip' | sudo EDITOR='tee -a' visudo
+fi
+
+if ! sudo grep --quiet '/sbin/route' /etc/sudoers; then
+    echo '%robocup ALL=(ALL) NOPASSWD: /sbin/route' | sudo EDITOR='tee -a' visudo
+fi
+
+if ! sudo grep --quiet '/sbin/ifconfig' /etc/sudoers; then
+    echo '%robocup ALL=(ALL) NOPASSWD: /sbin/ifconfig' | sudo EDITOR='tee -a' visudo
+fi
+
+if ! sudo grep --quiet '/usr/bin/killall' /etc/sudoers; then
+    echo '%robocup ALL=(ALL) NOPASSWD: /usr/bin/killall' | sudo EDITOR='tee -a' visudo
+fi
+
+if ! sudo grep --quiet '/bin/kill' /etc/sudoers; then
+    echo '%robocup ALL=(ALL) NOPASSWD: /bin/kill' | sudo EDITOR='tee -a' visudo
+fi
+
+if ! sudo grep --quiet '/usr/sbin/iftop' /etc/sudoers; then
+    echo '%robocup ALL=(ALL) NOPASSWD: /usr/sbin/iftop' | sudo EDITOR='tee -a' visudo
 fi
 
 echo 'Installing packages'
@@ -70,10 +101,12 @@ echo 'Linking SSH authorized_keys'
 cd ~/.ssh
 [ ! -h authorized_keys ] && ln -s ../falcons/code/config/authorized_keys
 
-echo 'Linking disk cleanup service'
+echo 'Linking maintenance services'
 cd /etc/systemd/system/
 [ ! -h diskCleanup.service ] && sudo ln -s ~/falcons/code/config/diskCleanup.service
 sudo systemctl enable diskCleanup.service
+[ ! -h shareLaptopInfo.service ] && sudo ln -s ~/falcons/code/config/shareLaptopInfo.service
+sudo systemctl enable shareLaptopInfo.service
 
 echo 'Installing git hooks'
 cd ~/falcons/code/.git/hooks
@@ -93,9 +126,6 @@ echo 'Installing refbox application'
 echo 'Installing ripgrep utility'
 sudo snap install ripgrep --classic
 
-echo 'Installing catapult (external submodule in data repo)'
-cd ~/falcons/data ; git submodule update --init ; cd -
-
 echo 'Installing google-chrome'
 cd /tmp
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
@@ -108,7 +138,13 @@ sudo gdebi -n google-chrome-stable_current_amd64.deb
 
 # Register the laptops (requires a configured git user)
 # Note: this will not register the laptops until the file is available on the master branch
-if ! ~/falcons/code/scripts/onRobot && [ ! ${SKIP_INTERACTIVE} ]; then
+if ! ~/falcons/code/scripts/onRobot; then
+
+    echo
+    echo '================'
+    echo 'Configuring laptop hostname'
+    echo
+    ~/falcons/code/scripts/setupLaptopInfo.py
 
     # Only configure the user when this is not the case yet
     if ! ~/falcons/code/scripts/setLaptopUser --check; then
@@ -119,14 +155,6 @@ if ! ~/falcons/code/scripts/onRobot && [ ! ${SKIP_INTERACTIVE} ]; then
         ~/falcons/code/scripts/setLaptopUser --skip-registration
     fi
 
-    # Don't proceed if setting up the user has failed
-    if ~/falcons/code/scripts/setLaptopUser --check; then
-        echo
-        echo '================'
-        echo 'Configuring laptop hostname'
-        echo
-        ~/falcons/code/scripts/setupLaptopInfo.py
-    fi
 fi
 
 

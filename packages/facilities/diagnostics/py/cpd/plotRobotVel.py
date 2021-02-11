@@ -1,15 +1,6 @@
-""" 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- """ 
- #!/usr/bin/env python3
+# Copyright 2020 Erik Kouters (Falcons)
+# SPDX-License-Identifier: Apache-2.0
+#!/usr/bin/env python3
 #
 
 import argparse
@@ -24,19 +15,23 @@ import rdlLib
 import cpd
 import plotdata
 
+### vy =  1.0 for 2 seconds
+### vy = -1.0 for 2 seconds
+### vx =  1.0 for 2 seconds
+### vx = -1.0 for 2 seconds
 blockly_cmd = """
-rci.setRobotVelocity(0, 1, 0)
+rci.setRobotPosVel("VEL_ONLY", 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, "NORMAL")
 time.sleep(2)
-rci.setRobotVelocity(0.0, 0.0, 0.0)
-rci.setRobotVelocity(0, -1, 0)
+rci.setRobotPosVel("VEL_ONLY", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "NORMAL")
+rci.setRobotPosVel("VEL_ONLY", 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, "NORMAL")
 time.sleep(2)
-rci.setRobotVelocity(0.0, 0.0, 0.0)
-rci.setRobotVelocity(1, 0, 0)
+rci.setRobotPosVel("VEL_ONLY", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "NORMAL")
+rci.setRobotPosVel("VEL_ONLY", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, "NORMAL")
 time.sleep(2)
-rci.setRobotVelocity(0.0, 0.0, 0.0)
-rci.setRobotVelocity(-1, 0, 0)
+rci.setRobotPosVel("VEL_ONLY", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "NORMAL")
+rci.setRobotPosVel("VEL_ONLY", 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, "NORMAL")
 time.sleep(2)
-rci.setRobotVelocity(0.0, 0.0, 0.0)
+rci.setRobotPosVel("VEL_ONLY", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "NORMAL")
 """
 
 class PlotRobotVel(cpd.CPD):
@@ -67,6 +62,10 @@ if __name__ == "__main__":
     parser.add_argument("--robot_hostname", type=str, required=True, help="the robot hostname to execute the move on. Example: --robot_hostname r3")
     parser.add_argument("--robot_id", type=int, required=True, help="the robot id to execute the move on. Example: --robot_id 3")
     args = parser.parse_args()
+
+    if args.robot_hostname == "localhost":
+        print("This CPD does not support simulation. Exiting...")
+        exit()
 
     plotRobotVel = PlotRobotVel()
     plotRobotVel.execute( args.robot_hostname, args.robot_id )

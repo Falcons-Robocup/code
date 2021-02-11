@@ -130,14 +130,6 @@ if [ $WIFI_ONLINE = 1 ]; then
     echo "OK"
 fi
 
-if [ $WIFI_ONLINE = 1 ]; then
-    echo -n "checking if external submodule catapult in data repo is updated... "
-    if [ ! -f ${FALCONS_DATA_PATH}/external/catapult/README.md ]; then
-        errorExit 'not updated' "try the following command to fix:\ncd ~/falcons/data ; git submodule update --init ; cd -"
-    fi
-    echo "OK"
-fi
-
 if [ "$onRobot" = 0 ]; then
     echo -n "checking GIT hooks... "
     d=${FALCONS_CODE_PATH}
@@ -186,7 +178,7 @@ if [ ! -f /snap/bin/rg ]; then
 fi
 echo "OK"
 
-if [ "$onRobot" = 1 ]; then
+if [ "$onRobot" = checkdisabled ]; then
     echo -n "checking routing tables... "
     expectedRouting=${FALCONS_CODE_PATH}/config/expectedRoutingWireless
     if [ $WIFI_ONLINE = 0 ]; then
@@ -203,7 +195,7 @@ if [ "$onRobot" = 1 ]; then
 fi
 
 echo -n "checking nm config... "
-if [ ! -f /etc/NetworkManager/system-connections/Falcons_A_a.nmconnection ]; then
+if [ ! -f /etc/NetworkManager/system-connections/Falcons_A_a* ]; then
     errorExit "Falcons_A_a not configured in NetworkManager"
     # TODO check that Falcons_A_a is not configured with automatic DHCP
 fi
@@ -211,24 +203,6 @@ echo "OK"
 
 echo -n "checking rtdb-related requirements... "
 ${FALCONS_CODE_PATH}/packages/facilities/rtdb/setup.sh -v || errorExit "something wrong with rtdb installation" "run the following command to fix:\ncd packages/facilities/rtdb ; ./setup.sh"
-# TODO merge these python dependencies into rtdb/setup.sh, once logging is merged in
-#if [ ! -f /usr/local/lib/python2.7/dist-packages/shm-1.2.2.egg-info ]; then
-#    errorExit "Python package shm not installed" "run the following command to fix:\ncd ${FALCONS_DATA_PATH}/external/shm-python/shm-1.2.2 ; sudo python setup.py install"
-#fi
-#if [ ! -f /usr/local/lib/python2.7/dist-packages/zstd.so ]; then
-#    errorExit "Python package zstd not installed" "run the following command to fix:\nsudo pip install zstd"
-#fi
-#if [ ! -d /usr/local/lib/python2.7/dist-packages/npyscreen ]; then
-#    errorExit "Python package npyscreen not installed" "run the following command to fix:\nsudo pip install npyscreen"
-#fi
-#if [ ! -d /home/robocup/.local/lib/python2.7/site-packages/CherryPy-17.4.2.dist-info ]; then
-#    if [ ! -d /usr/local/lib/python2.7/dist-packages/cherrypy ]; then
-#        errorExit "Python package cherrypy not installed" "run the following command to fix:\nsudo pip install CherryPy==17.4.2"
-#    fi
-#fi
-#if [ -d /usr/local/lib/python2.7/dist-packages/more_itertools-7.2.0.egg-info ]; then
-#    errorExit "Python package more_itertools is the wrong version (should be 5.0.0 instead of 7.2.0)" "run the following command to fix:\nsudo pip install more-itertools==5.0.0"
-#fi
 echo "OK"
 
 # TODO: is this still needed? if so, put it in setup.sh?
@@ -236,15 +210,25 @@ echo -n "checking tracing-related requirements... "
 ${FALCONS_CODE_PATH}/packages/facilities/tracing/setup.sh -v || errorExit "something wrong with tracing installation" "run the following command to fix:\nroscd tracing ; ./setup.sh"
 echo "OK"
 
-# this seems not needed anymore for ubuntu20 / cmake -- TODO remove
-#echo -n "checking if gtest and gmock are properly installed..."
-#if [ ! -f /usr/lib/libgtest.a ]; then
-#    errorExit "/usr/lib/libgtest.a not found" "run the following to fix:\ncd /usr/src/gtest ; sudo cmake CMakeLists.txt ; sudo make ; sudo cp lib/*.a /usr/lib"
-#fi
-#if [ ! -f /usr/lib/libgmock.a ]; then
-#    errorExit "/usr/lib/libgmock.a not found" "run the following to fix:\ncd /usr/src/gmock ; sudo cmake CMakeLists.txt ; sudo make ; sudo cp lib/*.a /usr/lib"
-#fi
-
+doNTPcheck=0
+configfileNTP=${FALCONS_CODE_PATH}/config/ntp.conf
+if [ "$onRobot" = 1 ]; then
+    doNTPcheck=1
+fi
+if [ `hostname` = coach ]; then
+    doNTPcheck=1
+    configfileNTP=${FALCONS_CODE_PATH}/config/ntp_coach.conf
+fi
+if [ "$doNTPcheck" = 1 ]; then
+    echo -n "checking NTP configuration ... "
+    if ! diff -B $configfileNTP /etc/ntp.conf > /dev/null ; then
+        # show the diff
+        echo "DIFF:"
+        diff $configfileNTP /etc/ntp.conf
+        errorExit "unexpected diff in NTP configuration" "run the following command to fix:\nsudo cp $configfileNTP /etc/ntp.conf"
+    fi
+    echo "OK"
+fi
 
 if [ "$onRobot" = 1 ]; then
     echo -n "checking disk usage... "
@@ -273,13 +257,6 @@ if [ "$onRobot" = 1 ]; then
     echo "OK"
 fi
 
-#echo -n "checking rosunit path in ros config... "
-## grep config file and look for error generating line, evaluate outcome
-#rosunit_ok="$(grep "bin/rosunit" /opt/ros/kinetic/share/rosunit/cmake/rosunit-extras.cmake | grep -v "^#" | grep "PYTHON_EXECUTABLE" | wc -l)"
-#if [[ $rosunit_ok -gt 0 ]]; then
-#    errorExit "Please open /opt/ros/kinetic/share/rosunit/cmake/rosunit-extras.cmake file and remove PYTHON_EXECUTABLE from line containing bin/rosunit"
-#fi
-#echo "OK"
 
 echo "Restart terminal if any error still exists..."
 

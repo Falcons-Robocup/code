@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2018-2020 Jan Feitsma (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * rtdbStructs.hpp
  *
  *  Created on: Nov 1, 2018
@@ -31,6 +22,7 @@
 #include "action.hpp"
 #include "actionResult.hpp"
 #include "motionSetpoint.hpp"
+#include "robotPosVel.hpp"
 #include "robotVelocity.hpp"
 #include "motorsTargetVelocity.hpp"
 #include "ballHandlersSetpoint.hpp"
@@ -49,6 +41,7 @@
 #include "diagWorldModel.hpp"
 #include "diagTeamplay.hpp"
 #include "diagPathPlanning.hpp"
+#include "diagVelocityControl.hpp"
 #include "DiagBallHandling.hpp"
 #include "diagPeripheralsInterface.hpp"
 #include "diagHealthSlow.hpp"
@@ -59,6 +52,7 @@
 #include "ConfigWorldModel.hpp"
 #include "ConfigHeartBeatCoach.hpp"
 #include "ConfigPathPlanning.hpp"
+#include "ConfigVelocityControl.hpp"
 #include "ConfigBallHandling.hpp"
 #include "ConfigMotionPlanning.hpp"
 #include "ConfigShootPlanning.hpp"
@@ -70,6 +64,8 @@
 #include "configSimulation.hpp"
 #include "configTeamplay.hpp"
 #include "SimulationScene.hpp"
+#include "diagTrueBall.hpp"
+#include "visionObjects.hpp"
 
 // generated in sharedTypes
 #include "generated_enum2str.hpp"
@@ -91,6 +87,7 @@ typedef std::vector<forbiddenArea>                T_FORBIDDEN_AREAS;
 typedef action                                    T_ACTION;
 typedef actionResult                              T_ACTION_RESULT;
 typedef motionSetpoint                            T_MOTION_SETPOINT;
+typedef robotPosVel                               T_ROBOT_POSVEL_SETPOINT;
 typedef robotVelocity                             T_ROBOT_VELOCITY_SETPOINT;
 typedef motorsTargetVelocity                      T_MOTOR_VELOCITY_SETPOINT;
 typedef ballHandlersSetpoint                      T_BALLHANDLERS_SETPOINT;
@@ -115,6 +112,7 @@ typedef diagWorldModelShared                      T_DIAG_WORLDMODEL_SHARED;
 typedef diagWorldModelLocal                       T_DIAG_WORLDMODEL_LOCAL;
 typedef diagTeamplay                              T_DIAG_TEAMPLAY;
 typedef diagPathPlanning                          T_DIAG_PATHPLANNING;
+typedef diagVelocityControl                       T_DIAG_VELOCITYCONTROL;
 typedef DiagBallHandling                          T_DIAG_BALLHANDLING;
 typedef diagPeripheralsInterface                  T_DIAG_PERIPHERALSINTERFACE;
 typedef diagHealthSlow                            T_DIAG_HEALTH_SLOW;
@@ -126,6 +124,7 @@ typedef tpOverrideResult                          T_TP_OVERRIDE_RESULT;
 typedef ConfigWorldModel                          T_CONFIG_WORLDMODEL;
 typedef ConfigHeartBeatCoach                      T_CONFIG_HEARTBEATCOACH;
 typedef ConfigPathPlanning                        T_CONFIG_PATHPLANNING;
+typedef ConfigVelocityControl                     T_CONFIG_VELOCITYCONTROL;
 typedef ConfigBallHandling                        T_CONFIG_BALLHANDLING;
 typedef ConfigMotionPlanning                      T_CONFIG_MOTIONPLANNING;
 typedef ConfigShootPlanning                       T_CONFIG_SHOOTPLANNING;
@@ -139,6 +138,8 @@ typedef configTeamplay                            T_CONFIG_TEAMPLAY;
 typedef SimulationScene                           T_SIMULATION_SCENE;
 typedef double                                    T_SIMULATION_TIME;
 typedef int                                       T_SIMULATION_TICK;
+typedef diagTrueBall                              T_DIAG_TRUE_BALL;
+typedef visionObjects                             T_VISION_OBJECTS;
 
 // !!!!!!!!
 // NOTE: If you update this list, please also update the Wiki page: "Software Architecture" and keep things consistent

@@ -17,6 +17,9 @@ if robotSwRunning ; then
     exit 1
 fi
 
+# do not forward X windows -- TODO make a toggle? 
+DISPLAY=:0
+
 # start all required processes
 source `which contextSet`
 jobname=robotReal

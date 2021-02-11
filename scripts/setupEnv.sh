@@ -56,7 +56,9 @@ fcd() {
         done
     fi
 }
-
+sshr () {
+    ssh -X robocup@$1
+}
 # Colorful Bash prompt that indicates git branch
 source $FALCONS_SCRIPTS_PATH/git-prompt.sh
 PS1='\[\033[01;32m\]\u@\h\[\033[01;31m\] [$(__git_ps1 "%s" )] \[\033[01;34m\]\W\[\033[00m\] \$ '

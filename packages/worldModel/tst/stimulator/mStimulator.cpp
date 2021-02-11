@@ -1,15 +1,6 @@
- /*** 
- 2014 - 2020 ASML Holding N.V. All Rights Reserved. 
- 
- NOTICE: 
- 
- IP OWNERSHIP All information contained herein is, and remains the property of ASML Holding N.V. The intellectual and technical concepts contained herein are proprietary to ASML Holding N.V. and may be covered by patents or patent applications and are protected by trade secret or copyright law. NON-COMMERCIAL USE Except for non-commercial purposes and with inclusion of this Notice, redistribution and use in source or binary forms, with or without modification, is strictly forbidden, unless prior written permission is obtained from ASML Holding N.V. 
- 
- NO WARRANTY ASML EXPRESSLY DISCLAIMS ALL WARRANTIES WHETHER WRITTEN OR ORAL, OR WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED, ANY IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, NON-INFRINGEMENT, TITLE OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- NO LIABILITY IN NO EVENT SHALL ASML HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION ANY LOST DATA, LOST PROFITS OR COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES), HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES 
- ***/ 
- /*
+// Copyright 2019-2020 Jan Feitsma (Falcons)
+// SPDX-License-Identifier: Apache-2.0
+/*
  * mStimulator.cpp
  *
  *  Created on: Dec 2018
@@ -31,7 +22,8 @@
 namespace po = boost::program_options;
 
 
-bool process_command_line(int argc, char** argv, int& agentId, int &verbosity, std::string& inputFile, std::string& outputFile)
+bool process_command_line(int argc, char** argv, int& agentId, int& verbosity, std::string& inputFile, std::string& outputFile, 
+                          int& overruleRobotPos, std::vector<std::string>& overruledKeys, std::vector<std::string>& deletedKeys)
 {
     try
     {
@@ -42,6 +34,10 @@ bool process_command_line(int argc, char** argv, int& agentId, int &verbosity, s
             ("input,i", po::value<std::string>(&inputFile)->required(), "set the input file")
             ("output,o", po::value<std::string>(&outputFile)->default_value("auto"), "set the output file")
             ("verbosity,v", po::value<int>(&verbosity)->default_value(1), "set verbosity level")
+            ("overrule_robot_pos,p", po::value<int>(&overruleRobotPos)->default_value(0), "overrule robot position with position already on rdl")
+            ("overrule_keys,k", po::value<std::vector<std::string> >()->multitoken()->zero_tokens()->composing(), "overrule keys on the new frame with values from existing frame")
+            ("delete_keys,d", po::value<std::vector<std::string> >()->multitoken()->zero_tokens()->composing(), "keys to be deleted from the existing frame")
+            
         ;
 
         po::variables_map vm;
@@ -57,6 +53,16 @@ bool process_command_line(int argc, char** argv, int& agentId, int &verbosity, s
         // There must be an easy way to handle the relationship between options "help" and others
         // Yes, the magic is putting the po::notify after "help" option check
         po::notify(vm);
+
+        if(vm.count("overrule_keys"))
+        {
+            overruledKeys = vm["overrule_keys"].as<std::vector<std::string> >();
+        }
+
+        if(vm.count("delete_keys"))
+        {
+            deletedKeys = vm["delete_keys"].as<std::vector<std::string> >();
+        }        
     }
     catch(std::exception& e)
     {
@@ -79,7 +85,10 @@ int main(int argc, char **argv)
     int verbosity = 1;
     std::string inputFile;
     std::string outputFile;
-    bool result = process_command_line(argc, argv, agentId, verbosity, inputFile, outputFile);
+    int overruleRobotPos = 0;
+    std::vector<std::string> overruledKeys;
+    std::vector<std::string> deletedKeys;
+    bool result = process_command_line(argc, argv, agentId, verbosity, inputFile, outputFile, overruleRobotPos, overruledKeys, deletedKeys);
     if (!result)
     {
         return 1;
@@ -89,6 +98,17 @@ int main(int argc, char **argv)
     // TODO: override configuration yaml file?
     cWorldModelStimulator stim(agentId, inputFile, outputFile);
     stim.setVerbosity(verbosity);
+    stim.setRobotPosOverrule(overruleRobotPos == 1);
+    for(auto it = overruledKeys.begin(); it != overruledKeys.end(); it++)
+    {
+        stim.add_overruled_key(*it);
+    }
+    for(auto it = deletedKeys.begin(); it != deletedKeys.end(); it++)
+    {
+        stim.add_deleted_key(*it);
+    }
+    
+
     stim.run();
 
     return 0;

@@ -70,37 +70,11 @@ Blockly.Python['tp_gamestate'] = function(block) {
 };
 
 
-
-
-
-
-
-
-Blockly.Python['tp_parameters'] = function(block) {
-  // Create a dict with any number of elements of any type.
-  var elements = new Array(block.itemCount_);
-
-  for (var i = 0; i < block.itemCount_; i++) {
-    var child = block.getInputTargetBlock('ADD' + i);
-
-    if (child === null || child.type != 'dictitem') {
-      elements[i] = Blockly.Python.blank + ": " + Blockly.Python.blank;
-      continue;
-    }
-
-    var key = Blockly.Python.valueToCode(child, 'key', Blockly.Python.ORDER_NONE) || Blockly.Python.blank;
-    var value = Blockly.Python.valueToCode(child, 'value', Blockly.Python.ORDER_NONE) || Blockly.Python.blank;
-    elements[i] = key + ": " + value;
-  }
-
-  var code = '{' + elements.join(', ') + '}';
-  return [code, Blockly.Python.ORDER_ATOMIC];
-};
-
 Blockly.Python['tp_dictitem'] = function(block) {
   var value_key = Blockly.Python.valueToCode(block, 'key', Blockly.Python.ORDER_ATOMIC);
   var value_value = Blockly.Python.valueToCode(block, 'value', Blockly.Python.ORDER_ATOMIC);
-  return ["", Blockly.Python.ORDER_NONE];
+  var code = '{' + value_key + ': ' + value_value + '}';
+  return [code, Blockly.Python.ORDER_ATOMIC];
 };
 
 

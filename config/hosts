@@ -22,6 +22,7 @@
 10.0.0.55	e5
 10.0.0.56	e6
 
+172.16.74.1 	kroonsteentje
 172.16.74.58	nest
 172.16.74.59	git
 172.16.74.60	build
@@ -34,7 +35,6 @@
 172.16.1.4	accesspoint2
 
 ## Laptop hostnames
-172.16.74.1	kroonsteentje
 172.16.74.10	fapper
 172.16.74.11	fiction
 172.16.74.12	ingress

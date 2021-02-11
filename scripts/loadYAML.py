@@ -68,10 +68,15 @@ class SmartAssignment():
         if not isinstance(source, dict):
             raise Exception("expecting a dict for {}{}, got {} with value '{}'".format(self.sourceName, locStr, type(source), str(source)))
 
-        # check key set equality
+        # check key set equality: target.keys() - source.keys() 
         keyDiff = set(target.keys()).difference(set(source.keys()))
         if len(keyDiff) > 0:
-            raise Exception("missing key {} in {} dict".format(".".join(stack + [keyDiff.pop()]), self.sourceName))
+            if self.strict:
+                raise Exception("missing key {} in {} dict".format(".".join(stack + [keyDiff.pop()]), self.sourceName))
+            else:
+                print("WARNING: missing key {} in {} dict".format(".".join(stack + [keyDiff.pop()]), self.sourceName))
+
+        # check key set equality: source.keys() - target.keys()
         keyDiff = set(source.keys()).difference(set(target.keys()))
         if len(keyDiff) > 0:
             if self.strict:
@@ -79,8 +84,8 @@ class SmartAssignment():
             else:
                 print("WARNING: missing key {} in {} dict".format(".".join(stack + [keyDiff.pop()]), self.targetName))
 
-        # go through the keys
-        for k in set( list(source.keys()) + list(target.keys()) ):
+        # go through the keys, copying all source keys towards the target
+        for k in source.keys():
             done = False
             # run the hook
             if self.hook != None:
@@ -115,17 +120,30 @@ def run(args):
     # Get current value
     # It is typically only written once when a process initializes, so do not use timeout flag
     item = rtdb2Store.get(args.agent, args.key, timeout=None)
+    if item is None:
+        # It is possible the key does not exist yet.
+        # So write the the entire YAML to RtDB.
+        print("WARNING: Failed to get key='{}' with agent='{}' from RtDB. Assuming key does not yet exist, and writing new values to RtDB.".format(args.key, args.agent))
 
-    # Assign yaml values, like
-    #     item.value = y
-    # but with more features:
-    # * type checks
-    # * completeness checks
-    # * enum/string conversions
-    SmartAssignment(item.value, y, hook=enumConverter, targetName="rtdb", sourceName="yaml", strict=(not args.nostrict))
+        itemvalue = {}
+        SmartAssignment(itemvalue, y, hook=enumConverter, targetName="rtdb", sourceName="yaml", strict=False)
 
-    # Store and finish
-    rtdb2Store.put(args.agent, args.key, item.value)
+        # Store key in RtDB
+        rtdb2Store.put(args.agent, args.key, itemvalue)
+
+    else:
+        # Assign yaml values, like
+        #     item.value = y
+        # but with more features:
+        # * type checks
+        # * completeness checks
+        # * enum/string conversions
+        SmartAssignment(item.value, y, hook=enumConverter, targetName="rtdb", sourceName="yaml", strict=(not args.nostrict))
+
+        # Store key back to RtDB
+        rtdb2Store.put(args.agent, args.key, item.value)
+
+    # cleanup
     rtdb2Store.closeAll()
 
 

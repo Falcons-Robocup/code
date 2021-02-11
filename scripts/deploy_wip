@@ -56,7 +56,12 @@ def is_alive(hostname, dryrun):
 
 
 def upload(abspath, robot, dryrun):
-    command = "scp {0} {1}:{0}".format(abspath, robot)
+    # ensure that it works for other laptop setups than standard /home/robocup
+    abspath_src = abspath
+    abspath_parts = abspath.split('/')
+    abspath_parts[2] = "robocup"
+    abspath_tgt = '/'.join(abspath_parts)
+    command = "scp {0} robocup@{1}:{2}".format(abspath_src, robot, abspath_tgt)
 
     if dryrun:
         print("Would have executed: %s" % command)

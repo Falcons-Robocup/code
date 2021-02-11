@@ -19,8 +19,8 @@ FALCONS_SCRIPTS_PATH = os.environ['FALCONS_SCRIPTS_PATH']
 # rtdb python toolset
 sys.path.append(FALCONS_CODE_PATH + "/packages/facilities/rtdb/python")
 
-# sharedTypes -> sharedTypes.py
-sys.path.append(FALCONS_CODE_PATH + "/packages/facilities/sharedTypes/src")
+# sharedTypes -> sharedTypes.py [generated]
+sys.path.append(FALCONS_CODE_PATH + "/build/codegen")
 
 # WorldModel -> worldState.py
 sys.path.append(FALCONS_CODE_PATH + "/packages/worldModel/src")

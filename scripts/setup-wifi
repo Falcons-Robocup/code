@@ -8,8 +8,8 @@ import uuid
 import glob
 import re
 
-use_pass_words = False
-pass_words = {'A': 'MSL2017a', 'B': 'MSL2017b'}
+use_pass_words = True
+pass_words = {'A': 'WIFI_access', 'B': 'WIFI_access'}
 
 
 template = """

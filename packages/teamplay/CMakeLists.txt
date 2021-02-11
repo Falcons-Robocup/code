@@ -7,6 +7,7 @@ find_package(Facilities)
 find_package(WorldModel)
 find_package(MotionPlanning)
 find_package(PathPlanning)
+find_package(VelocityControl)
 
 
 #set the default path for built executables to the "bin" directory

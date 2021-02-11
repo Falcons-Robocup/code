@@ -59,7 +59,7 @@ Blockly.Python['shoot'] = function(block) {
   var dropdown_shoottype = block.getFieldValue('shootType');
   var value_pos = Blockly.Python.valueToCode(block, 'pos', Blockly.Python.ORDER_ATOMIC);
   // Guard with 'hasBall' to ensure we only shoot when we have the ball
-  var code = 'if ws.hasBall(myRobotId): rci.setMotionPlanningAction("' + dropdown_shoottype + '", ' + value_pos + '.x, ' + value_pos + '.y, 0.0, False, True)\nif ws.hasBall(myRobotId): rci.blockUntilTPOverridePassedOrFailed()\n';
+  var code = 'if ws.hasBall(myRobotId): rci.setMotionPlanningAction("' + dropdown_shoottype + '", ' + value_pos + '.x, ' + value_pos + '.y, 0.0, "NORMAL", True)\nif ws.hasBall(myRobotId): rci.blockUntilTPOverridePassedOrFailed()\n';
   return code;
 };
 
@@ -67,7 +67,7 @@ Blockly.Python['kick'] = function(block) {
   var number_power = block.getFieldValue('power');
   var number_height = block.getFieldValue('height');
   // NOTE: no 'hasBall' guard! (use with caution) 
-  var code = 'rci.setMotionPlanningAction("KICK", ' + number_power + ', ' + number_height + ', 0.0, False, True)\nrci.blockUntilTPOverridePassedOrFailed()\n';
+  var code = 'rci.setMotionPlanningAction("KICK", ' + number_power + ', ' + number_height + ', 0.0, "NORMAL", True)\nrci.blockUntilTPOverridePassedOrFailed()\n';
   return code;
 };
 
@@ -76,7 +76,7 @@ Blockly.Python['movexyrz'] = function(block) {
   var number_y = block.getFieldValue('y');
   var angle_rz = block.getFieldValue('Rz');
 
-  var code = 'rci.setMotionPlanningAction("MOVE", ' + number_x + ', ' + number_y + ', ' + parseFloat(angle_rz) * (Math.PI/180.0) + ', False, True)\nrci.blockUntilTPOverridePassedOrFailed()\n';
+  var code = 'rci.setMotionPlanningAction("MOVE", ' + number_x + ', ' + number_y + ', ' + parseFloat(angle_rz) * (Math.PI/180.0) + ', "NORMAL", True)\nrci.blockUntilTPOverridePassedOrFailed()\n';
   return code;
 };
 
