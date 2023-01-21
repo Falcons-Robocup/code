@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Coen Tempelaars (Falcons)
+// Copyright 2018-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * simworldGameData.hpp
@@ -28,6 +28,7 @@ private:
     void recalculateRobot (Robot& robot, const float dt);
     void resolveBallToRobotCollision(const Circle& other, const Vector2D& otherspeed, const float dt);
     void resolveRobotToRobotCollision(Robot& robot, const Circle& other, const Vector2D& otherspeed, const float dt);
+    std::vector<Obstacle> getBallObstacles() const;
 };
 
 #endif /* SIMWORLDGAMEDATA_HPP_ */

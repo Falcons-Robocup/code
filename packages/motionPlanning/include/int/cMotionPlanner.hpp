@@ -1,4 +1,4 @@
-// Copyright 2017-2020 Jan Feitsma (Falcons)
+// Copyright 2017-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cMotionPlanner.hpp
@@ -22,24 +22,7 @@ public:
     cMotionPlanner(MP_WorldModelInterface *wm, PathPlanningClient *pp, MP_RTDBOutputAdapter *rtdbOutput);
     ~cMotionPlanner();
     
-    // set a the action (either continue current action or start a new one)
-    template<typename T>
-    void setAction(T const &action)
-    {
-        TRACE("setAction(%s)", typeid(action).name());
-        if (noAction())
-        {
-            TRACE("first action");
-            initiateAction((MP_AbstractAction *)(new T()));
-        }
-        else if (!checkActionEqual(typeid(action).name()))
-        {
-            TRACE("changing action");
-            clearAction();
-            initiateAction((MP_AbstractAction *)(new T()));
-        }
-        // else do nothing: running action remains alive
-    }
+    void setAction(actionTypeEnum actionType);
     
     // set the parameters of current action
     void setActionParameters(std::vector<std::string> const &params);
@@ -52,12 +35,9 @@ public:
     const cQueryInterface& getQI();
 
 private:
-    // current action and modifiers
+    // current action and modifiers;
+    actionTypeEnum _currentAction = actionTypeEnum::UNKNOWN;
     MP_AbstractAction *_action = NULL;
-    bool noAction();
-    bool checkActionEqual(std::string name);
-    void clearAction();
-    void initiateAction(MP_AbstractAction * action);
     
     // interfaces
     cInterfaces _interfaces;

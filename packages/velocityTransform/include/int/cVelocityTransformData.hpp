@@ -12,6 +12,7 @@
 
 #include "linepoint2D.hpp"
 #include "polygon2D.hpp"
+#include "ConfigRTDBAdapter.hpp"
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/lu.hpp>
@@ -25,6 +26,8 @@ class cVelocityTransformData
         ~cVelocityTransformData() { };
 
         // Getters and setters
+
+        void setConfigAdapter(ConfigRTDBAdapter<ConfigVelocityTransform> *vtConfigAdapter);
 
         // Robot data
         // Target from VelocityControl
@@ -53,6 +56,8 @@ class cVelocityTransformData
         publishFeedbackFunctionType publishFeedback;
 
         publishTargetFunctionType publishTarget;
+
+        ConfigRTDBAdapter<ConfigVelocityTransform> *_vtConfigAdapter;
 
     private:
 

@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBAdapterRobotStatus.cpp
@@ -30,7 +30,7 @@ void cRTDBAdapterRobotStatus::initialize() {
     TRACE_FUNCTION("");
 
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId);
 }
 
 void cRTDBAdapterRobotStatus::setRobotStatus(bool inPlay) {

@@ -4,15 +4,6 @@ project(Environment)
 
 find_package(Facilities)
 
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++11 -Wall -Werror")
-
-
-#set the default path for built executables to the "bin" directory
-#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
-
 include_directories("include/ext" "include")
 
 
@@ -22,7 +13,7 @@ target_link_libraries(EnvironmentCommon yaml-cpp FalconsCommon)
 
 #Create library libEnvironmentField
 add_library(EnvironmentField src/cEnvironmentField.cpp)
-target_link_libraries(EnvironmentField EnvironmentCommon Tracing rtdb2 FalconsCommon)
+target_link_libraries(EnvironmentField EnvironmentCommon Tracing FalconsRTDB FalconsCommon)
 
 #Create library libEnvironmentBall
 add_library(EnvironmentBall src/cEnvironmentBall.cpp)

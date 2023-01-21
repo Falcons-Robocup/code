@@ -1,4 +1,4 @@
-// Copyright 2017-2018 Coen Tempelaars (Falcons)
+// Copyright 2017-2022 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * robotStoreTest.cpp
@@ -14,6 +14,7 @@
 #include "int/stores/robotStore.hpp"
 
 /* SUT dependencies */
+#include "cEnvironmentField.hpp"
 
 
 
@@ -172,6 +173,7 @@ TEST_F(completeTeam, ownAssistantIsPresentAndHasBall)
 
 TEST_F(completeTeam, onlyGoalkeeperInOwnPenaltyArea)
 {
+    cEnvironmentField::getInstance().loadConfig("cEnvironment12x18");
     EXPECT_EQ(0, robotStore::getInstance().getAllRobotsExclGoalieInArea(fieldArea::OWN_PENALTYAREA).size());
     EXPECT_EQ(1, robotStore::getInstance().getAllRobotsInArea(fieldArea::OWN_PENALTYAREA).size());
     EXPECT_EQ(1, robotStore::getInstance().getAllRobotsExclOwnRobotInArea(fieldArea::OWN_PENALTYAREA).size());

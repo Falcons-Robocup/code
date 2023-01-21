@@ -1,4 +1,4 @@
-// Copyright 2019 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * preparingController.cpp
@@ -62,6 +62,7 @@ void PreparingController::control (const ArbiterGameData& gamedata,
 
     if (gamedata.ball.isMoving())
     {
+        TRACE("Ball is moving, stopping.");
         declareGameStopping();
     }
 
@@ -69,12 +70,14 @@ void PreparingController::control (const ArbiterGameData& gamedata,
     {
         if (!gamedata.anyRobotIsMoving())
         {
+            TRACE("No more robots moving and minimum waiting time finished, game prepared.");
             declareGamePrepared();
         }
     }
 
     if (secondsSinceLastTransition > maximumWaitingTime)
     {
+        TRACE("Maximum waiting time exceeded, game prepared.");
         declareGamePrepared();
     }
 }

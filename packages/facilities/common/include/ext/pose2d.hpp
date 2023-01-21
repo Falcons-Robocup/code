@@ -1,4 +1,4 @@
-// Copyright 2015 Coen Tempelaars (Falcons)
+// Copyright 2015-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Author: ctempela
@@ -21,14 +21,17 @@ namespace geometry
 class Pose2D : public Point2D
 {
 public:
+
+	double Rz;
+
 	Pose2D () : Point2D()
     {
-		m_phi = 0.0;
+		Rz = 0.0;
     };
 
 	Pose2D (double x, double y, double phi) : Point2D(x, y)
     {
-		m_phi = normalize(phi);
+		Rz = normalize(phi);
     };
 
 	~Pose2D ()
@@ -38,7 +41,7 @@ public:
 
 	Pose2D (const Pose2D &other) : Point2D(other)
 	{
-		m_phi = other.m_phi;
+		Rz = other.Rz;
 	}
 
     // operations
@@ -48,7 +51,7 @@ public:
 		{
 			x = other.x;
 			y = other.y;
-			m_phi = other.m_phi;
+			Rz = other.Rz;
 		}
 		return *this;
 	}
@@ -57,7 +60,7 @@ public:
 	{
 		this->x = x;
 		this->y = y;
-		this->m_phi = normalize(phi);
+		this->Rz = normalize(phi);
 		return *this;
 	}
 
@@ -70,7 +73,7 @@ public:
 
 	Pose2D& turn (double rad)
 	{
-		m_phi = normalize(m_phi + rad);
+		Rz = normalize(Rz + rad);
 		return *this;
 	}
 
@@ -78,22 +81,22 @@ public:
 	Pose2D& transformFCS2RCS (const Pose2D& robotpos)
 	{
 	    // first translate, then rotate
-		double angle = (M_PI/2 - robotpos.m_phi);
+		double angle = (M_PI/2 - robotpos.Rz);
 		Vector2D xynew = (Vector2D(x, y) - Vector2D(robotpos.x, robotpos.y)).rotate(angle);
 		x = xynew.x;
 		y = xynew.y;
-		m_phi = normalize(m_phi + angle);
+		Rz = normalize(Rz + angle);
 		return *this;
 	}
 
 	Pose2D& transformRCS2FCS (const Pose2D& robotpos)
 	{
 	    // first rotate, then translate
-		double angle = - (M_PI/2 - robotpos.m_phi);
+		double angle = - (M_PI/2 - robotpos.Rz);
 		Vector2D xyrot = (Vector2D(x, y)).rotate(angle);
 		x = xyrot.x + robotpos.x;
 		y = xyrot.y + robotpos.y;
-		m_phi = normalize(m_phi + angle);
+		Rz = normalize(Rz + angle);
 		return *this;
 	}
 
@@ -105,7 +108,7 @@ public:
 	        // rotate by half a circle
 	        x = -x;
 	        y = -y;
-	    	m_phi = normalize(m_phi + M_PI);
+	    	Rz = normalize(Rz + M_PI);
 	    }
 		return *this;
 	}
@@ -118,7 +121,7 @@ public:
 			// rotate by half a circle
 			x = -x;
 			y = -y;
-			m_phi = normalize(m_phi + M_PI);
+			Rz = normalize(Rz + M_PI);
 		}
 		return *this;
 	}
@@ -134,21 +137,27 @@ public:
 		return y;
 	}
 
-	double getPhi () const
+	double getRz () const
 	{
-		return m_phi;
+		return Rz;
 	}
+
+    std::string str() const
+    {
+        std::ostringstream oss;
+        oss << "(" << x << ", " << y << ", " << Rz << ")";
+        return oss.str();
+    }
 
 
 private:
-	double m_phi;
 
-	double normalize (double phi)
+	double normalize (double Rz)
 	{
-		double normalized_phi = phi;
-		while (normalized_phi < 0.0)      { normalized_phi += (2*M_PI); }
-		while (normalized_phi > (2*M_PI)) { normalized_phi -= (2*M_PI); }
-		return normalized_phi;
+		double normalized_Rz = Rz;
+		while (normalized_Rz < 0.0)      { normalized_Rz += (2*M_PI); }
+		while (normalized_Rz > (2*M_PI)) { normalized_Rz -= (2*M_PI); }
+		return normalized_Rz;
 	}
 };
 

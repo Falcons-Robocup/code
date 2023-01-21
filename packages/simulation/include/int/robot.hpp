@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Coen Tempelaars (Falcons)
+// Copyright 2018-2022 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * robot.hpp
@@ -54,6 +54,7 @@ public:
     bool hasBallHandlersEnabled() const;
     float getKickerHeight() const;
     float getKickerSpeed() const;
+    PlayingDirection getPlayingDirection() const;
 
     void recalculatePosition (const float dt);
     void recalculateBallPossession(const Point3D& ballPosition);

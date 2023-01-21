@@ -33,12 +33,12 @@ Blockly.Python['robot_sees_ball'] = function(block) {
 };
 
 Blockly.Python['get_ball'] = function(block) {
-  var code = 'rci.setTeamplayAction("GET_BALL", {})\nrci.blockUntilTPOverridePassedOrFailed()\n';
+  var code = 'rci.setMotionPlanningAction("GET_BALL", 0.0, 0.0, 0.0, "NORMAL", True)\nrci.blockUntilMPPassedOrFailed()\n';
   return code;
 };
 
 Blockly.Python['intercept_ball'] = function(block) {
-  var code = 'rci.setTeamplayAction("INTERCEPT_BALL", {})\nrci.blockUntilTPOverridePassedOrFailed()\n';
+  var code = 'rci.setMotionPlanningAction("INTERCEPT_BALL", 0.0, 0.0, 0.0, "NORMAL", True)\nrci.blockUntilMPPassedOrFailed()\n';
   return code;
 };
 
@@ -50,8 +50,7 @@ Blockly.Python['robot_position'] = function(block) {
 
 Blockly.Python['move'] = function(block) {
   var value_pos = Blockly.Python.valueToCode(block, 'pos', Blockly.Python.ORDER_ATOMIC);
-  //var code = 'rci.setTeamplayAction("MOVE", {"target": "coord:" + str(' + value_pos + '.x) + "," + str(' + value_pos + '.y)})\nrci.blockUntilTPOverridePassedOrFailed()\n';
-  var code = 'rci.setTeamplayAction("MOVE", {"target": ' + value_pos + '.id})\nrci.blockUntilTPOverridePassedOrFailed()\n';
+  var code = 'rci.setMotionPlanningAction("MOVE", ' + value_pos + '.x, ' + value_pos + '.y, 0.0, "NORMAL", True)\nrci.blockUntilMPPassedOrFailed()\n';
   return code;
 };
 
@@ -59,7 +58,7 @@ Blockly.Python['shoot'] = function(block) {
   var dropdown_shoottype = block.getFieldValue('shootType');
   var value_pos = Blockly.Python.valueToCode(block, 'pos', Blockly.Python.ORDER_ATOMIC);
   // Guard with 'hasBall' to ensure we only shoot when we have the ball
-  var code = 'if ws.hasBall(myRobotId): rci.setMotionPlanningAction("' + dropdown_shoottype + '", ' + value_pos + '.x, ' + value_pos + '.y, 0.0, "NORMAL", True)\nif ws.hasBall(myRobotId): rci.blockUntilTPOverridePassedOrFailed()\n';
+  var code = 'if ws.hasBall(myRobotId): rci.setMotionPlanningAction("' + dropdown_shoottype + '", ' + value_pos + '.x, ' + value_pos + '.y, 0.0, "NORMAL", True)\nif ws.hasBall(myRobotId): rci.blockUntilMPPassedOrFailed()\n';
   return code;
 };
 
@@ -67,7 +66,7 @@ Blockly.Python['kick'] = function(block) {
   var number_power = block.getFieldValue('power');
   var number_height = block.getFieldValue('height');
   // NOTE: no 'hasBall' guard! (use with caution) 
-  var code = 'rci.setMotionPlanningAction("KICK", ' + number_power + ', ' + number_height + ', 0.0, "NORMAL", True)\nrci.blockUntilTPOverridePassedOrFailed()\n';
+  var code = 'rci.setMotionPlanningAction("KICK", ' + number_power + ', ' + number_height + ', 0.0, "NORMAL", True)\nrci.blockUntilMPPassedOrFailed()\n';
   return code;
 };
 
@@ -76,7 +75,7 @@ Blockly.Python['movexyrz'] = function(block) {
   var number_y = block.getFieldValue('y');
   var angle_rz = block.getFieldValue('Rz');
 
-  var code = 'rci.setMotionPlanningAction("MOVE", ' + number_x + ', ' + number_y + ', ' + parseFloat(angle_rz) * (Math.PI/180.0) + ', "NORMAL", True)\nrci.blockUntilTPOverridePassedOrFailed()\n';
+  var code = 'rci.setMotionPlanningAction("MOVE", ' + number_x + ', ' + number_y + ', ' + parseFloat(angle_rz) * (Math.PI/180.0) + ', "NORMAL", True)\nrci.blockUntilMPPassedOrFailed()\n';
   return code;
 };
 

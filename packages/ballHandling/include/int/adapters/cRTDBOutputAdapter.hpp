@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBOutputAdapter.hpp
@@ -12,7 +12,7 @@
 
 #include "int/types/ballHandlersSetpointsType.hpp"
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class cRTDBOutputAdapter
 {

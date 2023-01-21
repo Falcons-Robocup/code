@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Michel Koenen (Falcons)
+// Copyright 2015-2022 Michel Koenen (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cEnvironmentField.hpp
@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "position2d.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 
 enum poiName {    // all right and left references as SEEN from OUR SIDE (or OUR GOALIE)
@@ -277,6 +277,7 @@ class cEnvironmentField
             /*
              * Getter functionality for use by anybody who needs to know
              */
+            void loadConfig(std::string key);
             poiInfo getFieldPOI(poiName poi);
             void getFieldPOI(poiName poi, poiInfo &fieldPOI);
             bool getFieldPOIByString(std::string poiString , poiInfo &fieldPOI);
@@ -311,14 +312,17 @@ class cEnvironmentField
             poiInfo _fieldPOIs[ (poiName) POI_COUNT];
             areaInfo _fieldAreas[ (areaName) AREA_COUNT];
 
-            void getConfig();
+            void getConfig(); // overload because we don't want to control the default
+            void getConfig(std::string key);
+            void fillConfig(std::vector< std::pair<std::string,std::string> > &fieldValues);
+            void initConfig();
             void generateFieldPOIs();
             void generateFieldAreas();
             void generateTTA();
             void checkUpdateConfiguration(poiName poi);
             void checkUpdateConfiguration(areaName area);
 
-            RtDB2 *_rtdb = NULL;
+            FalconsRTDB *_rtdb = NULL;
             void initRtdb();
             refboxConfigTTAside getTTAconfig();
 };

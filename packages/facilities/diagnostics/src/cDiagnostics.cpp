@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cDiagnostics.cpp
@@ -24,7 +24,7 @@ EventHandler::EventHandler(eventSeverityEnum severity, const char* fileName, con
     _event.lineNumber = lineNr;
     _event.funcName = functionName;
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, getTeamChar());
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, getTeamChar());
 }
 
 EventHandler::~EventHandler()

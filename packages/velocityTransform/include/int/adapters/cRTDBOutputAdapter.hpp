@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBOutputAdapter.hpp
@@ -12,7 +12,7 @@
 
 #include "int/cVelocityTransformData.hpp"
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class cRTDBOutputAdapter
 {

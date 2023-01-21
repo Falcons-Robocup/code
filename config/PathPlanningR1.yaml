@@ -1,4 +1,3 @@
-nominalFrequency:                         30
 numExtraSettlingTicks:                    0
 obstacleAvoidance:
     enabled:                              true # keeperMove will overrule to disable in goal area
@@ -34,3 +33,5 @@ deadzone:
     enabled:                              true # true = better for motors (not continuously sending small setpoints)
     toleranceXY:                          0.02
     toleranceRz:                          0.002
+tokyoDrift:
+    toleranceRz:                          1.0 # if deltaPos.Rz > tokyoDrift.toleranceRz -> do tokyo drift; otherwise do normal rotation

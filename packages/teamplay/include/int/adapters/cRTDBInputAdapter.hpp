@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBInputAdapter.hpp
@@ -12,7 +12,7 @@
 
 #include <vector>
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "cWorldModelClient.hpp"
 #include "int/types/cDecisionTreeTypes.hpp"
 

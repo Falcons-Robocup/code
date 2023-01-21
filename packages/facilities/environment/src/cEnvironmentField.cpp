@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Michel Koenen (Falcons)
+// Copyright 2015-2022 Michel Koenen (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cEnvironmentField.cpp
@@ -19,10 +19,7 @@ using namespace std;
 cEnvironmentField::cEnvironmentField()
 {
     getConfig();
-    generateFieldPOIs();
-    generateFieldAreas();
-    initRtdb();
-    generateTTA();
+    initConfig();
 }
 
 cEnvironmentField::~cEnvironmentField()
@@ -30,12 +27,26 @@ cEnvironmentField::~cEnvironmentField()
 
 }
 
+void cEnvironmentField::loadConfig(std::string key)
+{
+    getConfig(key);
+    initConfig();
+}
+
+void cEnvironmentField::initConfig()
+{
+    generateFieldPOIs();
+    generateFieldAreas();
+    initRtdb();
+    generateTTA();
+}
+
 void cEnvironmentField::initRtdb()
 {
     if (_rtdb == NULL)
     {
         // only used for global config from coach -> use agent 0 instead of getRobotNumber()
-        _rtdb = RtDB2Store::getInstance().getRtDB2(0);
+        _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(0);
     }
 }
 
@@ -308,18 +319,35 @@ bool cEnvironmentField::isPositionInArea( float x, float y, areaName area, float
 
 }
 
-/*! read the YAML file(s) as part of constructing phase and fill the private class members containing the values
- 
+/*! read the YAML file(s) as part of constructing phase
+
  */
 void cEnvironmentField::getConfig()
+{
+    std::vector< std::pair<std::string,std::string> > fieldValues;
+    environmentCommon::readYAML("field", fieldValues);
+    fillConfig(fieldValues);
+}
+
+/*! read the YAML file(s) as part of testing phase
+
+ */
+void cEnvironmentField::getConfig(std::string key)
+{
+    std::vector< std::pair<std::string,std::string> > fieldValues;
+    environmentCommon::readYAML("field", fieldValues, key);
+    fillConfig(fieldValues);
+}
+
+/*! fill the private class members containing the values
+
+ */
+void cEnvironmentField::fillConfig(std::vector< std::pair<std::string,std::string> > &fieldValues)
 {
     try
     {
 
         // fieldValues( <length, 18.0>, <width, 12.0>, ... )
-        std::vector< std::pair<std::string,std::string> > fieldValues;
-        environmentCommon::readYAML("field", fieldValues);
-
         // Find <width, 12.0> in fieldValues using key "width"
         auto pair = std::find_if( fieldValues.begin(), fieldValues.end(), KeyEquals("width") ); 
         _width = std::stof( pair->second );

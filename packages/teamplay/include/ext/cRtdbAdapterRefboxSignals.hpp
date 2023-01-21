@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRtdbAdapterRefboxSignals.hpp
@@ -10,7 +10,7 @@
 #ifndef CRTDBADAPTERREFBOXSIGNALS_HPP_
 #define CRTDBADAPTERREFBOXSIGNALS_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 
 /*!

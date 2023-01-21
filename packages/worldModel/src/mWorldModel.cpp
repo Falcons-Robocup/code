@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * mainRTDB.cpp
@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 {
     try
     {
-        INIT_TRACE;
+        INIT_TRACE("worldModel");
         
         // setup worldmodel
         cWorldModel w;

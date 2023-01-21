@@ -1,4 +1,3 @@
-nominalFrequency:                         30
 numExtraSettlingTicks:                    0
 obstacleAvoidance:
     enabled:                              true
@@ -34,3 +33,5 @@ deadzone:
     enabled:                              true # true = better for motors (not continuously sending small setpoints)
     toleranceXY:                          0.02
     toleranceRz:                          0.005 # real Rz-only performance is a bit worse (~0.012) due to wheel mounting errors (wobbly, at least seen on r5)
+tokyoDrift:
+    toleranceRz:                          1.0 # if deltaPos.Rz > tokyoDrift.toleranceRz -> do tokyo drift; otherwise do normal rotation

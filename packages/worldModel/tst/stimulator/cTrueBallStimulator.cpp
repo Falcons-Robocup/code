@@ -1,4 +1,4 @@
-// Copyright 2020 lucas (Falcons)
+// Copyright 2020-2021 lucas (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cTrueBallStimulator.cpp
@@ -18,7 +18,7 @@
 // other Falcons packages
 #include "falconsCommon.hpp"
 #include "tracing.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "cEnvironmentField.hpp"
 
 // internal includes
@@ -30,21 +30,22 @@ static const int VIDEO_WIDTH = 840;
 static const int VIDEO_HEIGHT = 572;
 static const int BORDER_SIZE = 20;
 
-cTrueBallStimulator::cTrueBallStimulator(int agentId, std::string inputFile, std::string outputFile, int flip)
+cTrueBallStimulator::cTrueBallStimulator(int agentId, std::string inputFile, std::string outputFile, int flip) :
+    cAbstractStimulator(agentId)
 {
     _inputFile = inputFile;
     _outputFile = outputFile;
     _agentId = agentId; // TODO I think we can strip this -- script sets env, wm knows itself which agent it is
     _component = "worldModel";
 
-    _rtdb = RtDB2Store::getInstance().getRtDB2(getRobotNumber());
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(getRobotNumber());
 
     fill_video_list();
     video_opened = false;
 
     flipped = flip == 1;
 
-    INIT_TRACE;
+    INIT_TRACE("TrueBallStimulator");
 }
 
 cTrueBallStimulator::~cTrueBallStimulator()

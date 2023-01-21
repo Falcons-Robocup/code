@@ -7,9 +7,10 @@ import argparse
 import yaml
 
 import falconspy
+import falconsrtdb
 import sharedTypes
-from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
 
+from rtdb2 import RTDB2_DEFAULT_PATH
 
 
 def enumConverter(v):
@@ -114,12 +115,12 @@ def run(args):
     y = yaml.load(f.read(), Loader=yaml.FullLoader)
     f.close()
 
-    # Create instance of RtDB2Store and read databases from disk
-    rtdb2Store = RtDB2Store(args.path, False) # don't start in read-only
+    # Create instance of FalconsRtDBStore and read databases from disk
+    rtdbStore = falconsrtdb.FalconsRtDBStore(readonly=False) # write mode
 
     # Get current value
     # It is typically only written once when a process initializes, so do not use timeout flag
-    item = rtdb2Store.get(args.agent, args.key, timeout=None)
+    item = rtdbStore.get(args.agent, args.key, timeout=None)
     if item is None:
         # It is possible the key does not exist yet.
         # So write the the entire YAML to RtDB.
@@ -129,7 +130,7 @@ def run(args):
         SmartAssignment(itemvalue, y, hook=enumConverter, targetName="rtdb", sourceName="yaml", strict=False)
 
         # Store key in RtDB
-        rtdb2Store.put(args.agent, args.key, itemvalue)
+        rtdbStore.put(args.agent, args.key, itemvalue)
 
     else:
         # Assign yaml values, like
@@ -141,15 +142,22 @@ def run(args):
         SmartAssignment(item.value, y, hook=enumConverter, targetName="rtdb", sourceName="yaml", strict=(not args.nostrict))
 
         # Store key back to RtDB
-        rtdb2Store.put(args.agent, args.key, item.value)
+        rtdbStore.put(args.agent, args.key, item.value)
 
     # cleanup
-    rtdb2Store.closeAll()
+    rtdbStore.closeAll()
 
 
 def guessAgentId():
     try:
         return int(os.getenv("TURTLE5K_ROBOTNUMBER"))
+    except:
+        return 0
+
+
+def guessTeam():
+    try:
+        return int(os.getenv("TURTLE5K_TEAMNAME"))
     except:
         return 0
 
@@ -161,6 +169,7 @@ if __name__ == '__main__':
     parser     = argparse.ArgumentParser(description=descriptionTxt, epilog=exampleTxt, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-k', '--key', help='RTDB key to write to', required=True)
     parser.add_argument('-a', '--agent', help='agent ID to use, default guess', type=int, default=guessAgentId())
+    parser.add_argument('-t', '--team', help='Team ID to use, default guess', type=int, default=guessTeam())
     parser.add_argument('-p', '--path', help='database path to use', type=str, default=RTDB2_DEFAULT_PATH)
     parser.add_argument('-s', '--nostrict', help='disable strict type/key checking', action='store_true')
     parser.add_argument('yamlfile', help='yaml file to load')

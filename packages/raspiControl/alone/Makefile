@@ -8,9 +8,9 @@ MAKEFLAGS = -j8
 
 CFLAGS = -g3 -O3 -m64 -ansi -std=c++11 -Wall -Wextra -Wpedantic -Werror
 
-INC = -I../include -I../../../packages/multiCam/include/
+INC = -I../include -I../../../packages/multiCam/include/ -I/usr/include/opencv4
 
-LDLIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lpthread
+LDLIBS = -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui -lpthread
 
 all: $(TARGET)
 	@killall $< 2>/dev/null|| killall -9 $< 2>/dev/null|| killall -15 $< 2>/dev/null|| true

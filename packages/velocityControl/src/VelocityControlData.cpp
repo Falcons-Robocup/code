@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * VelocityControlData.cpp
@@ -21,7 +21,6 @@ void VelocityControlData::reset()
     deltaPositionRcs = Position2D(0.0, 0.0, 0.0);
     resultVelocityRcs = Velocity2D(0.0, 0.0, 0.0);
     accelerationRcs = pose();
-    pidState = diagPIDstate();
     for (int dof = 0; dof < 3; ++dof)
     {
         isAccelerating[dof] = false;
@@ -37,6 +36,7 @@ void VelocityControlData::traceInputs()
     TRACE_FUNCTION("");
     TRACE("robotPos=[%6.2f, %6.2f, %6.2f] robotVel=[%6.2f, %6.2f, %6.2f]", robot.position.x, robot.position.y, robot.position.Rz, robot.velocity.x, robot.velocity.y, robot.velocity.Rz);
     TRACE("targetPos=[%6.2f, %6.2f, %6.2f] motionType=%s", target.pos.x, target.pos.y, target.pos.Rz, enum2str(motionType));
+    TRACE("previousVelocityRcs=%s", previousVelocityRcs.tostr());
 }
 
 void VelocityControlData::traceOutputs()

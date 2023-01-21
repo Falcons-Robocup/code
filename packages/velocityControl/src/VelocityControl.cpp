@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * VelocityControl.cpp
@@ -18,11 +18,12 @@
 #include "cDiagnostics.hpp"
 
 
-VelocityControl::VelocityControl(vcCFI *vcConfigInterface, ppCFI *ppConfigInterface, InputInterface *inputInterface, OutputInterface *outputInterface)
+VelocityControl::VelocityControl(vcCFI *vcConfigInterface, ppCFI *ppConfigInterface, exCFI *exConfigInterface, InputInterface *inputInterface, OutputInterface *outputInterface)
 {
     TRACE_FUNCTION("");
     _vcConfigInterface = vcConfigInterface;
     _ppConfigInterface = ppConfigInterface;
+    _exConfigInterface = exConfigInterface;
     _inputInterface = inputInterface;
     _outputInterface = outputInterface;
     if (_vcConfigInterface != NULL)
@@ -32,6 +33,10 @@ VelocityControl::VelocityControl(vcCFI *vcConfigInterface, ppCFI *ppConfigInterf
     if (_ppConfigInterface != NULL)
     {
         _ppConfigInterface->get(data.ppConfig);
+    }
+    if (_exConfigInterface != NULL)
+    {
+        _exConfigInterface->get(data.exConfig);
     }
 }
 
@@ -77,15 +82,17 @@ void VelocityControl::calculate()
         // too long ago, probably robot was standing still for a while
         // (in which case execution architecture causes components to not be poked)
         // -> reset velocity in order to properly limit acceleration
+        TRACE("Resetting previousVelocityRcs to (0, 0, 0)");
         data.previousVelocityRcs = Velocity2D(0.0, 0.0, 0.0);
+        data.previousVelocitySetpointFcs = Velocity2D(0.0, 0.0, 0.0);
     }
 
     // configure the sequence of algorithms
     std::vector<VelocityControlAlgorithm *> algorithms; // previously known as 'blocks'
 
     // prepare for velocity control to sub-target
-    algorithms.push_back(new ShiftBallOffset());
     algorithms.push_back(new CalculateDeltas());
+    algorithms.push_back(new ShiftBallOffset());
 
     // velocity control (in FCS or RCS, depends on configuration)
     // roadmap: this part is probably going to be moved to lower-level motion control
@@ -94,11 +101,16 @@ void VelocityControl::calculate()
     algorithms.push_back(new SelectVelocityController());
     algorithms.push_back(new CalculateVelocity(boost::bind(&VelocityControl::setupAndGetVelocitySetpointController, this))); // just-in-time callback
     // limiters and everything else below is performed in RCS
-    algorithms.push_back(new CalculateAccelerating());
-    algorithms.push_back(new ApplyLimits());
-    algorithms.push_back(new UnShiftBallOffset());
-    algorithms.push_back(new CalculateDeltas()); // needed for deadzone in case ball shift was applied
+    //algorithms.push)_back(new CalculateAccelerating());
+    //algorithms.push_back(new ApplyLimits());
+    //algorithms.push_back(new CalculateDeltas()); // needed for deadzone in case ball shift was applied
     algorithms.push_back(new Deadzone());
+
+
+    // Apply TokyoDrift after Deadzone -- otherwise Deadzone might set vx=0 while attempting to TokyoDrift
+    // Alternatively, DeadZone should look at ResultVelocityRCS next to DeltaPositionRCS
+    algorithms.push_back(new UnShiftBallOffset());
+    //algorithms.push_back(new ApplyTokyoDrift());
 
     // execute the sequence of algorithms
     for (auto it = algorithms.begin(); it != algorithms.end(); ++it)
@@ -188,7 +200,17 @@ diagVelocityControl VelocityControl::makeDiagnostics()
         result.deadzone[dof] = data.deadzone[dof];
     }
     result.shortStroke = data.shortStroke;
-    result.pid = data.pidState;
+
+    // SPG diag data
+    result.currentPosition = data.spgCurrentPosition;
+    result.currentVelocity = data.spgCurrentVelocity;
+    result.maxVelocity = data.spgMaxVelocity;
+    result.maxAcceleration = data.spgMaxAcceleration;
+    result.targetPosition = data.spgTargetPosition;
+    result.targetVelocity = data.spgTargetVelocity;
+    result.newPosition = data.spgNewPosition;
+    result.newVelocity = data.spgNewVelocity;
+
     return result;
 }
 
@@ -211,19 +233,23 @@ void VelocityControl::prepare()
     {
         _ppConfigInterface->get(data.ppConfig);
     }
+    if (_exConfigInterface != NULL)
+    {
+        _exConfigInterface->get(data.exConfig);
+    }
 
     data.vcSetpointConfig.type = VelocitySetpointControllerTypeEnum::NONE;
 
     // timestepping
-    if (data.vcConfig.nominalFrequency > 0)
+    if (data.exConfig.frequency > 0)
     {
-        data.dt = 1.0 / data.vcConfig.nominalFrequency;
+        data.dt = 1.0 / data.exConfig.frequency;
     }
     else
     {
         data.dt = 1.0 / 20;
     }
-    TRACE("nominalFrequency=%.1f dt=%.4fs", data.vcConfig.nominalFrequency, data.dt);
+    TRACE("nominalFrequency=%.1f dt=%.4fs", data.exConfig.frequency, data.dt);
 }
 
 void VelocityControl::clearVelocitySetpointController()

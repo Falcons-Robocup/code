@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Michel Koenen (Falcons)
+// Copyright 2016-2022 Michel Koenen (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cEnvironmentCommon.cpp
@@ -51,11 +51,11 @@ std::string environmentCommon::LoadFileAsString(const std::string &filename, boo
 }
 
 
-bool environmentCommon::readYAML(std::string root, std::vector< std::pair<std::string,std::string> > &values)
+bool environmentCommon::readYAML(std::string root, std::vector< std::pair<std::string,std::string> > &values, std::string config)
 {
 	try
 	{
-		std::string yamlFilePath = pathToConfig() + "/cEnvironment.yaml";
+		std::string yamlFilePath = determineConfig(config);
 
 		/*file contents something like:
 			{

@@ -1,12 +1,12 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include "RtDB2StorageLMDB.h"
 
 #include <boost/filesystem.hpp>
 #include <sstream>
-#include "../RtDB2ErrorCode.h"
+#include "RtDB2ErrorCode.h"
 #include "RtDB2Definitions.h"
-#include "../serializer/RtDB2Serializer.h"
+#include "serializer/RtDB2Serializer.h"
 
 
 RtDB2LMDB::RtDB2LMDB(std::string parent_path, std::string name) : is_initialized_(false)

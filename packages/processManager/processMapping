@@ -10,31 +10,39 @@ FALCONS_BUILD_DIR=$FALCONS_CODE_PATH/build
 cat << EOF
 bh                  $FALCONS_BUILD_DIR/packages/ballHandling/ballHandling
 commW               commW
+execution           $FALCONS_BUILD_DIR/packages/execution/execution
 halCompass          $FALCONS_BUILD_DIR/packages/peripheralsInterface/compass
 halIoBoard          $FALCONS_BUILD_DIR/packages/peripheralsInterface/ioBoard
 halMotors           $FALCONS_BUILD_DIR/packages/peripheralsInterface/motors
 halMotion           $FALCONS_CODE_PATH/scripts/startupWrapper_motion
 mcbInterface        $FALCONS_BUILD_DIR/packages/mcbInterface/mcbInterface
-heartbeatCoach      $FALCONS_BUILD_DIR/packages/heartBeat/heartBeatCoach
-matchMode           $FALCONS_BUILD_DIR/packages/heartBeat/mainMatchMode
+heartbeatCoach      $FALCONS_BUILD_DIR/packages/execution/heartBeatCoach
+matchMode           $FALCONS_BUILD_DIR/packages/execution/mainMatchMode
 health              $FALCONS_BUILD_DIR/packages/facilities/diagnostics/robotHealth
 logger              $FALCONS_BUILD_DIR/packages/facilities/logging/logger 50
 rtdbSync            $FALCONS_BUILD_DIR/packages/facilities/logging/rtdbSync 30
 pp                  $FALCONS_BUILD_DIR/packages/pathPlanning/pathplanningNode
-mp                  $FALCONS_BUILD_DIR/packages/motionPlanning/motionPlanner
+mp                  $FALCONS_BUILD_DIR/packages/motionPlanning/motionPlanning
+mtpAdapter          $FALCONS_BUILD_DIR/packages/mixedTeamProtocol/adapter/mtpAdapter
+mtpComm             $FALCONS_CODE_PATH/packages/mixedTeamProtocol/adapter/run_comm.sh
+refboxComm          $FALCONS_CODE_PATH/packages/mixedTeamProtocol/adapter/run_comm_refbox.sh
 refboxGui           startRefbox
 refboxRelay         $FALCONS_BUILD_DIR/packages/refbox/refboxRelay
+refboxRelayMTP      refboxRelayMTP
 simworld            $FALCONS_BUILD_DIR/packages/simulation/sw
 sp                  $FALCONS_BUILD_DIR/packages/shootPlanning/shoot_planner
 tp                  $FALCONS_BUILD_DIR/packages/teamplay/teamplay_main
+tp2                 $FALCONS_BUILD_DIR/packages/teamplay2/teamplay_main2
 vc                  $FALCONS_BUILD_DIR/packages/velocityControl/velocityControlNode
 vt                  $FALCONS_BUILD_DIR/packages/velocityTransform/velocityTransform
+vt_startupWrapper   $FALCONS_CODE_PATH/scripts/startupWrapper_velocityTransform
 multiCam            $FALCONS_BUILD_DIR/packages/multiCam/multiCamNode
+visionMLA           $FALCONS_BUILD_DIR/vision/mlAdapter/mlAdapter
 raspiSync           $FALCONS_BUILD_DIR/packages/raspiSync/raspiSync
 wm                  $FALCONS_BUILD_DIR/packages/worldModel/worldModelNode
 visualizer          $FALCONS_BUILD_DIR/packages/visualizer/visualizer
 setpointGen         python3 $FALCONS_CODE_PATH/packages/pathPlanning/scripts/setpointGeneratorNode_2ndorder.py
-blockly             python3 $FALCONS_CODE_PATH/packages/robotControl/scripts/blocklyDaemon.py
+blockly             python3 $FALCONS_CODE_PATH/packages/robotControl/py/blocklyDaemon.py
 EOF
 ) | sed 's/#.*//' # filter comments, like these ;)
 

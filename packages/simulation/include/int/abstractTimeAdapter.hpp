@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * abstractTimeAdapter.hpp
@@ -10,15 +10,19 @@
 #ifndef ABSTRACTTIMEADAPTER_HPP_
 #define ABSTRACTTIMEADAPTER_HPP_
 
-#include "FalconsRtDB2.hpp" // for rtime
+#include "FalconsRTDB.hpp" // for rtime
+
+#include "teamID.hpp"
+#include "robot.hpp"
 
 class AbstractTimeAdapter {
 public:
     virtual ~AbstractTimeAdapter() {}
 
-    virtual void waitForSimulationTick() const = 0;
-    virtual void publishSimulationTick() const = 0;
+    virtual void waitForHeartbeat() const = 0;
     virtual void publishSimulationTime (const rtime&) const = 0;
+    virtual void publishSimulationHeartbeatDone() const = 0;
+    virtual void waitForPutHeartbeatDone(TeamID teamID, RobotID robotID) const = 0;
 };
 
 #endif /* ABSTRACTTIMEADAPTER_HPP_ */

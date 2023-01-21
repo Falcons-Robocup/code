@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRtdbAdapterRefboxSignals.cpp
@@ -24,7 +24,7 @@ cRtdbAdapterRefboxSignals::cRtdbAdapterRefboxSignals()
     try
     {
         // setup RTDB connection, reading state from coach (id 0)
-        _rtdb = RtDB2Store::getInstance().getRtDB2(0, getTeamChar());
+        _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(0, getTeamChar());
     }
     catch (exception &e)
     {

@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * CoachHeartBeatAdapter.cpp
@@ -26,7 +26,7 @@ CoachHeartBeatAdapter::~CoachHeartBeatAdapter()
 
 void CoachHeartBeatAdapter::initializeRtDB()
 {
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId);
 }
 
 void CoachHeartBeatAdapter::run()

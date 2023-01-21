@@ -1,11 +1,10 @@
-nominalFrequency:                         30
 numExtraSettlingTicks:                    0
 obstacleAvoidance:
     enabled:                              true
     robotRadius:                          0.26
     obstacleRadius:                       0.40
     distanceScalingFactor:                0.1
-    speedScalingFactor:                   0.5
+    speedScalingFactor:                   1.0
     speedLowerThreshold:                  0.2
     speedUpperThreshold:                  3.0
     ballClearance:                        1.0
@@ -23,7 +22,7 @@ boundaries:
 slowFactor:                               0.50
 forwardDriving:
     withoutBall:
-        enabled:                          true # set to false to get 'alwaysFacingBall' Rz setpoint
+        enabled:                          false # set to false to get 'alwaysFacingBall' Rz setpoint
         minimumDistance:                  2.5
     withBall:
         enabled:                          true
@@ -34,3 +33,5 @@ deadzone:
     enabled:                              true # true = better for motors (not continuously sending small setpoints)
     toleranceXY:                          0.03
     toleranceRz:                          0.005 # ~0.012 due to wheel mounting errors (wobbly, at least seen on r5)
+tokyoDrift:
+    toleranceRz:                          1.0 # if deltaPos.Rz > tokyoDrift.toleranceRz -> do tokyo drift; otherwise do normal rotation

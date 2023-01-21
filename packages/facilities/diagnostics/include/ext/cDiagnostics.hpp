@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Jan Feitsma (Falcons)
+// Copyright 2016-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cDiagnostics.hpp
@@ -11,7 +11,7 @@
 #ifndef CDIAGNOSTICS_HPP_
 #define CDIAGNOSTICS_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "ftime.hpp"
 
 namespace diagnostics
@@ -29,7 +29,7 @@ namespace diagnostics
 
     private:
         event _event;
-        RtDB2 *_rtdb;
+        FalconsRTDB *_rtdb;
         int _myRobotId;
         
         void dispatch();

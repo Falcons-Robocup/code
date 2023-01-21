@@ -1,6 +1,6 @@
 %YAML:1.0
 global:
-    dimensions : dimensionsDeLocht
+    dimensions : dimensionsBangkok
     cameraWidth : 800
     cameraHeight : 608
     goodEnoughAngleToPixelRatio : 3.0 # error = xDelta + yDelta + angleToPixelRatio * rzDelta
@@ -63,6 +63,29 @@ dimensionsPlaza20190926: # use definitions MSL specifications
     touchLineBorder  : 0.600 # allow robot's to get a lock when out of the field
     metersToPixels   : 50
     remoteMetersToPixels : 70
+
+
+# Thailand, Bangkok, Bitec, July 12, 2022
+dimensionsBangkok: # use definitions MSL specifications
+    A                    : 22.535 # field width including lines (x)
+    B                    : 14.007 # field height including lines (y)
+    C                    :  6.903 # penalty area height including lines (y)
+    D                    :  3.902 # goal area height including lines (y)
+    E                    :  2.376 # penaly araa width including lines (x)
+    F                    :  0.765 # goal area width including lines (x)
+    G                    :  0.760 # corner circle radius including lines
+    H                    :  4.006 # inner circle diameter including lines
+    I                    :  3.677 # penalty mark distance (x) including line and mark
+    J                    :  0.153 # penalty mark diameter
+    K                    :  0.174 # center mark diameter
+    goalWidth            :  2.649 # # including goal posts
+    goalDepth            :  0.000 # 0.557 goalpost already marked as sunspot
+    goalPostTichness     :  0.125 # used by teamplay, not used by multiCam
+    lineThickness        :  0.133
+    goalLineBorder       :  1.000 # exclude back side goal 0.760 # area outside white lines
+    touchLineBorder      :  1.000 # allow robot's to get a lock when out of the field
+    metersToPixels       :  50
+    remoteMetersToPixels :  25
 
 # Australia Sydney July 2019 (for now copied the values from Montreal)
 dimensionsSydney: # use definitions for LARGE MSL specifications
@@ -404,7 +427,7 @@ line:
 ball:
     erodeSlider : 1 # remove the noise, keep low otherwise balls at 7 meters will be discarded, for above 8 meters it even need to be 0
     dilateSlider : 4
-    pixels : 60 # minimal required pixels detected by camera : countNonZero(inRangeFrame(rect))
+    pixels : 45 # minimal required pixels detected by camera : countNonZero(inRangeFrame(rect))
     pixelsNearby : 500 # minimal required pixels nearby robot (e.g. within 1 meter)
     xCenter : 30 # correct for ball diameter in millimeters
 
@@ -504,12 +527,12 @@ robot2:
 robot3:
     linePointDistance : 400 # in pixels, total camera is heigth 800 pixels
     linePointDistanceOffset : 25 # in pixels
-    ballPossesionDistanceOffset : 10 # in pixels, in the test image there is something black near the robot
-    obstacleDistanceOffset : 10 # in pixels
+    ballPossesionDistanceOffset : 18 # in pixels, in the test image there is something black near the robot
+    obstacleDistanceOffset : 18 # in pixels
 
     maskLeftFarAway : 156 # in pixels before the dewarp
     maskLeftCloseby : 271
-    maskRightCloseby : 468 # height is 608 pixels
+    maskRightCloseby : 440 # height is 608 pixels
     maskRightFarAway : 115
 
     ballAzimuth : 65 # in degrees

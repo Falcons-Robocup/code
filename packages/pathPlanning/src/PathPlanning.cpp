@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * PathPlanning.cpp
@@ -17,15 +17,20 @@
 #include "cDiagnostics.hpp"
 
 
-PathPlanning::PathPlanning(CFI *configInterface, InputInterface *inputInterface, OutputInterface *outputInterface)
+PathPlanning::PathPlanning(ppCFI *configInterfacePP, exCFI *configInterfaceEx, InputInterface *inputInterface, OutputInterface *outputInterface)
 {
     TRACE_FUNCTION("");
-    _configInterface = configInterface;
+    _configInterfacePP = configInterfacePP;
+    _configInterfaceEx = configInterfaceEx;
     _inputInterface = inputInterface;
     _outputInterface = outputInterface;
-    if (_configInterface != NULL)
+    if (_configInterfacePP != NULL)
     {
-        _configInterface->get(data.config);
+        _configInterfacePP->get(data.configPP);
+    }
+    if (_configInterfaceEx != NULL)
+    {
+        _configInterfaceEx->get(data.configEx);
     }
 }
 
@@ -178,20 +183,24 @@ void PathPlanning::prepare()
     data.reset();
 
     // new configuration?
-    if (_configInterface != NULL)
+    if (_configInterfacePP != NULL)
     {
-        _configInterface->get(data.config);
+        _configInterfacePP->get(data.configPP);
+    }
+    if (_configInterfaceEx != NULL)
+    {
+        _configInterfaceEx->get(data.configEx);
     }
 
     // timestepping
-    if (data.config.nominalFrequency > 0)
+    if (data.configEx.frequency > 0)
     {
-        data.dt = 1.0 / data.config.nominalFrequency;
+        data.dt = 1.0 / data.configEx.frequency;
     }
     else
     {
         data.dt = 1.0 / 20.0;
     }
-    TRACE("nominalFrequency=%.1f dt=%.4fs", data.config.nominalFrequency, data.dt);
+    TRACE("nominalFrequency=%.1f dt=%.4fs", data.configEx.frequency, data.dt);
 }
 

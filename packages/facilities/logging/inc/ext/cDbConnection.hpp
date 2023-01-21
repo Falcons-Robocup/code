@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cDbConnection.hpp
@@ -15,22 +15,18 @@
 
 #include <vector>
 #include <map>
-#include "RtDB2Store.h"
-
-
-#define RTDB2_STORAGE_PRODUCTION ("/tmp/rtdb2_storage")
-#define RTDB2_STORAGE_PLAYBACK ("/tmp/rtdb2_playback")
+#include "FalconsRTDB.hpp"
 
 
 class cDbConnection
 {
   public:
-    cDbConnection(std::string const &storage = RTDB2_STORAGE_PRODUCTION);
+    cDbConnection(std::string const &storage = RTDB_STORAGE_PRODUCTION);
     ~cDbConnection();
     
   public:
     std::vector<int> _agentIds;
-    std::map<int, RtDB2*> _rtdb; // key: agent id
+    std::map<int, FalconsRTDB*> _rtdb; // key: agent id
     void connectRTDB(std::string const &storage);
     void disconnectRTDB();
     

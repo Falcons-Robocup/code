@@ -3,16 +3,17 @@ Blockly.Python['motion_stop'] = function(block) {
   return code;
 };
 
-Blockly.Python['motion_teamplaymove'] = function(block) {
-  var value_target = Blockly.Python.valueToCode(block, 'target', Blockly.Python.ORDER_ATOMIC);
-  var dropdown_slow = block.getFieldValue('slow');
-  var code = 'rci.setTeamplayAction("MOVE", {"target": "coord:" + str(' + value_target + '.x) + "," + str(' + value_target + '.y)})\n';
+Blockly.Python['motion_motionplanning_action'] = function(block) {
+  var dropdown_action = block.getFieldValue('action');
+  var value_pos = Blockly.Python.valueToCode(block, 'pos', Blockly.Python.ORDER_ATOMIC);
+  var dropdown_motionType = block.getFieldValue('motionType');
+  var dropdown_bhEnabled = block.getFieldValue('bhEnabled');
+  var code = 'rci.setMotionPlanningAction("' + dropdown_action + '", ' + value_pos + '.x, ' + value_pos + '.y, ' + value_pos + '.Rz, "' + dropdown_motionType + '", ' + dropdown_bhEnabled + ')\n';
   return code;
 };
 
-Blockly.Python['motion_motionplanningmove'] = function(block) {
-  var value_pose = Blockly.Python.valueToCode(block, 'pose', Blockly.Python.ORDER_ATOMIC);
-  var code = 'rci.setMotionPlanningAction("MOVE", ' + value_pose + '.x, ' + value_pose + '.y, ' + value_pose + '.Rz, "NORMAL", True)\n';
+Blockly.Python['motion_blockuntilpassedorfailed'] = function(block) {
+  var code = 'rci.blockUntilMPPassedOrFailed()\n';
   return code;
 };
 

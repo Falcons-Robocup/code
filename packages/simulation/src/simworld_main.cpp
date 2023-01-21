@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Coen Tempelaars (Falcons)
+// Copyright 2018-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * simworld_main.cpp
@@ -19,28 +19,26 @@
 
 int main(int argc, char **argv)
 {
+    std::string arbiter = std::string( std::getenv("SIM_ARBITER") );
+    int sizeTeamA = std::stoi( std::getenv("SIM_SIZE_TEAM_A") );
+    int sizeTeamB = std::stoi( std::getenv("SIM_SIZE_TEAM_B") );
+
     try
     {
-        INIT_TRACE;
+        INIT_TRACE("simulation");
         TRACE_FUNCTION("");
 
         Simworld simworld;
-        simworld.initialize();
+        simworld.initialize(arbiter, sizeTeamA, sizeTeamB);
 
         // control will:
-        // - waitForPut SIMULATION_TICK
+        // - waitForPut HEARTBEAT
         // - advance simulation world by one tick
         // - advance the simulated timestamp
         // - publish new ROBOT_STATE
-        std::thread simworldControlThread = std::thread(&Simworld::control, &simworld);
-
-        // loop will:
-        // - get simulation tick frequency (e.g., 20hz)
-        // - sleep to maintain 20hz frequency
-        // - put SIMULATION_TICK
-        simworld.loop();
+        simworld.control();
     }
-    catch(std::exception& e)
+    catch (std::exception &e)
     {
         std::cout << "Main loop caught exception: " << e.what() << std::endl;
     }

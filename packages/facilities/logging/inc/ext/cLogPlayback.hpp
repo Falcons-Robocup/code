@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cLogPlayback.hpp
@@ -23,7 +23,7 @@
 class cLogPlayback
 {
 public:
-    cLogPlayback();
+    cLogPlayback(int agentId);
     virtual ~cLogPlayback() {};
 
     tLogHeader getHeader();

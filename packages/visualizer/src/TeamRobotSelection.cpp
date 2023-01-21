@@ -1,24 +1,26 @@
-// Copyright 2016-2017 Diana Koenraadt (Falcons)
+// Copyright 2016-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
- * FieldWidgetGameSignalSubscriber.h
+ * TeamRobotSelection.cpp
  *
  *  Created on: October 19, 2016
  *      Author: Diana Koenraadt
  */
+
+#include <cassert>
 
 // Internal:
 #include "int/TeamRobotSelection.h"
 
 void TeamRobotSelection::setTeamMode() 
 {
-    _viewMode = TEAM;
+    _viewMode = TEAM::OWN;
     onTeamModeChanged();
 }
 
 void TeamRobotSelection::setRobotMode(uint8_t id) 
 {
-    _viewMode = ROBOT;
-    _robotModeId = id; 
+    assert(id != 0);
+    _viewMode = id;
     onRobotModeChanged();
 }

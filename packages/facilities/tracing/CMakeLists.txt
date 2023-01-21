@@ -4,9 +4,7 @@ project(Tracing)
 
 find_package(Boost COMPONENTS system thread REQUIRED QUIET)
 
-# using shared_ptr
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror -fPIC")
-set(CMAKE_C_FLAGS "-Wall -Werror -fPIC")
+add_compile_options(-fPIC)
 
 include_directories("include/ext")
 

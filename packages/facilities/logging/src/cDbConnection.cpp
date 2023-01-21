@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cDbConnection.cpp
@@ -31,7 +31,7 @@ void cDbConnection::connectRTDB(std::string const &storage)
 {
     for (auto it = _agentIds.begin(); it != _agentIds.end(); ++it)
     {
-        _rtdb[*it] = RtDB2Store::getInstance().getRtDB2(*it, storage);
+        _rtdb[*it] = FalconsRTDBStore::getInstance().getFalconsRTDB(*it, storage);
     }
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBInputAdapter.hpp
@@ -12,8 +12,7 @@
 
 #include <vector>
 
-#include "FalconsRtDB2.hpp"
-#include "cRtDBClient.hpp"
+#include "FalconsRTDB.hpp"
 
 #include "int/facilities/identifierGenerator.hpp"
 
@@ -46,9 +45,22 @@ public:
     virtual void setRobotAdministrator(robotAdministrator *robotAdmin);
 
     // Data from Vision
-    void getLocalizationCandidates();
-    void getBallCandidates();
-    void getObstacleCandidates();
+    void getVisionFrame();
+    int getBallCandidates();
+    int getObstacleCandidates();
+    int getLocalizationCandidates();
+    
+    int fillObjectCandidatesML(std::vector<objectMeasurement> &candidates, std::string const &objectType);
+    int fillLocalizationCandidatesML(T_LOCALIZATION_CANDIDATES &candidates, std::string const &objectType);
+
+    int fillBallCandidatesOld(T_BALL_CANDIDATES &candidates);
+    int fillObstacleCandidatesOld(T_OBSTACLE_CANDIDATES &candidates);
+    int fillLocalizationCandidatesOld(T_LOCALIZATION_CANDIDATES &candidates);
+    
+    void processBallCandidates();
+    void processObstacleCandidates();
+    void processLocalizationCandidates();
+
     void getVisionBallPossession();
 
     // Data from VelocityControl
@@ -69,9 +81,8 @@ public:
     void enableInplayOverrule();
 
 private:
-    RtDB2 *_rtdb;
+    FalconsRTDB *_rtdb;
     int _myRobotId;
-    cRtDBClient _rtdbClient;
     T_CONFIG_WORLDMODELSYNC _config;
     bool _inplayOverrule = false;
 
@@ -82,6 +93,7 @@ private:
 
     identifierGenerator _uIDGenerator;
 
+    T_VISION_FRAME _visionFrame;
     T_BALL_CANDIDATES _ballCandidates;
     T_OBSTACLE_CANDIDATES _obstacleCandidates;
     T_LOCALIZATION_CANDIDATES _localizationCandidates;

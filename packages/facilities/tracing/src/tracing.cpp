@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include <cstdarg>
 #include <boost/algorithm/string.hpp> // for boost::is_any_of and boost::split
@@ -18,8 +18,8 @@ static boost::mutex _mtx;
 static std::string* componentName = 0;
 static int sliceCounter = 1;
 
-// hotFlush is used to flush every TRACE call in order to find crashes
-static bool hotFlush = false;
+// count is used to provide a sort index to the threads
+int InitTraceThreadClass::count = 0;
 
 // Copied from FalconsCommon.cpp
 std::string execCmd(const char* cmd) {
@@ -46,15 +46,27 @@ std::string get_timestamp_as_string()
 }
 
 // This class determines the (static) traceOutputFile on first run
-InitTraceClass::InitTraceClass(bool _hotFlush)
+InitTraceClass::InitTraceClass(const char* processName)
 {
-    hotFlush = _hotFlush;
-
     // If no tracing file determined yet, do this now.
     if (traceOutputFile.compare("") == 0)
     {
-        std::string tracingFileStr = execCmd("getTracingFilename.py");
-        std::cout << "getTracingFilename output: '" << tracingFileStr << "'" << std::endl;
+        // Build an appropriate tracing filename depending on the robot's context key (teamChar + robotId)
+        // e.g.
+        //   trace_A1_teamplay2
+        //   trace_visualizer.json
+        std::string tracingFileStr;
+        auto contextKey = getenv("CONTEXTKEY");
+        if (contextKey != NULL)
+        {
+            tracingFileStr = "trace_" + std::string(contextKey) + "_" + std::string(processName);
+        }
+        else
+        {
+            tracingFileStr = "trace_" + std::string(processName);
+        }
+
+        std::cout << "tracing filename: '" << tracingFileStr << "'" << std::endl;
         std::string newestLogdir = execCmd("newest_logdir.py");
 
         std::ostringstream ss;
@@ -81,9 +93,36 @@ InitTraceClass::InitTraceClass(bool _hotFlush)
     }
 
     mtr_init(traceOutputFile.c_str());
+    MTR_META_PROCESS_NAME(processName);
+    INIT_TRACE_THREAD("main");
 }
 
 InitTraceClass::~InitTraceClass()
+{}
+
+InitTraceThreadClass::InitTraceThreadClass(std::string threadName)
+{
+    init(threadName);
+}
+
+InitTraceThreadClass::InitTraceThreadClass(std::string threadName, std::string templateTypeName)
+{
+    std::string name = threadName + "<" + templateTypeName + ">";
+    init(name);
+}
+
+void InitTraceThreadClass::init(std::string threadName)
+{
+    MTR_META_THREAD_NAME(threadName.c_str());
+
+    // Lower sort index numbers are displayed higher in Trace Viewer.
+    // The callee uses an integer as big as a pointer to hold its value. We might
+    // get away with using a short-lived variable instead of using a mutex.
+    uintptr_t index = count++;
+    MTR_META_THREAD_SORT_INDEX(index);
+}
+
+InitTraceThreadClass::~InitTraceThreadClass()
 {}
 
 SliceTraceClass::SliceTraceClass()
@@ -176,7 +215,7 @@ std::string sanitize(std::string const &s)
     std::string tmp = s;
     boost::replace_all(tmp, "\"", "'");
     // in case a newline is part of the string, resulting json becomes invalid
-    boost::replace_all(tmp, "\n", " ");
+    boost::replace_all(tmp, "\n", "\\n");
     return tmp;
 }
 
@@ -211,11 +250,6 @@ void TraceClass::traceMsg(const std::string& msg)
     str << *componentName << "/" << filename;
 
     MTR_INSTANT_S(_fileName, _functionName, "msg", sanitize(msg).c_str());
-
-    if (hotFlush)
-    {
-        mtr_flush_to_disk();
-    }
 }
 
 TraceClass::~TraceClass()

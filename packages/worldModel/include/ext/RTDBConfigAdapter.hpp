@@ -1,4 +1,4 @@
-// Copyright 2019 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBConfigAdapter.hpp
@@ -10,7 +10,7 @@
 #ifndef CONFIGADAPTER_WORLDMODEL_HPP_
 #define CONFIGADAPTER_WORLDMODEL_HPP_
 
-#include "FalconsRtDB2.hpp" // need configWorldModel from sharedTypes
+#include "FalconsRTDB.hpp" // need configWorldModel from sharedTypes
 
 #include <boost/thread/thread.hpp>
 
@@ -23,7 +23,7 @@ public:
     void get(T_CONFIG_WORLDMODELSYNC &config);
 
 private:
-    RtDB2 *_rtdb = NULL;
+    FalconsRTDB *_rtdb = NULL;
     int _myRobotId = 0;
     T_CONFIG_WORLDMODELSYNC _config;
     std::string _configKey = CONFIG_WORLDMODELSYNC;

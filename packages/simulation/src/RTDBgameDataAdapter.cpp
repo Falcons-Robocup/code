@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Martijn (Falcons)
+// Copyright 2019-2022 Martijn (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * GameDataAdapter.cpp
@@ -11,17 +11,67 @@
 
 #include "int/gameData.hpp"
 #include "int/gameDataFactory.hpp"
+#include "int/simulation_generated_enum2str.hpp" // for enums of this package (simulation)
 #include "int/RTDBaccess.hpp"
 #include "int/simulationCapabilities.hpp"
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
+#include "generated_enum2str.hpp" // for enums of facilities package
 #include "tracing.hpp"
 #include "cEnvironmentField.hpp"
 #include <mutex>
 #include "ftime.hpp"
+#include <map>
 
 
 std::mutex g_mutex_sim;
+
+class VecAdapter {
+public:
+    VecAdapter(float x_factor, float y_factor) :
+        _x_factor(x_factor),
+        _y_factor(y_factor)
+    {}
+
+    void adapt(vec2d& v) const
+    {
+        v.x *= _x_factor;
+        v.y *= _y_factor;
+    }
+
+    void adapt(vec3d& v) const
+    {
+        v.x *= _x_factor;
+        v.y *= _y_factor;
+    }
+
+    template<typename T>
+    void adapt(vec2d T::*pVec, std::vector<T>& list) const
+    {
+        for (T& t : list)
+        {
+            adapt(t.*pVec);
+        }
+    }
+
+    template<typename T>
+    void adapt(vec3d T::*pVec, std::vector<T>& list) const 
+    {
+        for (T& t : list)
+        {
+            adapt(t.*pVec);
+        }
+    }
+
+private:
+    float _x_factor;
+    float _y_factor;
+};
+
+std::map<PlayingDirection, const VecAdapter> g_team_vec_adapter = {
+    {PlayingDirection::LEFT_TO_RIGHT, VecAdapter( 1, 1)},
+    {PlayingDirection::RIGHT_TO_LEFT, VecAdapter(-1,-1)}
+};
 
 
 RTDBgameDataAdapter::RTDBgameDataAdapter()
@@ -42,10 +92,8 @@ void addNonRobotObstaclesTo(std::vector<Obstacle> const &nonRobotObstacles, T_OB
     {
         obstacleResult obstacle;
         obstacle.confidence = 1.0;
-        obstacle.position.x = obst.position.x;
-        obstacle.position.y = obst.position.y;
-        obstacle.velocity.x = obst.velocity.x;
-        obstacle.velocity.y = obst.velocity.y;
+        obstacle.position = convert_xy(obst.position);
+        obstacle.velocity = convert_xy(obst.velocity);
         resultObstacles.push_back(obstacle);
     }
 }
@@ -57,12 +105,8 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData) const
     ballResult ball;
     ball.confidence = 1.0;
 
-    ball.position.x = gameData.ball.getPosition().x;
-    ball.position.y = gameData.ball.getPosition().y;
-    ball.position.z = gameData.ball.getPosition().z;
-    ball.velocity.x = gameData.ball.getVelocity().x;
-    ball.velocity.y = gameData.ball.getVelocity().y;
-    ball.velocity.z = gameData.ball.getVelocity().z;
+    ball.position = convert_xyz(gameData.ball.getPosition());
+    ball.velocity = convert_xyz(gameData.ball.getVelocity());
 
     auto teamWithBall = gameData.getTeamWithBall();
     if (teamWithBall)
@@ -109,10 +153,8 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData) const
 
         obstacleResult obstacle;
         obstacle.confidence = 1.0;
-        obstacle.position.x = robot.getPosition().x;
-        obstacle.position.y = robot.getPosition().y;
-        obstacle.velocity.x = robot.getVelocity().x;
-        obstacle.velocity.y = robot.getVelocity().y;
+        obstacle.position = convert_xy(robot.getPosition());
+        obstacle.velocity = convert_xy(robot.getVelocity());
 
         obstacles.push_back(obstacle);
         tprintf("put OBSTACLE position=[%6.2f, %6.2f] velocity=[%6.2f, %6.2f] confidence=%6.2f id=%d",
@@ -133,37 +175,34 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData) const
 void RTDBgameDataAdapter::publishGameData (const GameData& gameData,
                             const TeamID teamID, const RobotID robotID) const
 {
-    TRACE_FUNCTION("");
+    TRACE_FUNCTION("team = %s, robot = %s", enum2str(teamID), enum2str(robotID));
+    
+    PlayingDirection playingDirection = gameData.team.at(teamID).at(robotID).getPlayingDirection();
+    const VecAdapter& vecAdapter = g_team_vec_adapter.at(playingDirection);
 
     ballResult ball;
     ball.confidence = 1.0;
-
-    ball.position.x = gameData.ball.getPositionFCS(teamID).x;
-    ball.position.y = gameData.ball.getPositionFCS(teamID).y;
-    ball.position.z = gameData.ball.getPositionFCS(teamID).z;
-    ball.velocity.x = gameData.ball.getVelocity().x;
-    ball.velocity.y = gameData.ball.getVelocity().y;
-    ball.velocity.z = gameData.ball.getVelocity().z;
+    ball.position = convert_xyz(gameData.ball.getPosition()); 
+    ball.velocity = convert_xyz(gameData.ball.getVelocity());
+    ball.owner.robotId = 0;
 
     auto teamWithBall = gameData.getTeamWithBall();
     if (teamWithBall)
     {
         auto robotWithBall = gameData.getRobotWithBall(*teamWithBall);
-        if (*teamWithBall == TeamID::A)
+        if (*teamWithBall == teamID)
         {
             ball.owner.type = ballPossessionTypeEnum::TEAM;
             ball.owner.robotId = getRobotNumber(*robotWithBall);
         }
         else
         {
-            ball.owner.type = ballPossessionTypeEnum::OPPONENT;
-            ball.owner.robotId = 0;
+            ball.owner.type = ballPossessionTypeEnum::OPPONENT;   
         }
     }
     else /* No team has the ball */
     {
         ball.owner.type = ballPossessionTypeEnum::FIELD;
-        ball.owner.robotId = 0;
     }
 
     T_BALLS balls;
@@ -175,6 +214,8 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData,
     }
 
     auto rtdbConnection = getRTDBConnection(teamID, robotID);
+    vecAdapter.adapt(&ballResult::position, balls); // adapt ball positions
+    vecAdapter.adapt(&ballResult::velocity, balls); // adapt ball velocity
     auto r = rtdbConnection->put(BALLS, &balls);
     if (r != RTDB2_SUCCESS)
     {
@@ -189,14 +230,14 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData,
 
         obstacleResult obstacle;
         obstacle.confidence = 1.0;
-        obstacle.position.x = robot.getPosition().x;
-        obstacle.position.y = robot.getPosition().y;
-        obstacle.velocity.x = robot.getVelocity().x;
-        obstacle.velocity.y = robot.getVelocity().y;
+        obstacle.position = convert_xy(robot.getPosition());
+        obstacle.velocity = convert_xy(robot.getVelocity());
 
         obstacles.push_back(obstacle);
     }
     addNonRobotObstaclesTo(gameData.nonRobotObstacles, obstacles);
+    vecAdapter.adapt(&obstacleResult::position, obstacles); // adapt obstacle positions
+    vecAdapter.adapt(&obstacleResult::velocity, obstacles); // adapt obstacle velocity
     r = rtdbConnection->put(OBSTACLES, &obstacles);
     if (r != RTDB2_SUCCESS)
     {
@@ -206,25 +247,23 @@ void RTDBgameDataAdapter::publishGameData (const GameData& gameData,
     T_ROBOT_STATE robot;
     robot.status = robotStatusEnum::INPLAY;
     robot.timestamp = ftime::now();
-    robot.robotId = (int)robotID;
+    robot.robotId = getRobotNumber(robotID);
     robot.teamId = "A"; // according to worldModel, ok to leave on A even for simulated team B thanks to database separation
 
-    robot.position.x = gameData.team.at(teamID).at(robotID).getPositionFCS().x;
-    robot.position.y = gameData.team.at(teamID).at(robotID).getPositionFCS().y;
-    robot.position.Rz = gameData.team.at(teamID).at(robotID).getPositionFCS().phi;
-    robot.velocity.x = gameData.team.at(teamID).at(robotID).getVelocityFCS().x;
-    robot.velocity.y = gameData.team.at(teamID).at(robotID).getVelocityFCS().y;
-    robot.velocity.Rz = gameData.team.at(teamID).at(robotID).getVelocityFCS().phi;
+    // robot FCS coordinates are already converted to their own FCS coords, no adapter needed
+    robot.position = convert_xyphi(gameData.team.at(teamID).at(robotID).getPositionFCS());
+    robot.velocity = convert_xyphi(gameData.team.at(teamID).at(robotID).getVelocityFCS());
 
     robot.hasBall = gameData.team.at(teamID).at(robotID).canKickBall(gameData.ball.getPosition());
 
     if (robot.hasBall)
     {
-        robot.ballAcquired.x = gameData.ball.getPickupLocation().x;
-        robot.ballAcquired.y = gameData.ball.getPickupLocation().y;
+        robot.ballAcquired = convert_xy(gameData.ball.getPickupLocation());
+        vecAdapter.adapt(robot.ballAcquired);
     }
 
-    tprintf("put ROBOT_STATE status=%s position=[%6.2f, %6.2f, %6.2f] velocity=[%6.2f, %6.2f, %6.2f] hasBall=%s ballAcquired=[%6.2f, %6.2f]",
+    tprintf("put ROBOT_STATE robotId=%d status=%s position=[%6.2f, %6.2f, %6.2f] velocity=[%6.2f, %6.2f, %6.2f] hasBall=%s ballAcquired=[%6.2f, %6.2f]",
+            robot.robotId,
             enum2str(robot.status),
             robot.position.x, robot.position.y, robot.position.Rz,
             robot.velocity.x, robot.velocity.y, robot.velocity.Rz,
@@ -268,16 +307,12 @@ void RTDBgameDataAdapter::publishScene(const GameData& gameData) const
         SimulationSceneBall b;
         Point3D pos = gameData.ball.getPosition();
         Vector3D vel = gameData.ball.getVelocity();
-        b.position.x = pos.x;
-        b.position.y = pos.y;
-        b.position.z = pos.z; // TODO #14
-        b.velocity.x = vel.x;
-        b.velocity.y = vel.y;
-        b.velocity.z = vel.z;
+        b.position = convert_xyz(pos);
+        b.velocity = convert_xyz(vel);
         scene.balls.push_back(b);
     }
 
-    // there are never any extra obstacles at simworld initializatoin
+    // there are never any extra obstacles at simworld initialization
 
     // write to RTDB
     auto rtdbConnection = getRTDBConnection();
@@ -295,8 +330,8 @@ bool RTDBgameDataAdapter::checkUpdatedScene(SimulationScene &scene)
         auto rtdbConnection = getRTDBConnection();
         SimulationScene tmpScene;
         int r = rtdbConnection->get(SIMULATION_SCENE, &tmpScene);
-        TRACE("r=%d", r);
-        tprintf("got new SimulationScene, r=%d", r);
+        TRACE("get SIMULATION_SCENE result=%d", r);
+        tprintf("got new SimulationScene, result=%d", r);
         if (r == RTDB2_SUCCESS)
         {
             scene = tmpScene;
@@ -308,6 +343,7 @@ bool RTDBgameDataAdapter::checkUpdatedScene(SimulationScene &scene)
 
 void RTDBgameDataAdapter::monitorScene()
 {
+    INIT_TRACE_THREAD("monitorScene")
     TRACE_FUNCTION("");
 
     // Prevent race condition with other init time RTDB connections being created

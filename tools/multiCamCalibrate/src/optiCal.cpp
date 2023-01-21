@@ -50,7 +50,12 @@ void opticalCalibrator::calibrateFisheye()
         _calData.fisheyeCalibrated = true;
     }
     cv::fisheye::initUndistortRectifyMap(K, D, cv::Matx33d::eye(), K, images.back().size(), CV_32FC1, _rmapx, _rmapy);
+    _usePylonCam = false;
     setView(1); // will notify user
+}
+
+void opticalCalibrator::setPylon() {
+   _usePylonCam = true;
 }
 
 void opticalCalibrator::calibratePerspectiveClicks()

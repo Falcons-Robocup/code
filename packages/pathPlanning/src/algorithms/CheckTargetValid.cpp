@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * CheckTargetValid.cpp
@@ -43,14 +43,19 @@ void CheckTargetValid::execute(PathPlanningData &data)
     Position2D target = data.getSubTarget();
 
     // check option: what to do if target is inside a forbidden area
-    auto mode = data.config.boundaries.targetInsideForbiddenArea;
+    auto mode = data.configPP.boundaries.targetInsideForbiddenArea;
     if (mode != BoundaryOptionEnum::ALLOW)
     {
         for (auto it = data.forbiddenAreas.begin(); it != data.forbiddenAreas.end(); ++it)
         {
             if (it->isPointInside(vec2d(target.x, target.y)))
             {
-                TRACE("target is in forbidden area id=%d", it->id);
+                // JPGL - 2022-06-27
+                //      This trace was converted to an event log warning in order to
+                //      monitor how often we need to draw a forbidden area on the ball
+                //      We might want to consider putting this back to TRACE if it spams
+                //      th event logs too much
+                TRACE_WARNING("target is in forbidden area id=%d", it->id);
                 if (mode == BoundaryOptionEnum::CLIP)
                 {
                     // TODO: implement clipping option (geometry)
@@ -71,11 +76,11 @@ void CheckTargetValid::execute(PathPlanningData &data)
     }
 
     // check option: what to do if target is outside of field
-    mode = data.config.boundaries.targetOutsideField;
+    mode = data.configPP.boundaries.targetOutsideField;
     if (mode != BoundaryOptionEnum::ALLOW)
     {
-        float fieldMarginX = data.config.boundaries.fieldMarginX;
-        float fieldMarginY = data.config.boundaries.fieldMarginY;
+        float fieldMarginX = data.configPP.boundaries.fieldMarginX;
+        float fieldMarginY = data.configPP.boundaries.fieldMarginY;
         float fieldLength = cEnvironmentField::getInstance().getLength();
         float fieldWidth = cEnvironmentField::getInstance().getWidth();
         float limit = fieldWidth * 0.5 + fieldMarginX;
@@ -106,7 +111,7 @@ void CheckTargetValid::execute(PathPlanningData &data)
 
     // check options: own and opponent halves
     // (especially the CLIP options are useful for playing on half a demo field)
-    mode = data.config.boundaries.targetOnOwnHalf;
+    mode = data.configPP.boundaries.targetOnOwnHalf;
     if (mode != BoundaryOptionEnum::ALLOW)
     {
         if (target.y < 0.0)
@@ -119,7 +124,7 @@ void CheckTargetValid::execute(PathPlanningData &data)
             }
         }
     }
-    mode = data.config.boundaries.targetOnOpponentHalf;
+    mode = data.configPP.boundaries.targetOnOpponentHalf;
     if (mode != BoundaryOptionEnum::ALLOW)
     {
         if (target.y > 0.0)

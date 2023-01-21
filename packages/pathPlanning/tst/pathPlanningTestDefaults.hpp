@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * pathPlanningTestDefaults.hpp
@@ -17,7 +17,7 @@
 ConfigPathPlanning loadYAML(std::string const &yamlfilename);
 
 // common setup and some config values (we normally don't want to be sensitive to production yamls)
-PathPlanning pathPlanningSetup(CFI *ci, OutputInterface *output = NULL);
+PathPlanning pathPlanningSetup(ppCFI *ppci, exCFI *exci, OutputInterface *output = NULL);
 PathPlanning defaultPathPlanningSetup();
 
 // but for some tests we do want to check yaml values

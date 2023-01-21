@@ -1,0 +1,3 @@
+frequency:                     20.0      # [Hz]     The frequency of the heartbeat (tick), e.g., 40Hz -> 40 ticks per second.
+simulationSpeedupFactor:        1.0      # [double] The speedup factor for simulation, e.g., 2.0 -> simulation time advances at 200%: 1 real-world second == 2 seconds in simulation time
+tickFinishRtdbKey:          "SIMULATION_HEARTBEAT_DONE"       # [string] The RtDB key that is written when a tick / heartbeat finishes. Execution will subscribe to this RtDB key.

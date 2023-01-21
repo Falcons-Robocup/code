@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * dewarp.cpp
@@ -7,7 +7,9 @@
  *      Author: Jan Feitsma
  */
 
+#ifndef NOROS
 #include "falconsCommonDirs.hpp"
+#endif
 #include "dewarp.hpp"
 #include "cvmatio.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -19,7 +21,12 @@
 
 // calibration was done with a border, which we need to account for ... (TODO: get rid of this)
 int const BORDER_SIZE = 120;
+
+#ifdef NOROS
+std::string CALIBRATION_FOLDER = "/home/robocup/falcons/data/internal/vision/multiCam/calibration";
+#else
 std::string CALIBRATION_FOLDER = pathToDataRepo() + "/internal/vision/multiCam/calibration";
+#endif
 
 
 Dewarper::Dewarper(int robotId, int cam, bool autoUpdate, double timestamp)

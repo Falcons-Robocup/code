@@ -25,6 +25,7 @@ export RTDB_CONFIG_PATH=$FALCONS_CONFIG_PATH
 # register python paths
 export PYTHONPATH=$PYTHONPATH:$FALCONS_CODE_PATH/packages/facilities/environment/pymodule # to access C++ field environment library
 export PYTHONPATH=$PYTHONPATH:$FALCONS_CODE_PATH/packages/facilities/rtdb/python # to access rtdb2
+export PYTHONPATH=$PYTHONPATH:$FALCONS_CODE_PATH/packages/facilities/frtdb/python # to access FalconsRtDBStore
 export PYTHONPATH=$PYTHONPATH:$FALCONS_CODE_PATH/testing/execution/lib # to access robot framework libraries
 export PYTHONPATH=$PYTHONPATH:$FALCONS_SCRIPTS_PATH
 
@@ -33,7 +34,9 @@ export PATH=$PATH:$FALCONS_SCRIPTS_PATH
 export PATH=$PATH:$FALCONS_CODE_PATH/packages/processManager
 export PATH=$PATH:$FALCONS_CODE_PATH/packages/jobManager
 export PATH=$PATH:$FALCONS_CODE_PATH/packages/robotControl/scripts
+export PATH=$PATH:$FALCONS_CODE_PATH/packages/robotControl/py
 export PATH=$PATH:$FALCONS_CODE_PATH/packages/simulation/scripts
 export PATH=$PATH:$FALCONS_CODE_PATH/packages/facilities/diagnostics/scripts
+export PATH=$PATH:$FALCONS_CODE_PATH/packages/facilities/tracing/scripts
 export PATH=$PATH:$FALCONS_CODE_PATH/cmake
 

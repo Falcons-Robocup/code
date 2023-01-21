@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Coen Tempelaars (Falcons)
+// Copyright 2018-2022 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * robot.cpp
@@ -200,11 +200,14 @@ float Robot::getKickerSpeed() const
     return _kicker.speed;
 }
 
+PlayingDirection Robot::getPlayingDirection() const
+{
+    return _playingDirection;
+}
+
 void Robot::recalculatePosition (const float dt)
 {
-    _position.transform_acs2fcs(_playingDirection == PlayingDirection::LEFT_TO_RIGHT);
-    _position.update(getVelocityFCS(), dt);
-    _position.transform_fcs2acs(_playingDirection == PlayingDirection::LEFT_TO_RIGHT);
+    _position.update(getVelocity(), dt);
 }
 
 void Robot::recalculateBallPossession(const Point3D& ballPosition)
@@ -237,19 +240,19 @@ void Robot::setPlayingDirection(const PlayingDirection& p)
     _playingDirection = p;
 }
 
-void Robot::setPosition (const Position2D& p)
+void Robot::setPosition(const Position2D& p)
 {
     _position = p;
 }
 
-void Robot::setPositionFCS (const Position2D& p)
+void Robot::setPositionFCS(const Position2D& p)
 {
     _position = p;
     _position.transform_fcs2acs(_playingDirection == PlayingDirection::LEFT_TO_RIGHT);
 
 }
 
-void Robot::setVelocity (const Velocity2D& v)
+void Robot::setVelocity(const Velocity2D& v)
 {
     _velocity = v;
 }

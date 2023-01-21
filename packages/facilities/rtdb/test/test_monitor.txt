@@ -1,0 +1,45 @@
+[INFO] Loading database named: default
+=== no agents, no dbpath ===
+database: agent100
+database: agent101
+=== agent 100 ===
+me: 100
+processType: dbclient
+rootPath: /tmp/rtdb2_storage
+configFileName: config/rtdb2_configuration.xml
+networkName: 
+databaseName: default
+databasePath: /tmp/rtdb2_storage/100/default
+database: agent100
+database: agent101
+agent: 100
+agent: 101
+=== agents 100, 101 ===
+me: 100
+processType: dbclient
+rootPath: /tmp/rtdb2_storage
+configFileName: config/rtdb2_configuration.xml
+networkName: 
+databaseName: default
+databasePath: /tmp/rtdb2_storage/100/default
+database: agent100
+database: agent101
+agent: 100
+agent: 101
+agent: 100
+agent: 101
+[INFO] Loading database named: default
+=== other client ===
+me: 79
+processType: dbclient
+rootPath: /tmp/rtdb2_storage
+configFileName: config/rtdb2_configuration.xml
+networkName: 
+databaseName: default
+databasePath: /tmp/rtdb2_storage/79/default
+database: agent79
+agent: 79
+database: agent100
+database: agent101
+agent: 100
+agent: 101

@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cAbstractAction.hpp
@@ -19,7 +19,7 @@
 #include "int/cInterfaces.hpp"
 #include "int/cTimer.hpp"
 #include "tracing.hpp"
-#include "FalconsRtDB2.hpp" // actionResult
+#include "FalconsRTDB.hpp" // actionResult
 
 class MP_AbstractAction
 {
@@ -29,6 +29,7 @@ public:
     
     void setParameters(std::vector<std::string> const &params);
     virtual actionResultTypeEnum execute() = 0;
+    virtual void initialize() = 0;
     void connect(cInterfaces *interfaces = NULL);
     float elapsed(); // time in seconds
     

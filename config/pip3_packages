@@ -15,3 +15,6 @@ matplotlib
 py-dmidecode
 requests
 pyyaml
+python-socketio[client]>=5.5.0
+GitPython
+watchdog

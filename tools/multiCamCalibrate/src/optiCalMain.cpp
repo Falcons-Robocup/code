@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     for (int it = 1; it < argc; ++it)
     {
         std::string arg = argv[it];
-        if (arg.size() > 3)
+        if (arg.size() > 2)
         {
             if (hasEnding(arg, ".bin"))
             {
@@ -46,6 +46,27 @@ int main(int argc, char **argv)
             if (hasEnding(arg, ".jpg") || hasEnding(arg, ".png"))
             {
                 m.setStill(arg);
+            }
+            if (hasEnding(arg, "usb") || hasEnding(arg, "USB"))
+            {
+                m.setUsb(2); // webcam on HP Zbook G3 available through /dev/video2
+            }
+            if (hasEnding(arg, "usb0") || hasEnding(arg, "USB0"))
+            {
+                m.setUsb(0);
+            }
+            if (hasEnding(arg, "usb1") || hasEnding(arg, "USB1"))
+            {
+                m.setUsb(1);
+            }
+            if (hasEnding(arg, "usb2") || hasEnding(arg, "USB2"))
+            {
+                m.setUsb(2);
+            }
+            if (hasEnding(arg, "pylon") )
+            {
+                optiCal.setPylon();
+                m.setPylon();
             }
         }
     }

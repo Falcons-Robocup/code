@@ -1,4 +1,4 @@
-# Copyright 2020 Jan Feitsma (Falcons)
+# Copyright 2020-2021 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 #!/usr/bin/env python3
 
@@ -164,5 +164,5 @@ if __name__ == '__main__':
     # run
     runner = unittest.TextTestRunner(verbosity=1+args.verbose)
     result = runner.run(WorldModelRDLTestSuite(args))
-    sys.exit(len(result.errors))
+    sys.exit(len(result.errors) + len(result.failures))
 

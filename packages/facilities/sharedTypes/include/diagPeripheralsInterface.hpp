@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * diagPeripheralsInterface.hpp
@@ -16,19 +16,30 @@
 
 struct diagPeripheralsInterface
 {
-    float feedback_vel[3] = {0.0, 0.0, 0.0}; // measured speed
-    float speed_vel[3] = {0.0, 0.0, 0.0}; // intended speed
-    bool  hasball = false;
-    float bh_left_angle = 0.0;
-    float bh_right_angle = 0.0;
-    float voltage = 0.0;
+    // drive motors
+    float current_feedback[3] = {0.0, 0.0, 0.0}; // measured current
+    float current_setpoint[3] = {0.0, 0.0, 0.0}; // intended current
+    float torque_feedback[3] = {0.0, 0.0, 0.0}; // measured torque
+    float velocity_feedback[3] = {0.0, 0.0, 0.0}; // measured speed
+    float velocity_setpoint[3] = {0.0, 0.0, 0.0}; // intended speed
     float motion_temperature[3] = {0.0, 0.0, 0.0};
+    float voltage = 0.0;
     float motor_pid_output[3] = {0.0, 0.0, 0.0};
     float motor_error[3] = {0.0, 0.0, 0.0};
     float motor_integral[3] = {0.0, 0.0, 0.0};
     float motor_derivative[3] = {0.0, 0.0, 0.0};
 
-    SERIALIZE_DATA(feedback_vel, speed_vel, hasball, bh_left_angle, bh_right_angle, voltage, motion_temperature, motor_pid_output, motor_error, motor_integral, motor_derivative);
+    // ballhandlers
+    float bh_angle[2] = {0.0, 0.0};
+    float bh_tacho_zero[2] = {0.0, 0.0};
+    float bh_tacho[2] = {0.0, 0.0};
+    float bh_pid_output[2] = {0.0, 0.0};
+    float bh_error[2] = {0.0, 0.0};
+    float bh_integral[2] = {0.0, 0.0};
+    float bh_pwm[2] = {0.0, 0.0};
+
+    SERIALIZE_DATA(current_feedback, current_setpoint, torque_feedback, velocity_feedback, velocity_setpoint, motion_temperature, voltage, motor_pid_output, motor_error, motor_integral, motor_derivative, \
+                    bh_angle, bh_tacho_zero, bh_tacho, bh_pid_output, bh_error, bh_integral, bh_pwm);
 };
 
 #endif

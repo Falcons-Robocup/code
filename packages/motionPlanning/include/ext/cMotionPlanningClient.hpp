@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cMotionPlanningClient.hpp
@@ -17,15 +17,14 @@
 #include <map>
 
 // RTDB
-#include "cRtDBClient.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 #include "falconsCommon.hpp" // TODO fix type dealing abuse, use geometry package
 
 #include "cWorldModelClient.hpp"
 
 
-class cMotionPlanningClient : public cRtDBClient
+class cMotionPlanningClient
 {
   public:
     cMotionPlanningClient();

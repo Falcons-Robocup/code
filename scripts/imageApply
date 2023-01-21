@@ -43,14 +43,11 @@ fi
 
 
 # cleanup any work-in-progress
-gitClean
 cd $FALCONS_CODE_PATH
-git checkout master
-gitClean # TODO: rm -rf ? dangerous ...
 cd ..
 
 # unpack the tarball
 echo "applying image $image..."
-tar zxf $imageLocation/$image
+tar zxf $imageLocation/$image --overwrite
 
 

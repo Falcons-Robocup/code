@@ -1,4 +1,4 @@
-# Copyright 2020 Jan Feitsma (Falcons)
+# Copyright 2020-2022 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 #!/usr/bin/python
 # a set of data adapters to pandas dataframe
@@ -130,6 +130,10 @@ class BallHandling():
             data['bh_left'][row] = value['left']['angleFraction']
             data['bh_right'][row] = value['right']['angleFraction']
         self.handles = {'DIAG_BALLHANDLING': handleBallHandling}
+
+
+def all():
+    return [Common(), WorldModel(), VisionBestBall(), VisionLoc(), BallHandling(), Actuation()]
 
 
 # TODO: move RCS extension from intercept analysis to here? (Is it useful elsewhere?)

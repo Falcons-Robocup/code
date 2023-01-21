@@ -16,10 +16,10 @@ import glob
 import argparse
 import threading, time
 import falconspy
-from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
+import falconsrtdb
 
 # setup RTDB
-rtdb2Store = RtDB2Store(RTDB2_DEFAULT_PATH, True)
+rtdbStore = falconsrtdb.FalconsRtDBStore(readonly=True) # read mode
 
 
 
@@ -219,7 +219,7 @@ class TestGrabs():
 def report(robot):
     # helper to inspect RTDB contents
     def get(key):
-        item = rtdb2Store.get(robot, key)
+        item = rtdbStore.get(robot, key)
         if item != None:
             return item.value
         return None
@@ -260,7 +260,7 @@ def monitor(robot):
     active = False
     while True:
         # wait until the first data comes in
-        item = rtdb2Store.get(robot, "ROBOT_STATE", timeout=dt*2)
+        item = rtdbStore.get(robot, "ROBOT_STATE", timeout=dt*2)
         if item != None:
             active = True
         else:

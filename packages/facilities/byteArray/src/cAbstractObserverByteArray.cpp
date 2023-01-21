@@ -1,4 +1,4 @@
-// Copyright 2017 Tim Kouters (Falcons)
+// Copyright 2017-2021 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cAbstractObserverByteArray.cpp
@@ -38,19 +38,3 @@ cAbstractObserverByteArray::~cAbstractObserverByteArray()
 
 }
 
-/*!
- * \brief New packet notification
- *
- * This function is called when the UDP receiver received a new
- * byte array of data.
- * This function needs to be re-implemented by the client
- *
- * \param[in] cByteArray data Array of bytes received
- *
- * \note Not re-implementing this function will result in throwing
- * an error.
- */
-void cAbstractObserverByteArray::notifyNewPacket(cByteArray &data)
-{
-	throw runtime_error("Abstract class implementation of ByteArray observer called. Function needs to be implemented by client");
-}

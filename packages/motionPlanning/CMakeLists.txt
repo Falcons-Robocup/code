@@ -7,14 +7,18 @@ find_package(Facilities)
 find_package(PathPlanning)
 find_package(WorldModel)
 
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 include_directories("include")
 
 add_library(mpClient src/adapters/cMotionPlanningClient.cpp
                      src/cMotionPlanner.cpp)
 target_link_libraries(mpClient wmClient PathPlanning)
+
+add_executable(motionPlanning   src/main.cpp
+                                src/cMotionPlanner.cpp)
+target_link_libraries(motionPlanning mpInterfaces mpAdapters mpTypes mpActions mpConfigAdapter wmClient PathPlanning ${Boost_LIBRARIES})
 
 add_library(mpAdapters    src/adapters/MP_RTDBInputAdapter.cpp
                           src/adapters/MP_RTDBOutputAdapter.cpp)

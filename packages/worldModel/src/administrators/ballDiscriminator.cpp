@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ballDiscriminator.cpp
@@ -136,6 +136,11 @@ void ballDiscriminator::addMeasurement(const ballMeasurement &measurement)
         std::cout << "Caught exception: " << e.what() << std::endl;
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
+}
+
+void ballDiscriminator::addPossessionMeasurement(const Vector3D& ball_pos, uint8_t robotID, rtime timestamp)
+{
+
 }
 
 void ballDiscriminator::getMeasurementsToSync(std::vector<ballMeasurement> &measurements)

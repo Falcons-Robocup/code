@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBInputAdapter.cpp
@@ -15,7 +15,7 @@ cRTDBInputAdapter::cRTDBInputAdapter(ballHandlingControl *bhControl)
 {
     TRACE(">");
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId);
     _bhControl = bhControl;
     TRACE("<");
 }
@@ -37,11 +37,13 @@ void cRTDBInputAdapter::waitForBallHandlersSetpoint()
 
 void cRTDBInputAdapter::waitForBallHandlersFeedback()
 {
+    INIT_TRACE_THREAD("waitForBallHandlersFeedback");
+
     while (true)
     {
         _rtdb->waitForPut(BALLHANDLERS_FEEDBACK);
         getBallHandlersFeedback();
-        getRobotVelocityFeedback();
+        getRobotVelocitySetpoint();
 
         _bhControl->updateSetpoint();
         _bhControl->updateFeedback();
@@ -96,3 +98,17 @@ void cRTDBInputAdapter::getRobotVelocityFeedback()
 
 }
 
+void cRTDBInputAdapter::getRobotVelocitySetpoint()
+{
+    TRACE_FUNCTION("");
+    T_ROBOT_VELOCITY_SETPOINT robotVelocitySetpoint;
+
+    int r = _rtdb->get(ROBOT_VELOCITY_SETPOINT, &robotVelocitySetpoint);
+
+    if (r == RTDB2_SUCCESS)
+    {
+        Velocity2D robotVel = Velocity2D(robotVelocitySetpoint.x, robotVelocitySetpoint.y, robotVelocitySetpoint.Rz);
+
+        _bhControl->update_robot_velocity(robotVel);
+    }
+}

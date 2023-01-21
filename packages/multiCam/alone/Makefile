@@ -1,4 +1,4 @@
-# Copyright 2014-2020 Andre Pool
+# Copyright 2014-2022 Andre Pool
 # SPDX-License-Identifier: Apache-2.0
 
 TARGET = multiCamAlone
@@ -9,33 +9,15 @@ AbstractInterpolator.o cvmatio.o LeastSquaresInterpolator.o LinearInterpolator.o
 
 MAKEFLAGS = -j8
 
-# TODO:
-# is -m64 still needed nowadays?
-# change to from -O3 -Ofast
-# do we need -fPIC 
-# how does this related to the falconsbuild?
-# 
 # Warning: using -O0 will not generate relevant warnings
-CFLAGS = -g3 -O3 -m64 -ansi -std=c++11 -Wall -Wextra -Wpedantic -Werror -DNOROS
-# ros make options:
-# CFLAGS = -std=c++11 -O3 -fPIC -W -Wall -Wno-unused-parameter -fno-strict-aliasing -DNOROS
+CFLAGS = -g3 -O3 -m64 -ansi -std=c++17 -Wall -Wextra -Wpedantic -Werror -DNOROS
 
-LDFLAGS = -pthread -L/usr/local/lib -L${HOME}/falcons/code/build/packages/facilities/common -L${HOME}/falcons/code/build/packages/facilities/tracing
-LDLIBS = -lalglib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio -lpthread -lFalconsCommon -lTracing -lboost_thread
+LDFLAGS = -pthread -L/usr/local/lib -L${HOME}/falcons/code/build/packages/facilities/common
+LDLIBS = -lalglib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio -lpthread -lboost_thread
 
-INC = -I../include -I../../facilities/filters/inc -I../../facilities/filters/inc/ext -I/usr/include/opencv4 -I../../../packages/facilities/common/include/ext -I../../facilities/tracing/include/ext
+INC = -I../include -I../../facilities/filters/inc -I../../facilities/filters/inc/ext -I/usr/include/opencv4
 
-# building the filters external requires ros build dependency, solved by building filters locally (added to .o list)
-# BallDistanceEstimator uses common LinearInterpolator
-# PATHTOFILTERS=../../facilities/filters
-# INC += -I$(PATHTOFILTERS)/inc/ext
-# LDFLAGS += -L$(PATHTOFILTERS)/lib -Wl,-rpath,$(PATHTOFILTERS)/lib
-# LDLIBS += -lfilters
-
-
-all: $(TARGET)
-	@rm -f /dev/shm/cam0.jpg /dev/shm/cam1.jpg /dev/shm/cam2.jpg /dev/shm/cam3.jpg
-	@nice -n 15 ./$(TARGET) -i $(TURTLE5K_ROBOTNUMBER)
+all: r6
 
 r1: $(TARGET)
 	@rm -f /dev/shm/cam0.jpg /dev/shm/cam1.jpg /dev/shm/cam2.jpg /dev/shm/cam3.jpg
@@ -72,6 +54,23 @@ lo:
 	@ip link show lo | grep -q MULTICAST || sudo ip link set dev lo multicast on
 	@route -n | grep "224.16.16.0" | grep -q " eth0" && sudo route -n del -net 224.16.16.0 netmask 255.255.255.0 dev eth0 || true
 	@route -n | grep "224.16.16.0" | grep -q " lo"   || sudo route -n add -net 224.16.16.0 netmask 255.255.255.0 dev lo
+
+# use the following when no wired or wireless interface available
+lo2:
+	sudo route add -net 224.16.32.0 netmask 255.255.255.0 dev lo
+	sudo ifconfig lo multicast
+
+wlan wlan0:
+	sudo route add -net 224.16.32.0 netmask 255.255.255.0 dev wlan0
+	sudo ifconfig wlan0 multicast
+
+wlp wlp2 wlp2s0:
+	sudo route add -net 224.16.32.0 netmask 255.255.255.0 dev wlp2s0
+	sudo ifconfig wlp2s0 multicast
+
+wlp3 wlp3s0:
+	sudo route add -net 224.16.32.0 netmask 255.255.255.0 dev wlp3s0
+	sudo ifconfig wlp3s0 multicast
 
 ETHERNET=`multiCamNet`
 eth:
@@ -117,6 +116,6 @@ clean:
 	@rm -f *.o $(TARGET)
 	@rm -f /dev/shm/cam0.jpg /dev/shm/cam1.jpg /dev/shm/cam2.jpg /dev/shm/cam3.jpg
 
-.PHONY: all clean cap list format eth rdel lo
+.PHONY: all clean cap list format eth rdel lo r1 r2 r3 r4 r5 r6 r7
 
 .SECONDARY:

@@ -1,4 +1,4 @@
-// Copyright 2020 lucas (Falcons)
+// Copyright 2020-2021 lucas (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Author: Lucas Catabriga
@@ -176,7 +176,7 @@ static bool isEigenValue(double eig, Vector3D eigenValues, double tolerance=1e-6
     double valueFound = false;
     for(int i=0; i<3; i++)
     {
-        if(abs(eig - eigenValues[i]) < 1e-6)
+        if(abs(eig - eigenValues[i]) < tolerance)
         {
             valueFound = true;
         }

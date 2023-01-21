@@ -1,3 +1,3 @@
-include/int/generated_enum2str.hpp
-src/generated_enum2str.py
+include/int/simulation_generated_enum2str.hpp
+src/simulation_generated_enum2str.py
 

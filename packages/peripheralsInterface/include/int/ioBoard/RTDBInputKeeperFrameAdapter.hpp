@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBInputKeeperFrameAdapter.hpp
@@ -11,7 +11,7 @@
 #define INCLUDE_INT_ADAPTERS_RTDBINPUTKEERERFRAMEADAPTER_HPP_
 
 #include "int/ioBoard/KeeperFrame.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class RTDBInputKeeperFrameAdapter 
 {

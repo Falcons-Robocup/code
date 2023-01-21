@@ -1,0 +1,29 @@
+#!/bin/bash
+# wrapper script to start new refbox listener from MTP repo
+
+if [ $TURTLE5K_TEAMNAME = "teamB" ]; then
+    extraArgs=" --dbpath /tmp/rtdb_refbox_B"
+else
+    extraArgs=" --dbpath /tmp/rtdb_refbox_A"
+fi
+
+extraArgs="$extraArgs --config $FALCONS_CONFIG_PATH/rtdb2_configuration_refbox.xml"
+extraArgs="$extraArgs --dbname default" # must match with MTP internal listener...
+if [ $SIMULATED = 1 ]; then
+    extraArgs="$extraArgs --simulation true"
+fi
+
+if [ -n "$TURTLE5K_ROBOTNUMBER" ] && [ "$TURTLE5K_ROBOTNUMBER" = 0 ]; then
+    extraArgs="$extraArgs --network refboxRelay"
+else
+    extraArgs="$extraArgs --network refboxListener"
+fi
+
+if [ -z "$REFBOX_HOST" ]; then
+     echo "REFBOX_HOST environment variable is not set!"
+     exit 1
+fi
+
+sleep 6 # mtrbc is not robust (lacks a connect-retry mechanism?), GUI needs to start first
+$FALCONS_CODE_PATH/build/bin/mtrbc --host $REFBOX_HOST $extraArgs
+

@@ -1,4 +1,4 @@
-// Copyright 2019 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * main.cpp
@@ -22,9 +22,9 @@
 boost::thread _workerThreadWaitForBallHandlersFeedback;
 
 
-int main(int argc, char **argv)
+int main(/* unused: int argc, char **argv */)
 {
-    INIT_TRACE;
+    INIT_TRACE("ballHandling");
 
     try
     {

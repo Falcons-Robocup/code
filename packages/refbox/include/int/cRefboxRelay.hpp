@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRefboxRelay.hpp
@@ -16,7 +16,7 @@
 #include "int/RTDBAdapterLogging.hpp"
 
 // RTDB & types
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 
 class cRefboxRelay

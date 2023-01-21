@@ -1,4 +1,4 @@
-// Copyright 2019-2020 lucas (Falcons)
+// Copyright 2019-2022 lucas (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef FIELDVIDEOACTOR_H
 #define FIELDVIDEOACTOR_H
@@ -9,7 +9,7 @@
 
 #include <memory>
 
-#include "heightmapVisualizer.hpp"
+#include "HeightmapVisualizer.hpp"
 
 class vtkImageData;
 
@@ -50,13 +50,16 @@ private:
     HeightmapVisualizer hmv;
 
     std::vector<VideoFileInfo> video_files;
+    std::set<std::string> downloaded_dates;
 
-    void fill_video_list();
-    void open_video_file(double timestamp);
+    void fillVideoList();
+    void openVideoFile(double timestamp);
     void convertBGRtoRGB(unsigned char* mat_data_ptr);
     void setGreenBackground();
     void setVideoFrame(int frame_num);
     void setFieldTransformations();
+    void checkDate(double timestamp);
+    void downloadVideoFiles(int32_t year, int32_t month, int32_t day);
 };
 
 #endif

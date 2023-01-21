@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Diana Koenraadt (Falcons)
+// Copyright 2016-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Jan Feitsma, July 2016

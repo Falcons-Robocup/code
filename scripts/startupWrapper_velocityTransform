@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+# Used in processMapping to start velocityTransform only for R1-R6. R7+ does not need velocityTransform.
+# 
+# EKPC 2022-05-19 Creation
+# 
+
+if [ ${TURTLE5K_ROBOTNUMBER} -gt 6 ]; then
+    # R7 and up
+    # do nothing
+    echo "NoOp"
+    read -n 1 -r -p "Keeping process alive by waiting for input..." key
+else
+    #R1 - R6
+    processStart ${CONTEXTKEY} vt
+fi  
+

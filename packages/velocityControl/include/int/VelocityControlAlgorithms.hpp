@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * VelocityControlAlgorithms.hpp
@@ -73,6 +73,11 @@ class ShiftBallOffset : public VelocityControlAlgorithm
 };
 
 class UnShiftBallOffset : public VelocityControlAlgorithm
+{
+    void execute(VelocityControlData &data);
+};
+
+class ApplyTokyoDrift : public VelocityControlAlgorithm
 {
     void execute(VelocityControlData &data);
 };

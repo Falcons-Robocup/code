@@ -39,7 +39,8 @@ function includeJavascriptFile(filename)
 <div id="robotNrContainer">
     Execute blocks on Robot number: <input type="text" value="1" id="robotNr" name="robotNr"/>
 </div>
-<input type="button" value="Execute Scenario" id="runBtn"/><br/>
+<input type="button" value="Execute Scenario" id="runBtn"/>
+<input type="button" value="Download Plot" id="downloadBtn" style="display:none"/><br/>
 <textarea id="pythoncode" name="pythoncode" rows="4" cols="50" style="display:block"></textarea>
 
 <div>
@@ -51,11 +52,13 @@ function includeJavascriptFile(filename)
 <a href="?env=advanced">Go to Advanced Blockly</a>
 </div>
 
+<div id="robotStoppedContainer" style="display:none">
+    Robot has stopped
+</div>
 <div id="stopRobotContainer" style="display:none">
     <input type="button" id="stopRobot" style="height:100px;width:200px;background-color:#FF0000;font-size:24px;" value="STOP ROBOT" />
 </div>
-<div id="robotStoppedContainer" style="display:none">
-    Robot has stopped
+<div id="robotMessageContainer">
 </div>
 
 <script>
@@ -63,18 +66,77 @@ function includeJavascriptFile(filename)
 ///// "Execute Scenario" on click
 // When "Execute Scenario" is clicked, submit the scenario in the background
 $("#runBtn").click( function() {
+
+    // Display "STOP ROBOT" button
+    $("#stopRobotContainer").attr("style", "display:block");
+    // Hide "Robot has stopped"
+    $("#robotStoppedContainer").attr("style", "display:none");
+    // Reset message queue
+    $("#robotMessageContainer").html("");
+
     $.post( "cmd", { robotNr: $("#robotNr").val(), pythoncode: $("#pythoncode").val() } )
        .done( function( data ) {
 
           // data contains the Python scenario as executed on the server
           //alert( data );
 
-          // Display "STOP ROBOT" button
-          $("#stopRobotContainer").attr("style", "display:block");
-          // Hide "Robot has stopped"
-          $("#robotStoppedContainer").attr("style", "display:none");
+          // Display "Robot has stopped"
+          if (data.status === 'error') {
+            $("#robotStoppedContainer").html(data.error.message);
+          } else {
+            // Hide "STOP ROBOT"
+            $("#stopRobotContainer").attr("style", "display:none");
+            $("#robotStoppedContainer").html("Robot " + data.robotNr + " has stopped");
+
+            // Display button to download plot
+            var downloadUrl = "/plotfile";
+            downloadUrl += "?robotNr=" + data.robotNr;
+            downloadUrl += "&start=" + data.start;
+            downloadUrl += "&end=" + data.end;
+            downloadUrl += "&rdl_on_robot=" + data.rdl_on_robot;
+            $("#downloadBtn").data("href", downloadUrl);
+            $("#downloadBtn").attr("style", "display:inline");
+          }
+
+          $("#robotStoppedContainer").attr("style", "display:block");
+
     });
+
+    // Kick off real-time message flow
+    getMessages();
 });
+
+///// Get scenario messages
+function getMessages() {
+    $.get("message?robotNr=" + $("#robotNr").val())
+    .done(function(data) {
+        // Either the scenario hasn't started yet or we're already finished
+        if (!data.message) {
+            // Get more as long as the scenario is still running
+            if ($("#stopRobotContainer").attr("style") == "display:inline")
+                getMessages();
+
+          return;
+        }
+
+        // Extend the existing container with the newly received message
+        var html = $("#robotMessageContainer").html();
+
+        if (data.severity == 'error')
+          html +='<span style="color:red;">'
+
+        html += data.message;
+
+        if (data.severity == 'error')
+          html += '</p>';
+
+        html += "<br>";
+        $("#robotMessageContainer").html(html);
+
+        // Blindly continue getting more
+        getMessages();
+    });
+}
 
 ///// "STOP ROBOT" on click
 $("#stopRobot").click( function() {
@@ -86,9 +148,14 @@ $("#stopRobot").click( function() {
           $("#stopRobotContainer").attr("style", "display:none");
 
           // Display "Robot has stopped"
-          $("#robotStoppedContainer").html("Robot " + data + " has stopped");
+          $("#robotStoppedContainer").html("Robot " + data.robotNr + " has stopped");
           $("#robotStoppedContainer").attr("style", "display:block");
     });
+});
+
+///// Download plot on click
+$("#downloadBtn").click( function() {
+    window.location = $("#downloadBtn").data("href");
 });
 
 // Update "Execute Scenario" button when robot ID is changed in the input box

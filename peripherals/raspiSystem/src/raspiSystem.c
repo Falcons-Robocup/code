@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Andre Pool
+// Copyright 2018-2020 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
 
 // raspi system controls:
@@ -256,7 +256,12 @@ inline void md5sumSend() {
 inline void imageSend(char *inputFileName, uint32_t frameCounter, bool verbose) {
 	// determine input file size
 	struct stat st;
-	stat(inputFileName, &st);
+	if (stat(inputFileName, &st) < 0) {
+		printf("ERROR     : cam %u system file %s does not exist, message %s\n", camIndex, inputFileName,
+				strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
 	size_t fileSize = st.st_size;
 	if (verbose) {
 		printf("INFO      : cam %u system compressed image file size %.1fkB\n", camIndex, fileSize / 1000.0);
@@ -316,12 +321,18 @@ inline void imageSend(char *inputFileName, uint32_t frameCounter, bool verbose) 
 		imagePart++;
 
 		sendThePacket((char *) "image");
-		// compressed image is around 70kB/1466 ~= 48 packets
-		// the system period should be around 1 second
-		// 1000ms/48 ~= 20.8ms
 		pthread_mutex_unlock(&sendMutex);
 
-		usleep(10000); // 10ms, so there is enough head room to send the complete image in 1 second
+		// compressed image is around 70kB/1466 ~= 48 packets
+		// if ( camIndex == 0 ) {
+			// for the machine learning test we want to send the images of cam 0 at a rate of 5 fps (200 ms)
+			// 200ms/48 ~= 4.2ms
+			// usleep(1000); // 1ms, so there is enough head room to send the complete image in 250 ms
+		// } else {
+			// we want to send the images at a rate of 1 fps (1000 ms)
+			// 1000ms/48 ~= 20.8ms
+			usleep(10000); // 10ms, so there is enough head room to send the complete image in 1000 ms
+		// }
 	}
 	free(buffer);
 }
@@ -1200,7 +1211,7 @@ void doSendFrame(uint32_t frameCounter) {
 	char bmpFileName[256];
 	char jpgFileName[256];
 
-	#if defined(__arm__) || defined(__aarch64__)
+#if defined(__arm__) || defined(__aarch64__)
 	strcpy(bmpFileName, "/dev/shm/raspiGrab.bmp");
 	strcpy(jpgFileName, "/dev/shm/raspiGrab.jpg");
 #else
@@ -1247,7 +1258,17 @@ void* sendFrame(void *arg) {
 		uint32_t *frameCounterPtr = (uint32_t *) shmData;
 		if (*frameCounterPtr != frameCounterPrev) {
 			frameCounterPrev = *frameCounterPtr;
-			if (frameCounterPrev % 40 == 0) {
+			uint32_t frameCounterStep;
+			if( camIndex == 0 ) {
+				// send the jpg with ~5 fps
+				// frameCounterStep = 40/5;
+				// raspi not fast enough to send the jpg at ~5 fps, set also to ~1 fps for cam0
+				frameCounterStep = 40/1;
+			} else {
+				// send the jpg with ~1 fps
+				frameCounterStep = 40/1;
+			}
+			if (frameCounterPrev % frameCounterStep == 0) {
 				// printf("INFO      : cam %u system frameCounter %u\n", camIndex, frameCounterPrev);
 				fflush(stdout);
 				if (frameCounterNext != frameCounterPrev) {
@@ -1258,7 +1279,7 @@ void* sendFrame(void *arg) {
 
 				}
 				doSendFrame(frameCounterPrev);
-				frameCounterNext = frameCounterPrev + 40;
+				frameCounterNext = frameCounterPrev + frameCounterStep;
 			}
 
 		} else {

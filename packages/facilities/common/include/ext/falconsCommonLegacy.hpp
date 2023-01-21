@@ -1,4 +1,4 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * $Id: FalconsCommon.h 1966 2015-07-07 20:10:12Z jfei $
@@ -29,9 +29,6 @@ std::string systemStdout(std::string cmd, int bufferLimit = 512) ;
 
 #include "vector3d.hpp"
 #include "pose2d.hpp"
-
-// Finite State Machine
-#include "fsm.hpp"
 
 // Circle class and operations
 #include "circle.hpp"

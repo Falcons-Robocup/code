@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * robotAdministrator.cpp

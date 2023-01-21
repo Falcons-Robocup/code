@@ -1,4 +1,4 @@
-// Copyright 2016 Diana Koenraadt (Falcons)
+// Copyright 2016-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RobotLabel.h
@@ -34,6 +34,9 @@ public:
     }
 
     void initialize(int robotID, vtkRenderer *renderer, RobotVisualization* anchor);
+    void setRole(int robotId, std::string text);
+    void track();
+    void untrack();
 
 public Q_SLOTS:
     virtual void onAnchorPositionChanged(PositionVelocity& posvel) override;
@@ -41,6 +44,8 @@ public Q_SLOTS:
 
 private:
     void addLabel(int robotID, vtkRenderer* renderer);
+
+    vtkSmartPointer<vtkVectorText> _labelText;
 };
 
 #endif // ROBOTLABEL_H

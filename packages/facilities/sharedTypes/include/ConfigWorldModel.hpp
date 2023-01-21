@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef CONFIGWORLDMODEL_HPP_
 #define CONFIGWORLDMODEL_HPP_
@@ -99,14 +99,63 @@ struct ConfigWorldModelObstacleTracker
     SERIALIZE_DATA(objectFit, filterXYmemberTolerance, trackerXYTolerance, trackerTimeout, extrapolationTimeout, speedMinSize, speedMaxSize, speedResidualThreshold);
 };
 
+struct ConfigWorldModelGaussianObstacles
+{
+    float obstacleMergeThreshold;
+    float minAcceptedConfidence;
+    float parallelAxisDistanceFactor;
+    float parallelAxisOffset;
+    float perpendicularAxisDistanceFactor;
+    float perpendicularAxisOffset;
+    float maxAllowedVariance;
+
+    SERIALIZE_DATA(obstacleMergeThreshold, minAcceptedConfidence, parallelAxisDistanceFactor, parallelAxisOffset, perpendicularAxisDistanceFactor, perpendicularAxisOffset, maxAllowedVariance);
+};
+
+struct ConfigWorldModelGaussianBalls
+{
+    float ballMergeThreshold;
+    float minAcceptedConfidence;
+    float parallelAxisDistanceFactor;
+    float parallelAxisOffset;
+    float perpendicularAxisDistanceFactor;
+    float perpendicularAxisOffset;
+    float maxAllowedVariance;
+
+    SERIALIZE_DATA(ballMergeThreshold, minAcceptedConfidence, parallelAxisDistanceFactor, parallelAxisOffset, perpendicularAxisDistanceFactor, perpendicularAxisOffset, maxAllowedVariance);
+};
+
+struct ConfigWorldModelGaussian3DBalls
+{
+    float ballMergeThreshold;            
+    float ballVelocityMergeThreshold;    
+    float measurementMergeThreshold;     
+    float minAcceptedConfidence;         
+    float blacklistMaxVelocity;          
+    float blacklistMaxAcceleration;      
+    float flyingMeasurementHeight;       
+    float parallelAxisDistanceFactor;    
+    float parallelAxisOffset;     
+    float parallelAxisElevationFactor;
+    float perpendicularAxisDistanceFactor;
+    float perpendicularAxisOffset;       
+    float maxAllowedVariance;         
+    float timeFactor;   
+
+    SERIALIZE_DATA(ballMergeThreshold, ballVelocityMergeThreshold, measurementMergeThreshold, minAcceptedConfidence, blacklistMaxVelocity, blacklistMaxAcceleration, flyingMeasurementHeight, parallelAxisDistanceFactor, parallelAxisOffset, parallelAxisElevationFactor, perpendicularAxisDistanceFactor, perpendicularAxisOffset, maxAllowedVariance, timeFactor);
+};
+
 struct ConfigWorldModel
 {
     ConfigWorldModelAdministration administration;
     ConfigWorldModelBallTracker ballTracker;
     ConfigWorldModelLocalization localization;
     ConfigWorldModelObstacleTracker obstacleTracker;
+    ConfigWorldModelGaussianObstacles gaussianObstacles;
+    ConfigWorldModelGaussianBalls gaussianBalls;
+    ConfigWorldModelGaussian3DBalls gaussian3DBalls;
 
-    SERIALIZE_DATA(administration, ballTracker, localization, obstacleTracker);
+    SERIALIZE_DATA(administration, ballTracker, localization, obstacleTracker, gaussianObstacles, gaussianBalls, gaussian3DBalls);
 };
 
 #endif

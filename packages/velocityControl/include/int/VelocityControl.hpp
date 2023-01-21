@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * VelocityControl.hpp
@@ -27,12 +27,13 @@
 // use a short alias
 using vcCFI = ConfigInterface<ConfigVelocityControl>;
 using ppCFI = ConfigInterface<ConfigPathPlanning>;
+using exCFI = ConfigInterface<ConfigExecution>;
 
 
 class VelocityControl
 {
 public:
-    VelocityControl(vcCFI *vcConfigInterface = NULL, ppCFI *ppConfigInterface = NULL, InputInterface *inputInterface = NULL, OutputInterface *outputInterface = NULL);
+    VelocityControl(vcCFI *vcConfigInterface = NULL, ppCFI *ppConfigInterface = NULL, exCFI *exConfigInterface = NULL, InputInterface *inputInterface = NULL, OutputInterface *outputInterface = NULL);
     ~VelocityControl();
 
     // full iteration:
@@ -43,9 +44,6 @@ public:
 
     // raw calculation based on inputs, useful for unit testing
     void calculate();
-
-    // TODO: add an interface to provide (part of) the configuration
-    // example use case: interceptBall calculation needs robot speed capability (maxVelXY)
 
 public:
     // having these public is convenient for test suite
@@ -64,6 +62,7 @@ private:
 
     vcCFI                     *_vcConfigInterface;
     ppCFI                     *_ppConfigInterface;
+    exCFI                     *_exConfigInterface;
     InputInterface            *_inputInterface;
     OutputInterface           *_outputInterface;
     AbstractVelocitySetpointController *_velocitySetpointController = NULL;

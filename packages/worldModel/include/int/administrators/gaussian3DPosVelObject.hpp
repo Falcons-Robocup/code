@@ -1,4 +1,4 @@
-// Copyright 2020 lucas (Falcons)
+// Copyright 2020-2022 lucas (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Author: lucas catabriga
@@ -19,7 +19,7 @@ typedef std::map<uint8_t, std::list<Gaussian3DPosition> > Gaussian3DMeasurementM
 class Gaussian3DPosVelObject
 {
 public:
-    Gaussian3DPosVelObject(Gaussian3D position, Gaussian3D velocity, rtime timestamp);;
+    Gaussian3DPosVelObject(Gaussian3D position, Gaussian3D velocity, rtime timestamp);
     Gaussian3DPosVelObject(Gaussian3D position, rtime timestamp);
     
     void mergePosVelObject(Gaussian3DPosVelObject* other);

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * PlaybackControl.h
@@ -15,7 +15,7 @@
 
 #include "cLogFilePlayback.hpp"
 #include "cDbSync.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 #define SLIDER_RESOLUTION 1000.0
 

@@ -1,0 +1,17 @@
+#!/bin/bash -e
+
+filename=`ls *.pro`
+project=${filename%.pro}
+
+mkdir -p build
+# qmake should be in yout path, e.g. 
+# PATH=$PATH:/opt/Qt5.14.2/5.14.2/gcc_64/bin/
+
+qmake -o build/Makefile $filename
+
+cd build
+make -j 8
+cd ../
+
+./build/$project
+

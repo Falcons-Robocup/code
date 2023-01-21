@@ -1,4 +1,4 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * main.cpp
@@ -18,12 +18,6 @@
 #include "int/adapters/cRTDBInputAdapter.hpp"
 #include "int/adapters/cRTDBOutputAdapter.hpp"
 
-/* Globals */
-cShootPlanner shootPlanner;
-
-cRTDBInputAdapter _rtdbInputAdapter;
-cRTDBOutputAdapter _rtdbOutputAdapter;
-
 using std::exception;
 using std::cerr;
 using std::endl;
@@ -36,14 +30,16 @@ int main(int argc, char **argv)
 
     try
     {
-        INIT_TRACE;
+        INIT_TRACE("shootPlanning");
 
-        // RTDB adapters
-        _rtdbInputAdapter = cRTDBInputAdapter(&shootPlanner);
-        _rtdbOutputAdapter = cRTDBOutputAdapter();
+        tprintf("setup cShootPlanner");
+        cShootPlanner shootPlanner;
 
-        // spin
-        _rtdbInputAdapter.waitForShootSetpoint();
+        tprintf("setup RTDB input adapter");
+        cRTDBInputAdapter rtdbInputAdapter(&shootPlanner);
+
+        tprintf("spin ...");
+        rtdbInputAdapter.waitForShootSetpoint();
     } 
     catch (exception &e)
     {

@@ -1,4 +1,4 @@
-# Copyright 2017-2019 Jan Feitsma (Falcons)
+# Copyright 2022 Erik Kouters (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 from glob import glob
 from keyword import iskeyword
@@ -19,7 +19,8 @@ for name in glob(join(basedir, '*.py')):
             import logging
             logger = logging.getLogger(__name__)
             logger.warning('Ignoring exception while loading the %r plug-in:', module)
-            print traceback.format_exc()
+            print(traceback.format_exc())
         else:
             __all__.append(module)
 __all__.sort()
+

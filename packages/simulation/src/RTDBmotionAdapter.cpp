@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBMotionAdapter.cpp
@@ -9,13 +9,12 @@
 
 #include "int/RTDBmotionAdapter.hpp"
 
-#include "int/generated_enum2str.hpp"
 #include "int/RTDBaccess.hpp"
 #include "int/simulationCapabilities.hpp"
 
 #include <stdexcept>
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "tracing.hpp"
 
 
@@ -30,8 +29,8 @@ Velocity2D RTDBMotionAdapter::getVelocity (const TeamID& teamID, const RobotID& 
     {
         throw std::runtime_error("Error getting ROBOT_VELOCITY_SETPOINT from RtDB");
     }
-    tprintf("get ROBOT_VELOCITY_SETPOINT [%s %s] robotVelocity=[%6.2f, %6.2f, %6.2f]",
-                      enum2str(teamID), enum2str(robotID),
+    tprintf("get ROBOT_VELOCITY_SETPOINT [%d %d] robotVelocity=[%6.2f, %6.2f, %6.2f]",
+                      int(teamID), int(robotID),
                       robotVelocitySetpoint.x,
                       robotVelocitySetpoint.y,
                       robotVelocitySetpoint.Rz);
@@ -52,8 +51,8 @@ Kicker RTDBMotionAdapter::getKickerData (const TeamID& teamID, const RobotID& ro
     {
         throw std::runtime_error("Error getting KICKER_SETPOINT from RtDB");
     }
-    tprintf("get KICKER_SETPOINT [%s %s] kickerHeight=%6.2f kickerPower=%6.2f",
-            enum2str(teamID), enum2str(robotID),
+    tprintf("get KICKER_SETPOINT [%d %d] kickerHeight=%6.2f kickerPower=%6.2f",
+            int(teamID), int(robotID),
             kickerSetpoint.kickerHeight, kickerSetpoint.kickerPower);
     return {kickerSetpoint.kickerHeight, kickerSetpoint.kickerPower};
 }
@@ -70,8 +69,8 @@ bool RTDBMotionAdapter::hasBallHandlersEnabled (const TeamID& teamID, const Robo
     {
         throw std::runtime_error("Error getting BALLHANDLERS_SETPOINT from RtDB");
     }
-    tprintf("get BALLHANDLERS_SETPOINT [%s %s] enabled=%s",
-            enum2str(teamID), enum2str(robotID),
+    tprintf("get BALLHANDLERS_SETPOINT [%d %d] enabled=%s",
+            int(teamID), int(robotID),
             ((ballhandlersSetpoint)?("Yes"):("No ")));
     return ballhandlersSetpoint;
 }

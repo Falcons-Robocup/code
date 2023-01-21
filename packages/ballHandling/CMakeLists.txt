@@ -5,8 +5,8 @@ project(BallHandling)
 find_package(Boost COMPONENTS system thread REQUIRED QUIET)
 find_package(Facilities)
 
-
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++11 -Wall -Werror")
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 include_directories("include")
 
@@ -20,5 +20,5 @@ target_link_libraries(bhRtdbAdapters FalconsTypes)
 
 # main
 add_executable(ballHandling src/main.cpp)
-target_link_libraries(ballHandling bhController bhRtdbAdapters Tracing rtdb2 diagnostics ${Boost_LIBRARIES})
+target_link_libraries(ballHandling bhController bhRtdbAdapters Tracing FalconsRTDB diagnostics ${Boost_LIBRARIES})
 

@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Tim Kouters (Falcons)
+// Copyright 2015-2021 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Author: jfeitsma
@@ -144,6 +144,13 @@ class Position2D
         x = 0.0;
         y = 0.0;
         phi = 0.0;
+    }
+
+    Position2D(Position2D const &other)
+    {
+        x = other.x;
+        y = other.y;
+        phi = other.phi;
     }
 
     Position2D(double xx, double yy, double pp) {

@@ -4,9 +4,6 @@ project(Geometry)
 
 find_package(Facilities)
 
-# using shared_ptr
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror")
-
 include_directories("include/ext" "include")
 include_directories("/usr/include/opencv4")
 

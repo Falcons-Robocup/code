@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cWorldModelClient.cpp
@@ -9,55 +9,70 @@
 
 #include "ext/cWorldModelClient.hpp"
 
+#include "tracing.hpp"
+
 cWorldModelClient::cWorldModelClient()
 {
+    setRobotId(getRobotNumber());
 }
 
 cWorldModelClient::~cWorldModelClient()
 {
 }
 
+void cWorldModelClient::setRobotId(const int myRobotId)
+{
+    _myRobotId = myRobotId;
+    auto teamChar = getTeamChar();
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, teamChar);
+}
+
 void cWorldModelClient::update()
 {
+    TRACE_FUNCTION("");
+
     int r = 0;
     // clear
     _teamState.clear();
     _balls.clear();
     _obstacles.clear();
     // get robot- and team state
-    for (auto it = _agentIds.begin(); it != _agentIds.end(); ++it)
+    for (int agentId = 1; agentId <= MAX_ROBOTS; ++agentId)
     {
-        RtDB2Item item;
-        r = _rtdb.at(*it)->getItem(ROBOT_STATE, item, *it);
+        TRACE_SCOPE("AGENT", std::to_string(agentId).c_str());
+        T_ROBOT_STATE item;
+        int ageMs = 0;
+        r = _rtdb->get(ROBOT_STATE, &item, ageMs, agentId);
         if (r == RTDB2_SUCCESS)
         {
+            TRACE_SCOPE("ROBOT_STATE", std::to_string(agentId).c_str());
             // store
-            if (*it == _myRobotId)
+            if (agentId == _myRobotId)
             {
-                _robotState = item.value<T_ROBOT_STATE>();
+                TRACE_SCOPE("SELF", std::to_string(agentId).c_str());
+                _robotState = item;
             }
-            else if (item.age() < ACTIVE_TIMEOUT) // teammembers timeout: allow for wifi to stall for a few seconds
+            else if (ageMs < (ACTIVE_TIMEOUT*1000.0) ) // teammembers timeout: allow for wifi to stall for a few seconds
             {
-                _teamState[*it] = item.value<T_ROBOT_STATE>();
+                TRACE_SCOPE("TEAMMEMBER", std::to_string(agentId).c_str());
+                _teamState[agentId] = item;
             }
         }
     }
     // get balls and obstacles
-    if (_rtdb.count(_myRobotId))
+    T_BALLS balls;
+    r = _rtdb->get(BALLS, &balls);
+    if (r == RTDB2_SUCCESS)
     {
-        T_BALLS balls;
-        r = _rtdb.at(_myRobotId)->get(BALLS, &balls);
-        if (r == RTDB2_SUCCESS)
-        {
-            _balls = balls;
-        }
-        T_OBSTACLES obstacles;
-        r = _rtdb.at(_myRobotId)->get(OBSTACLES, &obstacles);
-        if (r == RTDB2_SUCCESS)
-        {
-            _obstacles = obstacles;
-        }
+        _balls = balls;
     }
+    T_OBSTACLES obstacles;
+    r = _rtdb->get(OBSTACLES, &obstacles);
+    if (r == RTDB2_SUCCESS)
+    {
+        _obstacles = obstacles;
+    }
+
     // update configuration
     _configAdapter.get(_config);
     _myTeamId = _config.teamId;
@@ -66,13 +81,14 @@ void cWorldModelClient::update()
 void cWorldModelClient::update(const int myRobotId)
 {
     // Overrule my robot ID
-    _myRobotId = myRobotId;
+    int myOriginalRobotId = _myRobotId;
+    setRobotId(myRobotId);
 
     // GET data from RTDB, store for all getters
     update();
 
     // Restore my robot ID
-    _myRobotId = getRobotNumber();
+    setRobotId(myOriginalRobotId);
 }
 
 bool cWorldModelClient::isActive() const
@@ -210,6 +226,7 @@ bool cWorldModelClient::getRobotState(T_ROBOT_STATE &robot, const int robotId, c
 
 std::vector<T_ROBOT_STATE> cWorldModelClient::getTeamMembersExcludingSelf() const
 {
+    TRACE_FUNCTION("");
     std::vector<T_ROBOT_STATE> result;
 
     std::map<int, T_ROBOT_STATE>::const_iterator it;
@@ -219,10 +236,28 @@ std::vector<T_ROBOT_STATE> cWorldModelClient::getTeamMembersExcludingSelf() cons
         {
             if (it->second.teamId == _myTeamId)
             {
+                TRACE("Found teammember %d", it->second.robotId);
                 result.push_back(it->second);
             }
         }
     }
 
     return result;
+}
+
+int cWorldModelClient::getLowestActiveRobotID() const
+{
+    // init with own robot id
+    int lowestActiveRobotID = _myRobotId;
+
+    // iterate over teammates to find lower id
+    for (const auto& teammate: _teamState)
+    {
+        if (teammate.first < lowestActiveRobotID)
+        {
+            lowestActiveRobotID = teammate.first;
+        }
+    }
+
+    return lowestActiveRobotID;
 }

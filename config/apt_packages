@@ -38,3 +38,9 @@ iftop
 doxygen
 graphviz
 git
+qtbase5-dev
+libzmq3-dev
+libncurses-dev
+libqt5svg5-dev
+xsdcxx
+protobuf-compiler

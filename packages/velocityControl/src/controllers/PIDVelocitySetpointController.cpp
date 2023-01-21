@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * PIDVelocitySetpointController.cpp
@@ -66,15 +66,15 @@ bool PIDVelocitySetpointController::calculate(VelocityControlData &data, Velocit
     }
 
     // store all PID terms for diagnostics / plotting
-    data.pidState.x.proportional = _controllerX.terms.proportional;
-    data.pidState.x.integral = _controllerX.terms.integral;
-    data.pidState.x.derivative = _controllerX.terms.derivative;
-    data.pidState.y.proportional = _controllerY.terms.proportional;
-    data.pidState.y.integral = _controllerY.terms.integral;
-    data.pidState.y.derivative = _controllerY.terms.derivative;
-    data.pidState.Rz.proportional = _controllerRz.terms.proportional;
-    data.pidState.Rz.integral = _controllerRz.terms.integral;
-    data.pidState.Rz.derivative = _controllerRz.terms.derivative;
+    //data.pidState.x.proportional = _controllerX.terms.proportional;
+    //data.pidState.x.integral = _controllerX.terms.integral;
+    //data.pidState.x.derivative = _controllerX.terms.derivative;
+    //data.pidState.y.proportional = _controllerY.terms.proportional;
+    //data.pidState.y.integral = _controllerY.terms.integral;
+    //data.pidState.y.derivative = _controllerY.terms.derivative;
+    //data.pidState.Rz.proportional = _controllerRz.terms.proportional;
+    //data.pidState.Rz.integral = _controllerRz.terms.integral;
+    //data.pidState.Rz.derivative = _controllerRz.terms.derivative;
 
     // no failure mode defined
     return true;

@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * LinearVelocitySetpointController.cpp
@@ -35,7 +35,7 @@ bool LinearVelocitySetpointController::calculate(VelocityControlData &data, Velo
     float dRz = deltaPosition.phi;
     resultVelocity.phi = dRz / data.dt;
 
-    TRACE("resultVelocity=(%6.2f, %6.2f, %6.2f)", resultVelocity.x, resultVelocity.y, resultVelocity.phi);
+    TRACE("resultVelocity=(%6.4f, %6.4f, %6.4f)", resultVelocity.x, resultVelocity.y, resultVelocity.phi);
 
     return true;
 }

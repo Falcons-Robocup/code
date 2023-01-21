@@ -1,4 +1,4 @@
-# Copyright 2020 Jan Feitsma (Falcons)
+# Copyright 2020-2022 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 import lmdb
 import msgpack
@@ -7,8 +7,15 @@ import sys
 import struct
 import datetime, time
 import os
+import random
+import posix_ipc
 
-RTDB2_DEFAULT_PATH = "/tmp/rtdb2_storage"
+teamname = os.environ.get('TURTLE5K_TEAMNAME')
+if teamname == "teamB":
+    RTDB2_DEFAULT_PATH = "/tmp/rtdb_teamB"
+else:
+    RTDB2_DEFAULT_PATH = "/tmp/rtdb_teamA"
+
 ENCODING = None
 if sys.version_info[0] > 2:
     ENCODING = 'utf-8'
@@ -41,6 +48,10 @@ def now():
 
 
 class RtDB2Store():
+    """
+    A RtDB2Store operates on a single database. Example: /tmp/rtdb_teamA/1/default/.
+    See also RtDB2MultiStore which can open all databases, example /tmp/rtdb_teamA.
+    """
     def __init__(self, path, readonly=True):
         self.path = path
         self.readonly = readonly
@@ -90,7 +101,7 @@ class RtDB2Store():
         return item
 
 
-    def get_and_clear(self, agent, key):
+    def get_and_clear(self, agent, key, timeout=1.0):
         # Dispatch to appropriate database
         db = "agent" + str(agent)
         if db not in self.rtdb_instances.keys():
@@ -121,6 +132,18 @@ class RtDB2Store():
 
         return list_items
 
+    def getAllSyncItems(self):
+        # Refresh all RtDB instances
+        self.refresh_rtdb_instances()
+
+        # Get all data from all RtDB sync instances in the form of RtDBSyncPoints
+        list_items = []
+        for rtdbInstance in self.rtdb_instances.values():
+            list_items.extend( rtdbInstance.getSyncItems() )
+
+        return list_items
+
+
     def wakeWaitingConsumers(self, agent, key):
         # Get sync database
         agent = "agent_sync" + str(agent)
@@ -128,17 +151,50 @@ class RtDB2Store():
 
             syncDB = self.rtdb_instances[agent]
 
-            # Get list of RtDB2SyncPoint
+            # Get list of semaphores
             data = syncDB.get_and_clear(key)
 
             if data is not None:
 
                 # Free the list of semaphores
-                for rtdb2SyncPoint in data:
+                # data = [{'sem_ID': 1494011372}, {'sem_ID': 6534342742445833997}]
+                for semTuple in data:
                     import posix_ipc
-                    semName = "/%s" % rtdb2SyncPoint["sem_ID"]
+                    semName = "/%s" % semTuple["sem_ID"]
                     sem = posix_ipc.Semaphore(semName)
                     sem.release()
+
+
+    def waitForPut(self, agent, key):
+        # Get sync database
+        agent = "agent_sync" + str(agent)
+        if agent in self.rtdb_instances.keys():
+            syncDB = self.rtdb_instances[agent]
+
+            # Try at most 10 times to find a unique semaphore
+            # See RtDB.cpp
+            semID = 0
+            for i in range(10):
+                semID = random.randint(1, 2147483647) #32bit max_int. Python's sys.maxsize gives 64bit max_int, which is too large for cpp code.
+                semFile = "/dev/shm/sem.%d" % (semID)
+                if not os.path.exists(semFile):
+                    break
+
+            # Create semaphore
+            semName = "/%s" % semID
+            sem = posix_ipc.Semaphore(semName, posix_ipc.O_CREAT | posix_ipc.O_EXCL, initial_value=0)
+
+            # Append semaphore to syncDB
+            syncpointsList = syncDB.append_to_sync_list(key, {'sem_ID': semID})
+
+            # Decrement (lock) the semaphore.
+            # If the semaphore's value is zero, the call blocks until it becomes possible to perform the decrement (semaphores can not become negative)
+            sem.acquire()
+
+            # Cleanup after waking up
+            sem.unlink()
+            sem.close()
+
 
 class RtDB2Instance():
     def __init__(self, store, path, name, readonly):
@@ -164,6 +220,7 @@ class RtDB2Instance():
         self.conn.close()
 
     def put(self, key, value):
+
         # A bit of extra effort: get current item, try to preserve its attributes
         item = self.get(key)
         if item == None:
@@ -223,6 +280,25 @@ class RtDB2Instance():
 
     def get_and_clear(self, key):
         return self.get(key, consume=True)
+
+    def append_to_sync_list(self, key, sem):
+        self.conn.reader_check()
+        txn = self.conn.begin(write=True)
+        value = txn.get( key.encode() )
+
+        if value is None:
+            semList = []
+        else:
+            semList = msgpack.unpackb(value, raw=False)
+
+        semList.append( sem )
+
+        raw_data = msgpack.packb(semList)
+        
+        cursor = txn.cursor()
+        cursor.put( key.encode(), raw_data )
+        cursor.close()
+        txn.commit()
 
     def isSync(self):
         if 'sync' in self.name:
@@ -396,6 +472,15 @@ class RtDBFrameItem(RtDBItem):
 
 
 class RtDBSyncPoint():
+    # Example:
+    # self.agent = 1
+    # self.key = b'ACTION'
+    # self.raw_data = b'\x91\x81\xa6sem_ID\xced\r\x02I'
+    # self.data = [{'sem_ID': 1678574153}]
+    # self.type = 'sync'
+    # self.size = 14
+    # self.keys = [{'sem_ID': 1678574153}]
+    # self.nokeys = 1
     def __init__(self, agent, key, raw_data, data_type):
         self.agent = agent
         self.key = key
@@ -412,3 +497,35 @@ class RtDBSyncPoint():
     def get_data(raw_data):
         data = msgpack.unpackb(raw_data, raw=False)
         return data
+
+class RtDB2MultiStore():
+    """
+    RtDB2MultiStore opens all agents in /tmp/rtdb_teamA/[0-9]
+    """
+    def __init__(self, path, readonly=True):
+        # check base folder exists
+        if not os.path.isdir(path):
+            raise Exception("folder not found: " + path)
+        self.path = path
+        # find agents
+        self.agents = os.listdir(path)
+        # setup instances
+        self.dbname = "default" # TODO: make configurable?
+        self.agentStores = {}
+        for agent in self.agents:
+            # workaround for the database symlink trick
+            if not os.path.islink(os.path.join(path, agent)):
+                storage_path = os.path.join(path, agent, self.dbname)
+                self.agentStores[agent] = RtDB2Store(storage_path, readonly)
+
+    def closeAll(self):
+        for store in self.agentStores.values():
+            store.closeAll()
+
+    def getAllRtDBItems(self):
+        items = []
+        # iterate over agent stores
+        for store in self.agentStores.values():
+            items += store.getAllRtDBItems()
+        return items
+

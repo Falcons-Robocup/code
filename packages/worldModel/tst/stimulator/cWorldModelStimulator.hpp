@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cWorldModelStimulator.hpp
@@ -17,6 +17,11 @@
 class cWorldModelPublic: public cWorldModel
 {
 public:
+    virtual ~cWorldModelPublic()
+    {
+
+    }
+
 	robotAdministrator* getRobotAdministrator()
 	{
 		return &_robotAdmin;
@@ -27,7 +32,7 @@ class cWorldModelStimulator: public cAbstractStimulator
 {
 public:
     cWorldModelStimulator(int agentId, std::string inputFile, std::string outputFile);
-    ~cWorldModelStimulator();
+    virtual ~cWorldModelStimulator();
     
     bool checkFrame(tLogFrame const &frame);
     void tick(rtime const &t);

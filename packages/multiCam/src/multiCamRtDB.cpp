@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 
 #include "multiCam.hpp"
@@ -16,14 +16,13 @@ using std::endl;
 
 int main(int argc, char** argv)
 {
-    INIT_TRACE;
+    INIT_TRACE("multiCam");
 
     int opt = 0;
     bool guiEnabled = true;
 
     int robotIdArg = 0;
-    float frequency = 40.0;
-    while( (opt = getopt(argc, argv, "ci:f:") ) != -1 )
+    while( (opt = getopt(argc, argv, "ci:") ) != -1 )
     {
         switch(opt)
         {
@@ -35,10 +34,6 @@ int main(int argc, char** argv)
         		robotIdArg = atoi(optarg);
         		printf("INFO      : using command argument to set robot id to %d\n", robotIdArg);
         		break;
-            case 'f':
-                frequency = atof(optarg);
-                printf("INFO      : using command argument to set frequency to %.1f\n", frequency);
-                break;
         }
     }
 
@@ -46,7 +41,7 @@ int main(int argc, char** argv)
 
     // attach the observer
     bool cameraCorrectlyMounted = false; // TODO remove, obsolete
-    observerRtDB *observerObj = new observerRtDB(robotIdArg, cameraCorrectlyMounted, 2.5, frequency);
+    observerRtDB *observerObj = new observerRtDB(robotIdArg, cameraCorrectlyMounted, 2.5);
     multCam->attach(observerObj);
 
     // run forever and without any sleep / timed loop, because library

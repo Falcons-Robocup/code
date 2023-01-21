@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionPassToTarget.cpp
@@ -19,7 +19,6 @@ Only the configurables are different, as well as the shoot power (determined by 
 MP_ActionPassToTarget::MP_ActionPassToTarget()
 {
     TRACE("init start");
-    initialize();
     TRACE("init end");
 }
 

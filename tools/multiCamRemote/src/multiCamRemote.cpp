@@ -142,8 +142,8 @@ void multiCamRemote::drawFloorRobot(size_t index) {
 		circle(robots[index], Point(round(xRatio), round(yRatio)), circleRadius, color, thickness);
 
 		// rz = 0 on y-axis, anti-clockwise
-		float xShooter = xRatio + 2.0f * circleRadius * sin(-rz);
-		float yShooter = yRatio - 2.0f * circleRadius * cos(rz); // subtract because negative y is on top and positive y is on bottom
+		float xShooter = xRatio + 4.0f * circleRadius * sin(-rz);
+		float yShooter = yRatio - 4.0f * circleRadius * cos(rz); // subtract because negative y is on top and positive y is on bottom
 		line(robots[index], Point(round(xRatio), round(yRatio)), Point(round(xShooter), round(yShooter)), color, 1);
 	}
 }

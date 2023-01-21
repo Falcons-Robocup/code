@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package Motors;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/type.proto";
+
+enum StatusEnum {
+    UNAVAILABLE = 0;
+    DISABLED    = 1;
+    IDLE        = 2;
+    RUNNING     = 3;
+    ERROR       = 4;
+}
+
+enum ModeEnum {
+    OPERATION = 0;
+    TUNING = 1;
+}
+
+enum CommandEnum {
+	DISABLE		= 0;
+	ENABLE		= 1;
+	RUN			= 2;
+}
+
+enum MotorEnum {
+    DRIVE_MOTOR_LEFT        = 0;
+    DRIVE_MOTOR_RIGHT       = 1;
+    DRIVE_MOTOR_REAR        = 2;
+    BALLHANDLER_MOTOR_LEFT  = 3;
+    BALLHANDLER_MOTOR_RIGHT = 4;
+}
+
+message Mode {
+    ModeEnum drive_motor_left			= 1;
+    ModeEnum drive_motor_right			= 2;
+    ModeEnum drive_motor_rear			= 3;
+    ModeEnum ballhandler_motor_left		= 4;
+    ModeEnum ballhandler_motor_right	= 5;
+}
+
+message Status {
+    StatusEnum drive_motor_left         = 1;
+    StatusEnum drive_motor_right        = 2;
+    StatusEnum drive_motor_rear         = 3;
+    StatusEnum ballhandler_motor_left   = 4;
+    StatusEnum ballhandler_motor_right  = 5;
+}
+
+message Command {
+	CommandEnum drive_motor_left		= 1;
+	CommandEnum drive_motor_right		= 2;
+	CommandEnum drive_motor_rear		= 3;
+	CommandEnum ballhandler_motor_left	= 4;
+	CommandEnum ballhandler_motor_right = 5;
+}
+
+message Motor {
+    MotorEnum motor = 1;
+}
+
+message MotorVector {
+    float drive_motor_left = 1;
+    float drive_motor_right = 2;
+    float drive_motor_rear = 3;
+    float ballhandler_motor_left = 4;
+    float ballhandler_motor_right = 5;
+}
+
+message CurrentControlParameterSet {
+    MotorEnum motor = 1;
+    uint32 p_gain   = 2;
+    uint32 i_gain   = 3;
+}
+
+message VelocityControlParameterSet {
+    MotorEnum motor             = 1;
+    uint32 p_gain               = 2;
+    uint32 i_gain               = 3;
+    uint32 ff_velocity_gain     = 4;
+    uint32 ff_acceleration_gain = 5;
+}
+
+message ElectricalSystemParameters {
+    MotorEnum motor                 = 1;
+    uint32 electrical_resistance    = 2;
+    uint32 electrical_inductance    = 3;
+}
+
+message Object {
+    MotorEnum motor                 = 1;
+    google.protobuf.Field.Kind type = 2;
+    oneof value {
+        string string               = 3;
+        double double               = 4;
+        float float                 = 5;
+        int64 int64                 = 6;
+        uint64 uint64               = 7;
+        int32 int32                 = 8;
+        uint32 uint32               = 9;
+        bool bool                   = 10;
+  }
+}
+
+service Motors {
+    rpc get_status(google.protobuf.Empty) returns(Status);
+
+    rpc get_mode(google.protobuf.Empty) returns(Mode);
+    rpc set_mode(Mode) returns(google.protobuf.Empty);
+    
+    rpc get_command(google.protobuf.Empty) returns(Command);
+    rpc set_command(Command) returns(google.protobuf.Empty);
+
+    rpc get_current_pid_settings(Motor) returns(CurrentControlParameterSet);
+    rpc set_current_pid_settings(CurrentControlParameterSet) returns(google.protobuf.Empty);
+
+    rpc get_velocity_pid_settings(Motor) returns(VelocityControlParameterSet);    
+    rpc set_velocity_pid_settings(VelocityControlParameterSet) returns(google.protobuf.Empty);
+
+    rpc get_electrical_system_parameters(Motor) returns(ElectricalSystemParameters);
+    
+/*    rpc get_object(google.protobuf.Empty) returns(Object); */
+/*    rpc set_object(Object) returns(Object); */ 
+}

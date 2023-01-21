@@ -18,24 +18,27 @@
 
 
 #include "camSysReceive.hpp"
+#include "grabber.hpp"
 
 enum class videoInputMode
 {
     NONE,
     STILL,       // a png or jpg image
     USB,         // /dev/videoX
-    MULTICAM     // Andre's code, default camera 0, can select also cameras 1,2,3
+    MULTICAM,    // Andre's code, default camera 0, can select also cameras 1,2,3
+    PYLONCAM     // Basler Pylon Dart USB camera's, can select also camera 1,2 and 3
 };
 
 
 class multiCamVideoFeed
 {
-
   public:
     multiCamVideoFeed();
     ~multiCamVideoFeed();
     void setMode(videoInputMode const &mode);
     void setStill(std::string const &filename);
+    void setUsb(int device);
+    void setPylon();
     void selectInput(int input);
     cv::Mat getFrame();
     std::string describe();
@@ -48,6 +51,8 @@ class multiCamVideoFeed
     int               _inputSelector = 0;
     std::string       _overrideFile;
     cv::Mat           _overrideFrame;
+    grabber          *_pylonGrab[4];
+    std::thread       _pylonGrabThread[4];
 };
 
 #endif /* MULTICAMVIDEOFEED_HPP_ */

@@ -8,7 +8,7 @@
 createLogdir
 
 # run tests
-fmake --test-only
+fmake -a --test-only
 retval=$?
 
 # exit

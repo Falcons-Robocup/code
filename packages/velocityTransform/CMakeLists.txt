@@ -5,14 +5,13 @@ project(VelocityTransform)
 find_package(Boost COMPONENTS system thread chrono REQUIRED QUIET)
 find_package(Facilities)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
-
-#set the default path for built executables to the "bin" directory
-#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 include_directories("include")
+
+# VelocityTransformClient
+add_library(vtClient src/cVelocityTransformClient.cpp)
 
 # RTDB adapters
 add_library(vtRtdbAdapters src/adapters/cRTDBInputAdapter.cpp
@@ -36,6 +35,6 @@ target_link_libraries(velocityTransform   vtRtdbAdapters
                                           velocityTransformAlgorithms
                                           ${Boost_LIBRARIES}
                                           Tracing
-                                          rtdb2
+                                          FalconsRTDB
                                           FalconsCommon
                                           diagnostics)

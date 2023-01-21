@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2022 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * simworld.cpp
@@ -15,6 +15,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <thread>
+#include <vector>
 
 #include "int/gameDataFactory.hpp"
 #include "int/robotCapabilities.hpp"
@@ -27,27 +28,77 @@
 #include "tracing.hpp"
 #include "ftime.hpp"
 
+#include <mutex>
+#include <condition_variable>
 
-static RTDBConfigAdapter rtdbConfigAdapter;
-static RTDBgameDataAdapter rtdbGameDataAdapter;
-static RTDBMotionAdapter rtdbMotionAdapter;
-static RTDBTimeAdapter rtdbTimeAdapter;
+class Simworld::HeartbeatWaiter
+{
+public:
+    HeartbeatWaiter(TeamID team, RobotID robot, const AbstractTimeAdapter& timeAdapter)
+    {
+        auto waitLoop = [this, team, robot, &timeAdapter]
+            {
+                while (true)
+                {
+                    // wait for a signal to start observing the heartbeat
+                    std::unique_lock<std::mutex> lock(_mutex);
+                    _conditionVar.wait(lock, [this]{ return isRunning(); });
+                    timeAdapter.waitForPutHeartbeatDone(team, robot);
+                    _running = false;
+                    lock.unlock();
+                    // awaken simworld
+                    _conditionVar.notify_all();
+                }
+            };
+        _thread = boost::thread(waitLoop);
+    }
 
+    bool isRunning() const { return _running; }
+    void start() 
+    { 
+        assert(_running == false); // assert precondition, this allows lockless (re)start
+        _running = true;
+        // awaken lambda waiter thread
+        _conditionVar.notify_all(); 
+    }
+private:
+    bool _running = false;
+    
+    std::mutex _mutex;
+    std::condition_variable _conditionVar;
+    boost::thread _thread;
+};
+
+void waitForPut(RtDB2* rtdbConn, const std::string& rtdbKey)
+{
+    rtdbConn->waitForPut(rtdbKey);
+}
 
 Simworld::Simworld()
-: _configAdapter(&rtdbConfigAdapter)
-, _gameDataAdapter(&rtdbGameDataAdapter)
-, _motionAdapter(&rtdbMotionAdapter)
-, _timeAdapter(&rtdbTimeAdapter)
+: _configAdapter(new RTDBConfigAdapter())
+, _gameDataAdapter(new RTDBgameDataAdapter())
+, _motionAdapter(new RTDBMotionAdapter())
+, _timeAdapter(new RTDBTimeAdapter())
 {
 }
 
-void Simworld::initialize()
+Simworld::~Simworld() {}
+
+void Simworld::initialize(const std::string& arbiter, int sizeTeamA, int sizeTeamB)
 {
     TRACE_FUNCTION("");
 
-    _sizeTeamA = 0;
-    _sizeTeamB = 0;
+    _sizeTeamA = sizeTeamA;
+    _sizeTeamB = sizeTeamB;
+    if (arbiter == "autoref")
+    {
+        _autorefEnabled = true;
+    }
+    else
+    {
+        _autorefEnabled = false;
+    }
+    
 
     /* Seed the random number generator */
     std::srand(std::time(0));
@@ -72,8 +123,6 @@ void Simworld::initialize()
 
     /* Create initial simworld game data */
     try {
-        _sizeTeamA = _configAdapter->getSize(TeamID::A);
-        _sizeTeamB = _configAdapter->getSize(TeamID::B);
         auto gameData = GameDataFactory::createGameData(_sizeTeamA, _sizeTeamB);
         _simworldGameData = SimworldGameDataFactory::createCompleteWorld(gameData);
     }
@@ -85,7 +134,7 @@ void Simworld::initialize()
     try
     {
         _tickFrequency = _configAdapter->getTickFrequency();
-        _tick_stepsize_s = _configAdapter->getStepSizeMs() / 1000.0;
+        _tick_stepsize_s = (1.0 / _tickFrequency) * _configAdapter->getSimulationSpeedupFactor();
         _sleeptime_ms = (1000 / _tickFrequency) / (_sizeTeamA + _sizeTeamB + 2); // +1 for gameData, +1 for buffer to ensure we don't miss the simulation tick 
     }
     catch (std::exception& e) {
@@ -117,7 +166,7 @@ void Simworld::initialize()
         }
     }
 
-    if (_configAdapter->getArbiter() == "simworld")
+    if (_autorefEnabled)
     {
         _arbiter.initialize();
     }
@@ -152,8 +201,9 @@ void Simworld::control()
 
     while (true)
     {
-        _timeAdapter->waitForSimulationTick();
-        tprintf("Waking up from SIMULATION_TICK");
+        tprintf("Waiting for HEARTBEAT...");
+        _timeAdapter->waitForHeartbeat();
+        tprintf("Waking up from HEARTBEAT");
 
 
         /* Get tickFrequency and stepSize */
@@ -161,14 +211,19 @@ void Simworld::control()
         {
             _tickFrequency = _configAdapter->getTickFrequency();
 
+
+            _tick_stepsize_s = (1.0 / _tickFrequency) * _configAdapter->getSimulationSpeedupFactor();
+
+
             // prevent divide by zero
             if (_tickFrequency == 0)
             {
-                continue;
+                _sleeptime_ms = 0.0;
             }
-
-            _tick_stepsize_s = _configAdapter->getStepSizeMs() / 1000.0;
-            _sleeptime_ms = (1000 / _tickFrequency) / (_sizeTeamA + _sizeTeamB + 2); // +1 for gameData, +1 for buffer to ensure we don't miss the simulation tick 
+            else
+            {
+                _sleeptime_ms = (1000 / _tickFrequency) / (_sizeTeamA + _sizeTeamB + 2 ); // +1 for thread join time limit, +1 for gameData, +1 for buffer to ensure we don't miss the simulation tick 
+            }
         }
         catch (std::exception& e) {
             std::cout << "Error obtaining tickFrequency and stepSize: " << e.what() << std::endl;
@@ -182,6 +237,7 @@ void Simworld::control()
          *   -> Either by advancing time with _dt, or by loading a newly published simScene
          * - Advance and publish the simulated timestamp
          * - Publish non-robot game data
+         * - WaitForPut for every robot to wait for heartbeat/tick to finish
          * - Publish the game data, per robot
          */
 
@@ -200,7 +256,7 @@ void Simworld::control()
         }
 
         /* Control the arbiter */
-        if (_configAdapter->getArbiter() == "simworld")
+        if (_autorefEnabled)
         {
             auto arbiterGameData = _arbiter.control(_simworldGameData, _tick_stepsize_s);
             _simworldGameData.ball = arbiterGameData.ball;
@@ -292,6 +348,7 @@ void Simworld::control()
             std::this_thread::sleep_for(std::chrono::milliseconds(_sleeptime_ms));
         }
 
+        /* WaitForPut for every robot to wait for heartbeat/tick to finish */
         /* Publish the game data, per robot */
         for (auto& teampair: _simworldGameData.team)
         {
@@ -299,6 +356,21 @@ void Simworld::control()
             for (const auto robotpair: teampair.second)
             {
                 const auto robotID = robotpair.first;
+                auto id = std::make_pair(teamID, robotID);
+                auto itWaiter = _robotHeartbeatWaiters.find(id);
+                if (itWaiter == _robotHeartbeatWaiters.end())
+                {  // the waiter doesn't exist yet
+                    _robotHeartbeatWaiters[id] = std::make_unique<HeartbeatWaiter>(teamID, robotID, *_timeAdapter);
+                }
+                else if (!itWaiter->second->isRunning())
+                {
+                    itWaiter->second->start();
+                }
+                else 
+                { 
+                    TRACE_ERROR("Robot %s (Team %s) heartbeat failed to finish within a tick", 
+                        enum2str(robotID), enum2str(teamID));  
+                }
 
                 try {
                     _gameDataAdapter->publishGameData(_simworldGameData, teamID, robotID);
@@ -306,7 +378,7 @@ void Simworld::control()
                 catch (std::exception& e) {
                     std::cout << "Error publishing robot game data team A: " << e.what() << std::endl;
                 }
-
+    
                 {
                     /* Trace and sleep for this robot to spread robot computations over the available time */
                     TRACE_SCOPE("SLEEP_ROBOT", "");
@@ -315,32 +387,13 @@ void Simworld::control()
             }
         }
 
-    }
-}
+        // give robots time to finish the heartbeat / tick
+        std::this_thread::sleep_for(std::chrono::milliseconds(_sleeptime_ms));
 
-void Simworld::loop()
-{
+        /* Finally, publish SIMULATION_HEARTBEAT_DONE to notify execution that the heartbeat / tick for all robots has finished */
+        _timeAdapter->publishSimulationHeartbeatDone();
 
-    while(true)
-    {
-        int tick_frequency = _configAdapter->getTickFrequency();
+        WRITE_TRACE;
 
-        //consider tick_frequency 0 as "paused"
-        if (tick_frequency == 0)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        }
-        else
-        {
-            int period_ms = (1000 / tick_frequency);
-
-            std::chrono::system_clock::time_point timePoint =
-                std::chrono::system_clock::now() + std::chrono::milliseconds(period_ms);
-
-            _timeAdapter->publishSimulationTick();
-            WRITE_TRACE;
-
-            std::this_thread::sleep_until(timePoint);
-        }
     }
 }

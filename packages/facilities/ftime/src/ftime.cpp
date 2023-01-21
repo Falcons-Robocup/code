@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ftime.cpp
@@ -17,7 +17,7 @@ rtime ftime::now()
 {
     // Check if time is simulated
 
-    auto rtdbConnection = RtDB2Store::getInstance().getRtDB2(COACH_AGENTID);
+    auto rtdbConnection = FalconsRTDBStore::getInstance().getFalconsRTDB(COACH_AGENTID);
     
     T_SIMULATION_TIME simTime;
 

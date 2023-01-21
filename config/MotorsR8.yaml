@@ -1,0 +1,8 @@
+motorPlotEnabled    : False         # Enable Data Dump for plotting
+Kp                  : 10073660      # P-value of PID (max=65536)                                              
+Ki                  : 10654362      # I-value of PID (max=65536)
+Kd                  : 0             # D-value of PID (max=65536)
+iTh                 : 1             # Threshold of using I (iMin) -- (max=65536)
+iMax                : 0             # Limits the maximum I value (max=100000)
+PwmMax              : 500           # PWM Maximum power (max=648)
+PwmMaxDeltaSize     : 147704        # PWM maximum step size per cycle (2.5ms, 400Hz, max=648<<16)

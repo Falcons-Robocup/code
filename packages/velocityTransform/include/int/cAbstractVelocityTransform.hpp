@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cAbstractVelocityTransform.hpp
@@ -18,7 +18,7 @@
 #include <sstream>
 
 #include "tracing.hpp"
-#include "FalconsRtDB2.hpp" // for rtime
+#include "FalconsRTDB.hpp" // for rtime
 
 #include "int/cVelocityTransformMain.hpp"
 

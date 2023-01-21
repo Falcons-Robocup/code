@@ -1,0 +1,6 @@
+*.o
+*.jpg
+202*
+vision
+log*
+FloorFileSize1.yaml

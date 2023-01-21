@@ -1,4 +1,4 @@
-// Copyright 2019-2020 lucas (Falcons)
+// Copyright 2019-2022 lucas (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 
 #include "int/widgets/Field/FieldVideoActor.h"
@@ -11,6 +11,7 @@
 
 #include "opencv2/opencv.hpp"
 #include <dirent.h>
+#include <thread>
 #include <string>
 #include <limits>
 
@@ -22,7 +23,6 @@ static const int BORDER_SIZE = 20;
 
 FieldVideoActor::FieldVideoActor()
 {
-    fill_video_list();
     video_opened = false;
     opened_video_name = "";
     is_background_green = false;
@@ -41,7 +41,34 @@ FieldVideoActor::~FieldVideoActor()
 
 }
 
-void FieldVideoActor::fill_video_list()
+void FieldVideoActor::downloadVideoFiles(int32_t year, int32_t month, int32_t day)
+{
+    std::string sync_command = "sync_topcam_videos " + std::to_string(year) + " " + std::to_string(month) + " " + std::to_string(day);
+    printf("Executing command: %s\n", sync_command.c_str());
+    system(sync_command.c_str());
+    video_opened = false;
+}
+
+void FieldVideoActor::checkDate(double timestamp)
+{
+    time_t rawtime = static_cast<time_t>(timestamp);
+    struct tm* timeinfo = localtime(&rawtime);
+
+    int32_t year = timeinfo->tm_year + 1900;
+    int32_t month = timeinfo->tm_mon + 1;
+    int32_t day = timeinfo->tm_mday;
+
+    std::string date_string = std::to_string(year) + "_" + std::to_string(month) + "_" + std::to_string(day);
+    if (downloaded_dates.find(date_string) == downloaded_dates.end())
+    {
+        downloaded_dates.insert(date_string);   
+
+        std::thread download_thread(&FieldVideoActor::downloadVideoFiles, this, year, month, day);
+        download_thread.detach();
+    }    
+}
+
+void FieldVideoActor::fillVideoList()
 {
     DIR* dir = opendir(VIDEOS_DIRECTORY.c_str());
 
@@ -79,7 +106,7 @@ void FieldVideoActor::setFieldFlip(bool flip)
     flip_fielp = flip;
 }
 
-void FieldVideoActor::open_video_file(double timestamp)
+void FieldVideoActor::openVideoFile(double timestamp)
 {
     double min_dist = std::numeric_limits<double>::max();
     std::vector<VideoFileInfo>::iterator best_video = video_files.begin();
@@ -196,7 +223,9 @@ void FieldVideoActor::updateImage(double timestamp, const CompositeHeightmapName
     {
         if(!video_opened)
         {
-            open_video_file(timestamp);
+            checkDate(timestamp);
+            fillVideoList();
+            openVideoFile(timestamp);
             video_opened = true;
         }
 
@@ -218,13 +247,17 @@ void FieldVideoActor::updateImage(double timestamp, const CompositeHeightmapName
             }
             else
             {
-                open_video_file(timestamp);
+                openVideoFile(timestamp);
                 setGreenBackground();
             }
         }
     }
     else /* Visualize heightmap */
     {
+        // After we're done drawing the heightmap, the background is no longer green
+        // Reset this flag to clear the heightmap when selecting None
+        is_background_green = false;
+
         auto image = hmv.visualizeHeightmap(heightmapName, robotID);
         cv::Mat scaledImage(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3);
         cv::resize(image, scaledImage, scaledImage.size());

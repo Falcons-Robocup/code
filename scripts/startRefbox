@@ -7,7 +7,8 @@
 set -e
 
 PATH_PROCESSING=~/processing-3.5.3
-PATH_REFBOX=${FALCONS_DATA_PATH}/external/refbox2019beta/mslrb2015
+#PATH_REFBOX=${FALCONS_DATA_PATH}/external/refbox2019beta/mslrb2015
+PATH_REFBOX=${FALCONS_DATA_PATH}/external/refbox_2.0_beta/mslrb2015
 
 # require data repo to be uptodate
 if [ ! -d $PATH_REFBOX ]; then
@@ -24,5 +25,5 @@ fi
 
 # run (using options as suggested in README.md)
 cd $PATH_PROCESSING
-./processing-java --sketch=$PATH_REFBOX --output=/tmp/refbox2019 --force --run
+./processing-java --sketch=$PATH_REFBOX --output=/tmp/refbox --force --run
 

@@ -16,6 +16,9 @@ INC = -I../include -I../../../packages/multiCam/include/ -I/usr/include/opencv4
 all: eth $(TARGET)
 	@nice -n 15 ./$(TARGET)
 
+0: eth $(TARGET)
+	@nice -n 15 ./$(TARGET) -0
+
 %.o: ../src/%.cpp Makefile
 	g++ $(CFLAGS) $(INC) -o $@ -c $<
 

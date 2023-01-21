@@ -63,4 +63,13 @@ sshr () {
 source $FALCONS_SCRIPTS_PATH/git-prompt.sh
 PS1='\[\033[01;32m\]\u@\h\[\033[01;31m\] [$(__git_ps1 "%s" )] \[\033[01;34m\]\W\[\033[00m\] \$ '
 
+# Bash completion
+_fdir() {
+    local cur prev words cword
+    _init_completion || return
+    fdirs=`fdir | xargs -n 1 basename | xargs echo`
+    COMPREPLY=( $(compgen -W "$fdirs" -- "$cur") )
+    return 0
+}
+complete -F _fdir fmake fcd
 

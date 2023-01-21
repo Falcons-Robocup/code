@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * obstacleDiscriminator.cpp
@@ -14,9 +14,6 @@
 
 // TODO remove debugging variable:
 //static int measurement_counter = 0;
-
-const static double MIN_ACCEPTED_CONFIDENCE = 0.4; // TODO make configurable
-
 
 static diagGaussian2D createDiagnosticsGaussian(Gaussian2D gaussian2D)
 {
@@ -35,12 +32,19 @@ static diagGaussian2D createDiagnosticsGaussian(Gaussian2D gaussian2D)
     return diagGaussian;
 }
 
-obstacleDiscriminator::obstacleDiscriminator() :
+obstacleDiscriminator::obstacleDiscriminator(WorldModelConfig* wmConfig) :
+    wmConfig(wmConfig),
     currentMeasurementBuffer(0),
     measurements(&(measurementsBuffer[currentMeasurementBuffer])),
-    obstacleMergeThreshold(0.01)
+    obstacleMergeThreshold(wmConfig->getConfiguration().gaussianObstacles.obstacleMergeThreshold),
+    minAcceptedConfidence(wmConfig->getConfiguration().gaussianObstacles.minAcceptedConfidence),
+    parallelAxisDistanceFactor(wmConfig->getConfiguration().gaussianObstacles.parallelAxisDistanceFactor),
+    parallelAxisOffset(wmConfig->getConfiguration().gaussianObstacles.parallelAxisOffset),
+    perpendicularAxisDistanceFactor(wmConfig->getConfiguration().gaussianObstacles.perpendicularAxisDistanceFactor),
+    perpendicularAxisOffset(wmConfig->getConfiguration().gaussianObstacles.perpendicularAxisOffset),
+    maxAllowedVariance(wmConfig->getConfiguration().gaussianBalls.maxAllowedVariance)
 {
-
+    
 }
 
 obstacleDiscriminator::~obstacleDiscriminator()
@@ -56,20 +60,16 @@ int obstacleDiscriminator::numTrackers() const
 
 double obstacleDiscriminator::getMeasurementVarianceParallelAxis(const Vector2D& measurementVec)
 {
-    double distanceFactor = 0.08;
     double size = measurementVec.size();
-    double offset = 0.0;
-
-    return offset + size*distanceFactor;
+    
+    return parallelAxisOffset + size*parallelAxisDistanceFactor;
 }
 
 double obstacleDiscriminator::getMeasurementVariancePerpendicularAxis(const Vector2D& measurementVec)
 {
-    double distanceFactor = 0.12;
     double size = measurementVec.size();
-    double offset = 0.01;
-
-    return offset + size*distanceFactor;
+    
+    return perpendicularAxisOffset + size*perpendicularAxisDistanceFactor;
 }
 
 GaussianMeasurement obstacleDiscriminator::gaussianMeasurementFromObstacleMeasurement(const obstacleMeasurement& measurement)
@@ -173,7 +173,6 @@ void obstacleDiscriminator::removeLostObstacles()
     {
         Matrix22 covariance = it->gaussianPosition.getGaussian2D().getCovariance();
         double maxCovariance = std::max(covariance.matrix[0][0], covariance.matrix[1][1]);
-        double maxAllowedVariance = 16.0;
 
         if(maxCovariance > maxAllowedVariance)
         {
@@ -291,7 +290,7 @@ void obstacleDiscriminator::convertGaussianObstaclesToOutputObstacles()
         double confidence = getGaussianObstacleConfidence(*it);
         obstacle.setConfidence(confidence);
 
-        if(confidence >= MIN_ACCEPTED_CONFIDENCE && !it->isTeammember)
+        if(confidence >= minAcceptedConfidence && !it->isTeammember)
         {
             obstacles.push_back(obstacle);
 #ifdef DEBUG
@@ -302,10 +301,7 @@ void obstacleDiscriminator::convertGaussianObstaclesToOutputObstacles()
             tprintf("BAD  pos=(%6.2f,%6.2f) conf=%.1f", pos.x, pos.y, confidence)
 #endif
         }
-
-//        Matrix22 cov = it->gaussianPosition.getGaussian2D().getCovariance();
-//        printf("M:([%f,%f],[[%f,%f],[%f,%f]],[%f,%f]),\n", pos.x, pos.y, cov.matrix[0][0], cov.matrix[0][1], cov.matrix[1][0], cov.matrix[1][1], velocity.x, velocity.y);
-
+        
         i++;
     }
 }
@@ -316,30 +312,11 @@ void obstacleDiscriminator::performCalculation(rtime const timeNow, const std::v
     removeLostObstacles();
     updateTeammembers(teamMembers);
 
-//    printf("Measurements: %ld\n", measurements->size() + 1);
-//
-//    // This section is to draw the self position as a measurement
-//    if(measurements->size() > 0)
-//    {
-//        for(auto it=gaussianObstacles.begin(); it!=gaussianObstacles.end(); it++)
-//        {
-//            if(it->isTeammember && it->robot_id == (*measurements)[0].measurer_id)
-//            {
-//                Vector2D pos = it->gaussianPosition.getGaussian2D().getMean();
-//                Matrix22 cov = it->gaussianPosition.getGaussian2D().getCovariance();
-//                printf("M:([%f,%f],[[%f,%f],[%f,%f]]),\n", pos.x, pos.y, cov.matrix[0][0], cov.matrix[0][1], cov.matrix[1][0], cov.matrix[1][1]);
-//                break;
-//            }
-//        }
-//    }
-
-//    measurement_counter = 1;
     for(auto it=measurements->begin(); it!=measurements->end(); it++)
     {
         double dt = timeNow - it->gaussianPosition.getTimestamp();
         it->gaussianPosition.estimateMovement(dt);
         addGaussianMeasurement(*it);
-//        measurement_counter++;
     }
 
     swapMeasurementBuffer();

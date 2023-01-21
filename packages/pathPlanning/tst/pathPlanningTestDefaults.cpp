@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * pathPlanningTestDefaults.cpp
@@ -9,6 +9,7 @@
 
 
 // Include testframework
+#include "cEnvironmentField.hpp"
 #include "pathPlanningTestDefaults.hpp"
 #include "ConfigRTDBAdapter.hpp" // configuration
 #include "tracing.hpp"
@@ -16,16 +17,27 @@
 
 // common setup and some config values (we don't want to be sensitive to production yamls)
 
-class ConfigStub : public CFI
+class exConfigStub : public exCFI
+{
+public:
+    bool get(ConfigExecution &c);
+};
+
+bool exConfigStub::get(ConfigExecution &c)
+{
+    c.frequency = 20;
+    return true;
+}
+
+class ppConfigStub : public ppCFI
 {
 public:
     bool get(ConfigPathPlanning &c);
 };
 
-bool ConfigStub::get(ConfigPathPlanning &c)
+bool ppConfigStub::get(ConfigPathPlanning &c)
 {
     TRACE_FUNCTION("");
-    c.nominalFrequency = 20;
     c.obstacleAvoidance.enabled = true;
     c.obstacleAvoidance.distanceScalingFactor = 0.0;
     c.obstacleAvoidance.speedScalingFactor = 1.0;
@@ -52,10 +64,10 @@ bool ConfigStub::get(ConfigPathPlanning &c)
     return true;
 }
 
-PathPlanning pathPlanningSetup(CFI *ci, OutputInterface *output)
+PathPlanning pathPlanningSetup(ppCFI *ppci, exCFI *exci, OutputInterface *output)
 {
     TRACE_FUNCTION("");
-    auto pp = PathPlanning(ci, NULL, output);
+    auto pp = PathPlanning(ppci, exci, NULL, output);
     pp.prepare();
     pp.data.robot.status = robotStatusEnum::INPLAY;
     pp.data.robot.hasBall = false;
@@ -69,8 +81,12 @@ PathPlanning pathPlanningSetup(CFI *ci, OutputInterface *output)
 PathPlanning defaultPathPlanningSetup()
 {
     TRACE_FUNCTION("");
-    ConfigStub configStub;
-    return pathPlanningSetup(&configStub);
+
+    cEnvironmentField::getInstance().loadConfig("cEnvironment12x18");
+
+    ppConfigStub configStubPP;
+    exConfigStub configStubEx;
+    return pathPlanningSetup(&configStubPP, &configStubEx);
 }
 
 PathPlanning yamlPathPlanningSetup(std::string const &yamlfilename, OutputInterface *output)
@@ -78,7 +94,8 @@ PathPlanning yamlPathPlanningSetup(std::string const &yamlfilename, OutputInterf
     TRACE_FUNCTION("");
     ConfigRTDBAdapter<ConfigPathPlanning> cadp(CONFIG_PATHPLANNING, true); // test mode: no tprintf and no wait_for_put thread
     cadp.loadYAML(pathToConfig() + "/" + yamlfilename);
-    return pathPlanningSetup(&cadp, output);
+    exConfigStub configStubEx;
+    return pathPlanningSetup(&cadp, &configStubEx, output);
 }
 
 PathPlanning ConfigPathPlanningSetup(ConfigPathPlanning const &config, OutputInterface *output)
@@ -86,7 +103,8 @@ PathPlanning ConfigPathPlanningSetup(ConfigPathPlanning const &config, OutputInt
     TRACE_FUNCTION("");
     ConfigInterface<ConfigPathPlanning> cfi;
     cfi.set(config);
-    return pathPlanningSetup(&cfi, output);
+    exConfigStub configStubEx;
+    return pathPlanningSetup(&cfi, &configStubEx, output);
 }
 
 ConfigPathPlanning loadYAML(std::string const &yamlfilename)

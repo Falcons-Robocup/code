@@ -1,11 +1,14 @@
-// Copyright 2015-2020 Jan Feitsma (Falcons)
+// Copyright 2015-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include <QApplication>
+#include <QFile>
+#include <QTextStream>
 #include <GL/glut.h>
 #include <signal.h>
 #include <string>
 
 #include "tracing.hpp"
+#include "StackTracer.hpp"
 
 // Internal:
 #include "int/MainWindow.h"
@@ -17,9 +20,12 @@ QApplication* application = NULL;
 
 int main(int argc, char *argv[])
 {
+    // prints stack trace in case of an error
+    StackTracer stack_tracer;
+
     string nodename = "visualizer";
 
-    INIT_TRACE;
+    INIT_TRACE("visualizer");
 
     application = new QApplication(argc, argv);
     glutInit(&argc,argv);
@@ -41,10 +47,16 @@ int main(int argc, char *argv[])
     Visualizer::MainWindow * visualizerWindow = new Visualizer::MainWindow(pbControl);
     visualizerWindow->show();
 
-    // Setting up fusion
-    printf("setStyle fusion\n"); fflush(stdout);
-    TRACE("setStyle fusion");
-    application->setStyle("fusion");
+    // // Setting up fusion
+    // printf("setStyle fusion\n"); fflush(stdout);
+    // TRACE("setStyle fusion");
+    // application->setStyle("fusion");
+
+    // set stylesheet
+    QFile file(":/dark/stylesheet.qss");
+    file.open(QFile::ReadOnly | QFile::Text);
+    QTextStream stream(&file);
+    application->setStyleSheet(stream.readAll());
 
     // Starting gui loop
     TRACE("start gui loop");

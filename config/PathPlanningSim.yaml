@@ -1,4 +1,3 @@
-nominalFrequency:                         20
 numExtraSettlingTicks:                    1
 obstacleAvoidance:
     enabled:                              true
@@ -23,14 +22,16 @@ boundaries:
 slowFactor:                               0.50
 forwardDriving:
     withoutBall:
-        enabled:                          true # maximize speed
+        enabled:                          false # maximize speed
         minimumDistance:                  1.5
     withBall:
         enabled:                          true
         minimumDistance:                  0.9
     radiusRobotToBall:                    0.26
-    applyLimitsToBall:                    false # false: simulate perfect ballHandling; true: probably more realistic
+    applyLimitsToBall:                    true # false: simulate perfect ballHandling; true: probably more realistic
 deadzone:
     enabled:                              false
     toleranceXY:                          0.01
     toleranceRz:                          0.001
+tokyoDrift:
+    toleranceRz:                          1.0 # if deltaPos.Rz > tokyoDrift.toleranceRz -> do tokyo drift; otherwise do normal rotation

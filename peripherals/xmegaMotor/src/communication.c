@@ -226,7 +226,7 @@ void taskCommunication() {
 		} else if ( rxPacket.command == CMD_SET_DRV8301 ) {
 			// configure the drv8301 motor driver
 			setDrv8301( rxPacket.pl.u16[0], rxPacket.pl.u16[1] );
-			if( rxPacket.payloadSize != 2 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
+			if( rxPacket.payloadSize != 4 ) { error |= COMMUNICATION_ERROR_TO_BOARD_PAYLOADSIZE; }
 		} else if ( rxPacket.command == CMD_GET_DRV8301 ) {
 			// read back both status registers and both control registers of the drv8301 motor controller
 			txPacket.responseType = RESP_DRV8301;

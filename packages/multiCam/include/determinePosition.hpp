@@ -1,45 +1,43 @@
-// Copyright 2018 Andre Pool (Falcons)
+// Copyright 2018-2022 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2014-2018 Andre Pool
+// Copyright 2014-2022 Andre Pool and Geraldo Santiago
 // SPDX-License-Identifier: Apache-2.0
 
 #ifndef DETERMINEPOSITION_HPP
 #define DETERMINEPOSITION_HPP
 
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "fieldLut.hpp"
 #include <iostream>
+#include <mutex>
+#include <opencv2/opencv.hpp>
+
+#include "fieldLut.hpp"
 #include "configurator.hpp"
 #include "linePointDetection.hpp"
 #include "robotFloor.hpp"
 #include "observer.hpp"
 
-#include <mutex>
-
 // used as intermediate to export positions to ros
 #define NUMPOSITION 10
 
-typedef struct{
+typedef struct {
 	float x[NUMPOSITION]; // range -(9+1) to (9+1) meter, center point is 0
 	float y[NUMPOSITION]; // range -(6+1) to (6+1) meter, center point is 0
 	float rz[NUMPOSITION]; // range 0 to 360 degrees, 0 is on x axis, anti clock wise
 	float score[NUMPOSITION]; // range 0 (good) to 1 (bad), roughly below 0.2 is probably location lock
-	float fps[NUMPOSITION]; // APOX todo: if available move fps to general ros WorldsSensing api
+	float fps[NUMPOSITION]; // APOX TODO: if available move fps to general ros WorldsSensing api
 	float age[NUMPOSITION];
 	float lastActive[NUMPOSITION];
 	int linePoints[NUMPOSITION];
 	size_t numPositions;
 } detPosStRosVect;
 
-class determinePosition
-{
+class determinePosition {
 
 private:
 
 	struct th {
 		pthread_t thread;
-		determinePosition * classContext;
+		determinePosition *classContext;
 		detPosSt determinedPosition;
 		detPosSt start;
 		detPosSt found;
@@ -71,7 +69,7 @@ private:
 
 	positionStDbl createRandomPosition(positionStDbl previousPos, bool useRecentPos);
 	detPosSt optimizePosition(positionStDbl startPos, bool localSearch, cv::Ptr<cv::optim::DownhillSolver> solverLUT);
-	static void* processOneLocation( void *id );
+	static void* processOneLocation(void *id);
 	void goodEnough(); // determine the best position (if any)
 	void notifyNewPos();
 
@@ -82,10 +80,10 @@ public:
 	std::vector<detPosSt> getLocList();
 
 	detPosSt getGoodEnoughLoc(); // get the last know position or none
-	detPosSt getGoodEnoughLocExport( );
-	detPosSt getGoodEnoughLocExportRos( );
+	detPosSt getGoodEnoughLocExport();
+	detPosSt getGoodEnoughLocExportRos();
 
-	// only for ros
+	// only for ROS
 	void attach(observer *observer);
 	void detach(observer *observer);
 	detPosStRosVect getFLoorLocationsRos();

@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBConfigAdapter.cpp
@@ -13,15 +13,15 @@
 #include <stdexcept>
 #include <thread>
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "tracing.hpp"
 
 RTDBConfigAdapter::RTDBConfigAdapter()
 {
     // Fetch configuration from yaml file
-    //std::string configFile = determineConfig("simulation");
-    _configAdapter = new ConfigRTDBAdapter<T_CONFIG_SIMULATION>(CONFIG_SIMULATION);
-    _configAdapter->load();
+    std::string configFile = determineConfig("execution");
+    _configAdapter = new ConfigRTDBAdapter<T_CONFIG_EXECUTION>(CONFIG_EXECUTION);
+    _configAdapter->loadYAML(configFile);
 }
 
 RTDBConfigAdapter::~RTDBConfigAdapter()
@@ -29,51 +29,26 @@ RTDBConfigAdapter::~RTDBConfigAdapter()
     delete _configAdapter;
 }
 
-std::string RTDBConfigAdapter::getArbiter() const
+float RTDBConfigAdapter::getTickFrequency() const
 {
     TRACE_FUNCTION("");
-    T_CONFIG_SIMULATION config;
+    T_CONFIG_EXECUTION config;
     _configAdapter->get(config);
-    tprintf("get CONFIG_SIMULATION arbiter=%s", config.arbiter.c_str());
-    return config.arbiter;
+    return config.frequency;
 }
 
-int RTDBConfigAdapter::getSize(const TeamID teamID) const
+float RTDBConfigAdapter::getSimulationSpeedupFactor() const
 {
     TRACE_FUNCTION("");
-
-    T_CONFIG_SIMULATION config;
+    T_CONFIG_EXECUTION config;
     _configAdapter->get(config);
-
-    int teamSize = 0;
-    if (teamID == TeamID::A)
-    {
-        teamSize = config.sizeTeamA;
-        tprintf("get CONFIG_SIMULATION teamID=A teamSize=%d", teamSize);
-    }
-    else
-    {
-        teamSize = config.sizeTeamB;
-        tprintf("get CONFIG_SIMULATION teamID=B teamSize=%d", teamSize);
-    }
-
-    return teamSize;
+    return config.simulationSpeedupFactor;
 }
 
-int RTDBConfigAdapter::getTickFrequency() const
+std::string RTDBConfigAdapter::getTickFinishRtdbKey() const
 {
     TRACE_FUNCTION("");
-    T_CONFIG_SIMULATION config;
+    T_CONFIG_EXECUTION config;
     _configAdapter->get(config);
-    //tprintf("get CONFIG_SIMULATION tickFrequency=%d", config.tick_frequency);
-    return config.tick_frequency;
-}
-
-int RTDBConfigAdapter::getStepSizeMs() const
-{
-    TRACE_FUNCTION("");
-    T_CONFIG_SIMULATION config;
-    _configAdapter->get(config);
-    tprintf("get CONFIG_SIMULATION stepSize=%d", config.tick_stepsize_ms);
-    return config.tick_stepsize_ms;
+    return config.tickFinishRtdbKey;
 }

@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBTimeAdapter.cpp
@@ -14,21 +14,16 @@
 
 #include "tracing.hpp"
 
-void RTDBTimeAdapter::waitForSimulationTick() const
+void RTDBTimeAdapter::waitForHeartbeat() const
 {
     TRACE_FUNCTION("");
     
     auto rtdbConnection = getRTDBConnection();
-    rtdbConnection->waitForPut(SIMULATION_TICK);
-}
-
-void RTDBTimeAdapter::publishSimulationTick() const
-{
-    TRACE_FUNCTION("");
-    
-    auto rtdbConnection = getRTDBConnection();
-    T_SIMULATION_TICK tick = 0;
-    rtdbConnection->put(SIMULATION_TICK, &tick);
+    auto r = rtdbConnection->waitForPut(HEARTBEAT);
+    if (r != RTDB2_SUCCESS)
+    {
+        throw std::runtime_error("Error during WaitForPut HEARTBEAT");
+    }
 }
 
 void RTDBTimeAdapter::publishSimulationTime (const rtime& simTime) const
@@ -44,4 +39,23 @@ void RTDBTimeAdapter::publishSimulationTime (const rtime& simTime) const
     {
         throw std::runtime_error("Error writing SIMULATION_TIME to RtDB");
     }
+}
+
+void RTDBTimeAdapter::publishSimulationHeartbeatDone() const
+{
+    TRACE_FUNCTION("");
+    T_SIMULATION_HEARTBEAT_DONE simHBDone = 0;
+
+    auto rtdbConnection = getRTDBConnection();
+    auto r = rtdbConnection->put(SIMULATION_HEARTBEAT_DONE, &simHBDone);
+    if (r != RTDB2_SUCCESS)
+    {
+        throw std::runtime_error("Error writing SIMULATION_HEARTBEAT_DONE to RtDB");
+    }
+}
+
+void RTDBTimeAdapter::waitForPutHeartbeatDone(TeamID teamID, RobotID robotID) const
+{
+    auto rtdbConnection = getRTDBConnection(teamID, robotID);
+    rtdbConnection->waitForPut(ACTION_RESULT);
 }

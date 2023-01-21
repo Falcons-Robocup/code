@@ -1,0 +1,34 @@
+#!/bin/bash -e
+
+sudo docker build ./ -f ./Dockerfile -t mldiag
+
+user_id=`id -u $USER`
+
+my_xauth=/run/user/$user_id/gdm/Xauthority
+
+rm -f $my_xauth
+# ls -tlr $my_xauth
+# xauth with complain unless ~/.Xauthority exists
+
+rm -f $HOME/.Xauthority # make clear Xauthority from /run/user/user_id/gdm is used
+
+touch $my_xauth
+
+# only this one key is needed for X11 over SSH 
+xauth -f $my_xauth generate :0 . trusted
+
+# generate our own key, xauth requires 128 bit hex encoding
+# xauth add ${HOST}:0 . $(xxd -l 16 -p /dev/urandom)
+
+# To view a listing of the .Xauthority file, enter the following 
+xauth list 
+
+# use .Xauthority instead of xhost +local:
+sudo docker run -i -t \
+   -e DISPLAY=${DISPLAY} \
+   -e XDG_RUNTIME_DIR=/tmp/runtime-root \
+   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+   -v $my_xauth \
+   --privileged \
+   --network host \
+   mldiag:latest 

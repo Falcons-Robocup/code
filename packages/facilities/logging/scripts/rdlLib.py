@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Jan Feitsma (Falcons)
+# Copyright 2019-2022 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 import struct
 import msgpack
@@ -8,7 +8,6 @@ from copy import copy
 
 import falconspy
 from rtdb2 import RtDBTime, RtDBItem, RtDBFrameItem
-
 
 class RDLFrame:
     def __init__(self, raw_frame, is_compressed):
@@ -53,8 +52,24 @@ class RDLHeader:
         self.filename = str(raw_header[4], "utf-8")
         self.frequency = raw_header[5]
 
+        if (len(raw_header) >= 8):
+            self.commitCode = str(raw_header[6], "utf-8")
+            self.commitTeamplayData = str(raw_header[7], "utf-8")
+        else:
+            self.commitCode = 'old'
+            self.commitTeamplayData = 'old'
+
+
     def serialize(self):
-        return [self.hostname, [int(self.creation.tv_sec), int(self.creation.tv_usec)], self.compression, self.duration, self.filename, self.frequency]
+        return [    self.hostname, 
+                    [   int(self.creation.tv_sec), 
+                        int(self.creation.tv_usec) ], 
+                    self.compression, 
+                    self.duration, 
+                    self.filename, 
+                    self.frequency,
+                    self.commitCode,
+                    self.commitTeamplayData ]
 
 class RDLFile:
     def __init__(self, filename):

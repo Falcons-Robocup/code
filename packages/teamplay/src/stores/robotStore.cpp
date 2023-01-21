@@ -1,4 +1,4 @@
-// Copyright 2017-2020 Coen Tempelaars (Falcons)
+// Copyright 2017-2022 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * robotStore.cpp
@@ -127,7 +127,9 @@ robot robotStore::getOwnRobot() const
     }
     else
     {
-        TRACE("getOwnRobot: ") << own_robot->str();
+        // Disabled due to (useless) TRACE pollution.
+        // Please re-enable if deemed useful.
+        //TRACE("getOwnRobot: ") << own_robot->str();
     }
 
     return *own_robot;
@@ -161,8 +163,10 @@ std::vector<robot> robotStore::getAllRobotsExclGoalie() const
     std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
             [&](const robot& it){ return (it.getRole() != treeEnum::R_GOALKEEPER); });
 
-    std::for_each(retVal.begin(), retVal.end(),
-            [&](const robot& it){ TRACE("getAllRobotsExclGoalie: ") << it.str(); });
+    // Disabled due to (useless) TRACE pollution.
+    // Please re-enable if deemed useful.
+    //std::for_each(retVal.begin(), retVal.end(),
+    //        [&](const robot& it){ TRACE("getAllRobotsExclGoalie: ") << it.str(); });
     return retVal;
 }
 
@@ -173,8 +177,10 @@ std::vector<robot> robotStore::getAllRobotsExclOwnRobot() const
     std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
             [&](const robot& it){ return !it.isOwnRobot(); });
 
-    std::for_each(retVal.begin(), retVal.end(),
-            [&](const robot& it){ TRACE("getAllRobotsExclOwnRobot: ") << it.str(); });
+    // Disabled due to (useless) TRACE pollution.
+    // Please re-enable if deemed useful.
+    //std::for_each(retVal.begin(), retVal.end(),
+    //        [&](const robot& it){ TRACE("getAllRobotsExclOwnRobot: ") << it.str(); });
     return retVal;
 }
 
@@ -233,8 +239,10 @@ std::vector<robot> robotStore::getAllRobotsInArea(const fieldArea& area) const
     std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
             [&](const robot& it){ return it.isInArea(area); });
 
-    std::for_each(retVal.begin(), retVal.end(),
-            [&](const robot& it){ TRACE("getAllRobotsInArea: ") << it.str(); });
+    // Disabled due to (useless) TRACE pollution.
+    // Please re-enable if deemed useful.
+    //std::for_each(retVal.begin(), retVal.end(),
+    //        [&](const robot& it){ TRACE("getAllRobotsInArea: ") << it.str(); });
     return retVal;
 }
 
@@ -245,8 +253,10 @@ std::vector<robot> robotStore::getAllRobotsExclGoalieInArea (const fieldArea& ar
     std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
             [&](const robot& it){ return (it.getRole() != treeEnum::R_GOALKEEPER) && it.isInArea(area); });
 
-    std::for_each(retVal.begin(), retVal.end(),
-            [&](const robot& it){ TRACE("getAllRobotsExclGoalieInArea: ") << it.str(); });
+    // Disabled due to (useless) TRACE pollution.
+    // Please re-enable if deemed useful.
+    //std::for_each(retVal.begin(), retVal.end(),
+    //        [&](const robot& it){ TRACE("getAllRobotsExclGoalieInArea: ") << it.str(); });
     return retVal;
 }
 
@@ -257,8 +267,10 @@ std::vector<robot> robotStore::getAllRobotsExclOwnRobotInArea(const fieldArea& a
     std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
             [&](const robot& it){ return !it.isOwnRobot() && it.isInArea(area); });
 
-    std::for_each(retVal.begin(), retVal.end(),
-            [&](const robot& it){ TRACE("getAllRobotsExclOwnRobotInArea: ") << it.str(); });
+    // Disabled due to (useless) TRACE pollution.
+    // Please re-enable if deemed useful.
+    //std::for_each(retVal.begin(), retVal.end(),
+    //        [&](const robot& it){ TRACE("getAllRobotsExclOwnRobotInArea: ") << it.str(); });
     return retVal;
 }
 
@@ -269,8 +281,10 @@ std::vector<robot> robotStore::getAllRobotsExclOwnRobotExclGoalieInArea(const fi
     std::copy_if(_all_active_robots.begin(), _all_active_robots.end(), std::back_inserter(retVal),
             [&](const robot& it){ return !it.isOwnRobot() && (it.getRole() != treeEnum::R_GOALKEEPER) && it.isInArea(area); });
 
-    std::for_each(retVal.begin(), retVal.end(),
-            [&](const robot& it){ TRACE("getAllRobotsExclOwnRobotExclGoalieInArea: ") << it.str(); });
+    // Disabled due to (useless) TRACE pollution.
+    // Please re-enable if deemed useful.
+    //std::for_each(retVal.begin(), retVal.end(),
+    //        [&](const robot& it){ TRACE("getAllRobotsExclOwnRobotExclGoalieInArea: ") << it.str(); });
     return retVal;
 }
 
@@ -309,10 +323,10 @@ boost::optional<robot> robotStore::getRobotWithRole (const treeEnum& r) const
             [&](const robot& it){ return it.getRole() == r; });
 
     if (result != _all_active_robots.end())  // found
-            {
+    {
         TRACE("getRobotWithRole ") << role(r).str() << ": " << result->str();
         return *result;
-            }
+    }
     else  // not found
     {
         TRACE("getRobotWithRole ") << role(r).str() << ": not found";

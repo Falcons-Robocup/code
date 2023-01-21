@@ -10,7 +10,7 @@
 #include "genericFilter2nd.h"
 
 #define HARDWARE_VERSION 0x0002
-#define SOFTWARE_VERSION 0x0016
+#define SOFTWARE_VERSION 0x0018
 
 #define DEVICE_ID 0x0042
 #define VENDOR_ID 0x0009

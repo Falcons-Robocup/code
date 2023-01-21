@@ -160,9 +160,21 @@ if [ $WIFI_ONLINE = 1 ]; then
         current_pip_packages=$(${pipcommand} list 2>/dev/null | awk '{print $1}')
         MISSING_PACKAGES=""
         for p in $(cat ${FALCONS_CODE_PATH}/config/${pipcommand}_packages) ; do
+            package_and_version=$(echo -n "$p" | sed -n -r "s/(\S*?)\[\S*\](\W*)(.*)|(.*)$/\1 \2 \3 \4/p")
+            arr_package_and_version=($package_and_version)
+            p=${arr_package_and_version[0]}
             echo "$current_pip_packages" | grep -qi "^$p$"
             if [ $? != 0 ]; then
                 MISSING_PACKAGES="$MISSING_PACKAGES $p"
+            elif [ ! -z "${arr_package_and_version[2]}" ] ; then
+                # check version of package
+                cur_version="$(${pipcommand} list 2>/dev/null | grep $p | awk '{print $2}')"
+                # echo ${arr_package_and_version[1]} # order expression (e.g '>=')
+                min_version=${arr_package_and_version[2]}
+                # assuming version specified in config is minimum version
+                if [[ "$min_version" > "$cur_version" ]] ; then
+                    MISSING_PACKAGES="$MISSING_PACKAGES $p>=$min_version"
+                fi
             fi
         done
         if [ ! -z "$MISSING_PACKAGES" ]; then
@@ -199,10 +211,6 @@ if [ ! -f /etc/NetworkManager/system-connections/Falcons_A_a* ]; then
     errorExit "Falcons_A_a not configured in NetworkManager"
     # TODO check that Falcons_A_a is not configured with automatic DHCP
 fi
-echo "OK"
-
-echo -n "checking rtdb-related requirements... "
-${FALCONS_CODE_PATH}/packages/facilities/rtdb/setup.sh -v || errorExit "something wrong with rtdb installation" "run the following command to fix:\ncd packages/facilities/rtdb ; ./setup.sh"
 echo "OK"
 
 # TODO: is this still needed? if so, put it in setup.sh?
@@ -258,7 +266,17 @@ if [ "$onRobot" = 1 ]; then
 fi
 
 
-echo "Restart terminal if any error still exists..."
+if [ "$onRobot" = 0 ]; then
+    echo -n "checking KST Plot Viewer configuration ... "
+    if [ ! -f ~/.local/share/mime/packages/kstplot.xml ]; then
+        errorExit "KST Plot Viewer is not installed" "run the following command to fix:\npython3 -c 'import falconspy; import kstplot; kstplot.install()'"
+    fi
+    echo "OK"
+fi
+
+echo "If any errors still exists try:
+1. Run: python3 ~/falcons/data/makeLibraries.py
+2. Restart terminal"
 
 # TODO check symlink for hosts
 

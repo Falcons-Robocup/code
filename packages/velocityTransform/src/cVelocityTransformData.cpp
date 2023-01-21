@@ -17,6 +17,16 @@ cVelocityTransformData::cVelocityTransformData()
 {
 }
 
+
+void cVelocityTransformData::setConfigAdapter(ConfigRTDBAdapter<ConfigVelocityTransform> *vtConfigAdapter)
+{
+    _mtx.lock();
+    _vtConfigAdapter = vtConfigAdapter;
+    _mtx.unlock();
+}
+
+
+// RobotData
 void cVelocityTransformData::getTargetRobotData(vt_robot_data& targetRobotData)
 {
     _mtx.lock();

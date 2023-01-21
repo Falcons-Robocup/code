@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ConfigAdapter.cpp
@@ -22,7 +22,7 @@ ConfigAdapter::ConfigAdapter()
 {
     TRACE(">");
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, getTeamChar());
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, getTeamChar());
     _updateThread = boost::thread(&ConfigAdapter::loopUpdate, this);
     _config = {};
     TRACE("<");

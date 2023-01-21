@@ -1,0 +1,34 @@
+#!/usr/bin/python3
+
+from argparse import ArgumentParser, RawTextHelpFormatter
+import rtdb2
+
+
+description = "Inject a refbox command into the refbox RTDB"
+example = """example:
+  refboxPutCommand --command START
+  refboxPutCommand --command FREEKICK --team A
+  refboxPutCommand --command IS_ALIVE --team A --arguments 2
+"""
+
+# Parse arguments
+parser = ArgumentParser(description=description, epilog=example, formatter_class=RawTextHelpFormatter)
+parser.add_argument("-c", "--command", required=True)
+parser.add_argument("-a", "--arguments", default="")
+parser.add_argument("-t", "--team", choices={"A", "B"})
+args = parser.parse_args()
+
+# Send the command to both teams
+agent_id = 0
+for team_db in {"A", "B"}:
+    rtdb_path = f"/tmp/rtdb_refbox_{team_db}/{agent_id}/default"
+    rtdb_store = rtdb2.RtDB2Store(rtdb_path, readonly=False)
+
+    if args.team:
+        target_team = "US" if args.team == team_db else "THEM"
+    else:
+        target_team = "ALL"
+
+    rtdb_store.put(agent_id, "COMMAND", args.command)
+    rtdb_store.put(agent_id, "ARGUMENTS", args.arguments)
+    rtdb_store.put(agent_id, "TARGETTEAM", target_team)

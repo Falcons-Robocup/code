@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kst version="2.0">
+    <data>
+        <source reader="ASCII file" updateType="0" file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt">
+            <properties vector="age" interpretation="3" delimiters="#" columntype="2" columndelimiter=";" headerstart="1" fields="0" readfields="true" usedot="true" columnwidthisconst="false" readunits="false" units="0" limitFileBuffer="false" limitFileBufferSize="0" useThreads="0" asciiTimeFormat="hh:mm:ss.zzz" dataRate="1" offsetDateTime="false" offsetFileDate="true" offsetRelavive="false" dateTimeOffset="2020-11-12T11:10:07.497Z" relativeOffset="0" nanValue="2" updateType="0"/>
+        </source>
+    </data>
+    <variables>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="age" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" initialVNum="1" initialXNum="1"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_BALL_POSSESSION." start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="ballPossession" initialVNum="3" initialXNum="25"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_FEEDBACK.[0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_left.angle.feedback" initialVNum="4" initialXNum="37"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_FEEDBACK.[1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_right.angle.feedback" initialVNum="5" initialXNum="49"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_FEEDBACK.[2]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_left.velocity.feedback" initialVNum="6" initialXNum="61"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_FEEDBACK.[3]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_right.velocity.feedback" initialVNum="7" initialXNum="73"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_MOTOR_SETPOINT.[0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="enabled.setpoint" initialVNum="8" initialXNum="85"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_MOTOR_SETPOINT.[1][0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_left.angle.setpoint" initialVNum="9" initialXNum="97"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_MOTOR_SETPOINT.[1][1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_right.angle.setpoint" initialVNum="10" initialXNum="109"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_MOTOR_SETPOINT.[1][2]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_left.velocity.setpoint" initialVNum="11" initialXNum="121"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="BALLHANDLERS_MOTOR_SETPOINT.[1][3]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_right.velocity.setpoint" initialVNum="12" initialXNum="133"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_BALLHANDLING.['ballPossession']" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.ballPossession" initialVNum="13" initialXNum="145"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_BALLHANDLING.['left']['angleFraction']" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_left.angleFraction" initialVNum="14" initialXNum="157"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_BALLHANDLING.['left']['enabled']" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_left.enabled" initialVNum="15" initialXNum="169"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_BALLHANDLING.['left']['lifted']" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_left.lifted" initialVNum="16" initialXNum="181"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_BALLHANDLING.['left']['velocitySetpoint']" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_left.velocitySetpoint" initialVNum="17" initialXNum="193"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_BALLHANDLING.['right']['angleFraction']" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_right.angleFraction" initialVNum="18" initialXNum="205"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_BALLHANDLING.['right']['enabled']" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_right.enabled" initialVNum="19" initialXNum="217"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_BALLHANDLING.['right']['lifted']" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_right.lifted" initialVNum="20" initialXNum="229"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_BALLHANDLING.['right']['velocitySetpoint']" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="bh_right.velocitySetpoint" initialVNum="21" initialXNum="241"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_angle'][0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_left.angle" initialVNum="22" initialXNum="253"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_angle'][1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_right.angle" initialVNum="23" initialXNum="265"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_tacho_zero'][0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_left.tacho_zero" initialVNum="24" initialXNum="277"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_tacho_zero'][1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_right.tacho_zero" initialVNum="25" initialXNum="289"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_tacho'][0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_left.tacho" initialVNum="26" initialXNum="301"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_tacho'][1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_right.tacho" initialVNum="27" initialXNum="313"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_pid_output'][0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_left.pid_output" initialVNum="28" initialXNum="325"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_pid_output'][1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_right.pid_output" initialVNum="29" initialXNum="337"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_error'][0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_left.error" initialVNum="30" initialXNum="349"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_error'][1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_right.error" initialVNum="31" initialXNum="361"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_integral'][0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_left.integral" initialVNum="32" initialXNum="373"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_integral'][1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_right.integral" initialVNum="33" initialXNum="385"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_pwm'][0]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_left.pwm" initialVNum="34" initialXNum="397"/>
+        <datavector file="/home/robocup/falcons/code/packages/facilities/diagnostics/py/cpd/../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" fileRelative="../../../../../../../../../var/tmp/cpd/plotBallHandlers/plotBallHandlers.txt" field="DIAG_PERIPHERALSINTERFACE.['bh_pwm'][1]" start="0" count="-1" skip="-1" doAve="false" startUnits="" rangeUnits="" descriptiveNameIsManual="true" descriptiveName="diag.bh_right.pwm" initialVNum="35" initialXNum="409"/>
+    </variables>
+    <objects/>
+    <relations>
+        <curve xvector="age (V1)" yvector="bh_left.angle.setpoint (V9)" color="#fce94f" alpha="255" headcolor="#fce94f" headalpha="255" barfillcolor="#ff00ff" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="1"/>
+        <curve xvector="age (V1)" yvector="bh_left.angle.feedback (V4)" color="#5c3566" alpha="255" headcolor="#5c3566" headalpha="255" barfillcolor="#105010" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="2"/>
+        <curve xvector="age (V1)" yvector="bh_right.angle.setpoint (V10)" color="#fce94f" alpha="255" headcolor="#fce94f" headalpha="255" barfillcolor="#ff0000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="5"/>
+        <curve xvector="age (V1)" yvector="bh_right.angle.feedback (V5)" color="#204a87" alpha="255" headcolor="#204a87" headalpha="255" barfillcolor="#000000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="6"/>
+        <curve xvector="age (V1)" yvector="diag.bh_left.angle (V22)" color="#fce94f" alpha="255" headcolor="#fce94f" headalpha="255" barfillcolor="#350a0a" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="9"/>
+        <curve xvector="age (V1)" yvector="diag.bh_left.tacho_zero (V24)" color="#204a87" alpha="255" headcolor="#204a87" headalpha="255" barfillcolor="#0000ff" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="10"/>
+        <curve xvector="age (V1)" yvector="diag.bh_left.tacho (V26)" color="#ef2929" alpha="255" headcolor="#ef2929" headalpha="255" barfillcolor="#ff00ff" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="11"/>
+        <curve xvector="age (V1)" yvector="diag.bh_left.pid_output (V28)" color="#fce94f" alpha="255" headcolor="#fce94f" headalpha="255" barfillcolor="#005500" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="13"/>
+        <curve xvector="age (V1)" yvector="diag.bh_left.error (V30)" color="#204a87" alpha="255" headcolor="#204a87" headalpha="255" barfillcolor="#2e5778" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="14"/>
+        <curve xvector="age (V1)" yvector="diag.bh_left.integral (V32)" color="#ef2929" alpha="255" headcolor="#ef2929" headalpha="255" barfillcolor="#ff0000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="15"/>
+        <curve xvector="age (V1)" yvector="diag.bh_left.pwm (V34)" color="#ff00ff" alpha="255" headcolor="#ff00ff" headalpha="255" barfillcolor="#501010" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="16"/>
+        <curve xvector="age (V1)" yvector="diag.bh_right.angle (V23)" color="#fce94f" alpha="255" headcolor="#fce94f" headalpha="255" barfillcolor="#0000aa" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="17"/>
+        <curve xvector="age (V1)" yvector="diag.bh_right.tacho_zero (V25)" color="#204a87" alpha="255" headcolor="#204a87" headalpha="255" barfillcolor="#aa00aa" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="18"/>
+        <curve xvector="age (V1)" yvector="diag.bh_right.tacho (V27)" color="#ef2929" alpha="255" headcolor="#ef2929" headalpha="255" barfillcolor="#0a350a" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="19"/>
+        <curve xvector="age (V1)" yvector="diag.bh_right.pid_output (V29)" color="#fce94f" alpha="255" headcolor="#fce94f" headalpha="255" barfillcolor="#008000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="20"/>
+        <curve xvector="age (V1)" yvector="diag.bh_right.error (V31)" color="#204a87" alpha="255" headcolor="#204a87" headalpha="255" barfillcolor="#4682b4" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="21"/>
+        <curve xvector="age (V1)" yvector="diag.bh_right.integral (V33)" color="#ef2929" alpha="255" headcolor="#ef2929" headalpha="255" barfillcolor="#aa0000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="22"/>
+        <curve xvector="age (V1)" yvector="diag.bh_right.pwm (V35)" color="#ff00ff" alpha="255" headcolor="#ff00ff" headalpha="255" barfillcolor="#000000" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="23"/>
+        <curve xvector="age (V1)" yvector="bh_left.velocity.setpoint (V11)" color="#fce94f" alpha="255" headcolor="#000000" headalpha="255" barfillcolor="#ff00ff" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="24"/>
+        <curve xvector="age (V1)" yvector="bh_left.velocity.feedback (V6)" color="#204a87" alpha="255" headcolor="#501010" headalpha="255" barfillcolor="#105010" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="25"/>
+        <curve xvector="age (V1)" yvector="bh_right.velocity.setpoint (V12)" color="#fce94f" alpha="255" headcolor="#0000aa" headalpha="255" barfillcolor="#005500" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="26"/>
+        <curve xvector="age (V1)" yvector="bh_right.velocity.feedback (V7)" color="#204a87" alpha="255" headcolor="#aa00aa" headalpha="255" barfillcolor="#2e5778" barfillalpha="255" haslines="true" linewidth="0" linestyle="0" haspoints="true" pointtype="2" pointdensity="0" pointsize="5" hasbars="false" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="27"/>
+    </relations>
+    <graphics>
+        <view name="BHLeft Angle" width="1843" height="893" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="1" name="Plot">
+                <position x="921.4451999999999" y="459.9471" z="500"/>
+                <rect x="-918.4964" y="-457.00019999999995" width="1835.9966" height="886.2131999999998"/>
+                <relativesize width="0.9962" height="0.9923999999999998" centerx="0.4997" centery="0.4995" posx="0.0015999999999999702" posy="0.0033000000000000277" leftx="0.0015999999999999702" lefty="0.9956999999999999" rightx="0.9977999999999999" righty="0.9956999999999999" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" style="1"/>
+                </pen>
+                <brush color="#ffffff" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-758.2447923410726" y="-384.5392926321594" z="500"/>
+                    <rect x="0" y="0" width="613" height="35"/>
+                    <relativesize width="0.35596919989563663" height="0.0448882999543935" centerx="0.21533181274610574" centery="0.09806286127750635" posx="0.03734721279828744" posy="0.0756187113003096" leftx="0.03734721279828744" lefty="0.1205070112547031" rightx="0.39331641269392403" righty="0.1205070112547031" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="bh_left.angle.setpoint vs age (C1)"/>
+                    <relation tag="bh_left.angle.feedback vs age (C2)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="true" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="0" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="1268705277"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="1" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="bh_left.angle.setpoint" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="age" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="1605177498.0016022" y="2619.6" width="6.97998046875" height="730.8000000000002"/>
+            </plot>
+        </view>
+        <view name="BHRight Angle" width="1843" height="893" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="2" name="Plot">
+                <position x="921.4451999999999" y="446.5497" z="500"/>
+                <rect x="-918.4964" y="-443.6028" width="1835.9966" height="886.2132"/>
+                <relativesize width="0.9962" height="0.9924000000000001" centerx="0.4997" centery="0.4995" posx="0.0015999999999999702" posy="0.0032999999999999948" leftx="0.0015999999999999702" lefty="0.9957" rightx="0.9977999999999999" righty="0.9957" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" style="1"/>
+                </pen>
+                <brush color="#ffffff" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-758.9639515110432" y="-369.7602454034391" z="500"/>
+                    <rect x="0" y="0" width="1311" height="35"/>
+                    <relativesize width="0.7612979136430335" height="0.04488829995439349" centerx="0.4175785537726068" centery="0.0998348554270479" posx="0.03692959695109" posy="0.07739070544985116" leftx="0.03692959695109" lefty="0.12227900540424465" rightx="0.7982275105941236" righty="0.12227900540424465" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="bh_right.angle.setpoint vs age (C5)"/>
+                    <relation tag="bh_right.angle.feedback vs age (C6)"/>
+                    <relation tag="bh_right.velocity.setpoint vs age (C7)"/>
+                    <relation tag="bh_right.velocity.feedback vs age (C8)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="true" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="0" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="1" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="bh_right.angle.setpoint" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="age" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="1605177498.0016022" y="-88.17500000000001" width="6.97998046875" height="3703.3500000000004"/>
+            </plot>
+        </view>
+        <view name="BHLeft Velocity" width="1843" height="893" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="7" name="Plot">
+                <position x="921.4467999999999" y="446.4636" z="500"/>
+                <rect x="-918.4964" y="-443.5134" width="1836.9928" height="887.0268"/>
+                <relativesize width="0.9962" height="0.9922" centerx="0.4997" centery="0.4994" posx="0.0015999999999999702" posy="0.0032999999999999948" leftx="0.0015999999999999702" lefty="0.9954999999999999" rightx="0.9977999999999999" righty="0.9954999999999999" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" style="1"/>
+                </pen>
+                <brush color="#ffffff" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-798.452128459225" y="-366.43543575072067" z="500"/>
+                    <rect x="0" y="0" width="657" height="35"/>
+                    <relativesize width="0.3727608709793208" height="0.04484150960607631" centerx="0.2224511611860133" centery="0.10387595179214772" posx="0.03607072569635288" posy="0.08145519698910957" leftx="0.03607072569635288" lefty="0.12629670659518588" rightx="0.4088315966756737" righty="0.12629670659518588" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="bh_left.velocity.setpoint vs age (C24)"/>
+                    <relation tag="bh_left.velocity.feedback vs age (C25)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="true" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="0" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="1" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="842085679"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="age" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="1605177498.0016022" y="-1.1699999809265138" width="6.97998046875" height="49.13999919891357"/>
+            </plot>
+        </view>
+        <view name="BHRight Velocity" width="1843" height="893" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="8" name="Plot">
+                <position x="921.4467999999999" y="446.4636" z="500"/>
+                <rect x="-918.4964" y="-443.5134" width="1836.9928" height="887.0268"/>
+                <relativesize width="0.9962" height="0.9922" centerx="0.4997" centery="0.4994" posx="0.0015999999999999702" posy="0.0032999999999999948" leftx="0.0015999999999999702" lefty="0.9954999999999999" rightx="0.9977999999999999" righty="0.9954999999999999" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" style="1"/>
+                </pen>
+                <brush color="#ffffff" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-798.452128459225" y="-366.43543575072067" z="500"/>
+                    <rect x="0" y="0" width="679" height="35"/>
+                    <relativesize width="0.3852429701597547" height="0.04484150960607631" centerx="0.22869221077623023" centery="0.10387595179214772" posx="0.03607072569635288" posy="0.08145519698910957" leftx="0.03607072569635288" lefty="0.12629670659518588" rightx="0.42131369585610756" righty="0.12629670659518588" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="bh_right.velocity.setpoint vs age (C26)"/>
+                    <relation tag="bh_right.velocity.feedback vs age (C27)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="true" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="0" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="1" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="age" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="1605177498.0016022" y="-1.194499969482422" width="6.97998046875" height="50.168998718261726"/>
+            </plot>
+        </view>
+        <view name="BHLeft Tacho" width="1843" height="893" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="3" name="Plot">
+                <position x="921.4451999999999" y="446.46029999999996" z="500"/>
+                <rect x="-918.4964" y="-443.5134" width="1835.9966" height="886.0346"/>
+                <relativesize width="0.9962" height="0.9922" centerx="0.4997" centery="0.4994" posx="0.0015999999999999702" posy="0.0032999999999999948" leftx="0.0015999999999999702" lefty="0.9954999999999999" rightx="0.9977999999999999" righty="0.9954999999999999" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" style="1"/>
+                </pen>
+                <brush color="#ffffff" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-759.842825905274" y="-367.50175387532033" z="500"/>
+                    <rect x="0" y="0" width="828" height="35"/>
+                    <relativesize width="0.47956655523694497" height="0.04489858436046328" centerx="0.27610759115904343" centery="0.10264027552424185" posx="0.03632431354057094" posy="0.08019098334401022" leftx="0.03632431354057094" lefty="0.1250895677044735" rightx="0.5158908687775159" righty="0.1250895677044735" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="diag.bh_left.angle vs age (C9)"/>
+                    <relation tag="diag.bh_left.tacho_zero vs age (C10)"/>
+                    <relation tag="diag.bh_left.tacho vs age (C11)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="true" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="0" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="1" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="age" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="1605177498.0016022" y="-83.25" width="6.97998046875" height="3496.5"/>
+            </plot>
+        </view>
+        <view name="BHRight Tacho" width="1843" height="893" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="5" name="Plot">
+                <position x="921.4451999999999" y="446.46029999999996" z="500"/>
+                <rect x="-918.4964" y="-443.5134" width="1835.9966" height="886.0346"/>
+                <relativesize width="0.9962" height="0.9922" centerx="0.4997" centery="0.4994" posx="0.0015999999999999702" posy="0.0032999999999999948" leftx="0.0015999999999999702" lefty="0.9954999999999999" rightx="0.9977999999999999" righty="0.9954999999999999" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" style="1"/>
+                </pen>
+                <brush color="#ffffff" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-759.5428173895243" y="-367.52309661288325" z="500"/>
+                    <rect x="0" y="0" width="864" height="35"/>
+                    <relativesize width="0.5017249407990702" height="0.0449597867029569" centerx="0.28745591984065805" centery="0.10138964671470721" posx="0.036593449441122944" posy="0.07890975336322877" leftx="0.036593449441122944" lefty="0.12386954006618567" rightx="0.5383183902401931" righty="0.12386954006618567" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="diag.bh_right.angle vs age (C17)"/>
+                    <relation tag="diag.bh_right.tacho_zero vs age (C18)"/>
+                    <relation tag="diag.bh_right.tacho vs age (C19)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="true" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="0" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="diag.bh_right.angle" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="age" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="1605177498.0016022" y="1996.9369920623963" width="6.97998046875" height="1693.1260158752075"/>
+            </plot>
+        </view>
+        <view name="BHLeft PID" width="1843" height="893" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="4" name="Plot">
+                <position x="921.4451999999999" y="446.46029999999996" z="500"/>
+                <rect x="-918.4964" y="-443.5134" width="1835.9966" height="886.0346"/>
+                <relativesize width="0.9962" height="0.9922" centerx="0.4997" centery="0.4994" posx="0.0015999999999999702" posy="0.0032999999999999948" leftx="0.0015999999999999702" lefty="0.9954999999999999" rightx="0.9977999999999999" righty="0.9954999999999999" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" style="1"/>
+                </pen>
+                <brush color="#ffffff" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-778.0768072082893" y="-369.47275043161426" z="500"/>
+                    <rect x="0" y="0" width="1099" height="35"/>
+                    <relativesize width="0.630958845450951" height="0.04489858436046328" centerx="0.3523474376270187" centery="0.10011184823404341" posx="0.03686801490154318" posy="0.07766255605381177" leftx="0.03686801490154318" lefty="0.12256114041427506" rightx="0.6678268603524943" righty="0.12256114041427506" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="diag.bh_left.pid_output vs age (C13)"/>
+                    <relation tag="diag.bh_left.error vs age (C14)"/>
+                    <relation tag="diag.bh_left.integral vs age (C15)"/>
+                    <relation tag="diag.bh_left.pwm vs age (C16)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="true" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="49"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="age" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="1605177498.6996002" y="-44.132364986871806" width="6.97998046875" height="216.53359317346334"/>
+            </plot>
+        </view>
+        <view name="BHRight PID" width="1843" height="893" color="#ffffff" style="1">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" numberaxislabelscale="true" initialPlotNum="6" name="Plot">
+                <position x="921.4451999999999" y="446.46029999999996" z="500"/>
+                <rect x="-918.4964" y="-443.5134" width="1835.9966" height="886.0346"/>
+                <relativesize width="0.9962" height="0.9922" centerx="0.4997" centery="0.4994" posx="0.0015999999999999702" posy="0.0032999999999999948" leftx="0.0015999999999999702" lefty="0.9954999999999999" rightx="0.9977999999999999" righty="0.9954999999999999" fixaspect="false" lockpostodata="false"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" style="1"/>
+                </pen>
+                <brush color="#ffffff" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" color="#000000" verticaldisplay="false" name="Legend">
+                    <position x="-778.3903730132247" y="-368.50051697589686" z="500"/>
+                    <rect x="0" y="0" width="1145" height="35"/>
+                    <relativesize width="0.6556744421209041" height="0.04489858436046328" centerx="0.36443067050157496" centery="0.10135904554346034" posx="0.036593449441122895" posy="0.0789097533632287" leftx="0.036593449441122895" lefty="0.12380833772369199" rightx="0.6922678915620271" righty="0.12380833772369199" fixaspect="false" lockpostodata="false"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="1" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="diag.bh_right.pid_output vs age (C20)"/>
+                    <relation tag="diag.bh_right.error vs age (C21)"/>
+                    <relation tag="diag.bh_right.integral vs age (C22)"/>
+                    <relation tag="diag.bh_right.pwm vs age (C23)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="true" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="0" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" forceoffsetmin="false" interpret="false" interpretation="1" display="4" displayformatstring="hh:mm:ss.zzz" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="1" timezonename="GMT" timezoneoffset="0">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="393219"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="diag.bh_right.pid_output" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="age" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="1605177498.0016022" y="-12.424999999999997" width="6.97998046875" height="143.85000000000002"/>
+            </plot>
+        </view>
+    </graphics>
+</kst>

@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Jan Feitsma (Falcons)
+// Copyright 2017-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cTimer.hpp
@@ -10,7 +10,7 @@
 #ifndef CTIMER_HPP_
 #define CTIMER_HPP_
 
-#include "FalconsRtDB2.hpp" // for rtime
+#include "FalconsRTDB.hpp" // for rtime
 
 class cTimer
 {
@@ -19,13 +19,13 @@ public:
     ~cTimer();
     
     void reset();
-    float elapsed();
-    void setDuration(float duration);
+    double elapsed();
+    void setDuration(double duration);
     bool expired();
 
 private:
     double _t0;
-    float _duration;
+    double _duration;
 };
 
 #endif /* CTIMER_HPP_ */

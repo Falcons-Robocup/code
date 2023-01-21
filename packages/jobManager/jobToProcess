@@ -15,7 +15,7 @@ if [ -z "$jobid" ]; then
 fi
 
 # in case jobid starts with a context string, then cut it off
-jobid=`echo $jobid | sed 's/^[AB][0123456]_//'`
+jobid=`echo $jobid | sed 's/^[AB][0123456789]_//'`
 
 # find the job name
 line=`jobMapping | grep "^$jobid "`

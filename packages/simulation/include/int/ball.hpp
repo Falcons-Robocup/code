@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Coen Tempelaars (Falcons)
+// Copyright 2018-2022 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ball.hpp
@@ -18,7 +18,6 @@ public:
     Point2D getLocation() const;
     Point2D getPickupLocation() const;
     Point3D getPosition() const;
-    Point3D getPositionFCS(const TeamID&) const;
     float getSpeed() const;
     Vector3D getVelocity() const;
     bool isMoving() const;

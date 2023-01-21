@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionShootAtTarget.cpp
@@ -37,17 +37,18 @@
  *
  */
 
+#include <stdexcept>
+#include <thread>
+
 #include "../include/int/MP_ActionShootAtTarget.hpp"
 
 #include "falconsCommon.hpp"
-#include <stdexcept>
 #include "cDiagnostics.hpp"
 
 
 MP_ActionShootAtTarget::MP_ActionShootAtTarget()
 {
     TRACE("init start");
-    initialize();
     TRACE("init end");
 }
 
@@ -61,6 +62,7 @@ MP_ActionShootAtTarget::~MP_ActionShootAtTarget()
 actionResultTypeEnum MP_ActionShootAtTarget::execute()
 {
     TRACE_FUNCTION("");
+
     _timestamp = ftime::now();
 
     // check if finished already
@@ -105,7 +107,7 @@ actionResultTypeEnum MP_ActionShootAtTarget::execute()
 void MP_ActionShootAtTarget::traceData()
 {
     // elapsedTime phase deltaPhi tolerance didShoot hasBall bhEnabled settleTimer aimTimer
-    tprintf("ptrace %5s %8.3f %9s %8.4f %8.4f %d %d %d %d %8.3f %8.3f", _actionName.c_str(), elapsed(), phaseString().c_str(), _deltaPhi, _moveAngleThreshold, _didShoot, _wm->hasBall(), !_disabledBh, _settledOk, _settleTimer.elapsed(), _aimTimer.elapsed());
+    tprintf("ptrace %5s %8.3f %9s %8.4f %8.4f %d %d %d %8.3f %8.3f", _actionName.c_str(), elapsed(), phaseString().c_str(), _deltaPhi, _moveAngleThreshold, _didShoot, _wm->hasBall(), _settledOk, _settleTimer.elapsed(), _aimTimer.elapsed());
 }
 
 void MP_ActionShootAtTarget::traceResult(bool success, const char* details)
@@ -177,7 +179,6 @@ void MP_ActionShootAtTarget::getCommonConfig()
 {
     _aimSettleTime   =  getConfig().shootAtTargetConfig.aimSettleTime;
     _coarseAngle     =  getConfig().shootAtTargetConfig.coarseAngle; // timeout starts when within this tolerance
-    _disableBhDelay  =  getConfig().shootAtTargetConfig.disableBhDelay;
     _sleepAfterShoot =  getConfig().shootAtTargetConfig.sleepAfterShoot; // don't worry, it is not a blocking sleep
 }
 
@@ -185,6 +186,7 @@ void MP_ActionShootAtTarget::initialize()
 {
     _previousPhase = phaseEnum::UNDEFINED;
     _currentPhase = phaseEnum::UNDEFINED;
+    TRACE_CONTEXT_START(phaseString().c_str(), this);
     _result = actionResultTypeEnum::RUNNING;
     _didShoot = false;
     _settledOk = false;
@@ -197,12 +199,17 @@ void MP_ActionShootAtTarget::initialize()
     _aimTimer.setDuration(_timeout);
     _settleTimer.setDuration(_aimSettleTime);
     _shootTimer.setDuration(_sleepAfterShoot);
-    _bhTimer.setDuration(_disableBhDelay);
+
+    // Trace the config
+    std::ostringstream oss;
+    oss << "_timeout=" << _timeout << "; _aimSettleTime=" << _aimSettleTime << "; _sleepAfterShoot=" << _sleepAfterShoot;
+    TRACE_FUNCTION(oss.str().c_str());
 }
 
 void MP_ActionShootAtTarget::finalize()
 {
-    TRACE(">");
+    TRACE_FUNCTION("");
+    TRACE_CONTEXT_FINISH(phaseString().c_str(), this);
     if (_isConnected)
     {
         _rtdbOutput->setBallHandlersSetpoint(true);
@@ -216,33 +223,6 @@ void MP_ActionShootAtTarget::finalize()
         // any apparent reason for stopping the robot and/or stopping the ballhandlers at this point.
 //        stopMoving();
     }
-    TRACE("<");
-}
-
-void MP_ActionShootAtTarget::checkDisableBh()
-{
-    // disable ball handlers a fixed period before shooting
-    if (!_disabledBh && (_settleTimer.elapsed() + _disableBhDelay > _aimSettleTime))
-    {
-        bool doDisable = true;
-        // also require that it is not one-off settling, because it will cause timing issues 
-        // with sequential enable/disable which severely reduce accuracy
-        if ((_currentPhase == phaseEnum::SETTLE) && (_previousPhase != phaseEnum::SETTLE))
-        {
-            doDisable = false;
-        }
-        if (doDisable)
-        {
-            // EKPC HACK Portugal 2019
-            // Remove relax ballhandlers from the shooting sequence
-            // When aiming at goal, the ballhandlers were disabled, but the robot was still repositioning/aiming for the goal.
-            // This resulted in the robot losing control of the ball when shooting
-            //_rtdbOutput->setBallHandlersSetpoint(false);
-
-            _bhTimer.reset();
-            _disabledBh = true;
-        }
-    }
 }
 
 void MP_ActionShootAtTarget::executeShot()
@@ -254,13 +234,20 @@ void MP_ActionShootAtTarget::executeShot()
 void MP_ActionShootAtTarget::shoot()
 {
     // make sure to shoot only once
-    // also, we require a fixed duration of ballHandler relaxation, to release the inwards force applied from ballHandlers on ball 
-    if (!_didShoot && _bhTimer.expired())
+    if (!_didShoot)
     {
-        TRACE("Shooting: !_didShoot && _bhTimer.expired()");
+        TRACE("Shooting (_didShoot == false)");
         executeShot();
         _shootTimer.reset();
         _didShoot = true;
+
+        // UGLY HACK / TODO / FIXME
+        // Sleep after shooting.
+        // This hack prevents the robot from immediately chasing the ball after shooting
+        // This is because the Teamplay logic is that the 'closest robot to the ball' always grabs the ball.
+        // The better solution is to improve the Teamplay logic.
+        // But until that time, this should work
+        std::this_thread::sleep_for(std::chrono::milliseconds((int)(_sleepAfterShoot * 1000.0)));
     }
 }
 
@@ -272,22 +259,26 @@ void MP_ActionShootAtTarget::moveToTarget()
 
 void MP_ActionShootAtTarget::enterPhaseRotate()
 {
+    TRACE_CONTEXT_FINISH(phaseString().c_str(), this);
     _currentPhase = phaseEnum::ROTATE;
-    _disabledBh = false;
+    TRACE_CONTEXT_START(phaseString().c_str(), this);
     _rtdbOutput->setBallHandlersSetpoint(true);
 }
 
 void MP_ActionShootAtTarget::enterPhaseSettle()
 {
+    TRACE_CONTEXT_FINISH(phaseString().c_str(), this);
     _currentPhase = phaseEnum::SETTLE;
+    TRACE_CONTEXT_START(phaseString().c_str(), this);
     _settledOk = false;
     _settleTimer.reset();
 }
 
 void MP_ActionShootAtTarget::enterPhaseShoot()
 {
-    // stopMoving(); // Erik advises to keep moving
+    TRACE_CONTEXT_FINISH(phaseString().c_str(), this);
     _currentPhase = phaseEnum::SHOOT;
+    TRACE_CONTEXT_START(phaseString().c_str(), this);
     _shootTimer.reset();
     // performance tracing event    x     y     z  dist lob
     // TODO make ptrace specific: SHOOTEVENT versus PASSEVENT, for better visualization
@@ -297,7 +288,9 @@ void MP_ActionShootAtTarget::enterPhaseShoot()
 void MP_ActionShootAtTarget::enterPhaseFinished()
 {
     stopMoving();
+    TRACE_CONTEXT_FINISH(phaseString().c_str(), this);
     _currentPhase = phaseEnum::FINISHED;
+    TRACE_CONTEXT_START(phaseString().c_str(), this);
 }
 
 std::string MP_ActionShootAtTarget::phaseString()
@@ -305,13 +298,13 @@ std::string MP_ActionShootAtTarget::phaseString()
     switch (_currentPhase)
     {
         case phaseEnum::UNDEFINED:
-            return "UNDEFINED";
+            return "UNDEFINED_PHASE";
         case phaseEnum::ROTATE:
-            return "ROTATE";
+            return "ROTATE_PHASE";
         case phaseEnum::SETTLE:
-            return "SETTLE";
+            return "SETTLE_PHASE";
         case phaseEnum::SHOOT:
-            return "SHOOT";
+            return "SHOOT_PHASE";
         case phaseEnum::FINISHED:
             if (_result == actionResultTypeEnum::PASSED)
             {
@@ -352,6 +345,7 @@ void MP_ActionShootAtTarget::determineCurrentPhase()
             TRACE_SCOPE("ROTATE", "");
             if (_aimTimer.expired())
             {
+                TRACE_WARNING("Wide angle timer expired while aiming for a shot during ROTATE phase");
                 TRACE("Entering SHOOT phase: _aimTimer expired during ROTATE phase");
                 enterPhaseShoot();
             }
@@ -374,6 +368,7 @@ void MP_ActionShootAtTarget::determineCurrentPhase()
                 }
                 else
                 {
+                    TRACE_WARNING("Wide angle timer expired while aiming for a shot during SETTLE phase");
                     TRACE("Entering SHOOT phase: _aimTimer expired during SETTLE phase");
                 }
                 enterPhaseShoot();
@@ -473,7 +468,7 @@ void MP_ActionShootAtTarget::executeCurrentPhase()
                 _rtdbOutput->setShootSetpoint(shootPhaseEnum::PREPARE, shootTypeEnum::PASS, Position2D(_distance, 0, _shootTargetPos.z));
             }
             
-            // reset aim timer
+            // reset aim timer if outside of the wide angle
             if (fabs(_deltaPhi) > _coarseAngle)
             {
                 _aimTimer.reset();
@@ -485,16 +480,12 @@ void MP_ActionShootAtTarget::executeCurrentPhase()
         {
             TRACE_SCOPE("SETTLE", "");
             moveToTarget();
-            // due to overshoot, we lost the ball too often in testmatch VDL 2018-01-25
-            // so we decided to disable this micro-optimization: only disable bh at start of SHOOT phase
-            //checkDisableBh(); 
             break;
         }
         case phaseEnum::SHOOT:
         {
             TRACE_SCOPE("SHOOT", "");
-            checkDisableBh();
-            moveToTarget(); // Erik advises to keep moving
+            moveToTarget();
             shoot();
             break;
         }

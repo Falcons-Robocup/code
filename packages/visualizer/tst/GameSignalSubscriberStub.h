@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Diana Koenraadt (Falcons)
+// Copyright 2016-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * GameSignalSubscriberStub.h
@@ -14,7 +14,7 @@
 
 #include <vector>
 
-#include "int/GameSignalAdapter.h"
+#include "int/adapters/GameSignalAdapter.h"
 #include "int/GameSignalSubscriber.h"
 
 /*

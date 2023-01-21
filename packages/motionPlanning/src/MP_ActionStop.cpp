@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionStop.cpp
@@ -10,6 +10,11 @@
 #include "../include/int/MP_ActionStop.hpp"
 
 using namespace std;
+
+void MP_ActionStop::initialize()
+{
+    TRACE_FUNCTION("");
+}
 
 actionResultTypeEnum MP_ActionStop::execute()
 {

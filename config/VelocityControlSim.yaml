@@ -1,32 +1,32 @@
-nominalFrequency:                         20
 motionTypes:
     NORMAL:
         velocityControllers:
             threshold:                            99.0 # effectively disable long-stroke, SPG is preferred for simulation
             longStroke:
-                type:                             VelocitySetpointControllerTypeEnum:LINEAR
+                type:                             VelocitySetpointControllerTypeEnum:SPG
                 coordinateSystem:                 CoordinateSystemEnum:RCS
             shortStroke:
                 type:                             VelocitySetpointControllerTypeEnum:SPG
                 coordinateSystem:                 CoordinateSystemEnum:RCS
         limits:
-            maxVelX:                          1.0
+            maxVelX:                          2.0
             maxVelYforward:                   2.0
             maxVelYbackward:                  2.0
             maxVelRz:                         2.0
-            maxAccX:                          1.5
+            maxAccX:                          3.5
             maxAccYforward:                   3.5
             maxAccYbackward:                  3.5
             maxAccRz:                         3.5
-            maxDecX:                          4.0
+            maxDecX:                          7.0
             maxDecY:                          7.0
             maxDecRz:                         7.0
             accThresholdX:                    0.0
             accThresholdY:                    0.0
             accThresholdRz:                   0.0
         setPointGenerator:
-            synchronizeRotation:                  true
-            weightFactorClosedLoop:               0.0  # simulation is perfect, so use open loop
+            synchronizeRotation:                  false
+            weightFactorClosedLoopVel:            0.0  # simulation is perfect, so use open loop
+            weightFactorClosedLoopPos:            0.7  #  30% position from WM,  70% computed new position from SPG
             latencyOffset:                        0.00
             convergenceWorkaround:                true
         pid:
@@ -42,14 +42,14 @@ motionTypes:
             fadeI_Rz:                             0.99
     WITH_BALL:
         limits:
-            maxVelX:                          0.5
+            maxVelX:                          1.5
             maxVelYforward:                   1.5
-            maxVelYbackward:                  0.5
-            maxVelRz:                         4.0
-            maxAccX:                          1.0
-            maxAccYforward:                   3.0
-            maxAccYbackward:                  1.5
-            maxAccRz:                         6.0
+            maxVelYbackward:                  1.5
+            maxVelRz:                         1.0
+            maxAccX:                          1.5
+            maxAccYforward:                   1.0
+            maxAccYbackward:                  1.0
+            maxAccRz:                         2.0
     ACCURATE:
         limits:
             maxVelX:                          0.5

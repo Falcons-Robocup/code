@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Diana Koenraadt (Falcons)
+// Copyright 2016-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include <vtkAlgorithm.h>
 #include <vtkAlgorithmOutput.h>
@@ -91,6 +91,11 @@ FieldWidget3D::FieldWidget3D(QWidget *parent)
     _trueBallActor = vtkSmartPointer<BallVisualization>::New();
     _mainRenderer->AddActor(_trueBallActor);
     _trueBallActor->VisibilityOff();
+
+    // add moving dot actor
+    _movingDotActor = createColoredDot(0, 0, 0.2, 1, 0, 1);
+    _movingDotActor->VisibilityOff();
+    _mainRenderer->AddActor(_movingDotActor);
 
     resetZoomPanRotate();
 
@@ -215,12 +220,12 @@ void FieldWidget3D::reloadSettings()
 {
     QSettings settings;
 
-    // Enable/disable path planning visualization
-    bool showPathPlanning = settings.value(Visualizer::Settings::showPathPlanningSetting, false).toBool();
-    for (size_t i = 0; i < _teamActors.size(); i++)
-    {
-        getTeamRobot((uint8_t)i + 1)->setPathPlanningEnabled(showPathPlanning);
-    }
+    // // Enable/disable path planning visualization
+    // bool showPathPlanning = settings.value(Visualizer::Settings::showPathPlanningSetting, false).toBool();
+    // for (size_t i = 0; i < _teamActors.size(); i++)
+    // {
+    //     getTeamRobot((uint8_t)i + 1)->setPathPlanningEnabled(showPathPlanning);
+    // }
 };
 
 /*
@@ -257,44 +262,63 @@ void FieldWidget3D::flip(bool flip)
 {
     _flipField = flip;
 
-    fieldVideoActor->setFieldFlip(flip);
+    _fieldVideoActor->setFieldFlip(flip);
+    //TODO: boolean for flipping _movingDotActor location in updateTrueBall?
 
     resetZoomPanRotate();
 }
 
 void FieldWidget3D::switchHeightmapToNone(void)
 {
-    _heightmapName = CompositeHeightmapName::INVALID;
+    _displayedHeightmap = SelectedHeightmap{CompositeHeightmapName::INVALID};
+}
+
+void FieldWidget3D::switchHeightmapToActiveHeightmap(void)
+{
+    _displayedHeightmap = ActiveHeightmap{_activeHeightmaps[getRobotIdToDisplay()]};
 }
 
 void FieldWidget3D::switchHeightmapToDefendAttackingOpponent(void)
 {
-    _heightmapName = CompositeHeightmapName::DEFEND_ATTACKING_OPPONENT;
+    _displayedHeightmap = SelectedHeightmap{CompositeHeightmapName::DEFEND_ATTACKING_OPPONENT};
 }
 
 void FieldWidget3D::switchHeightmapToDribble(void)
 {
-    _heightmapName = CompositeHeightmapName::DRIBBLE;
+    _displayedHeightmap = SelectedHeightmap{CompositeHeightmapName::DRIBBLE};
 }
 
 void FieldWidget3D::switchHeightmapToMoveToFreeSpot(void)
 {
-    _heightmapName = CompositeHeightmapName::MOVE_TO_FREE_SPOT;
+    _displayedHeightmap = SelectedHeightmap{CompositeHeightmapName::MOVE_TO_FREE_SPOT};
 }
 
 void FieldWidget3D::switchHeightmapToPositionForOppSetpiece(void)
 {
-    _heightmapName = CompositeHeightmapName::POSITION_FOR_OPP_SETPIECE;
+    _displayedHeightmap = SelectedHeightmap{CompositeHeightmapName::POSITION_FOR_OPP_SETPIECE};
 }
 
-void FieldWidget3D::switchHeightmapToPositionForOwnSetpiece(void)
+void FieldWidget3D::switchHeightmapToPositionAttackerForOwnSetpiece(void)
 {
-    _heightmapName = CompositeHeightmapName::POSITION_FOR_OWN_SETPIECE;
+    _displayedHeightmap = SelectedHeightmap{CompositeHeightmapName::POSITION_ATTACKER_FOR_OWN_SETPIECE};
 }
 
 void FieldWidget3D::switchHeightmapForRobot(int robotId)
 {
-    _robotID = robotId;
+    _robot = robotId;
+    if (std::holds_alternative<ActiveHeightmap>(_displayedHeightmap)) 
+    {   // for active heightmap: update to heightmap of newly selected robot
+        switchHeightmapToActiveHeightmap();
+    }
+}
+
+void FieldWidget3D::switchHeightmapForRole(QString role)
+{
+    _robot = role.toStdString();
+    if (std::holds_alternative<ActiveHeightmap>(_displayedHeightmap)) 
+    {   // for active heightmap: update to heightmap of newly selected robot
+        switchHeightmapToActiveHeightmap();
+    }
 }
 
 /*
@@ -415,6 +439,29 @@ vtkSmartPointer<RobotVisualization> FieldWidget3D::getTeamRobot(uint8_t robotId)
     return _teamActors[robotId];
 }
 
+void FieldWidget3D::setRole(uint8_t robotId, const std::string& role)
+{
+    _teamLabels[robotId]->setRole(robotId, role);
+    auto previousRobotRole = _roles[robotId];
+    _roles[robotId] = role;
+    
+    if (std::holds_alternative<ActiveHeightmap>(_displayedHeightmap)) 
+    {   // for active heightmap: update to heightmap
+        switchHeightmapToActiveHeightmap();
+    }
+}
+
+void FieldWidget3D::setActiveHeightmap(uint8_t robotId, CompositeHeightmapName activeHeightmap)
+{
+    _activeHeightmaps[robotId] = activeHeightmap;
+    
+    if (std::holds_alternative<ActiveHeightmap>(_displayedHeightmap)) 
+    {   // for active heightmap: update to heightmap
+        switchHeightmapToActiveHeightmap();
+    }
+}
+
+
 void FieldWidget3D::setLogTimeStamp(double t)
 {
     _timestamp = t;
@@ -422,7 +469,36 @@ void FieldWidget3D::setLogTimeStamp(double t)
 
 void FieldWidget3D::setClockTick(double elapsedTime, double actualTime)
 {
-    fieldVideoActor->updateImage(actualTime, _heightmapName, _robotID);
+    try
+    {
+        for (auto& kv : _teamLabels)
+        {
+            if (kv.first == getRobotIdToDisplay())
+            {
+                kv.second->track();
+            }
+            else
+            {
+                kv.second->untrack();
+            }
+        }
+
+        _fieldVideoActor->updateImage(actualTime, getHeightmapToDisplay(), getRobotIdToDisplay());
+        if (getHeightmapToDisplay() ==CompositeHeightmapName::INVALID)
+        {
+            _movingDotActor->VisibilityOff();
+        }
+        else {
+            Point2D opt = _hmv.getOptimum(getHeightmapToDisplay(), getRobotIdToDisplay());
+            _movingDotActor->SetPosition(opt.x, opt.y, 0);
+            _movingDotActor->VisibilityOn();
+        }
+    } 
+    catch (const std::runtime_error& e)
+    {   // In some cases the heightmap or optimum cannot be found (e.g. robot does not exist)
+        // then hide optimum dot
+        _movingDotActor->VisibilityOff();
+    }
 }
 
 /*
@@ -431,11 +507,55 @@ void FieldWidget3D::setClockTick(double elapsedTime, double actualTime)
 * ========================================
 */
 
+CompositeHeightmapName FieldWidget3D::getHeightmapToDisplay()
+{
+    CompositeHeightmapName hmToDisplay = CompositeHeightmapName::INVALID;
+    if (std::holds_alternative<ActiveHeightmap>(_displayedHeightmap)) 
+    {   
+        hmToDisplay = std::get<ActiveHeightmap>(_displayedHeightmap).heightmap;
+    }
+    else
+    {
+        hmToDisplay = std::get<SelectedHeightmap>(_displayedHeightmap).heightmap;
+    }
+    return hmToDisplay;
+}
+
+int FieldWidget3D::getRobotIdToDisplay()
+{
+    static int lastRobotIdToDisplay = 1;
+    // by default stay to currently displayed robot
+    // needed in cases e.g. a robotId for a role cannot be found
+    int robotIdToDisplay = lastRobotIdToDisplay;
+    if (std::holds_alternative<int>(_robot)) 
+    {   
+        robotIdToDisplay = std::get<int>(_robot);
+    }
+    else
+    {
+        std::string role = std::get<std::string>(_robot);
+        // find robotId corresponding to role
+        auto it = std::find_if(_roles.begin(), _roles.end(), 
+            [role](decltype(_roles)::const_reference kv) { 
+                return (kv.second.compare(role) == 0);
+            });
+        if (it != _roles.end())
+        {   // update heightmap for role
+            robotIdToDisplay = it->first;
+        }
+        else {
+            std::cout << "role not found";
+        }
+    }
+    lastRobotIdToDisplay = robotIdToDisplay;
+    return robotIdToDisplay;
+}
+
 void FieldWidget3D::clear()
 {
-    for (size_t i = 0; i < _teamActors.size(); i++)
+    for (size_t i = 1; i <= _teamActors.size(); i++)
     {
-        getTeamRobot((uint8_t)i + 1)->VisibilityOff();
+        getTeamRobot((uint8_t)i)->VisibilityOff();
     }
 
     _obstacleMapping.clear();
@@ -518,8 +638,8 @@ void FieldWidget3D::addFieldActors()
     // this->update();
     // _mainRenderer->AddActor(_field);
 
-    fieldVideoActor = vtkSmartPointer<FieldVideoActor>::New();
-    _mainRenderer->AddActor(fieldVideoActor);
+    _fieldVideoActor = vtkSmartPointer<FieldVideoActor>::New();
+    _mainRenderer->AddActor(_fieldVideoActor);
 
     // Draw playing direction arrow in a lighter color.
     vtkSmartPointer<vtkPoints> arrowPoints = vtkSmartPointer<vtkPoints>::New();
@@ -718,9 +838,9 @@ void FieldWidget3D::addRobotActor(uint8_t robotId)
     _teamActors[robotId]->initialize(robotId, _mainRenderer);
     _mainRenderer->AddActor(_teamActors[robotId]);
 
-    vtkSmartPointer<RobotLabel> label = vtkSmartPointer<RobotLabel>::New();
-    label->initialize(robotId, _annotationRenderer, _teamActors[robotId]);
-    _annotationRenderer->AddActor(label);
+    _teamLabels[robotId] = vtkSmartPointer<RobotLabel>::New();
+    _teamLabels[robotId]->initialize(robotId, _annotationRenderer, _teamActors[robotId]);
+    _annotationRenderer->AddActor(_teamLabels[robotId]);
 }
 
 void FieldWidget3D::addObstacleActor()
@@ -1011,7 +1131,7 @@ vtkSmartPointer<vtkActor> FieldWidget3D::createColoredDot(float x, float y, floa
     dot->SetHeight(0.001);
     dot->SetResolution(32);
     vtkSmartPointer<vtkPolyDataMapper> dotMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    dotMapper->SetInputData(dot->GetOutput());
+    dotMapper->SetInputConnection(dot->GetOutputPort());
 
     vtkActor* coloredDot = vtkActor::New();
     coloredDot->SetMapper(dotMapper);
@@ -1253,5 +1373,15 @@ void FieldWidget3D::updateTrueBall(T_DIAG_TRUE_BALL& true_ball)
     // this leads to a delay on MATCH_STATE compared to the robots time
     // when analyzing the log of a specific robot, this signals is synchronized to
     // that robots time, leading to a more accurate image
-    fieldVideoActor->updateImage(true_ball.timestamp.toDouble(), _heightmapName, _robotID);
+    try
+    {
+        _fieldVideoActor->updateImage(true_ball.timestamp.toDouble(), getHeightmapToDisplay(), getRobotIdToDisplay());
+        Point2D opt = _hmv.getOptimum(getHeightmapToDisplay(), getRobotIdToDisplay());
+        _movingDotActor->SetPosition(opt.x, opt.y, 0);
+    } 
+    catch (const std::runtime_error& e)
+    {   // In some cases optimum cannot be found (e.g. robot does not exist)
+        // then hide optimum dot
+        _movingDotActor->VisibilityOff();
+    }
 }

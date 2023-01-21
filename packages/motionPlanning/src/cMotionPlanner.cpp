@@ -1,4 +1,4 @@
-// Copyright 2017-2020 Jan Feitsma (Falcons)
+// Copyright 2017-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cMotionPlanner.cpp
@@ -36,42 +36,91 @@ cMotionPlanner::~cMotionPlanner()
     delete _cfg;
 }
 
-bool cMotionPlanner::noAction()
+void cMotionPlanner::setAction(actionTypeEnum actionType)
 {
-    TRACE("> actionPtr=%p", _action);
-    bool result = _action == NULL;
-    TRACE("< result=%d", result);
-    return result;
-}
-
-bool cMotionPlanner::checkActionEqual(std::string name)
-{
-    TRACE("> actionPtr=%p", _action);
-    bool result = false;
-    if (_action != NULL)
+    TRACE_FUNCTION("");
+    // Only create a new action if:
+    // - no action exists yet, or
+    // - when a new action is chosen
+    if (_action == NULL || _currentAction != actionType)
     {
-        result = (typeid(*_action).name() == name);
-    }
-    TRACE("< result=%d", result);
-    return result;
-}
+        TRACE("Creating new action");
+        // Delete the old action (if it exists)
+        if (_action != NULL)
+        {
+            delete _action;
+            TRACE_CONTEXT_FINISH(enum2str(_currentAction), _action);
+            _action = 0;
+        }
 
-void cMotionPlanner::clearAction()
-{
-    TRACE("> actionPtr=%p", _action);
-    if (_action != NULL)
-    {
-        delete _action;
-    }
-    TRACE("<");
-}
+        switch(actionType)
+        {
+            case actionTypeEnum::MOVE:
+            {
+                _action = new MP_ActionMoveToTarget();
+                break;
+            }
+            case actionTypeEnum::KICK:
+            {
+                _action = new MP_ActionKick();
+                break;
+            }
+            case actionTypeEnum::PASS:
+            {
+                _action = new MP_ActionPassToTarget();
+                break;
+            }
+            case actionTypeEnum::SHOOT:
+            {
+                _action = new MP_ActionShootAtTarget();
+                break;
+            }
+            case actionTypeEnum::LOB:
+            {
+                _action = new MP_ActionShootAtTarget();
+                break;
+            }
+            case actionTypeEnum::STOP:
+            {
+                _action = new MP_ActionStop();
+                break;
+            }
+            case actionTypeEnum::GET_BALL:
+            {
+                _action = new MP_ActionGetBall();
+                break;
+            }
+            case actionTypeEnum::TURN_AWAY_FROM_OPPONENT:
+            {
+                _action = new MP_ActionTurnAwayFromOpponent();
+                break;
+            }
+            case actionTypeEnum::KEEPER_MOVE:
+            {
+                _action = new MP_ActionKeeperMove();
+                break;
+            }
+            case actionTypeEnum::INTERCEPT_BALL:
+            {
+                _action = new MP_ActionInterceptBall();
+                break;
+            }
+            default:
+            {
+                throw std::runtime_error("Unknown enum value received");
+                break;
+            }
+        }
 
-void cMotionPlanner::initiateAction(MP_AbstractAction *action)
-{
-    TRACE("> actionPtr=%p", _action);
-    _action = action;
-    _action->connect(&_interfaces);
-    TRACE("<");
+        TRACE_CONTEXT_START(enum2str(actionType), _action);
+
+        // Connect the action to all data interfaces
+        _action->connect(&_interfaces);
+        _action->setConfig( _cfg->getConfiguration() );
+        _action->initialize();
+
+        _currentAction = actionType;
+    }
 }
 
 void cMotionPlanner::setActionParameters(std::vector<std::string> const &params)
@@ -102,13 +151,6 @@ actionResult cMotionPlanner::execute()
     // Write ACTION_RESULT to RTDB
     _interfaces.rtdbOutput->setActionResult(result);
 
-    // clear if done
-    if (result.result != actionResultTypeEnum::RUNNING)
-    {
-        TRACE("cleanup");
-        delete _action;
-        _action = NULL;
-    }
     TRACE("< result=%s", enum2str(result.result));
     return result;
 }

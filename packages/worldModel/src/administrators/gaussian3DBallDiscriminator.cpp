@@ -1,4 +1,4 @@
-// Copyright 2020 lucas (Falcons)
+// Copyright 2020-2022 lucas (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Gaussian3DBallDiscriminator.cpp
@@ -15,18 +15,24 @@
 #include "linalgcv.hpp"
 
 
-const static double MIN_ACCEPTED_CONFIDENCE = 0.0;
-const static double MEASUREMENT_MERGE_THRESHOLD = 0.01;
-const static double BALL_MERGE_THRESHOLD = 0.02;
-const static double BALL_VEL_MERGE_THRESHOLD = 0.001;
-const static double BLACKLIST_MAX_VELOCITY = 1.0;
-const static double BLACKLIST_MAX_ACCELERATION = -5.0;
-static const double FLYING_MEASUREMENT_HEIGHT = 0.4;
-
-
-Gaussian3DBallDiscriminator::Gaussian3DBallDiscriminator() :
+Gaussian3DBallDiscriminator::Gaussian3DBallDiscriminator(WorldModelConfig* wmConfig) :
+    wmConfig(wmConfig),
     currentMeasurementBuffer(0),
-    gaussianMeasurements(&(measurementsBuffer[currentMeasurementBuffer]))
+    gaussianMeasurements(&(measurementsBuffer[currentMeasurementBuffer])),
+    ballMergeThreshold(wmConfig->getConfiguration().gaussian3DBalls.ballMergeThreshold),
+    ballVelocityMergeThreshold(wmConfig->getConfiguration().gaussian3DBalls.ballVelocityMergeThreshold),
+    measurementMergeThreshold(wmConfig->getConfiguration().gaussian3DBalls.measurementMergeThreshold),
+    minAcceptedConfidence(wmConfig->getConfiguration().gaussian3DBalls.minAcceptedConfidence),
+    blacklistMaxVelocity(wmConfig->getConfiguration().gaussian3DBalls.blacklistMaxVelocity),
+    blacklistMaxAcceleration(wmConfig->getConfiguration().gaussian3DBalls.blacklistMaxAcceleration),
+    flyingMeasurementHeight(wmConfig->getConfiguration().gaussian3DBalls.flyingMeasurementHeight),
+    parallelAxisDistanceFactor(wmConfig->getConfiguration().gaussian3DBalls.parallelAxisDistanceFactor),
+    parallelAxisOffset(wmConfig->getConfiguration().gaussian3DBalls.parallelAxisOffset),
+    parallelAxisElevationFactor(wmConfig->getConfiguration().gaussian3DBalls.parallelAxisElevationFactor),
+    perpendicularAxisDistanceFactor(wmConfig->getConfiguration().gaussian3DBalls.perpendicularAxisDistanceFactor),
+    perpendicularAxisOffset(wmConfig->getConfiguration().gaussian3DBalls.perpendicularAxisOffset),
+    maxAllowedVariance(wmConfig->getConfiguration().gaussian3DBalls.maxAllowedVariance),
+    timeFactor(wmConfig->getConfiguration().gaussian3DBalls.timeFactor)
 {
 
 }
@@ -38,10 +44,9 @@ Gaussian3DBallDiscriminator::~Gaussian3DBallDiscriminator()
 
 double Gaussian3DBallDiscriminator::getMeasurementVarianceParallelAxis(const Vector3D& measurementVec, const ballMeasurement& measurement, double elevation)
 {
-    double distanceFactor = 0.30;
     double size = vectorsize(measurementVec);
-    double offset = 0.01;
-    double elevationFactor = 1.0;
+    double elevationFactor = parallelAxisElevationFactor;
+
 
     if(elevation < -M_PI/4)
     {
@@ -50,23 +55,21 @@ double Gaussian3DBallDiscriminator::getMeasurementVarianceParallelAxis(const Vec
         elevationFactor = std::max(elevationFactor, 0.0);
     }
 
-    return offset + size*distanceFactor*elevationFactor;
+    return parallelAxisOffset + size*parallelAxisDistanceFactor*elevationFactor;
 }
 
 double Gaussian3DBallDiscriminator::getMeasurementVariancePerpendicularAxis(const Vector3D& measurementVec, const ballMeasurement& measurement)
 {
     //int ownRobotId = getRobotNumber();
 
-    double distanceFactor = 0.02;
     double size = vectorsize(measurementVec);
-    double offset = 0.01;
 
     // if(measurement.identifier.robotID == ownRobotId)
     // {
     //     distanceFactor = 0.002;
     // }
 
-    return offset + size*distanceFactor;
+    return perpendicularAxisOffset + size*perpendicularAxisDistanceFactor;
 }
 
 Vector3D Gaussian3DBallDiscriminator::getMeasurementMean(Vector3D measurementVec, const ballMeasurement& measurement)
@@ -112,11 +115,33 @@ Gaussian3DMeasurement Gaussian3DBallDiscriminator::gaussianMeasurementFromBallMe
     return gaussianMeasurement;
 }
 
+Gaussian3DMeasurement Gaussian3DBallDiscriminator::gaussianMeasurementFromPossesionMeasurement(const Vector3D& ball_pos, uint8_t robotID, rtime timestamp)
+{
+    // the perpendicularAxisOffset is arbitrarily chosen as a low value
+    // for the high confidence of possession measurements
+    Matrix33 covariance;
+    covariance.matrix[0][0] = perpendicularAxisOffset;
+    covariance.matrix[1][1] = perpendicularAxisOffset;
+    covariance.matrix[2][2] = perpendicularAxisOffset;
+    Gaussian3D ballGaussianPos(ball_pos, covariance);
+
+    Gaussian3DPosition positionGaussian(ballGaussianPos, timestamp);
+    Gaussian3DMeasurement gaussianMeasurement(positionGaussian, robotID);
+    return gaussianMeasurement;
+}
+
 void Gaussian3DBallDiscriminator::addMeasurement(const ballMeasurement& measurement)
 {    
     Gaussian3DMeasurement gaussianMeasurement = gaussianMeasurementFromBallMeasurement(measurement);
 
     measurements.push_back(measurement);
+    gaussianMeasurements->push_back(gaussianMeasurement);
+}
+
+void Gaussian3DBallDiscriminator::addPossessionMeasurement(const Vector3D& ball_pos, uint8_t robotID, rtime timestamp)
+{
+    Gaussian3DMeasurement gaussianMeasurement = gaussianMeasurementFromPossesionMeasurement(ball_pos, robotID, timestamp);
+
     gaussianMeasurements->push_back(gaussianMeasurement);
 }
 
@@ -135,7 +160,6 @@ void Gaussian3DBallDiscriminator::removeLostBalls()
     {
         Matrix33 covariance = it->getPosition().getCovariance();
         double maxCovariance = std::max(std::max(covariance.matrix[0][0], covariance.matrix[1][1]),covariance.matrix[2][2]);
-        double maxAllowedVariance = 16.0;
 
         if(maxCovariance > maxAllowedVariance)
         {
@@ -173,9 +197,9 @@ void Gaussian3DBallDiscriminator::removeBallsOutsideField()
     }
 }
 
-static bool isGaussianMeasurementOfFlyingBall(const Gaussian3DMeasurement& measurement)
+bool Gaussian3DBallDiscriminator::isGaussianMeasurementOfFlyingBall(const Gaussian3DMeasurement& measurement)
 {
-    bool flying = measurement.gaussianPosition.getGaussian3D().getMean().z > FLYING_MEASUREMENT_HEIGHT;
+    bool flying = measurement.gaussianPosition.getGaussian3D().getMean().z > flyingMeasurementHeight;
     return flying;    
 }
 
@@ -187,7 +211,7 @@ void Gaussian3DBallDiscriminator::addGaussianMeasurement(const Gaussian3DMeasure
     for(auto it=gaussianBalls.begin(); it!=gaussianBalls.end(); it++)
     {
         double intersection = it->getPosition().getIntersection(measurement.gaussianPosition.getGaussian3D());
-        bool intersectionCondition = (intersection > MEASUREMENT_MERGE_THRESHOLD) && (intersection > bestMatchIntersection);
+        bool intersectionCondition = (intersection > measurementMergeThreshold) && (intersection > bestMatchIntersection);
         bool flying_condition = isGaussianMeasurementOfFlyingBall(measurement) == it->isFlying();
 
         bool mergeAccepted = intersectionCondition && flying_condition;
@@ -226,7 +250,7 @@ void Gaussian3DBallDiscriminator::blacklistFakeBalls()
 
             Vector3D acceleration = it->getAcceleration();
 
-            bool blacklisted = acceleration.z > BLACKLIST_MAX_ACCELERATION;
+            bool blacklisted = acceleration.z > blacklistMaxAcceleration;
             it->setBlacklisted(blacklisted);
         }
         else
@@ -251,8 +275,8 @@ void Gaussian3DBallDiscriminator::mergeBalls()
             Gaussian3D velocity_jt = jt->getVelocity();
             double intersection_vel = velocity_it.getIntersection(velocity_jt);
 
-            bool posIntersectionCondition = intersection_pos > BALL_MERGE_THRESHOLD;
-            bool velIntersectionCondition = intersection_vel > BALL_VEL_MERGE_THRESHOLD;
+            bool posIntersectionCondition = intersection_pos > ballMergeThreshold;
+            bool velIntersectionCondition = intersection_vel > ballVelocityMergeThreshold;
             bool flying_condition = it->isFlying() == jt->isFlying();
 
             if(posIntersectionCondition && velIntersectionCondition && flying_condition)
@@ -292,7 +316,7 @@ void Gaussian3DBallDiscriminator::convertGaussianBallsToOutputBalls()
         ball.setConfidence(confidence);
         ball.setIsValid(true);
 
-        if(confidence >= MIN_ACCEPTED_CONFIDENCE && (!it->getBlacklisted()))
+        if(confidence >= minAcceptedConfidence && (!it->getBlacklisted()))
         {
             balls.push_back(ball);
         }
@@ -319,8 +343,7 @@ void Gaussian3DBallDiscriminator::performCalculation(rtime timeNow, const Vector
     for(auto it=gaussianMeasurements->begin(); it!=gaussianMeasurements->end(); it++)
     {
         double dt = timeNow - it->gaussianPosition.getTimestamp();
-        double timefactor = 0.01;
-        it->gaussianPosition.estimateMovement(dt, timefactor);
+        it->gaussianPosition.estimateMovement(dt, timeFactor);
         addGaussianMeasurement(*it);
     }
 

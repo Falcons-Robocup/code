@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include <cDiagnostics.hpp>
 #include "int/motors/PeripheralsInterfaceData.hpp"
@@ -76,9 +76,6 @@ void PeripheralsInterfaceData::setVelocityOutput(const piVelAcc& vel) {
 piDisplacement PeripheralsInterfaceData::getDisplacementOutput() {
 	_displacementOutputLock.lock();
 	piDisplacement displacement = _displacementOutput;
-	_displacementOutput.m1_pos = 0.0;
-	_displacementOutput.m2_pos = 0.0;
-	_displacementOutput.m3_pos = 0.0;
 	_displacementOutputLock.unlock();
 
 	return displacement;
@@ -86,9 +83,9 @@ piDisplacement PeripheralsInterfaceData::getDisplacementOutput() {
 
 void PeripheralsInterfaceData::setDisplacementOutput(const piDisplacement& displacement) {
 	_displacementOutputLock.lock();
-	_displacementOutput.m1_pos += displacement.m1_pos;
-	_displacementOutput.m2_pos += displacement.m2_pos;
-	_displacementOutput.m3_pos += displacement.m3_pos;
+	_displacementOutput.m1_pos = displacement.m1_pos;
+	_displacementOutput.m2_pos = displacement.m2_pos;
+	_displacementOutput.m3_pos = displacement.m3_pos;
 	_displacementOutputLock.unlock();
 }
 

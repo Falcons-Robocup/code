@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef CONFIGPATHPLANNING_HPP_
 #define CONFIGPATHPLANNING_HPP_
@@ -67,17 +67,23 @@ struct DeadzoneConfig
     SERIALIZE_DATA(enabled, toleranceXY, toleranceRz);
 };
 
+struct TokyoDriftConfig
+{
+    float toleranceRz    = 1.0; // if deltaPos.Rz > tokyoDrift.toleranceRz -> do tokyo drift; otherwise do normal rotation
+    SERIALIZE_DATA(toleranceRz);
+};
+
 struct ConfigPathPlanning
 {
-    float                              nominalFrequency = 20.0;
     int                                numExtraSettlingTicks = 0;
     ObstacleAvoidanceConfig            obstacleAvoidance;
     BoundaryConfig                     boundaries;
     float                              slowFactor = 0.5;
     ForwardDrivingConfigs              forwardDriving;
     DeadzoneConfig                     deadzone;
+    TokyoDriftConfig                   tokyoDrift;
 
-    SERIALIZE_DATA(nominalFrequency, numExtraSettlingTicks, obstacleAvoidance, boundaries, slowFactor, forwardDriving, deadzone);
+    SERIALIZE_DATA(numExtraSettlingTicks, obstacleAvoidance, boundaries, slowFactor, forwardDriving, deadzone, tokyoDrift);
 };
 
 #endif

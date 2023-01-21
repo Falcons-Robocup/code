@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Jan Feitsma (Falcons)
+// Copyright 2015-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
@@ -9,10 +9,10 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 
 // Internal:
-#include "int/GameSignalAdapter.h"
-#include "int/RefboxConfigAdapter.h"
+#include "int/adapters/RtdbGameSignalAdapter.h"
 #include "int/PlaybackControl.h"
 
 
@@ -29,13 +29,17 @@ namespace Visualizer
         ~MainWindow();
         
     private:
-        GameSignalAdapter *_gameSignalAdapter;
-        RefboxConfigAdapter * refboxConfig;
+        std::shared_ptr<cDbConnection>          _db_connection_A = nullptr;
+        std::shared_ptr<cDbConnection>          _db_connection_B = nullptr;
+        std::unique_ptr<RtdbGameSignalAdapter>  _gameSignalAdapter = nullptr;
 
-        std::vector<QAction*> _robotViewActions;
-        std::vector<QAction*> _robotHeightmapActions;
-        std::vector<WidgetBase *> _widgets;
-        PlaybackControl *_pbControl;
+        QAction*                    _actionViewTeamB = nullptr;
+        std::vector<QAction*>       _robotViewActions;
+        std::vector<QAction*>       _robotHeightmapActions;
+        std::vector<QAction*>       _roleHeightmapActions;
+        
+        std::vector<WidgetBase *>   _widgets;
+        PlaybackControl*            _pbControl = nullptr;
 
     protected:
         bool eventFilter(QObject *obj, QEvent *event); // handle Qt events from parent window
@@ -50,11 +54,12 @@ namespace Visualizer
         void switchViewToPathPlanning(void);
         void switchViewToTeamplay(void);
         void switchViewToTeam(void);
+        void switchViewToTeamB(void);
         void switchViewToRobot(int robotId);
 
     private Q_SLOTS:
-        void showSettingsDialog(void);
-
+        void setDarkTheme(void);
+        void setLightTheme(void);
     };
 }
 

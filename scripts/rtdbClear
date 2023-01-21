@@ -1,14 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env python3
 #
-# Clear RTDB file storage.
+# Clear RTDB file storage(s). Typically used at robot/coach/simulation startup.
 # 
 # JFEI 2018-10-21 
 
+import rtdb2
+from pathlib import Path
 
-location=/tmp
-for folder in rtdb2_playback rtdb2_storage ; do
-    if [ -d $location/$folder ]; then
-        rm -rf $location/$folder
-    fi
-done
-
+for rtdb_path in Path("/tmp/").glob("rtdb_*"):
+    rtdb_store = rtdb2.RtDB2MultiStore(rtdb_path, readonly=False)
+    for item in rtdb_store.getAllRtDBItems():
+        for agent_store in rtdb_store.agentStores.values():
+            agent_store.wakeWaitingConsumers(item.agent, item.key)
+            agent_store.get_and_clear(item.agent, item.key)

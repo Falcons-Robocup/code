@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBInputAdapter.cpp
@@ -16,7 +16,7 @@ cRTDBInputAdapter::cRTDBInputAdapter(cVelocityTransformData *data, iterateFuncti
 {
     TRACE(">");
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId);
     _vtData = data;
     _iterateFeedbackFunc = feedbackfunc;
     _iterateSetpointFunc = setpointfunc;
@@ -29,6 +29,8 @@ cRTDBInputAdapter::~cRTDBInputAdapter()
 
 void cRTDBInputAdapter::waitForMotorFeedback()
 {
+    INIT_TRACE_THREAD("waitForMotorFeedback");
+
     while (true)
     {
         try

@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Minitrace
 //
@@ -109,9 +109,9 @@ void internal_mtr_raw_event_arg(const char *category, const char *name, char ph,
 #define MTR_SCOPE_LIMIT(c, n, l) MTRScopedTraceLimit ____mtr_scope(c, n, l)
 
 // Async events. Can span threads. ID identifies which events to connect in the view.
-#define MTR_START(c, n, id) internal_mtr_raw_event(c, n, 'S', (void *)(id))
-#define MTR_STEP(c, n, id, step) internal_mtr_raw_event_arg(c, n, 'T', (void *)(id), MTR_ARG_TYPE_STRING_CONST, "step", (void *)(step))
-#define MTR_FINISH(c, n, id) internal_mtr_raw_event(c, n, 'F', (void *)(id))
+#define MTR_START(c, n, id) internal_mtr_raw_event(c, n, 'b', (void *)(id))
+#define MTR_STEP(c, n, id, step) internal_mtr_raw_event_arg(c, n, 'n', (void *)(id), MTR_ARG_TYPE_STRING_CONST, "step", (void *)(step))
+#define MTR_FINISH(c, n, id) internal_mtr_raw_event(c, n, 'e', (void *)(id))
 
 // Flow events. Like async events, but displayed in a more fancy way in the viewer.
 #define MTR_FLOW_START(c, n, id) internal_mtr_raw_event(c, n, 's', (void *)(id))

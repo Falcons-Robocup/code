@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Andre Pool (Falcons)
+// Copyright 2018-2021 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2017-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
@@ -18,7 +18,7 @@
 #include "multicastSend.hpp"
 
 #ifndef NOROS
-#include "FalconsRtDB2.hpp" // for the multiCamStatistics type(s)
+#include "FalconsRTDB.hpp" // for the multiCamStatistics type(s)
 #endif
 
 using namespace std;
@@ -69,7 +69,16 @@ multicastSend::multicastSend(ballDetection *ballDet[4], ballDetection *ballFarDe
 
 	// first check if we can find the Ubuntu 16.04 network interface names
 	// TODO: determine interface names with a dynamic mechanism
-	sprintf(buff, "wlp2s0"); // wlan
+	sprintf(buff, "wlp2s0"); // wlan cpu box
+	strcpy(ifr.ifr_name, buff);
+	if (ioctl(fd, SIOCGIFFLAGS, &ifr) >= 0) {
+		printNetworkInterface(buff, ifr.ifr_flags);
+		if (ifr.ifr_flags & IFF_RUNNING) {
+			searchInterface = false;
+		}
+	}
+
+	sprintf(buff, "wlp3s0"); // wlan hp zbook g3
 	strcpy(ifr.ifr_name, buff);
 	if (ioctl(fd, SIOCGIFFLAGS, &ifr) >= 0) {
 		printNetworkInterface(buff, ifr.ifr_flags);
@@ -609,7 +618,6 @@ void multicastSend::floorLinePoints() {
 // send the ball list, also used for the cyanList, magentaList and obstacles
 void multicastSend::objectList(size_t type) {
 	vector<objectSt> objectList;
-	objectList.empty();
 	if (type == TYPE_BALLDETECTION) {
 		for (size_t cam = 0; cam < 4; cam++) {
 			vector<ballSt> tmp = ballDet[cam]->getAndClearPositionsRemoteViewer();

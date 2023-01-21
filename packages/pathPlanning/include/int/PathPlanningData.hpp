@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * PathPlanningData.hpp
@@ -19,6 +19,7 @@
 // sharedTypes
 #include "actionResult.hpp"
 #include "ConfigPathPlanning.hpp"
+#include "ConfigExecution.hpp"
 #include "diagPathPlanning.hpp"
 #include "wayPoint.hpp"
 #include "forbiddenArea.hpp"
@@ -32,7 +33,8 @@
 struct PathPlanningData
 {
     // inputs
-    ConfigPathPlanning          config;
+    ConfigPathPlanning          configPP;
+    ConfigExecution             configEx;
     wayPoint                    target;
     rtime                       timestamp;
     std::vector<forbiddenArea>  forbiddenAreas;

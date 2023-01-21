@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Erik Kouters (Falcons)
+// Copyright 2015-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cShootPlanner.cpp
@@ -6,7 +6,7 @@
  *  Created on: Jun 21, 2015
  *      Author: Thomas Kerkhof
  */
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "ConfigRTDBAdapter.hpp"
 
 #include "int/cShootPlanner.hpp"

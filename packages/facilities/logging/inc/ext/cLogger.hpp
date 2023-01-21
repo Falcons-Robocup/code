@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cLogger.hpp
@@ -19,7 +19,7 @@
 #include <map>
 #include <fstream>
 #include "cLogFileWriter.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 
 class cLogger

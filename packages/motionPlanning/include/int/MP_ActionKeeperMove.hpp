@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionKeeperMove.hpp
@@ -19,11 +19,13 @@ class MP_ActionKeeperMove: public MP_AbstractAction
 public:
     MP_ActionKeeperMove();
     actionResultTypeEnum execute();
+
+    void initialize() override;
     
 private:
-    void unpackParameters();
     void getCfg();
     void calculateSlow();
+    void calculateTarget();
     void checkBallBehindKeeper();
     void clipTarget();
     void checkExtendKeeperFrame();
@@ -32,6 +34,8 @@ private:
     // data members
     actionResultTypeEnum _result;
     Position2D _currentPos;
+    Vector3D _ballPos;
+    Vector3D _ballVel;
     Position2D _targetPos;
     motionTypeEnum _motionType = motionTypeEnum::INVALID;
     bool       _haveKeeperFrame = false;

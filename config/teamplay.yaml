@@ -52,7 +52,7 @@ heightmaps:
             OBS_BLOCKING_BALL                   : 0.0
             OBS_BLOCKING_OPP_GOAL               : 0.0
             OBS_BLOCKING_TEAMMATES              : 0.0
-        POSITION_FOR_OWN_SETPIECE:
+        POSITION_ATTACKER_FOR_OWN_SETPIECE:
             AVOID_BALL                          : 0.0
             AVOID_OBSTACLES                     : 0.3
             AVOID_TEAM_MATES                    : 0.2
@@ -72,8 +72,8 @@ interceptBall:
     activeIntercept: False
 
 rules:
-    setpieceExecuteTimeout: 7000
-    penaltyExecuteTimeout: 15000
+    setpieceExecuteTimeout: 7.0
+    penaltyExecuteTimeout: 15.0
     minKickDistanceKicked: 1.5
     minPenaltyDistanceKicked: 2.0
     minOwnKickoffDistanceKicked: 1.5

@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Tim Kouters (Falcons)
+// Copyright 2015-2021 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * main.cpp
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 
     try
     {
-        INIT_TRACE;
+        INIT_TRACE("teamplay");
 
         // setup the refbox signal listener by creating the object once (singleton)
         // (note that this is done via callback, so no periodical update in the loop below)

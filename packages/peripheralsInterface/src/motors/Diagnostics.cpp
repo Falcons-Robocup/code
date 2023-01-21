@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Diagnostics.cpp
@@ -23,7 +23,7 @@ Diagnostics::Diagnostics(PeripheralsInterfaceData& piData, bool ballhandlersAvai
 	TRACE(">");
 
 	started = false;
-    _rtdb = RtDB2Store::getInstance().getRtDB2(getRobotNumber());
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(getRobotNumber());
 
 
 	if (ballhandlersAvailable) {
@@ -81,21 +81,17 @@ void Diagnostics::timer() {
 void Diagnostics::addSensorData() {
 	T_DIAG_PERIPHERALSINTERFACE msg;
 
+	/////// DRIVE MOTORS
+
 	piVelAcc v = piData.getVelocityInput();
-	msg.speed_vel[0] = v.m1_vel;
-	msg.speed_vel[1] = v.m2_vel;
-	msg.speed_vel[2] = v.m3_vel;
+	msg.velocity_setpoint[0] = v.m1_vel;
+	msg.velocity_setpoint[1] = v.m2_vel;
+	msg.velocity_setpoint[2] = v.m3_vel;
 
 	v = piData.getVelocityOutput();
-	msg.feedback_vel[0] = v.m1_vel;
-	msg.feedback_vel[1] = v.m2_vel;
-	msg.feedback_vel[2] = v.m3_vel;
-	
-	// check if driving
-	bool isDriving = false;
-	if (fabs(v.m1_vel) > 0.1) isDriving = true;
-	if (fabs(v.m2_vel) > 0.1) isDriving = true;
-	if (fabs(v.m3_vel) > 0.1) isDriving = true;
+	msg.velocity_feedback[0] = v.m1_vel;
+	msg.velocity_feedback[1] = v.m2_vel;
+	msg.velocity_feedback[2] = v.m3_vel;
 
 	MotionBoardDataOutput rearMotionBoardData = piData.getRearMotionBoard().getDataOutput();
 	MotionBoardDataOutput rightMotionBoardData = piData.getRightMotionBoard().getDataOutput();
@@ -110,16 +106,18 @@ void Diagnostics::addSensorData() {
 	voltageMonitor.feed(leftMotionBoardData.motorController.voltage);
 	voltageMonitor.feed(rightMotionBoardData.motorController.voltage);
 	msg.voltage = voltageMonitor.get();
+
+	// check if driving
+	bool isDriving = false;
+	if (fabs(v.m1_vel) > 0.1) isDriving = true;
+	if (fabs(v.m2_vel) > 0.1) isDriving = true;
+	if (fabs(v.m3_vel) > 0.1) isDriving = true;
 	
 	// check voltage, but do not generate warnings while driving
 	if (!isDriving)
 	{
 		voltageMonitor.check();
 	}
-
-	// get ballhandler angles
-	msg.bh_left_angle = piData.getLeftBallhandlerBoard().getDataOutput().ballhandler.angle * 0.01;
-	msg.bh_right_angle = piData.getRightBallhandlerBoard().getDataOutput().ballhandler.angle * 0.01;
 
     // motor PID
     msg.motor_pid_output[0] = rightMotionBoardData.motion.pidOutput;
@@ -141,6 +139,33 @@ void Diagnostics::addSensorData() {
     msg.motor_derivative[1] = rearMotionBoardData.motion.derivative;
     msg.motor_derivative[2] = leftMotionBoardData.motion.derivative;
 
+
+
+	/////// BALLHANDLERS
+
+	BallhandlerBoardDataOutput bh_left_data = piData.getLeftBallhandlerBoard().getDataOutput();
+	BallhandlerBoardDataOutput bh_right_data = piData.getRightBallhandlerBoard().getDataOutput();
+
+	msg.bh_angle[0] = bh_left_data.ballhandler.angle;
+	msg.bh_angle[1] = bh_right_data.ballhandler.angle;
+
+	msg.bh_tacho_zero[0] = bh_left_data.ballhandler.tachoZero;
+	msg.bh_tacho_zero[1] = bh_right_data.ballhandler.tachoZero;
+
+	msg.bh_tacho[0] = bh_left_data.ballhandler.tacho;
+	msg.bh_tacho[1] = bh_right_data.ballhandler.tacho;
+
+	msg.bh_pid_output[0] = bh_left_data.motorController.pidOutput / 10000.0;
+	msg.bh_pid_output[1] = bh_right_data.motorController.pidOutput / 10000.0;
+
+	msg.bh_error[0] = bh_left_data.motorController.error;
+	msg.bh_error[1] = bh_right_data.motorController.error;
+
+	msg.bh_integral[0] = bh_left_data.motorController.integral;
+	msg.bh_integral[1] = bh_right_data.motorController.integral;
+
+	msg.bh_pwm[0] = bh_left_data.motorController.pwm;
+	msg.bh_pwm[1] = bh_right_data.motorController.pwm;
 
     if (_rtdb != NULL)
     {

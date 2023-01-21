@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionGetBall.cpp
@@ -70,6 +70,26 @@ void MP_ActionGetBall::analyzeGeometry()
     _ballMovingFastEnough = (vectorsize(Vector2D(ballVelocity.x, ballVelocity.y)) > _ballSpeedThreshold);
 
     // roadmap: detect if ball is bouncing, if so, adjust depth D on the ball line
+
+    ////// !! 2020-12-31 EKPC -- WIP for overtaking ball by sprinting
+    // see if we can overtake the ball and catch it with a sprint
+    //for (int i = 0; i < 10; i++)
+    //{
+    //    Vector2D ballPosAfterXSeconds = Vector2D(_B.x, _B.y) + Vector2D(_wm->ballVelocity().x, _wm->ballVelocity().y) * double(i);
+    //    Vector2D robotPosAfterXSeconds = Vector2D(_R.x, _R.y) + Vector2D(_wm->ballVelocity().x, _wm->ballVelocity().y).normalized() * 1.6 * double(i);
+    //    // overtake at +1m
+    //    Vector2D overtakeBallPos = Vector2D(ballPosAfterXSeconds.x, ballPosAfterXSeconds.y) + Vector2D(_wm->ballVelocity().x, _wm->ballVelocity().y).normalized() * 1.0;
+
+    //    std::stringstream str;
+    //    str << "------\n";
+    //    str << "After " << i << " seconds:\n";
+    //    str << "ballPos=(" << ballPosAfterXSeconds.x << ", " << ballPosAfterXSeconds.y << ")\n";
+    //    str << "robotPos=(" << robotPosAfterXSeconds.x << ", " << robotPosAfterXSeconds.y << ")\n";
+    //    str << "overtakeBallPos=(" << overtakeBallPos.x << ", " << overtakeBallPos.y << ")\n";
+    //    str << "------\n";
+    //    
+    //    TRACE(str.str().c_str());
+    //}
 }
 
 void MP_ActionGetBall::faceBall()
@@ -84,16 +104,19 @@ actionResultTypeEnum MP_ActionGetBall::execute()
     // check active
     if (!_wm->isActive())
     {
+        TRACE("Failed: WM inactive");
         return actionResultTypeEnum::FAILED;
     }
     // check ball existence
     if (_wm->noBall())
     {
+        TRACE("Failed: Ball not found");
         return actionResultTypeEnum::FAILED;
     }
     // check ball possession
     if (_wm->hasBall())
     {
+        TRACE("Robot has ball");
         // action has finished successfully
         // notify pathPlanning to reset, to clear diagnostics and to prevent setpoint drift (watchdog)
         // (this might actually have been contributing to the rotation-on-intercept issue we have been seeing)
@@ -102,6 +125,7 @@ actionResultTypeEnum MP_ActionGetBall::execute()
     }
     if (_wm->teamHasBall())
     {
+        TRACE("Failed: Team already has ball");
         return actionResultTypeEnum::FAILED;
     }
 

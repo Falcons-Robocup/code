@@ -1,11 +1,11 @@
-// Copyright 2019 Edwin Schreuder (Falcons)
+// Copyright 2019-2021 Edwin Schreuder (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef RTDBINPUTADAPTER_HPP_
 #define RTDBINPUTADAPTER_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
-#include "Motors.pb.h"
+#include "motion.pb.h"
 
 struct KickerSetpoint
 {
@@ -23,8 +23,8 @@ public:
     RTDBInputAdapter();
     ~RTDBInputAdapter();
 
-    ::motors::RobotVector getRobotVelocitySetpoint();
-    ::motors::BallhandlerAngles getBallhandlerAngleSetpoints();
+    ::Motion::RobotVector getRobotVelocitySetpoint();
+    ::Motion::BallhandlerVector getBallhandlerAngleSetpoints();
     bool getBallhandlersOn();
 
     void waitForKickerSetpoint();

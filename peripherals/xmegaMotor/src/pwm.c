@@ -61,17 +61,31 @@ void taskPwm() {
 	// for testing the setpoint can be directly set to the pwm (without pid)
 	if( getMode() == MODE_PWM_ONLY ) {
 		pwmValue16 = getPrimarySetPoint(); // only used for testing
-	} else {
-		int32_t pwmValue32 = getPidPrimaryResult32(); // default use the pid value
+	}
+	else if ( getMode() == MODE_PID_ENCODER ) // drive motors only
+	{
+		int32_t pidOutput32 = getPidPrimaryResult32(); // default use the pid value
+
+        // pid provides a signal that aims to bring the error to 0
+        // pwm_output = pwm_output + pid_output
+        int32_t newPwmValue32 = pwmValuePrevious + pidOutput32;
+
+        // old: pwm_output = pid_output
+        // new: pwm_output = pwm_output + pid_output
+        // The old one, when the setpoint is reached (error=0), the I term was required to stay on the setpoint
+        // The new one, pid_output is used as delta to regulate pwm_output such that error=0
+        //
+        // In other words, drive motors is a velocity controller.
+        // If error=0, keep PWM output at the same level
 
 		// limit the max PWM as function of the motor's velocity
 		int32_t pwmValuePosMax = velocity*41822 + 8406586;
 		int32_t pwmValueNegMax = velocity*41822 - 8406586;
-		if( pwmValue32 > pwmValuePosMax ) {
-			pwmValue32 = pwmValuePosMax;
+		if( newPwmValue32 > pwmValuePosMax ) {
+			newPwmValue32 = pwmValuePosMax;
 		}
-		if( pwmValue32 < pwmValueNegMax ) {
-			pwmValue32 = pwmValueNegMax;
+		if( newPwmValue32 < pwmValueNegMax ) {
+			newPwmValue32 = pwmValueNegMax;
 		}
 
 		// limit the maximal increase or decrease for the pwm per 2.5ms
@@ -84,10 +98,36 @@ void taskPwm() {
 		//	pwmValue32 = pwmValueNegMaxSafe;
 		//}
 
-		pwmValuePrevious = pwmValue32; // store current pwm value for the next cycle
+		pwmValuePrevious = newPwmValue32; // store current pwm value for the next cycle
 
-		pwmValue16 = pwmValue32>>16;
+		pwmValue16 = newPwmValue32>>16;
 	}
+	else // ballhandler motors
+	{
+		int32_t pidOutput32 = getPidPrimaryResult32(); // default use the pid value
+
+        // pid provides a signal that aims to bring the error to 0
+        // pwm_output = pid_output
+        int32_t newPwmValue32 = pidOutput32;
+
+        // Ballhandlers is a position controller.
+        // If error=0, the ballhandlers should not spin, and the PWM output also 0.
+
+		// limit the maximal increase or decrease for the pwm per 2.5ms
+		int32_t pwmValuePosMaxSafe = pwmValuePrevious + pwmDelta;
+		int32_t pwmValueNegMaxSafe = pwmValuePrevious - pwmDelta;
+		if( newPwmValue32 > pwmValuePosMaxSafe ) {
+			newPwmValue32 = pwmValuePosMaxSafe;
+		}
+		if( newPwmValue32 < pwmValueNegMaxSafe ) {
+			newPwmValue32 = pwmValueNegMaxSafe;
+		}
+
+		pwmValuePrevious = newPwmValue32; // store current pwm value for the next cycle
+
+		pwmValue16 = newPwmValue32>>16;
+	}
+	
 
 	// limit the pwm within the available range (time)
 	if( pwmValue16 > PWM_COUNTS ) {

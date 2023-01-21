@@ -1,7 +1,7 @@
 // Copyright 2020 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
- * cAbstractVelocityTransform.hpp
+ * cVelocityTransformMain.hpp
  *
  *  Created on: Jan 27, 2018
  *      Author: Erik Kouters

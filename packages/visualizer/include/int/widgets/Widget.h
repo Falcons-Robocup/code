@@ -1,4 +1,4 @@
-// Copyright 2016-2019 Diana Koenraadt (Falcons)
+// Copyright 2016-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Widget.h
@@ -16,7 +16,7 @@
 // Internal:
 #include "int/TeamRobotSelection.h"
 #include "int/GameSignalSubscriber.h"
-#include "int/GameSignalAdapter.h"
+#include "int/adapters/GameSignalAdapter.h"
 
 template <class TWidgetGameSignalSubscriber, class TWidget, class TSettingsDialog = QDialog>
 class Widget;

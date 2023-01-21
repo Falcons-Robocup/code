@@ -1,4 +1,4 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef CAMBADA_RTDBDEFINITIONS_H
 #define CAMBADA_RTDBDEFINITIONS_H
@@ -14,11 +14,11 @@
 #define SERIALIZE_DATA_FIXED(...)   MSGPACK_DEFINE(__VA_ARGS__)
 #define SERIALIZE_ENUM(enum_name)   MSGPACK_ADD_ENUM(enum_name)
 #define RTDB2_DEFAULT_PATH          "/tmp/rtdb2_storage"
-#define RTDB2_SIM_TEAM_A_PATH       "/tmp/rtdb2_storage"   // TODO: change into rtdb2_storage_team_A
-#define RTDB2_SIM_TEAM_B_PATH       "/tmp/rtdb2_storage_team_B"
-#define DB_PREPEND_NAME             "agent"
 #define RTDB2_CONFIGURATION_FILE    "config/rtdb2_configuration.xml"
 #define ZSTD2_DICTIONARY_FILE       "config/zstd_dictionary.dic"
+
+const std::string DB_PREPEND_NAME("agent");
+const std::string DB_SYNC_PREPEND_NAME("agent_sync");
 
 // Default defines that are possible to call
 // _FC means that it is possible to define the file and function caller

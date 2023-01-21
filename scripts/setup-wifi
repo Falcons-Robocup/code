@@ -8,8 +8,11 @@ import uuid
 import glob
 import re
 
-use_pass_words = True
-pass_words = {'A': 'WIFI_access', 'B': 'WIFI_access'}
+pass_words = {
+    "MSL_FIELD": False,
+    "Falcons": 'WIFI_access',
+}
+
 
 
 template = """
@@ -29,11 +32,10 @@ method=ignore
 [ipv4]
 method=manual
 dns=172.16.74.1;
-addresses1=172.16.74.{SUBIP};24;{GATEWAY};
+addresses1=172.16.74.{SUBIP};16;{GATEWAY};
 """
 
-if use_pass_words:
-    template += """
+pass_template = """
 [802-11-wireless-security]
 key-mgmt=wpa-psk
 psk={PASSWORD}
@@ -74,6 +76,9 @@ def write_config(configdata):
 
     try:
         print(template.format(**configdata), file=config)
+        if configdata['PASSWORD']:
+            print(pass_template.format(**configdata), file=config)
+
         config.close()
     except IOError as e:
         raise RuntimeError('Error while writing config {}: {}'.format(filename, e.strerror))
@@ -303,19 +308,20 @@ def main():
     config['MACADDRESS'] = config['INT'][1]
     del config['INT']
     config['SUBIP'] = sub_ip()
-    config['PASSWORD'] = pass_words[config['FIELD']]
     config['FREQ'] = 'b' if config['FREQ'] == '2.4' else 'a'
 
     for network in networks:
         config['UUID'] = str(uuid.uuid4())
         config['NETWORK'] = network
         config['GATEWAY'] = gateways[network]
+        config['PASSWORD'] = pass_words[network]
         configname = '{}_{}_{}'.format(config['NETWORK'], config['FIELD'], config['FREQ'])
 
         remove_all_msl_configs(network)
         print('Removed all existing %s WIFI configurations' % (network))
         write_config(config)
         print('Wrote a new WIFI configuration for {}; it should come up automatically'.format(configname))
+        print("If not, try running the following command: systemctl restart NetworkManager")
 
 
 if __name__ == '__main__':

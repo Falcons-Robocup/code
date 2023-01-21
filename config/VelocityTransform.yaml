@@ -1,0 +1,5 @@
+motorMaxVel:        1.5
+matrix:
+    - [-0.5, -0.866, 0.22  ] # [vx, vy, vRz] for motor 1
+    - [-0.5,  0.866, 0.22  ] # [vx, vy, vRz] for motor 2
+    - [ 1.0,  0.0  , 0.2266] # [vx, vy, vRz] for motor 3

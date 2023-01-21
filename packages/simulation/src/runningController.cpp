@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Coen Tempelaars (Falcons)
+// Copyright 2018-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * runningController.cpp
@@ -14,14 +14,6 @@
 
 
 const static float minimumWaitingTime =  5.0; //seconds
-
-static Vector2D getPositionNoise()
-{
-    /* Returns a Vector2D between (-0.5, -0.5) and (0.5, 0.5) */
-    double random_x = ( (std::rand() % 1000000) * 0.000001 ) - 0.5;
-    double random_y = ( (std::rand() % 1000000) * 0.000001 ) - 0.5;
-    return Vector2D(random_x, random_y);
-}
 
 boost::signals2::connection RunningController::goalSignalSubscribe (const goalSignal_t::slot_type& subscriber)
 {
@@ -63,7 +55,7 @@ void RunningController::control (const ArbiterGameData& gamedata, const float se
         poiInfo p;
         cEnvironmentField::getInstance().getFieldPOI(P_CENTER, p);
         judgement.ballPosition = Point2D(p.x, p.y);
-        judgement.setpiece = Setpiece::KICKOFF;
+        judgement.setpiece = SetpieceEnum::KICKOFF;
         judgement.teamID = TeamID::A;
         declareGameStopping(judgement);
     }
@@ -76,7 +68,7 @@ void RunningController::control (const ArbiterGameData& gamedata, const float se
         poiInfo p;
         cEnvironmentField::getInstance().getFieldPOI(P_CENTER, p);
         judgement.ballPosition = Point2D(p.x, p.y);
-        judgement.setpiece = Setpiece::KICKOFF;
+        judgement.setpiece = SetpieceEnum::KICKOFF;
         judgement.teamID = TeamID::B;
         declareGameStopping(judgement);
     }
@@ -90,7 +82,7 @@ void RunningController::control (const ArbiterGameData& gamedata, const float se
             poiInfo p;
             cEnvironmentField::getInstance().getFieldPOI(P_OWN_CORNER_LEFT, p);
             judgement.ballPosition = Point2D(p.x + 0.5, p.y + 0.5);
-            judgement.setpiece = Setpiece::CORNER;
+            judgement.setpiece = SetpieceEnum::CORNER;
             judgement.teamID = TeamID::B;
         }
 
@@ -99,7 +91,7 @@ void RunningController::control (const ArbiterGameData& gamedata, const float se
             poiInfo p;
             cEnvironmentField::getInstance().getFieldPOI(P_OWN_GOALAREA_GOALLINE_LEFT, p);
             judgement.ballPosition = Point2D(p.x - 1.25, p.y + 2.0);
-            judgement.setpiece = Setpiece::GOALKICK;
+            judgement.setpiece = SetpieceEnum::GOALKICK;
             judgement.teamID = TeamID::A;
         }
 
@@ -115,7 +107,7 @@ void RunningController::control (const ArbiterGameData& gamedata, const float se
             poiInfo p;
             cEnvironmentField::getInstance().getFieldPOI(P_OPP_GOALAREA_GOALLINE_RIGHT, p);
             judgement.ballPosition = Point2D(p.x + 1.25, p.y - 2.0);
-            judgement.setpiece = Setpiece::GOALKICK;
+            judgement.setpiece = SetpieceEnum::GOALKICK;
             judgement.teamID = TeamID::B;
         }
 
@@ -124,7 +116,7 @@ void RunningController::control (const ArbiterGameData& gamedata, const float se
             poiInfo p;
             cEnvironmentField::getInstance().getFieldPOI(P_OPP_CORNER_RIGHT, p);
             judgement.ballPosition = Point2D(p.x - 0.5, p.y - 0.5);
-            judgement.setpiece = Setpiece::CORNER;
+            judgement.setpiece = SetpieceEnum::CORNER;
             judgement.teamID = TeamID::A;
         }
 
@@ -135,7 +127,7 @@ void RunningController::control (const ArbiterGameData& gamedata, const float se
     {
         Judgement judgement;
         judgement.ballPosition = gamedata.ball.getLocation() * 0.8;
-        judgement.setpiece = Setpiece::THROWIN;
+        judgement.setpiece = SetpieceEnum::THROWIN;
         judgement.teamID = otherTeam(gamedata.teamLastHoldingBall);
         declareGameStopping(judgement);
     }
@@ -144,9 +136,10 @@ void RunningController::control (const ArbiterGameData& gamedata, const float se
     {
         if (gamedata.isScrum())
         {
+            TRACE("Maximum waiting time exceeded and game is scrum, stopping.");
             Judgement judgement;
-            judgement.ballPosition = gamedata.ball.getLocation() * 0.8 + getPositionNoise();
-            judgement.setpiece = Setpiece::DROPPED_BALL;
+            judgement.ballPosition = gamedata.ball.getLocation();
+            judgement.setpiece = SetpieceEnum::DROPPED_BALL;
             declareGameStopping(judgement);
         }
     }

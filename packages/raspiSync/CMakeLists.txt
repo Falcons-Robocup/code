@@ -9,11 +9,10 @@ find_package(RaspiControl)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
+
 include_directories("include")
-
-#set the default path for built executables to the "bin" directory
-#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-
 
 
 # Create executable for raspiSync

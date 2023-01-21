@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionMoveToTarget.hpp
@@ -19,6 +19,8 @@ class MP_ActionMoveToTarget: public MP_AbstractAction
 public:
     MP_ActionMoveToTarget();
     actionResultTypeEnum execute();
+
+    void initialize() override;
     
 private:
     void unpackParameters();

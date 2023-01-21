@@ -1,7 +1,7 @@
 getBallConfig:
     obstacleThreshold:      3.0
     ballSpeedThreshold:     0.35
-    ballSpeedScaling:       0.6
+    ballSpeedScaling:       0.4
 interceptBallConfig:
     obstacleThreshold:      3.0
     ballSpeedThreshold:     0.35
@@ -14,14 +14,14 @@ keeperMoveConfig:
 passToTargetConfig:
     aimSettleTime:          0.2
     accuracy:               0.05  # keep trying, optimize for short pass
-    timeout:                1.0
-    coarseAngle:            0.5
+    timeout:                2.0
+    coarseAngle:            0.2
     disableBhDelay:         0.1   # for (short) passes, if tuned agressively, ballHandling will cause either small bump or reduce pass power
     sleepAfterShoot:        0.3
 shootAtTargetConfig:
-    aimSettleTime:          0.1
-    accuracy:               0.2
-    timeout:                0.6
-    coarseAngle:            0.5
-    disableBhDelay:         0.0
-    sleepAfterShoot:        0.3
+    aimSettleTime:          0.25  # [s] Amount of time to settle before shooting
+    accuracy:               0.2   # [m] Aim to settle within (meters at target position). e.g., start settling when aiming within 20cm
+    timeout:                2.0   # [s] Fail-safe amount of time before just shooting, despite the sloppy aim.
+    coarseAngle:            0.5   # [m] Fail-safe wide angle (meters at target position)
+    disableBhDelay:         0.0   # unused
+    sleepAfterShoot:        0.3   # [s]

@@ -1,4 +1,4 @@
-// Copyright 2020 lucas (Falcons)
+// Copyright 2020-2022 lucas (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Author: lucas catabriga
@@ -81,6 +81,14 @@ void Gaussian3DPosVelObject::removeOldMeasurements(rtime timenow)
 
 Gaussian3D Gaussian3DPosVelObject::calculateVelocity()
 {
+    // Velocity is calculated from the point of view of each of the measurer robots
+    // and then averaged for all the robots
+    // This is done because if there is a small bias in each robot measurement
+    // this could lead to a big difference in the final calculated velocity, if positions
+    // from two different robots are used
+    // As the velocity is also calculated as a gaussian, the velocity measured from positions
+    // with a greater confidence will have a greater impact on the final average velocity
+
     int velocitiesCount = 0;
     Gaussian3D averageVelocity;
 
@@ -196,6 +204,8 @@ void Gaussian3DPosVelObject::mergePosVelObject(Gaussian3DPosVelObject* other)
 
 void Gaussian3DPosVelObject::estimateMovement(double deltaTime)
 {
+    // not estimating gravity because this made static fake balls
+    // more difficult to handle
     //estimateGravity(deltaTime);
 
     // This covariance dispersion is calculated this way

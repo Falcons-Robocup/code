@@ -6,5 +6,5 @@
 # 
 
 
-ls /sys/class/net | grep e | head -1
+ls /sys/class/net | grep "^en" | head -1
 

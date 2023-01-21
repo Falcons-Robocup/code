@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ConfigRTDBAdapterImpl.hpp
@@ -21,7 +21,7 @@ ConfigRTDBAdapter<T>::ConfigRTDBAdapter(std::string const &configKey, bool testm
     TRACE_FUNCTION("");
     _configKey = configKey;
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, getTeamChar());
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, getTeamChar());
     _testmode = testmode;
     _config = {};
     _verbose = !testmode;
@@ -31,6 +31,7 @@ ConfigRTDBAdapter<T>::ConfigRTDBAdapter(std::string const &configKey, bool testm
 template <typename T>
 ConfigRTDBAdapter<T>::~ConfigRTDBAdapter()
 {
+    terminate();
 }
 
 template <typename T>
@@ -117,6 +118,7 @@ void ConfigRTDBAdapter<T>::startLoopUpdate()
 template <typename T>
 void ConfigRTDBAdapter<T>::loopUpdate()
 {
+    INIT_TRACE_THREAD_TEMPLATE("ConfigRTDBAdapter");
     TRACE_FUNCTION("");
     if (_rtdb == NULL)
     {
@@ -126,9 +128,15 @@ void ConfigRTDBAdapter<T>::loopUpdate()
     while (true)
     {
         _rtdb->waitForPut(_configKey);
+
+        if (_terminateRequested)
+        {
+            break;
+        }
+
         if (_verbose)
         {
-            tprintf("configuration touched");
+            tprintf("configuration '%s' touched", _configKey.c_str());
         }
 
         try
@@ -199,3 +207,11 @@ void ConfigRTDBAdapter<T>::update(bool allowOldData)
     }
 }
 
+template <typename T>
+void ConfigRTDBAdapter<T>::terminate()
+{
+    // To terminate the thread, set the terminate bool, and write to rtdb to trigger the waitForPut
+    _terminateRequested = true;
+    _rtdb->put(_configKey, &_config);
+    _updateThread.join();
+}

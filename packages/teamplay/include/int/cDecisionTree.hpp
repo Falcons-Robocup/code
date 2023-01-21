@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Erik Kouters (Falcons)
+// Copyright 2016-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cDecisionTree.hpp
@@ -18,7 +18,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "cDiagnostics.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 #include "int/types/cDecisionTreeTypes.hpp"
 #include "int/types/cActionTypes.hpp"

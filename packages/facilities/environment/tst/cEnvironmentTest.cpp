@@ -1,4 +1,4 @@
-// Copyright 2015 Michel Koenen (Falcons)
+// Copyright 2015-2022 Michel Koenen (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cEnvionmentTestRAW.cpp
@@ -19,6 +19,7 @@ TEST(TestSuiteEnvironmentgetFieldPOI, fieldPOI)
 {
 	poiInfo myPoi;
 
+	cEnvironmentField::getInstance().loadConfig("cEnvironment12x18");
 	cEnvironmentField::getInstance().getFieldPOI( P_OWN_CORNER_LEFT, myPoi );
 	EXPECT_FLOAT_EQ( -6.0f, myPoi.x);  //test will only work with official field values
 	EXPECT_FLOAT_EQ( -9.0f, myPoi.y);
@@ -28,6 +29,7 @@ TEST(TestSuiteEnvironmentgetAreaPOI, fieldArea)
 {
 	areaInfo myArea;
 
+	cEnvironmentField::getInstance().loadConfig("cEnvironment12x18");
 	cEnvironmentField::getInstance().getFieldArea( A_FIELD, myArea);
 	float width=abs(myArea.R.corner1.x) + abs(myArea.R.corner2.x);
 	float length=abs(myArea.R.corner1.y) + abs(myArea.R.corner2.y);

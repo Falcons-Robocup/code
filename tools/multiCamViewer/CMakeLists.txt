@@ -11,7 +11,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror")
 include_directories(/usr/include/opencv4)
 link_directories(/usr/local/lib)
 
-include_directories(./include ./../../packages/multiCam/include $ENV{FALCONS_CODE_PATH}/packages/facilities/common/include/ext)
+include_directories(./include)
+include_directories(./../../packages/multiCam/include)
+include_directories(./../../packages/facilities/common/include/ext)
                                        
 add_executable(multiCamViewer src/multiCamViewer.cpp
                               ./../../packages/multiCam/src/camSysReceive.cpp)

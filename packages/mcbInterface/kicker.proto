@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package Kicker;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+service Kicker {
+    rpc shoot(google.protobuf.FloatValue) returns(google.protobuf.Empty);
+    rpc set_height(google.protobuf.FloatValue) returns(google.protobuf.Empty);
+}
+

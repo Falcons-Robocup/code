@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cAbstractStimulator.hpp
@@ -25,7 +25,7 @@
 class cAbstractStimulator: public cLogPlayback
 {
 public:
-    cAbstractStimulator();
+    cAbstractStimulator(int agentId);
     virtual ~cAbstractStimulator();
     
     // client functions

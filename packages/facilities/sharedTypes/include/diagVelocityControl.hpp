@@ -1,22 +1,10 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef DIAGVELOCITYCONTROL_HPP_
 #define DIAGVELOCITYCONTROL_HPP_
 
 #include "pose.hpp"
-#include "PIDTerms.hpp"
-
 #include "RtDB2.h" // required for serialization
-
-
-struct diagPIDstate
-{
-    PIDTerms x;
-    PIDTerms y;
-    PIDTerms Rz;
-    SERIALIZE_DATA(x, y, Rz);
-};
-
 
 struct diagVelocityControl
 {
@@ -25,9 +13,17 @@ struct diagVelocityControl
     std::vector<bool>     accelerationClipping;
     bool                  shortStroke;
     std::vector<bool>     deadzone;
-    diagPIDstate          pid;
 
-    SERIALIZE_DATA(accelerationRCS, isAccelerating, accelerationClipping, shortStroke, deadzone, pid);
+    pose currentPosition;
+    pose currentVelocity;
+    pose maxVelocity;
+    pose maxAcceleration;
+    pose targetPosition;
+    pose targetVelocity;
+    pose newPosition;
+    pose newVelocity;
+
+    SERIALIZE_DATA(accelerationRCS, isAccelerating, accelerationClipping, shortStroke, deadzone, currentPosition, currentVelocity, maxVelocity, maxAcceleration, targetPosition, targetVelocity, newPosition, newVelocity);
 };
 
 #endif

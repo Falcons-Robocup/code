@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBInputAdapter.hpp
@@ -12,7 +12,7 @@
 
 #include "int/ballHandlingControl.hpp"
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class cRTDBInputAdapter
 {
@@ -27,6 +27,7 @@ public:
     void getBallHandlersSetpoint();
     void getBallHandlersFeedback();
     void getRobotVelocityFeedback();
+    void getRobotVelocitySetpoint();
 
 private:
     int _myRobotId;

@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Diana Koenraadt (Falcons)
+// Copyright 2016-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * GameSignalSubscriber.h
@@ -10,7 +10,7 @@
 #ifndef GAMESIGNALSUBSCRIBER_H
 #define GAMESIGNALSUBSCRIBER_H
 
-#include "GameSignalAdapter.h" // For enum BallPossessionType and SignalMode definition
+#include "int/adapters/GameSignalAdapter.h" // For enum BallPossessionType and SignalMode definition
 #include <time.h>
 
 /*
@@ -50,6 +50,7 @@ public:
     virtual void onBallPositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel, float confidence, float age, CameraType camType) {}; // Ball position according to one robot
     virtual void onBallPossessionChanged(uint8_t senderRobotId, SignalMode mode, BallPossessionType type, uint8_t robotId) {}; // Ball possession according to one robot
     virtual void onRobotStatusChanged(uint8_t senderRobotId, SignalMode mode, uint8_t robotId, int status) {};
+    virtual void onRobotRoleChanged(uint8_t robotId, std::string role) {};
     virtual void onOwnTeamPositionChanged(uint8_t senderRobotId, SignalMode mode, uint8_t robotId, PositionVelocity& posvel) {}; // Team member position according to one robot
     virtual void onObstaclePositionChanged(ObjectId id, SignalMode mode, PositionVelocity& posvel) {}; // Obstacle position according to one robot
     virtual void onForbiddenAreaChanged(ObjectId id, SignalMode signalMode, polygon2D& area) {}; // Obstacle position according to one robot

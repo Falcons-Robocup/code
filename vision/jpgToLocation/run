@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+filename=`ls *.pro`
+project=${filename%.pro}
+
+mkdir -p build
+
+qmake -o build/Makefile $filename
+
+cd build
+make -j 8
+cd ../
+
+./build/$project
+

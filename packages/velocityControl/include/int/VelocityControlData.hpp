@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * VelocityControlData.hpp
@@ -16,9 +16,12 @@
 // other Falcons packages
 #include "falconsCommon.hpp" // TODO disentangle (move Position2D etc. to geometry package? #14)
 
+#include "cVelocityTransformClient.hpp"
+
 // sharedTypes
 #include "ConfigVelocityControl.hpp"
 #include "ConfigPathPlanning.hpp"
+#include "ConfigExecution.hpp"
 #include "diagVelocityControl.hpp"
 #include "wayPoint.hpp"
 #include "motionSetpoint.hpp"
@@ -32,8 +35,10 @@
 struct VelocityControlData
 {
     // inputs
+    cVelocityTransformClient    vtClient;
     ConfigVelocityControl       vcConfig;
     ConfigPathPlanning          ppConfig;
+    ConfigExecution             exConfig;
     wayPoint                    target;
     rtime                       timestamp;
     robotState                  robot;
@@ -47,6 +52,7 @@ struct VelocityControlData
     Position2D                  currentPositionFcs; // might be corrected with ball possession offset
     Velocity2D                  currentVelocityFcs; // might be corrected with ball possession offset
     Position2D                  targetPositionFcs; // might be corrected with ball possession offset
+    Velocity2D                  targetVelocityFcs;
     Position2D                  deltaPositionFcs; // delta of current position w.r.t. subtarget (=first waypoint)
     Position2D                  deltaPositionRcs;
     Velocity2D                  deltaVelocityRcs;
@@ -60,10 +66,23 @@ struct VelocityControlData
     // internal data
     float                       dt;
     bool                        done = false;
-    diagPIDstate                pidState; // PID-specific analysis
     MotionTypeConfig            currentMotionTypeConfig;
+    Position2D                  previousPositionFcs;
+    Position2D                  previousPositionSetpointFcs;
+    Velocity2D                  previousVelocitySetpointFcs;
     Velocity2D                  previousVelocityRcs; // store from previous iteration, for acceleration limiter
+    Velocity2D                  previousVelocityFcs; // store from previous iteration, for acceleration limiter
     rtime                       previousTimestamp;
+
+    // SPG diag data
+    pose spgCurrentPosition;
+    pose spgCurrentVelocity;
+    pose spgMaxVelocity;
+    pose spgMaxAcceleration;
+    pose spgTargetPosition;
+    pose spgTargetVelocity;
+    pose spgNewPosition;
+    pose spgNewVelocity;
 
     // functions
     void reset();

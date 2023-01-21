@@ -1,49 +1,58 @@
 
-Blockly.Python['tp_action'] = function(block) {
-  var dropdown_action = block.getFieldValue('action');
-  var value_params = Blockly.Python.valueToCode(block, 'params', Blockly.Python.ORDER_ATOMIC);
-  var code = 'rci.setTeamplayAction("' + dropdown_action + '", ' + value_params + ')\n';
-  return code;
-};
-
-Blockly.Python['tp_behavior'] = function(block) {
-  var dropdown_behavior = block.getFieldValue('behavior');
-  var value_params = Blockly.Python.valueToCode(block, 'params', Blockly.Python.ORDER_ATOMIC);
-  var code = 'rci.setTeamplayBehavior("' + dropdown_behavior + '", ' + value_params + ')\n';
-  return code;
-};
-
-Blockly.Python['tp_setpiecebehavior'] = function(block) {
-  var dropdown_ownopp = block.getFieldValue('ownopp');
-  var dropdown_setpiece = block.getFieldValue('setpiece');
-  var dropdown_prepexecutesearch = block.getFieldValue('prepexecutesearch');
-  var value_params = Blockly.Python.valueToCode(block, 'params', Blockly.Python.ORDER_ATOMIC);
-
-  var enum_name = "";
-  if (dropdown_setpiece == "DROPBALL")
-  {
-      enum_name = dropdown_setpiece + "_" + dropdown_prepexecutesearch;
-  }
-  else
-  {
-      enum_name = dropdown_ownopp + "_" + dropdown_setpiece + "_" + dropdown_prepexecutesearch;
-  }
-
-  var code = 'rci.setTeamplayBehavior("' + enum_name + '", ' + value_params + ')\n';
-  return code;
-};
-
 Blockly.Python['tp_role'] = function(block) {
+    //  UNDEFINED = 0,
+    //  GOALKEEPER = 1,
+    //  ATTACKER_MAIN = 2,
+    //  ATTACKER_ASSIST = 3,
+    //  ATTACKER_GENERIC = 4,
+    //  DEFENDER_MAIN = 5,
+    //  DEFENDER_GENERIC = 6,
+    //  DISABLED_OUT = 7,
+    //  DISABLED_IN = 8
   var dropdown_role = block.getFieldValue('role');
-  var value_params = Blockly.Python.valueToCode(block, 'params', Blockly.Python.ORDER_ATOMIC);
-  var code = 'rci.setTeamplayRole("' + dropdown_role + '", ' + value_params + ')\n';
+  var code = 'rci.setTeamplayRole("' + dropdown_role + '")\n';
   return code;
 };
 
 Blockly.Python['tp_gamestate'] = function(block) {
   var dropdown_inmatch = block.getFieldValue('inMatch');
   var dropdown_gamestate = block.getFieldValue('gamestate');
-  var value_params = Blockly.Python.valueToCode(block, 'params', Blockly.Python.ORDER_ATOMIC);
+
+  // OUT_OF_MATCH_NEUTRAL_STOPPED
+  // OWN_PENALTY_SHOOTOUT_EXECUTE
+  // OWN_PENALTY_SHOOTOUT_PREPARE
+  // OPP_PENALTY_SHOOTOUT_EXECUTE
+  // OPP_PENALTY_SHOOTOUT_PREPARE
+  // PARKING
+  // INVALID
+  // DROPPED_BALL_EXECUTE
+  // DROPPED_BALL_PREPARE
+  // NEUTRAL_PLAYING
+  // NEUTRAL_STOPPED
+  // OPP_CORNER_EXECUTE
+  // OPP_CORNER_PREPARE
+  // OPP_FREEKICK_EXECUTE
+  // OPP_FREEKICK_PREPARE
+  // OPP_GOALKICK_EXECUTE
+  // OPP_GOALKICK_PREPARE
+  // OPP_KICKOFF_EXECUTE
+  // OPP_KICKOFF_PREPARE
+  // OPP_PENALTY_EXECUTE
+  // OPP_PENALTY_PREPARE
+  // OPP_THROWIN_EXECUTE
+  // OPP_THROWIN_PREPARE
+  // OWN_CORNER_EXECUTE
+  // OWN_CORNER_PREPARE
+  // OWN_FREEKICK_EXECUTE
+  // OWN_FREEKICK_PREPARE
+  // OWN_GOALKICK_EXECUTE
+  // OWN_GOALKICK_PREPARE
+  // OWN_KICKOFF_EXECUTE
+  // OWN_KICKOFF_PREPARE
+  // OWN_PENALTY_EXECUTE
+  // OWN_PENALTY_PREPARE
+  // OWN_THROWIN_EXECUTE
+  // OWN_THROWIN_PREPARE
 
   var enum_name = "";
   if (dropdown_gamestate == "SETPIECE")
@@ -53,30 +62,21 @@ Blockly.Python['tp_gamestate'] = function(block) {
       var dropdown_prepexecute = block.getFieldValue('prepexecute');
       if (dropdown_setpiece == "DROPPED_BALL")
       {
-          enum_name = dropdown_inmatch + "_" + dropdown_setpiece + "_" + dropdown_prepexecute + "_NEUTRAL";
+          enum_name = dropdown_setpiece + "_" + dropdown_prepexecute;
       }
       else
       {
-          enum_name = dropdown_inmatch + "_" + dropdown_ownopp + "_" + dropdown_setpiece + "_" + dropdown_prepexecute + "_NEUTRAL";
+          enum_name = dropdown_ownopp + "_" + dropdown_setpiece + "_" + dropdown_prepexecute;
       }
   }
   else
   {
-      enum_name = dropdown_inmatch + "_" + dropdown_gamestate + "_NEUTRAL";
+      enum_name = dropdown_gamestate;
   }
 
-  var code = 'rci.setTeamplayGameState("' + enum_name + '", ' + value_params + ')\n';
+  var code = 'rci.setTeamplayGameState("' + enum_name + '")\n';
   return code;
 };
-
-
-Blockly.Python['tp_dictitem'] = function(block) {
-  var value_key = Blockly.Python.valueToCode(block, 'key', Blockly.Python.ORDER_ATOMIC);
-  var value_value = Blockly.Python.valueToCode(block, 'value', Blockly.Python.ORDER_ATOMIC);
-  var code = '{' + value_key + ': ' + value_value + '}';
-  return [code, Blockly.Python.ORDER_ATOMIC];
-};
-
 
 
 

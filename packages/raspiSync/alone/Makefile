@@ -8,9 +8,12 @@ MAKEFLAGS = -j8
 
 CFLAGS = -g3 -O3 -m64 -ansi -std=c++11 -Wall -Wextra -Wpedantic -Werror
 
-LDLIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lpthread
+LDLIBS = -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui -lpthread
 
-INC = -I../include -I../../../packages/raspiControl/include -I../../../packages/multiCam/include/
+INC = -I../include
+INC += -I../../../packages/raspiControl/include
+INC += -I../../../packages/multiCam/include
+INC += -I/usr/include/opencv4
 
 %.o: ../src/%.cpp Makefile
 	g++ $(CFLAGS) $(INC) -o $@ -c $<

@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cAbstractStimulator.cpp
@@ -19,9 +19,10 @@
 #include "cLogger.hpp"
 #include "falconsCommon.hpp"
 #include "tracing.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
-cAbstractStimulator::cAbstractStimulator()
+cAbstractStimulator::cAbstractStimulator(int agentId) :
+    cLogPlayback(agentId)
 {
     systemStdout("rtdbClear"); 
 }

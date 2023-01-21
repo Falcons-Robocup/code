@@ -47,7 +47,7 @@ localization:
     scoreActivityScale:                 5.0 
     scoreAgeScale:                      20.0
     scoreFreshScale:                    0.5 
-    settlingTime:                       3.0 
+    settlingTime:                       0.1 
     minimumConfidence:                  0.8 
     speedLimitXY:                       5.0 
     speedLimitPhi:                      6.0 
@@ -69,3 +69,34 @@ obstacleTracker:
     speedMinSize:                       0.3
     speedMaxSize:                       5.0
     speedResidualThreshold:             1.0
+gaussianObstacles:
+    obstacleMergeThreshold:             0.01
+    minAcceptedConfidence:              0.4
+    parallelAxisDistanceFactor:         0.08
+    parallelAxisOffset:                 0.0
+    perpendicularAxisDistanceFactor:    0.12
+    perpendicularAxisOffset:            0.01
+    maxAllowedVariance:                 16.0
+gaussianBalls:
+    ballMergeThreshold:                 0.01
+    minAcceptedConfidence:              0.4
+    parallelAxisDistanceFactor:         0.30
+    parallelAxisOffset:                 0.01
+    perpendicularAxisDistanceFactor:    0.02
+    perpendicularAxisOffset:            0.01
+    maxAllowedVariance:                 16.0
+gaussian3DBalls:
+    ballMergeThreshold:                 0.02
+    ballVelocityMergeThreshold:         0.001
+    measurementMergeThreshold:          0.01
+    minAcceptedConfidence:              0.0
+    blacklistMaxVelocity:               1.0
+    blacklistMaxAcceleration:          -5.0
+    flyingMeasurementHeight:            0.4
+    parallelAxisDistanceFactor:         0.30
+    parallelAxisOffset:                 0.01
+    parallelAxisElevationFactor:        1.0
+    perpendicularAxisDistanceFactor:    0.02
+    perpendicularAxisOffset:            0.01
+    maxAllowedVariance:                 16.0
+    timeFactor:                         0.01

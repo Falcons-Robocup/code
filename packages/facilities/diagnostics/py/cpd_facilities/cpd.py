@@ -94,7 +94,10 @@ class CPD:
         e.g., parseDataFieldsFromRDL("r3", 3, plotdata.PlotData.MOTION, "/var/tmp/20200827_205619_r2.rdl", ageMin, ageMax, output_textfile)
         """
 
-        self.doSshOnRobot(robot_hostname, "python3 {}/plotfile.py --robotid {} --data {} --rdl_filename {} --ageMin {:06.2f} --ageMax {:06.2f} --output_filename {}".format(os.path.dirname(__file__), robot_id, plot_data_enum, rdl_filename, ageMin, ageMax, output_textfile))
+        cmd = "python3 {}/plotfile.py --robotid {} --data {} --rdl_filename {} --ageMin {:06.2f} --ageMax {:06.2f} --output_filename {}".format(os.path.dirname(__file__),     robot_id, plot_data_enum, rdl_filename, ageMin, ageMax, output_textfile)
+        #print(cmd)
+        output = self.doSshOnRobot(robot_hostname, cmd)
+        print("Extracting data from RtDB returned: {}".format(output))
 
 
     def plotData(self, plottable_filename):

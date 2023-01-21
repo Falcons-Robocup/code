@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBConfigAdapter.cpp
@@ -19,7 +19,7 @@ RTDBConfigAdapter::RTDBConfigAdapter()
 {
     TRACE(">");
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, getTeamChar());
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, getTeamChar());
     _config = {};
     std::string configFile = determineConfig("worldModelSyncConfig");
     loadYAML(configFile);
@@ -57,6 +57,8 @@ void RTDBConfigAdapter::get(T_CONFIG_WORLDMODELSYNC &config)
 
 void RTDBConfigAdapter::loopUpdate()
 {
+    INIT_TRACE_THREAD("RTDBConfigAdapter");
+
     //sleep(1); // give loadYAML some time
     update();
     while (true)

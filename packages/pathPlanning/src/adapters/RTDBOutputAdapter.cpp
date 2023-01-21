@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBOutputAdapter.cpp
@@ -18,7 +18,7 @@ RTDBOutputAdapter::RTDBOutputAdapter(bool verbose, int robotId)
     _verbose = verbose;
     _myRobotId = robotId;
     auto teamChar = getTeamChar();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, teamChar);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, teamChar);
 }
 
 RTDBOutputAdapter::~RTDBOutputAdapter()

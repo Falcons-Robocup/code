@@ -32,7 +32,7 @@ camSysReceive::camSysReceive() {
 	int reuse = 1;
 	if (setsockopt(multReceiveFd, SOL_SOCKET, SO_REUSEADDR, (char *) &reuse, sizeof(reuse)) < 0) {
 		printf(
-				"ERROR     : cannot configure port for multiple UTP sockets for receiving from raspiSystem, message: %s\n",
+				"ERROR     : cannot configure port for multiple UDP sockets for receiving from raspiSystem, message: %s\n",
 				strerror(errno));
 		fflush(stdout);
 		exit(EXIT_FAILURE);
@@ -61,7 +61,7 @@ camSysReceive::camSysReceive() {
 		// fallback
 		mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 		if (setsockopt(multReceiveFd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *) &mreq, sizeof(mreq)) < 0) {
-			printf("ERROR     : cannot join the multicast group from receiving from raspiSystem, %s\n",
+			printf("ERROR     : cannot join the multicast group from receiving from raspiSystem, message %s\n",
 					strerror(errno));
 			fflush(stdout);
 			exit(EXIT_FAILURE);
@@ -229,6 +229,7 @@ void camSysReceive::storeImage(size_t camIndex, size_t receivedAlready) {
 
 // write the jpg file
 	fwrite(&camImage[camIndex], 1, receivedAlready, fd);
+	// memset((void *) &camImage[camIndex], 0, sizeof(camImage[camIndex]));
 
 // close the file handle
 	fclose(fd);
@@ -244,6 +245,19 @@ void camSysReceive::storeImage(size_t camIndex, size_t receivedAlready) {
 		char symLinkName[128] = { 0 };
 		sprintf(symLinkName, "%s/cam%zu.jpg", imageGrabPath.c_str(), camIndex);
 		// printf("INFO      : cam %zu symlink name %s\n", camIndex, symLinkName);
+
+#ifdef NONO
+		char command[512] = { 0 };
+		sprintf(command, "jpegtran -rotate 270 %s > %s/cam%zu_%s_rotated.jpg", fileName, imageGrabPath.c_str(),
+				camIndex, dateCode);
+
+		if (system(command) < 0) {
+			printf("ERROR     : cam %zu system shell cannot execute %s, message: %s\n", camIndex, command,
+					strerror(errno));
+			fflush(stdout);
+			exit(EXIT_FAILURE);
+		}
+#endif
 
 		struct stat statBuf;
 		camImageExportMutex.lock();

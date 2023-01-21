@@ -1,4 +1,4 @@
-// Copyright 2019-2020 jquack (Falcons)
+// Copyright 2019-2021 jquack (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * AvoidObstacles.cpp
@@ -63,7 +63,7 @@ void AvoidObstacles::execute(PathPlanningData &data)
     std::string msg = "target: ";
     msg.append(target.tostr());
     TRACE_FUNCTION(msg.c_str());
-    auto config = data.config.obstacleAvoidance;
+    auto config = data.configPP.obstacleAvoidance;
 
     // check if functionality is enabled
     if (config.enabled == false)

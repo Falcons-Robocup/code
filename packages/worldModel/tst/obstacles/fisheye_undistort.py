@@ -1,4 +1,4 @@
-# Copyright 2019-2020 lucas (Falcons)
+# Copyright 2019-2021 lucas (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 import sys
 import os
@@ -248,7 +248,7 @@ if __name__ == '__main__':
         video_time = os.path.getmtime(input_video_name)
         output_video_name = os.path.expanduser('~') + '/game-videos/' + str(video_time) + '.avi'
     output_width = 800
-    fish_und = FisheyeUndistort(K, D, DIM)    
+    fish_und = FisheyeUndistort(K, D, DIM)
     fish_und.convert_video_file(input_video_name, output_video_name, output_width)
 
 

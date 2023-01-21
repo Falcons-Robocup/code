@@ -32,7 +32,7 @@ sys.path.append(FALCONS_CODE_PATH + "/packages/simulation/scripts")
 sys.path.append(FALCONS_CODE_PATH + "/packages/facilities/geometry/src")
 
 # robotControl -> robotControlInterface.py
-sys.path.append(FALCONS_CODE_PATH + "/packages/robotControl/scripts")
+sys.path.append(FALCONS_CODE_PATH + "/packages/robotControl/py")
 
 # common -> FalconsCommon.py / FalconsEnv.py
 sys.path.append(FALCONS_CODE_PATH + "/packages/facilities/common/src")

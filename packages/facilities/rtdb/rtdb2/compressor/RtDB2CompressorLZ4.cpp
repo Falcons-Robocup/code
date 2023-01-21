@@ -1,11 +1,11 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include "RtDB2CompressorLZ4.h"
 
 #include <lz4.h>
 #include <stdexcept>
 
-#include "../RtDB2ErrorCode.h"
+#include "RtDB2ErrorCode.h"
 
 RtDB2CompressorLZ4::RtDB2CompressorLZ4() {
 }

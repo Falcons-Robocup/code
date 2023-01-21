@@ -1,0 +1,56 @@
+#!/bin/bash -e
+
+# width * heigth * 2 bytes per pixel (bayer8) * 4 camera * 5 buffers = 92 Mbyte
+
+# https://www.baslerweb.com/en/sales-support/knowledge-base/frequently-asked-questions/how-can-i-set-the-usbfs-on-linux-or-linux-for-arm-to-prevent-image-losses-with-pylon-and-usb-cameras/29826/
+# 
+
+usbmem=`cat /sys/module/usbcore/parameters/usbfs_memory_mb`
+if ((usbmem < 256));then
+   echo "ERROR   not enough usb memory"
+   echo "        add 'usbcore.usbfs_memory_mb=1000' to GRUB_CMDLINE_LINUX_DEFAULT"
+   echo "        or sudo sh -c 'echo 1000 > /sys/module/usbcore/parameters/usbfs_memory_mb'"
+   exit
+fi
+
+# turn off USB power autosuspend
+# 
+autosuspend=`cat /sys/module/usbcore/parameters/autosuspend`
+if ((autosuspend != -1));then
+   echo "ERROR   usb auto suspend still enalbed"
+   echo "        add ' usbcore.autosuspend=-1' to GRUB_CMDLINE_LINUX_DEFAULT"
+   echo "        or sudo sh -c 'echo -1 > /sys/module/usbcore/parameters/autosuspend'"
+   exit
+fi
+
+filename=`ls *.pro`
+project=${filename%.pro}
+
+mkdir -p build
+# qmake should be in yout path, e.g. 
+# PATH=$PATH:/opt/Qt5.14.2/5.14.2/gcc_64/bin/
+
+qmake -o build/Makefile $filename
+
+cd build
+make -j 8
+cd ../
+
+# TODO: the route is not set through the application, for now do it manually
+# WARNING assumes usb Ethernet adapter (enx instead of enp)
+route | grep 224.16.16.0 || sudo route add -net 224.16.16.0 netmask 255.255.255.0 dev `ls /sys/class/net | grep enx`
+
+set +e # continue bash script when error
+
+keepGoing=1
+while [ $keepGoing -eq 1 ]
+do
+   ./build/$project
+   if [ $? -eq 1 ]
+   then
+      echo "ERROR   unexpected program exit, restart program"
+   else
+      echo "INFO    program finished"
+      keepGoing=0
+   fi
+done

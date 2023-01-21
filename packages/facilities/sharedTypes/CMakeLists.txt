@@ -4,10 +4,6 @@ project(sharedTypes)
 
 find_package(Facilities)
 
-# using shared_ptr
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror")
-
-
 # Create library libFalconsTypes
 set(LIBRARY_TARGET_NAME FalconsTypes)
 add_library(${LIBRARY_TARGET_NAME} src/objectMeasurement.cpp src/uniqueObjectID.cpp)
@@ -18,7 +14,11 @@ add_library(${LIBRARY_TARGET_NAME} src/objectMeasurement.cpp src/uniqueObjectID.
 # the generated artefacts are now also stored in the build/ tree (FALCONS_CODEGEN_FOLDER)
 add_custom_command(
     OUTPUT  ${FALCONS_CODEGEN_FOLDER}/generated_enum2str.hpp ${FALCONS_CODEGEN_FOLDER}/sharedTypes.py
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/generateEnums.py -i ${CMAKE_CURRENT_SOURCE_DIR}/include -o ${FALCONS_CODEGEN_FOLDER}/generated_enum2str.hpp -p ${FALCONS_CODEGEN_FOLDER}/sharedTypes.py
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/generateEnums.py
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/include
+        -o ${FALCONS_CODEGEN_FOLDER}/generated_enum2str.hpp
+        -p ${FALCONS_CODEGEN_FOLDER}/sharedTypes.py
+        SHARED_TYPES
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp
 )
 

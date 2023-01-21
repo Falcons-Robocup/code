@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2022 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * simworld.hpp
@@ -10,6 +10,10 @@
 #ifndef SIMWORLD_HPP_
 #define SIMWORLD_HPP_
 
+#include <thread>
+#include <map>
+#include <boost/thread.hpp>
+
 #include "abstractConfigAdapter.hpp"
 #include "abstractGameDataAdapter.hpp"
 #include "abstractMotionAdapter.hpp"
@@ -20,16 +24,16 @@
 class Simworld {
 public:
     Simworld();
+    ~Simworld();
 
-    void initialize();
+    void initialize(const std::string& arbiter, int sizeTeamA, int sizeTeamB);
     void control();
-    void loop();
 
 protected:
-    AbstractConfigAdapter* _configAdapter;
-    AbstractGameDataAdapter* _gameDataAdapter;
-    AbstractMotionAdapter* _motionAdapter;
-    AbstractTimeAdapter* _timeAdapter;
+    std::unique_ptr<AbstractConfigAdapter> _configAdapter;
+    std::unique_ptr<AbstractGameDataAdapter> _gameDataAdapter;
+    std::unique_ptr<AbstractMotionAdapter> _motionAdapter;
+    std::unique_ptr<AbstractTimeAdapter> _timeAdapter;
 
 private:
     Arbiter _arbiter;
@@ -38,6 +42,11 @@ private:
     rtime _simulationTime;
     int _sizeTeamA;
     int _sizeTeamB;
+    bool _autorefEnabled;
+
+    // This vector contains for every robot a thread that is waiting for PUT to synchronize the end of the heartbeat
+    class HeartbeatWaiter;
+    std::map< std::pair<TeamID, RobotID>, std::unique_ptr<HeartbeatWaiter> > _robotHeartbeatWaiters;
 
     // The number of updates/recalculations of the simulated world per second
     int _tickFrequency;

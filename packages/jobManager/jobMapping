@@ -10,14 +10,14 @@
 
 (
 cat << EOF
-coachPart1       refboxRelay               # part 1: bare essentials (e.g. to bootstrap teamB simulation)
-coachPart2Real   coachPart2Common commW wm heartbeatCoach
-coachPart2Sim    coachPart2Common simworld
-coachPart2Common visualizer logger rtdbSync # part 2: extra human interfacing (typically teamA)
+coachPart1       refboxRelayMTP mtpAdapter                                        # part 1: bare essentials (e.g. to bootstrap teamB simulation)
+coachPart2       commW wm heartbeatCoach visualizer logger rtdbSync     # part 2: extra human interfacing (typically teamA
+coachDockerSim   coachPart1 execution logger rtdbSync
 vision           multiCam raspiSync
-robotReal        robotCommon vision halMotion vt bh commW logger health wm blockly
+robotReal        robotCommon vision halMotion vt_startupWrapper bh commW logger health wm blockly execution mtpComm refboxComm
 robotSim         robotCommon
-robotCommon      tp sp vc matchMode
+robotDockerSim   robotCommon commW logger execution refboxComm
+robotCommon      tp2 mp sp vc matchMode
 EOF
 ) | sed 's/#.*//' # filter comments, like these ;)
 

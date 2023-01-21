@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionTurnAwayFromOpponent.cpp
@@ -16,6 +16,11 @@
 
 MP_ActionTurnAwayFromOpponent::MP_ActionTurnAwayFromOpponent()
 {
+}
+
+void MP_ActionTurnAwayFromOpponent::initialize()
+{
+    TRACE_FUNCTION("");
 }
 
 actionResultTypeEnum MP_ActionTurnAwayFromOpponent::execute()

@@ -1,4 +1,4 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * falconsCommonLegacy.hpp (previously cFalconsCommon.cpp)
@@ -89,7 +89,7 @@ Position2D getPosition2D( const geometry::Pose2D& pose)
     Position2D myPosition;
     myPosition.x= pose.x;
     myPosition.y= pose.y;
-    return ( myPosition );
+    return myPosition;
 }
 
 Position2D getPosition2D( const Point3D& point3d)
@@ -97,7 +97,7 @@ Position2D getPosition2D( const Point3D& point3d)
     Position2D myPosition;
     myPosition.x= (double) point3d.x;
     myPosition.y= (double) point3d.y;
-    return ( myPosition );
+    return myPosition;
 }
 
 // coordinate transformations

@@ -1,4 +1,4 @@
-// Copyright 2017-2020 Jan Feitsma (Falcons)
+// Copyright 2017-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cTimer.cpp
@@ -23,15 +23,15 @@ cTimer::~cTimer()
 
 void cTimer::reset()
 {
-    _t0 = ftime::now();
+    _t0 = ftime::now().toDouble();
 }
 
-float cTimer::elapsed()
+double cTimer::elapsed()
 {
-    return (double)(ftime::now() - _t0);
+    return (ftime::now().toDouble() - _t0);
 }
 
-void cTimer::setDuration(float duration)
+void cTimer::setDuration(double duration)
 {
     _duration = duration;
 }

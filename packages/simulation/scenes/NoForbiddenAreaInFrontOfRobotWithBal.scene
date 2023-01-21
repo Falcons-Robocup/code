@@ -1,0 +1,23 @@
+# teamplay: No forbidden area in front of robot with ball
+#   https://git.falcons-robocup.nl/falcons/code/-/issues/127
+# To launch this scene:
+#    simStart -A 4 -B 0
+#    simScene.py NoForbiddenAreaInFrontOfRobotWithBal.scene
+balls:
+- position: [-4.64162540435791, -6.9924468994140625, 0.0]
+  velocity: [-0.00027171234250999987, -0.00037077232263982296, 0.0]
+obstacles: []
+opponents: []
+robots:
+- position: [-0.5476272702217102, -8.674115180969238, 1.5707859992980957]
+  robotId: 1
+  velocity: [0.0, 0.0, 0.0]
+- position: [-2.7284774780273438, 5.757260799407959, 4.560629367828369]
+  robotId: 2
+  velocity: [0.0, 0.0, 0.0]
+- position: [-4.8894500732421875, -7.918282985687256, 1.2887314558029175]
+  robotId: 3
+  velocity: [0.0, 0.0, 0.0]
+- position: [0.012053225189447403, -0.004084484186023474, 4.12463903427124]
+  robotId: 4
+  velocity: [0.0, 0.0, 0.0]

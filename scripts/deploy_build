@@ -1,0 +1,41 @@
+#!/bin/bash
+set -e
+
+# Ghetto option parsing
+while getopts ":r:" opt; do
+  case ${opt} in
+    r )
+      TARGET=$OPTARG
+      ;;
+  esac
+done
+shift $((OPTIND -1))
+
+
+# Help text (secretly -h doesn't do anything different from any other bogus argument)
+if [[ ! "$TARGET" ]]; then
+    echo "Usage:"
+    echo "    deploy_build -h              Display this help message."
+    echo "    deploy_build -r ROBOT        Deploy to the specifed robot."
+    echo ""
+    echo "This script will deploy the build from the your laptop to the specified robot."
+    echo "It will look for the git root of the current working directory and transmit the"
+    echo "contents of the build directory relative to it."
+    exit 0
+fi
+
+
+# Go into the root directory of the current git repository
+GIT_ROOT=$(git rev-parse --show-toplevel)
+cd $GIT_ROOT
+
+
+# This script works in three stages:
+#  - Find all executable files in the build directory (ignoring simulation and visualizer)
+#  - Compress all these files together into an archive and dump it to stdout
+#  - SSH into the target and extract the archive from stdin to the code directory
+(find build -type f -executable -print0; find build -name '*.py' -print0)    \
+  | grep --null-data --invert-match --regexp=simulation --regexp=visualizer  \
+  | grep --null-data --invert-match --regexp=Test$                           \
+  | tar -czf- --null --files-from=-                                          \
+  | ssh $TARGET tar -xzvf- --directory=falcons/code

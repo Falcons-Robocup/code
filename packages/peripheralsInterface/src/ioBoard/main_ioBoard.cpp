@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * main_ioBoard.cpp
@@ -278,7 +278,7 @@ string getSerialPortName()
 
 int main(int argc, char **argv)
 {
-    INIT_TRACE;
+    INIT_TRACE("peripheralsInterfaceIoBoard");
 
     TRACE(">");
 

@@ -5,7 +5,8 @@ project(PeripheralsInterface)
 find_package(Boost COMPONENTS system thread REQUIRED QUIET)
 find_package(Facilities)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 include_directories("include")
 
@@ -57,7 +58,7 @@ target_link_libraries(motors deviceManager
                              ${Boost_LIBRARIES}
                              Tracing
                              FalconsCommon
-                             rtdb2
+                             FalconsRTDB
                              diagnostics)
 
 ################################################################################
@@ -81,12 +82,12 @@ target_link_libraries(ioBoard
     rtdbAdaptersIoBoard
     ${Boost_LIBRARIES}
     Tracing
-    rtdb2
+    FalconsRTDB
     FalconsTypes
     diagnostics)
 
 add_executable(testKeeperFrame src/ioBoard/testKeeperFrame.cpp src/ioBoard/Kicker.cpp)
-target_link_libraries(testKeeperFrame ioBoardCommunication ${Boost_LIBRARIES} Tracing rtdb2 diagnostics)
+target_link_libraries(testKeeperFrame ioBoardCommunication ${Boost_LIBRARIES} Tracing FalconsRTDB diagnostics)
 
 ################################################################################
 # Tests

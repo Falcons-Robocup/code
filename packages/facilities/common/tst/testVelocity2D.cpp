@@ -1,4 +1,4 @@
-// Copyright 2015 Coen Tempelaars (Falcons)
+// Copyright 2015-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Author: ctempela
@@ -18,22 +18,22 @@ TEST(TestVelocity2D, testConstructAndAssignment)
   geometry::Velocity2D vel1;
   EXPECT_EQ(0.0, vel1.getX());
   EXPECT_EQ(0.0, vel1.getY());
-  EXPECT_EQ(0.0, vel1.getPhi());
+  EXPECT_EQ(0.0, vel1.getRz());
 
   geometry::Velocity2D vel2(1.0, 2.0, 3.0);
   EXPECT_EQ(1.0, vel2.getX());
   EXPECT_EQ(2.0, vel2.getY());
-  EXPECT_EQ(3.0, vel2.getPhi());
+  EXPECT_EQ(3.0, vel2.getRz());
 
   geometry::Velocity2D vel3(vel2);
   EXPECT_EQ(1.0, vel3.getX());
   EXPECT_EQ(2.0, vel3.getY());
-  EXPECT_EQ(3.0, vel3.getPhi());
+  EXPECT_EQ(3.0, vel3.getRz());
 
   vel1 = vel3;
   EXPECT_EQ(1.0, vel1.getX());
   EXPECT_EQ(2.0, vel1.getY());
-  EXPECT_EQ(3.0, vel1.getPhi());
+  EXPECT_EQ(3.0, vel1.getRz());
 }
 
 
@@ -42,22 +42,22 @@ TEST(TestVelocity2D, testAccelerate)
   geometry::Velocity2D vel1(0.0, 0.0, 0.0);
   EXPECT_EQ(0.0, vel1.getX());
   EXPECT_EQ(0.0, vel1.getY());
-  EXPECT_NEAR(0.0, vel1.getPhi(), 0.00001);
+  EXPECT_NEAR(0.0, vel1.getRz(), 0.00001);
 
   vel1.accelerate(1.0, 2.0, (0.5 * M_PI));
   EXPECT_EQ(1.0, vel1.getX());
   EXPECT_EQ(2.0, vel1.getY());
-  EXPECT_NEAR((0.5 * M_PI), vel1.getPhi(), 0.00001);
+  EXPECT_NEAR((0.5 * M_PI), vel1.getRz(), 0.00001);
 
   vel1.accelerate(-1.5, -2.5, (-1.0 * M_PI));
   EXPECT_EQ(-0.5, vel1.getX());
   EXPECT_EQ(-0.5, vel1.getY());
-  EXPECT_NEAR((-0.5 * M_PI), vel1.getPhi(), 0.00001);
+  EXPECT_NEAR((-0.5 * M_PI), vel1.getRz(), 0.00001);
 
   vel1.accelerate(0.0, 0.0, (5 * M_PI));
   EXPECT_EQ(-0.5, vel1.getX());
   EXPECT_EQ(-0.5, vel1.getY());
-  EXPECT_NEAR((4.5 * M_PI), vel1.getPhi(), 0.00001);
+  EXPECT_NEAR((4.5 * M_PI), vel1.getRz(), 0.00001);
 }
 
 
@@ -72,7 +72,7 @@ TEST(TestVelocity2D, testTransformFCS2RCS)
         obstacle.transformFCS2RCS(robot1);
         EXPECT_NEAR(2.0, obstacle.getX(), 0.00001);
         EXPECT_NEAR(1.0, obstacle.getY(), 0.00001);
-        EXPECT_NEAR((0.5 * M_PI), obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR((0.5 * M_PI), obstacle.getRz(), 0.00001);
     }
 
     {
@@ -80,7 +80,7 @@ TEST(TestVelocity2D, testTransformFCS2RCS)
         obstacle.transformFCS2RCS(robot2);
         EXPECT_NEAR(-2.0, obstacle.getX(), 0.00001);
         EXPECT_NEAR(-1.0, obstacle.getY(), 0.00001);
-        EXPECT_NEAR((1.5 * M_PI), obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR((1.5 * M_PI), obstacle.getRz(), 0.00001);
     }
 
     {
@@ -88,7 +88,7 @@ TEST(TestVelocity2D, testTransformFCS2RCS)
         obstacle.transformFCS2RCS(robot3);
         EXPECT_NEAR(sqrt(8.0), obstacle.getX(), 0.00001);
         EXPECT_NEAR(0.0, obstacle.getY(), 0.00001);
-        EXPECT_NEAR((5.0 * M_PI), obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR((5.0 * M_PI), obstacle.getRz(), 0.00001);
     }
 }
 
@@ -104,7 +104,7 @@ TEST(TestVelocity2D, testTransformRCS2FCS)
         obstacle.transformRCS2FCS(robot1);
         EXPECT_NEAR(2.0, obstacle.getX(), 0.00001);
         EXPECT_NEAR(1.0, obstacle.getY(), 0.00001);
-        EXPECT_NEAR((0.5 * M_PI), obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR((0.5 * M_PI), obstacle.getRz(), 0.00001);
     }
 
     {
@@ -112,7 +112,7 @@ TEST(TestVelocity2D, testTransformRCS2FCS)
         obstacle.transformRCS2FCS(robot2);
         EXPECT_NEAR(2.0, obstacle.getX(), 0.00001);
         EXPECT_NEAR(1.0, obstacle.getY(), 0.00001);
-        EXPECT_NEAR((1.5 * M_PI), obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR((1.5 * M_PI), obstacle.getRz(), 0.00001);
     }
 
     {
@@ -120,7 +120,7 @@ TEST(TestVelocity2D, testTransformRCS2FCS)
         obstacle.transformRCS2FCS(robot3);
         EXPECT_NEAR(2.0, obstacle.getX(), 0.00001);
         EXPECT_NEAR(2.0, obstacle.getY(), 0.00001);
-        EXPECT_NEAR((5.0 * M_PI), obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR((5.0 * M_PI), obstacle.getRz(), 0.00001);
     }
 }
 
@@ -132,7 +132,7 @@ TEST(TestVelocity2D, testTransformACS2FCS)
         obstacle.transformACS2FCS(true);
         EXPECT_NEAR(1.5, obstacle.getX(), 0.00001);
         EXPECT_NEAR(0.5, obstacle.getY(), 0.00001);
-        EXPECT_NEAR(M_PI, obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR(M_PI, obstacle.getRz(), 0.00001);
     }
 
     {
@@ -140,7 +140,7 @@ TEST(TestVelocity2D, testTransformACS2FCS)
         obstacle.transformACS2FCS(false);
         EXPECT_NEAR(-1.5, obstacle.getX(), 0.00001);
         EXPECT_NEAR(-0.5, obstacle.getY(), 0.00001);
-        EXPECT_NEAR(M_PI, obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR(M_PI, obstacle.getRz(), 0.00001);
     }
 }
 
@@ -152,7 +152,7 @@ TEST(TestVelocity2D, testTransformFCS2ACS)
         obstacle.transformFCS2ACS(true);
         EXPECT_NEAR(1.5, obstacle.getX(), 0.00001);
         EXPECT_NEAR(0.5, obstacle.getY(), 0.00001);
-        EXPECT_NEAR(M_PI, obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR(M_PI, obstacle.getRz(), 0.00001);
     }
 
     {
@@ -160,7 +160,7 @@ TEST(TestVelocity2D, testTransformFCS2ACS)
         obstacle.transformFCS2ACS(false);
         EXPECT_NEAR(-1.5, obstacle.getX(), 0.00001);
         EXPECT_NEAR(-0.5, obstacle.getY(), 0.00001);
-        EXPECT_NEAR(M_PI, obstacle.getPhi(), 0.00001);
+        EXPECT_NEAR(M_PI, obstacle.getRz(), 0.00001);
     }
 }
 

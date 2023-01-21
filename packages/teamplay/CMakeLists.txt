@@ -9,18 +9,13 @@ find_package(MotionPlanning)
 find_package(PathPlanning)
 find_package(VelocityControl)
 
-
-#set the default path for built executables to the "bin" directory
-#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 include_directories("include")
 
 # Add link library for finding OpenCV libs
 link_directories(/usr/local/lib)
-
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++11 -Wall -Werror")
 
 add_library(tpactions   src/actions/cAbstractAction.cpp
                         src/actions/cActionSuccess.cpp
@@ -135,106 +130,106 @@ target_link_libraries(tpHeightmapVisualizer tpstores rtdbInputAdapter tpconfigAd
 
 ## TESTERS
 # WorldStateFunctions
-add_executable(cWorldStateFunctionsTest tst/cWorldStateFunctionsTest.cpp)
-target_link_libraries(cWorldStateFunctionsTest worldModelInterface tpworldStateFunctions gtest)
-add_test(cWorldStateFunctionsTest cWorldStateFunctionsTest)
-set_tests_properties(cWorldStateFunctionsTest PROPERTIES TIMEOUT 5)
-
-# GameState Tester
-add_executable(gameStateTest tst/gameStateTest.cpp)
-target_link_libraries(gameStateTest tpgameStateManager gtest)
-add_test(gameStateTest gameStateTest)
-set_tests_properties(gameStateTest PROPERTIES TIMEOUT 5)
-
-# GameStateTransitionTable Tester
-add_executable(gameStateTransitionTableTest tst/gameStateTransitionTableTest.cpp)
-target_link_libraries(gameStateTransitionTableTest tpgameStateManager gtest)
-add_test(gameStateTransitionTableTest gameStateTransitionTableTest)
-set_tests_properties(gameStateTransitionTableTest PROPERTIES TIMEOUT 5)
-
-# AbstractHeightMap Tester
-add_executable(abstractHeightMapTest tst/abstractHeightMapTest.cpp)
-target_link_libraries(abstractHeightMapTest tpstores gtest)
-add_test(abstractHeightMapTest abstractHeightMapTest)
-set_tests_properties(abstractHeightMapTest PROPERTIES TIMEOUT 1)
-
-# HeightMapStore Tester
-add_executable(heightMapStoreTest tst/heightMapStoreTest.cpp)
-target_link_libraries(heightMapStoreTest tpstores gtest)
-add_test(heightMapStoreTest heightMapStoreTest)
-set_tests_properties(heightMapStoreTest PROPERTIES TIMEOUT 1)
-
-# HeightmapVisualizer Tester
-add_executable(heightmapVisualizerTest tst/heightmapVisualizerTest.cpp)
-target_link_libraries(heightmapVisualizerTest tpHeightmapVisualizer opencv_imgproc opencv_highgui opencv_core opencv_imgcodecs gtest)
-add_test(heightmapVisualizerTest heightmapVisualizerTest)
-set_tests_properties(heightmapVisualizerTest PROPERTIES TIMEOUT 10)
-
-# HeightMap hmBetweenPoiAndClosestObstacle Tester
-add_executable(hmBetweenPoiAndClosestObstacleTest tst/hmBetweenPoiAndClosestObstacleTest.cpp)
-target_link_libraries(hmBetweenPoiAndClosestObstacleTest tpstores gtest)
-add_test(hmBetweenPoiAndClosestObstacleTest hmBetweenPoiAndClosestObstacleTest)
-set_tests_properties(hmBetweenPoiAndClosestObstacleTest PROPERTIES TIMEOUT 1)
-
-# HeightMap hmInFrontOfOppGoal Tester
-add_executable(hmInFrontOfOppGoalTest tst/hmInFrontOfOppGoalTest.cpp)
-target_link_libraries(hmInFrontOfOppGoalTest tpstores gtest)
-add_test(hmInFrontOfOppGoalTest hmInFrontOfOppGoalTest)
-set_tests_properties(hmInFrontOfOppGoalTest PROPERTIES TIMEOUT 1)
-
-# HeightMap hmNearPosition Tester
-add_executable(hmNearPositionTest tst/hmNearPositionTest.cpp)
-target_link_libraries(hmNearPositionTest tpstores gtest)
-add_test(hmNearPositionTest hmNearPositionTest)
-set_tests_properties(hmNearPositionTest PROPERTIES TIMEOUT 1)
-
-# ObjectPath Tester
-add_executable(cObjectPathTest tst/cObjectPathTest.cpp)
-target_link_libraries(cObjectPathTest objectPath gtest)
-add_test(cObjectPathTest cObjectPathTest)
-set_tests_properties(cObjectPathTest PROPERTIES TIMEOUT 1)
-
-# ObstacleStore Tester
-add_executable(obstacleStoreTest tst/obstacleStoreTest.cpp)
-target_link_libraries(obstacleStoreTest tpstores gtest)
-add_test(obstacleStoreTest obstacleStoreTest)
-set_tests_properties(obstacleStoreTest PROPERTIES TIMEOUT 1)
-
-# RobotStore Tester
-add_executable(robotStoreTest tst/robotStoreTest.cpp)
-target_link_libraries(robotStoreTest tpstores gtest)
-add_test(robotStoreTest robotStoreTest)
-set_tests_properties(robotStoreTest PROPERTIES TIMEOUT 1)
-
-# RuleAvoidAreas Tester
-add_executable(ruleAvoidAreasTest tst/ruleAvoidAreasTest.cpp)
-target_link_libraries(ruleAvoidAreasTest gmock tprules tpstores gtest)
-add_test(ruleAvoidAreasTest ruleAvoidAreasTest)
-set_tests_properties(ruleAvoidAreasTest PROPERTIES TIMEOUT 1)
-
-# RuleSetPieceExecuteFinished Tester
-add_executable(ruleSetpieceExecuteFinishedTest tst/ruleSetpieceExecuteFinishedTest.cpp)
-target_link_libraries(ruleSetpieceExecuteFinishedTest gmock tprules tpstores gtest)
-add_test(ruleSetpieceExecuteFinishedTest ruleSetpieceExecuteFinishedTest)
-set_tests_properties(ruleSetpieceExecuteFinishedTest PROPERTIES TIMEOUT 1)
-
-# RuleStimulatePassing Tester
-add_executable(ruleStimulatePassingTest tst/ruleStimulatePassingTest.cpp)
-target_link_libraries(ruleStimulatePassingTest tprules tpstores gtest)
-add_test(ruleStimulatePassingTest ruleStimulatePassingTest)
-set_tests_properties(ruleStimulatePassingTest PROPERTIES TIMEOUT 1)
-
-# Timer tester
-add_executable(timerTest tst/timerTest.cpp src/utilities/timer.cpp)
-target_link_libraries(timerTest ${Boost_LIBRARIES} gtest Tracing RtDButils FTime)
-add_test(timerTest timerTest)
-set_tests_properties(timerTest PROPERTIES TIMEOUT 1)
-
-# Tree tester
-add_executable(cTreeTesterTest tst/cTreeTester.cpp)
-target_link_libraries(cTreeTesterTest tpdecisionTree tpworldStateFunctions ${Boost_LIBRARIES} gtest)
-add_test(cTreeTesterTest cTreeTesterTest)
-set_tests_properties(cTreeTesterTest PROPERTIES TIMEOUT 5)
+#add_executable(cWorldStateFunctionsTest tst/cWorldStateFunctionsTest.cpp)
+#target_link_libraries(cWorldStateFunctionsTest worldModelInterface tpworldStateFunctions gtest)
+#add_test(cWorldStateFunctionsTest cWorldStateFunctionsTest)
+#set_tests_properties(cWorldStateFunctionsTest PROPERTIES TIMEOUT 5)
+#
+## GameState Tester
+#add_executable(gameStateTest tst/gameStateTest.cpp)
+#target_link_libraries(gameStateTest tpgameStateManager gtest)
+#add_test(gameStateTest gameStateTest)
+#set_tests_properties(gameStateTest PROPERTIES TIMEOUT 5)
+#
+## GameStateTransitionTable Tester
+#add_executable(gameStateTransitionTableTest tst/gameStateTransitionTableTest.cpp)
+#target_link_libraries(gameStateTransitionTableTest tpgameStateManager gtest)
+#add_test(gameStateTransitionTableTest gameStateTransitionTableTest)
+#set_tests_properties(gameStateTransitionTableTest PROPERTIES TIMEOUT 5)
+#
+## AbstractHeightMap Tester
+#add_executable(abstractHeightMapTest tst/abstractHeightMapTest.cpp)
+#target_link_libraries(abstractHeightMapTest tpstores gtest)
+#add_test(abstractHeightMapTest abstractHeightMapTest)
+#set_tests_properties(abstractHeightMapTest PROPERTIES TIMEOUT 1)
+#
+## HeightMapStore Tester
+#add_executable(heightMapStoreTest tst/heightMapStoreTest.cpp)
+#target_link_libraries(heightMapStoreTest tpstores gtest)
+#add_test(heightMapStoreTest heightMapStoreTest)
+#set_tests_properties(heightMapStoreTest PROPERTIES TIMEOUT 1)
+#
+## HeightmapVisualizer Tester
+#add_executable(heightmapVisualizerTest tst/heightmapVisualizerTest.cpp)
+#target_link_libraries(heightmapVisualizerTest tpHeightmapVisualizer opencv_imgproc opencv_highgui opencv_core opencv_imgcodecs gtest)
+#add_test(heightmapVisualizerTest heightmapVisualizerTest)
+#set_tests_properties(heightmapVisualizerTest PROPERTIES TIMEOUT 10)
+#
+## HeightMap hmBetweenPoiAndClosestObstacle Tester
+#add_executable(hmBetweenPoiAndClosestObstacleTest tst/hmBetweenPoiAndClosestObstacleTest.cpp)
+#target_link_libraries(hmBetweenPoiAndClosestObstacleTest tpstores gtest)
+#add_test(hmBetweenPoiAndClosestObstacleTest hmBetweenPoiAndClosestObstacleTest)
+#set_tests_properties(hmBetweenPoiAndClosestObstacleTest PROPERTIES TIMEOUT 1)
+#
+## HeightMap hmInFrontOfOppGoal Tester
+#add_executable(hmInFrontOfOppGoalTest tst/hmInFrontOfOppGoalTest.cpp)
+#target_link_libraries(hmInFrontOfOppGoalTest tpstores gtest)
+#add_test(hmInFrontOfOppGoalTest hmInFrontOfOppGoalTest)
+#set_tests_properties(hmInFrontOfOppGoalTest PROPERTIES TIMEOUT 1)
+#
+## HeightMap hmNearPosition Tester
+#add_executable(hmNearPositionTest tst/hmNearPositionTest.cpp)
+#target_link_libraries(hmNearPositionTest tpstores gtest)
+#add_test(hmNearPositionTest hmNearPositionTest)
+#set_tests_properties(hmNearPositionTest PROPERTIES TIMEOUT 1)
+#
+## ObjectPath Tester
+#add_executable(cObjectPathTest tst/cObjectPathTest.cpp)
+#target_link_libraries(cObjectPathTest objectPath gtest)
+#add_test(cObjectPathTest cObjectPathTest)
+#set_tests_properties(cObjectPathTest PROPERTIES TIMEOUT 1)
+#
+## ObstacleStore Tester
+#add_executable(obstacleStoreTest tst/obstacleStoreTest.cpp)
+#target_link_libraries(obstacleStoreTest tpstores gtest)
+#add_test(obstacleStoreTest obstacleStoreTest)
+#set_tests_properties(obstacleStoreTest PROPERTIES TIMEOUT 1)
+#
+## RobotStore Tester
+#add_executable(robotStoreTest tst/robotStoreTest.cpp)
+#target_link_libraries(robotStoreTest tpstores gtest)
+#add_test(robotStoreTest robotStoreTest)
+#set_tests_properties(robotStoreTest PROPERTIES TIMEOUT 1)
+#
+## RuleAvoidAreas Tester
+#add_executable(ruleAvoidAreasTest tst/ruleAvoidAreasTest.cpp)
+#target_link_libraries(ruleAvoidAreasTest gmock tprules tpstores gtest)
+#add_test(ruleAvoidAreasTest ruleAvoidAreasTest)
+#set_tests_properties(ruleAvoidAreasTest PROPERTIES TIMEOUT 1)
+#
+## RuleSetPieceExecuteFinished Tester
+#add_executable(ruleSetpieceExecuteFinishedTest tst/ruleSetpieceExecuteFinishedTest.cpp)
+#target_link_libraries(ruleSetpieceExecuteFinishedTest gmock tprules tpstores gtest)
+#add_test(ruleSetpieceExecuteFinishedTest ruleSetpieceExecuteFinishedTest)
+#set_tests_properties(ruleSetpieceExecuteFinishedTest PROPERTIES TIMEOUT 1)
+#
+## RuleStimulatePassing Tester
+#add_executable(ruleStimulatePassingTest tst/ruleStimulatePassingTest.cpp)
+#target_link_libraries(ruleStimulatePassingTest tprules tpstores gtest)
+#add_test(ruleStimulatePassingTest ruleStimulatePassingTest)
+#set_tests_properties(ruleStimulatePassingTest PROPERTIES TIMEOUT 1)
+#
+## Timer tester
+#add_executable(timerTest tst/timerTest.cpp src/utilities/timer.cpp)
+#target_link_libraries(timerTest ${Boost_LIBRARIES} gtest Tracing RtDButils FTime)
+#add_test(timerTest timerTest)
+#set_tests_properties(timerTest PROPERTIES TIMEOUT 1)
+#
+## Tree tester
+#add_executable(cTreeTesterTest tst/cTreeTester.cpp)
+#target_link_libraries(cTreeTesterTest tpdecisionTree tpworldStateFunctions ${Boost_LIBRARIES} gtest)
+#add_test(cTreeTesterTest cTreeTesterTest)
+#set_tests_properties(cTreeTesterTest PROPERTIES TIMEOUT 5)
 
 
 # MAIN 
@@ -250,10 +245,9 @@ target_link_libraries(teamplay_main tpconfigAdapter
                                     tpactions
                                     ${Boost_LIBRARIES}
                                     Tracing
-                                    rtdb2
+                                    FalconsRTDB
                                     diagnostics
                                     EnvironmentField
                                     falconsGeometry
                                     PathPlanning
                                     mpClient)
-

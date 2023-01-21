@@ -38,7 +38,7 @@ def get_work_in_progress(dryrun):
     for line in output.splitlines():
         files.append(os.path.join(repository, line))
     repository = falconspy.FALCONS_TPDATA_PATH
-    output = subprocess.check_output(command, shell=True, cwd=repository)
+    output = subprocess.check_output(command, shell=True, cwd=repository).decode()
     for line in output.splitlines():
         files.append(os.path.join(repository, line))
     return files

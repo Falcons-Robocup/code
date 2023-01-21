@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * main.cpp
@@ -17,10 +17,9 @@
 
 int main(int argc, char ** argv)
 {
-    INIT_TRACE_HOT_FLUSH;
+    INIT_TRACE("refbox");
     // no CLI
     cRefboxRelay r;
     r.run();
     return 0;
 }
-

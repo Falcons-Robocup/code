@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package Publish;
+
+import "motion.proto";
+import "motors.proto";
+import "google/protobuf/timestamp.proto";
+
+message Message {
+    google.protobuf.Timestamp   timestamp = 1;
+    bool                        software_on = 2;
+    bool                        inplay = 3;
+
+    bool                        ballhandlers_enabled = 4;
+    Motion.BallhandlerVector    ballhandler_angles = 5;
+    Motion.BallhandlerVector    ballhandler_angle_setpoints = 6;
+
+    bool                        driving_enabled = 7;
+    Motion.RobotVector          robot_velocity = 8;
+    Motion.RobotVector          robot_position = 9;
+    Motion.RobotVector          robot_setpoint = 10;
+
+    Motors.MotorVector          motor_torque = 11;
+    Motors.MotorVector          motor_velocity = 12;
+    Motors.MotorVector          motor_velocity_demand = 13;
+    Motors.MotorVector          motor_position = 14;
+    Motors.MotorVector          motor_current = 15;
+    Motors.MotorVector          motor_current_demand = 16;
+}

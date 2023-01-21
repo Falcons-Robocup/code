@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cVelocityTransformMain.cpp
@@ -37,6 +37,8 @@ cVelocityTransformMain::~cVelocityTransformMain()
 
 void cVelocityTransformMain::iterateFeedback()
 {
+    INIT_TRACE_THREAD("iterateFeedback");
+
     while (true)
     {
         try
@@ -72,6 +74,8 @@ void cVelocityTransformMain::iterateFeedback()
 
 void cVelocityTransformMain::iterateSetpoint()
 {
+    INIT_TRACE_THREAD("iterateSetpoint");
+
     while (true)
     {
         try

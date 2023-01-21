@@ -5,7 +5,7 @@ field:
     penaltyAreaOffset:      2.25    # E
     penaltySpotOffset:      3.0     # I
     centerCircleRadius:     2.0     # H/2
-    safetyBoundaryOffset:   1.50    # touchLineBorder
+    safetyBoundaryOffset:   0.75    # touchLineBorder
     lineThickness:          0.132   # lineThickness
     goalDepth:              0.6     # goalDepth
     goalPostOffset:         1.2     # goalWidth/2 - goalPostWidth

@@ -1,4 +1,4 @@
-// Copyright 2019 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBaccess.hpp
@@ -12,14 +12,14 @@
 
 #include <map>
 
-#include "RtDB2Store.h"
+#include "FalconsRTDB.hpp"
 #include "robot.hpp"
 #include "teamID.hpp"
 
 
-RtDB2* getRTDBConnection();
-RtDB2* getRTDBConnection (const TeamID&);
-RtDB2* getRTDBConnection (const TeamID&, const RobotID&);
+FalconsRTDB* getRTDBConnection();
+FalconsRTDB* getRTDBConnection (const TeamID&);
+FalconsRTDB* getRTDBConnection (const TeamID&, const RobotID&);
 int getRobotNumber (const RobotID&);
 
 

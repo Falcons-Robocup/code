@@ -1,0 +1,6 @@
+*.o
+*.log
+*.bin
+FloorFileSize1.yaml
+remote
+matches

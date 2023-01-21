@@ -3,6 +3,19 @@
 
 path=~/falcons/data/internal/vision/multiCam
 
+# issue 107
+# robot = r6
+# date = 20200818
+# time = 205032
+
+# robot = r6
+# date = 20200820
+# time = 210857
+
+robot = r5
+date = 20220712
+time = 172633
+
 # path=~/data
 # path=~/falcons/data/internal/vision/multiCam
 
@@ -51,9 +64,9 @@ path=~/falcons/data/internal/vision/multiCam
 # time = 231123
 
 # lots of balls on lines
-robot = r2
-date = 20180809
-time = 223758
+# robot = r2
+# date = 20180809
+# time = 223758
 # time = 223759
 # time = 223800
 

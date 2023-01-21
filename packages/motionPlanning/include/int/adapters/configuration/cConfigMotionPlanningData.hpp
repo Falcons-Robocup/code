@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Shepherd Takawira (Falcons)
+// Copyright 2018-2021 Shepherd Takawira (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cConfigMotionPlanningData.hpp
@@ -9,7 +9,7 @@
 #ifndef CCONFIGMOTIONPLANNING_HPP_
 #define CCONFIGMOTIONPLANNING_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "ConfigRTDBAdapter.hpp"
 
 

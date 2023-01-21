@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Jan Feitsma (Falcons)
+# Copyright 2018-2021 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 #!/usr/bin/env python3
 # Author: Jan Feitsma
@@ -25,7 +25,7 @@ import pygame
 import sys, time
 import pause, datetime
 import falconspy
-from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
+import falconsrtdb
 
 
 class Button:
@@ -205,8 +205,7 @@ class xRelay:
     def __init__(self, robotId, joystickIndex=0):
         # setup RTDB
         self.robotId = robotId # TODO: allow live toggle via select button?
-        self.rtdb2Store = RtDB2Store(RTDB2_DEFAULT_PATH, False)
-        self.rtdb2Store.refresh_rtdb_instances()
+        self.rtdbStore = falconsrtdb.FalconsRtDBStore(readonly=False) # write mode
         # ballhandler enable/disable events
         self.enable_bh = False
         self.toggle_bh()
@@ -291,7 +290,7 @@ class xRelay:
             self.action = "shootAtGoal"
         # serialize and put into RTDB
         item = [self.robotId, [self.vx, self.vy, self.vrz], self.enable_bh, self.kicker_height, self.kicker_power, self.action]
-        self.rtdb2Store.put(0, "JOYSTICK_CONTROL_" + str(self.robotId), item)
+        self.rtdbStore.put(0, "JOYSTICK_CONTROL_" + str(self.robotId), item)
         # shooting?
         if self.kicker_power > 0.0:
             time.sleep(0.5) # wait for ball to leave

@@ -78,12 +78,27 @@ class PlottableTextFile:
 
                 for value in self.data_fields[key]:
 
-                    try:
-                        # key_data.value['speed_vel'][0]
-                        value_data = eval( "key_data.value" + value )
-                    except:
-                        print("Error: Unable to resolve the value '%s' in key '%s' for robot_id '%d'" % (value, key, self.robot_id))
-                        exit()
+                    if value == "timestamp":
+                        try:
+                            # key_data.timestamp
+                            value_data = key_data.timestamp
+                        except:
+                            pass
+
+                    else:
+                        try:
+                            # key_data.value['velocity_setpoint'][0]
+                            value_data = eval( "key_data.value" + value )
+                        except:
+                            print("Error: Unable to resolve the value '%s' in key '%s' for robot_id '%d'" % (value, key, self.robot_id))
+                            exit()
+
+                    # Map boolean: [True, False] => [1, 0]
+                    if isinstance(value_data, bool):
+                        if value_data:
+                            value_data = 1
+                        else:
+                            value_data = 0
 
                     data_fields.append( str(value_data) )
 

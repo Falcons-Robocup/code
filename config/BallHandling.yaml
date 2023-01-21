@@ -1,5 +1,5 @@
 # note: angles are in fractions, where 0.0 is down and 1.0 is up
-angleSetpoint:               0.8 # ball control setpoint angle
+angleSetpoint:               0.7 # ball control setpoint angle
 armLiftedAngleThreshold:     0.4 # threshold when to consider an arm 'lifted' (used in feedForward and extraPull)
 ballPossession:
     angleThresholdOn:        0.6 # angle where ball is seen as detected
@@ -8,13 +8,13 @@ ballPossession:
 feedForward:
     enabledWithoutBall:      false # enabling it would probably negatively affect ball acceptance
     enabledWithBall:         true # prevent losing the ball while dribbling
-    factorX:                 10.0 # tuning parameters, multiplier to current robot velocity feedback
-    factorY:                 -10.0
-    factorRz:                4.0
+    factorX:                 5.5 # tuning parameters, multiplier to current robot velocity feedback
+    factorY:                 -5.5
+    factorRz:                1.0
 extraPull: # tricks to suck in a ball which is not fully in yet (only one arm 'lifted')
     enabledWithoutBall:      true # functionality is meant this, to increase the chance/speed of a partial ball possession becoming full ball possession
     enabledWithBall:         false # enabling would not help much, in fact maybe cause problems
-    setpointVelocity:        60 # extra velocity in rad/s to apply
+    setpointVelocity:        20 # extra velocity in rad/s to apply
 
 # to calculate between angles in fractions and sensor values, calibration is required of the (nonlinear!) sensors
 calibration: 
@@ -30,36 +30,36 @@ calibration:
         down:  3056
         up:    3970
     rightArm:
-        down:  3008
+        down:  3020
         up:    3877
 -   robotId: 3
     leftArm:
-        down:  2875
-        up:    3773
+        down:  2880
+        up:    3760
     rightArm:
-        down:  2959
-        up:    3817
+        down:  2972
+        up:    3840
 -   robotId: 4
     leftArm:
-        down:  2321
-        up:    3174
+        down:  2340
+        up:    3120
     rightArm:
-        down:  2492
-        up:    3306
+        down:  2495
+        up:    3310
 -   robotId: 5
     leftArm:
-        down:  2665
-        up:    3629
+        down:  2995
+        up:    3840
     rightArm:
-        down:  2576
-        up:    3678
+        down:  2825
+        up:    3820
 -   robotId: 6
     leftArm:
-        down:  2632
-        up:    3509
+        down:  2640
+        up:    3410
     rightArm:
-        down:  2697
-        up:    3735
+        down:  2685
+        up:    3580
 -   robotId: 7
     leftArm:
         down:  1287

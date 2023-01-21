@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include <chrono>
 #include <exception>
@@ -7,7 +7,7 @@
 
 #include <pwd.h>
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "ConfigRTDBAdapter.hpp"
 #include "cDiagnostics.hpp"
 #include "falconsCommon.hpp"
@@ -202,6 +202,7 @@ void peripheralsInterfaceMain::updateConfigurationBallHandlers() {
     settings.anglePid.i = configBH.Ang_Ki;
     settings.anglePid.d = configBH.Ang_Kd;
     settings.anglePid.iTh = 0;
+    settings.anglePid.iMax = 0;
     settings.maxPwmValue = configBH.PwmMax;
     settings.maxPwmStepValue = configBH.PwmMaxDeltaSize;
 
@@ -213,7 +214,7 @@ void peripheralsInterfaceMain::updateConfigurationBallHandlers() {
 
 int main(int argc, char **argv) {
 
-    INIT_TRACE;
+    INIT_TRACE("peripheralsInterfaceMotors");
 
     // stays alive and blocking by the controller
     peripheralsInterfaceMain peripheralsInterface;

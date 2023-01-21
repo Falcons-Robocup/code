@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * velocityControlTestDefaults.cpp
@@ -15,6 +15,20 @@
 
 
 // common setup and some config values (we don't want to be sensitive to production yamls)
+class ConfigStubEx : public exCFI
+{
+public:
+    bool get(ConfigExecution &exConfig);
+};
+
+bool ConfigStubEx::get(ConfigExecution &exConfig)
+{
+    TRACE_FUNCTION("");
+
+    exConfig.frequency = 20;
+
+    return true;
+}
 
 class ConfigStubPP : public ppCFI
 {
@@ -46,13 +60,11 @@ bool ConfigStubVC::get(ConfigVelocityControl &vcConfig)
 {
     TRACE_FUNCTION("");
 
-    vcConfig.nominalFrequency = 20;
-
     ///// NORMAL
 
     vcConfig.motionTypes[enum2str(motionTypeEnum::NORMAL)].velocityControllers.threshold = 5.0;
-    vcConfig.motionTypes[enum2str(motionTypeEnum::NORMAL)].velocityControllers.longStroke.type = VelocitySetpointControllerTypeEnum::LINEAR;
-    vcConfig.motionTypes[enum2str(motionTypeEnum::NORMAL)].velocityControllers.longStroke.coordinateSystem = CoordinateSystemEnum::FCS;
+    vcConfig.motionTypes[enum2str(motionTypeEnum::NORMAL)].velocityControllers.longStroke.type = VelocitySetpointControllerTypeEnum::SPG;
+    vcConfig.motionTypes[enum2str(motionTypeEnum::NORMAL)].velocityControllers.longStroke.coordinateSystem = CoordinateSystemEnum::RCS;
     vcConfig.motionTypes[enum2str(motionTypeEnum::NORMAL)].velocityControllers.shortStroke.type = VelocitySetpointControllerTypeEnum::SPG;
     vcConfig.motionTypes[enum2str(motionTypeEnum::NORMAL)].velocityControllers.shortStroke.coordinateSystem = CoordinateSystemEnum::RCS;
 
@@ -85,8 +97,8 @@ bool ConfigStubVC::get(ConfigVelocityControl &vcConfig)
     ////// WITH_BALL
 
     vcConfig.motionTypes[enum2str(motionTypeEnum::WITH_BALL)].velocityControllers.threshold = 5.0;
-    vcConfig.motionTypes[enum2str(motionTypeEnum::WITH_BALL)].velocityControllers.longStroke.type = VelocitySetpointControllerTypeEnum::LINEAR;
-    vcConfig.motionTypes[enum2str(motionTypeEnum::WITH_BALL)].velocityControllers.longStroke.coordinateSystem = CoordinateSystemEnum::FCS;
+    vcConfig.motionTypes[enum2str(motionTypeEnum::WITH_BALL)].velocityControllers.longStroke.type = VelocitySetpointControllerTypeEnum::SPG;
+    vcConfig.motionTypes[enum2str(motionTypeEnum::WITH_BALL)].velocityControllers.longStroke.coordinateSystem = CoordinateSystemEnum::RCS;
     vcConfig.motionTypes[enum2str(motionTypeEnum::WITH_BALL)].velocityControllers.shortStroke.type = VelocitySetpointControllerTypeEnum::SPG;
     vcConfig.motionTypes[enum2str(motionTypeEnum::WITH_BALL)].velocityControllers.shortStroke.coordinateSystem = CoordinateSystemEnum::RCS;
 
@@ -119,10 +131,10 @@ bool ConfigStubVC::get(ConfigVelocityControl &vcConfig)
     return true;
 }
 
-VelocityControl velocityControlSetup(vcCFI *vcConfig, ppCFI *ppConfig, OutputInterface *output)
+VelocityControl velocityControlSetup(vcCFI *vcConfig, ppCFI *ppConfig, exCFI *exConfig, OutputInterface *output)
 {
     TRACE_FUNCTION("");
-    auto pp = VelocityControl(vcConfig, ppConfig, NULL, output);
+    auto pp = VelocityControl(vcConfig, ppConfig, exConfig, NULL, output);
     pp.prepare();
     pp.data.robot.status = robotStatusEnum::INPLAY;
     pp.data.robot.hasBall = false;
@@ -133,13 +145,22 @@ VelocityControl velocityControlSetup(vcCFI *vcConfig, ppCFI *ppConfig, OutputInt
     pp.data.robotPosVelMoveType = robotPosVelEnum::POSVEL;
     pp.data.motionType = motionTypeEnum::NORMAL;
     pp.data.configureLimits();
+
+    // Modify ConfigVelocityTransform to never exceed motor limits
+    FalconsRTDB* rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(getRobotNumber(), getTeamChar());
+    ConfigVelocityTransform vtConfig;
+    rtdb->get(CONFIG_VELOCITYTRANSFORM, &vtConfig);
+    vtConfig.motorMaxVel = 10.0;
+    rtdb->put(CONFIG_VELOCITYTRANSFORM, &vtConfig);
+
     return pp;
 }
 
 VelocityControl defaultVelocityControlSetup()
 {
     TRACE_FUNCTION("");
-    ConfigStubPP configStubPP;
     ConfigStubVC configStubVC;
-    return velocityControlSetup(&configStubVC, &configStubPP);
+    ConfigStubPP configStubPP;
+    ConfigStubEx configStubEx;
+    return velocityControlSetup(&configStubVC, &configStubPP, &configStubEx);
 }

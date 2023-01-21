@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Tim Kouters (Falcons)
+// Copyright 2015-2021 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cWorldModelInterface.cpp
@@ -70,8 +70,8 @@ void cWorldModelInterface::store (const teamplay::worldModelInfo& wmInfo)
         /* Store the active teammembers */
         for (auto member = wmInfo.activeTeammembers.begin(); member != wmInfo.activeTeammembers.end(); member++)
         {
-            const Position2D pos(member->second.position.x, member->second.position.y, member->second.position.getPhi());
-            const Velocity2D vel(member->second.velocity.x, member->second.velocity.y, member->second.velocity.getPhi());
+            const Position2D pos(member->second.position.x, member->second.position.y, member->second.position.Rz);
+            const Velocity2D vel(member->second.velocity.x, member->second.velocity.y, member->second.velocity.Rz);
             robot teammate(member->first, treeEnum::R_ROBOT_STOP, pos, vel);
 
             if (wmInfo.ballPossession.robotID == member->first)
@@ -85,8 +85,8 @@ void cWorldModelInterface::store (const teamplay::worldModelInfo& wmInfo)
         /* Store the obstacles */
         for (auto obstacle = wmInfo.obstacles.begin(); obstacle != wmInfo.obstacles.end(); obstacle++)
         {
-            const Position2D pos(obstacle->second.position.x, obstacle->second.position.y, obstacle->second.position.getPhi());
-            const Velocity2D vel(obstacle->second.velocity.x, obstacle->second.velocity.y, obstacle->second.velocity.getPhi());
+            const Position2D pos(obstacle->second.position.x, obstacle->second.position.y, obstacle->second.position.Rz);
+            const Velocity2D vel(obstacle->second.velocity.x, obstacle->second.velocity.y, obstacle->second.velocity.Rz);
 
             teamplay::obstacleStore::getInstance().addObstacle(teamplay::obstacle(pos, vel));
         }

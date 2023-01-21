@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * VelocityControlClient.cpp
@@ -25,13 +25,12 @@ vcRTDBInputAdapter *g_vcRtdbInputAdapter;
 vcRTDBOutputAdapter *g_vcRtdbOutputAdapter;
 vcConfigRTDBAdapter *g_vcConfigAdapter;
 ConfigRTDBAdapter<ConfigPathPlanning> *g_ppConfigAdapter;
+ConfigRTDBAdapter<ConfigExecution> *g_exConfigAdapter;
 VelocityControl *g_vc;
 
 
 VelocityControlClient::VelocityControlClient()
 {
-    INIT_TRACE;
-
     // setup adapters
     TRACE("setting up vcRTDBInputAdapter");
     g_vcRtdbInputAdapter = new vcRTDBInputAdapter();
@@ -49,9 +48,14 @@ VelocityControlClient::VelocityControlClient()
     std::string ppConfigFile = determineConfig("PathPlanning");
     g_ppConfigAdapter->loadYAML(ppConfigFile);
 
+    TRACE("setting up ConfigRTDBAdapter<Execution>");
+    g_exConfigAdapter = new ConfigRTDBAdapter<ConfigExecution>(CONFIG_EXECUTION);
+    std::string exConfigFile = determineConfig("execution");
+    g_exConfigAdapter->loadYAML(exConfigFile);
+
     // setup VelocityControl, connect adapters
     TRACE("setting up VelocityControl");
-    g_vc = new VelocityControl(g_vcConfigAdapter, g_ppConfigAdapter, g_vcRtdbInputAdapter, g_vcRtdbOutputAdapter);
+    g_vc = new VelocityControl(g_vcConfigAdapter, g_ppConfigAdapter, g_exConfigAdapter, g_vcRtdbInputAdapter, g_vcRtdbOutputAdapter);
 }
 
 VelocityControlClient::~VelocityControlClient()

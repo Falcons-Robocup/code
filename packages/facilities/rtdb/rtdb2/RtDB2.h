@@ -1,4 +1,4 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef CAMBADA_RtDB2_H
 #define CAMBADA_RtDB2_H
@@ -13,11 +13,13 @@
 #include <iostream>
 #include <semaphore.h>
 
+#include "RtDB2Context.h"
 #include "RtDB2Item.h"
 #include "RtDB2Definitions.h"
 #include "RtDB2ErrorCode.h"
 #include "RtDB2Configuration.h"
 #include "RtDB2Frame.h"
+#include "RtDB2SyncPoint.h"
 
 #include "serializer/RtDB2Serializer.h"
 #include "compressor/RtDB2Compressor.h"
@@ -38,8 +40,12 @@ class RtDB2
 {
 
 public:
-    // An RTDB instance is always associated to an agent ID.
-    RtDB2(int agentId, std::string const &path = RTDB2_DEFAULT_PATH);
+    // Context specifies the local agent that reads and writes data
+    RtDB2(RtDB2Context const &context);
+    // Context specifies the local agent that reads the data of the remote agent.
+    // When remote agent and local agent are equal the local agent reads its own data.
+    RtDB2(RtDB2Context const &context, int remoteAgentId);
+    RtDB2Context const &getContext() const;
 
     // Put a value for associated agent ID.
     template <typename T>
@@ -78,13 +84,10 @@ public:
     template <typename T>
     int getAndClear(std::string const &key, T *value);
 
-    // Configuration
-    RtDB2Configuration const &getConfiguration() const;
-    std::string getPath() { return _path; }
-
     // Temporary functions to compress/decompress, for use in stimulator / logger -- TODO: refactor all of it into this rtdb package
     void compress(std::string &s);
     void decompress(std::string &s);
+    std::set<int> getAgentIds() const;
 
 private:
     // Helpers
@@ -100,13 +103,14 @@ private:
 
     // Datamembers
     const int                          _agentId;
-    std::string                        _path;
-    RtDB2Configuration                 _configuration;
     boost::shared_ptr<RtDB2Compressor> _compressor;
+    const RtDB2Context                 _context;
 
     // Storage
     std::map<int, boost::shared_ptr<RtDB2Storage> > _storage;
     std::map<int, boost::shared_ptr<RtDB2Storage> > sync_; // TODO merge this with main storage? specialize RtDB2Item?
+
+
 };
 
 
@@ -177,7 +181,7 @@ template<typename T>
 int RtDB2::putCore(std::string const &key, T *value, int agentId)
 {
     if (value == NULL) return RTDB2_VALUE_POINTING_TO_NULL;
-    rdebug("putCore start key=%s", key.c_str());
+    rdebug("putCore start key=%s at p=%p", key.c_str(), this);
 
     // serialize the value
     std::string serialized_data;
@@ -198,7 +202,7 @@ int RtDB2::putCore(std::string const &key, T *value, int agentId)
     if(it == sync_.end())
     {
         it = sync_.insert(std::pair<int, boost::shared_ptr<RtDB2Storage> >(
-                agentId, boost::make_shared<RtDB2LMDB>(_path, createAgentName(agentId, true)))).first;
+                agentId, boost::make_shared<RtDB2LMDB>(_context.getDatabasePath(), createAgentName(agentId, true)))).first;
     }
 
     if(it != sync_.end())

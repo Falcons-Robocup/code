@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ballAdministrator.cpp
@@ -12,7 +12,6 @@
 #include <algorithm>
 
 #include "int/administrators/ballDiscriminator.hpp"
-#include "int/administrators/gaussianBallDiscriminator.hpp"
 #include "int/administrators/gaussian3DBallDiscriminator.hpp"
 
 #include "cDiagnostics.hpp"
@@ -40,7 +39,7 @@ ballAdministrator::ballAdministrator(WorldModelConfig& wmConfig)
     }
     else if(ballTrackerAlgorithm == 1)
     {
-        _ballDiscriminator = new Gaussian3DBallDiscriminator();
+        _ballDiscriminator = new Gaussian3DBallDiscriminator(&wmConfig);
     }
     else
     {
@@ -82,6 +81,11 @@ void ballAdministrator::appendBallMeasurements(const std::vector<ballMeasurement
         throw std::runtime_error(std::string("Linked to: ") + e.what());
     }
     //TRACE("<");
+}
+
+void ballAdministrator::appendBallPossessionMeasurements(const Vector3D& ball_pos, uint8_t robotID, rtime timestamp)
+{
+    _ballDiscriminator->addPossessionMeasurement(ball_pos, robotID, timestamp);
 }
 
 void ballAdministrator::overruleBall(const ballClass_t ball)

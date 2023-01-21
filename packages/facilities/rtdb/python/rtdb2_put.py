@@ -1,4 +1,4 @@
-# Copyright 2020 Jan Feitsma (Falcons)
+# Copyright 2020-2021 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 #!/usr/bin/python
 import os
@@ -22,7 +22,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create instance of RtDB2Store and read databases from disk
-    rtdb2Store = RtDB2Store(args.path, False) # don't start in read-only
+    p = os.path.join(args.path, str(args.agent), 'default')
+    rtdb2Store = RtDB2Store(p, False) # don't start in read-only
 
     # This put operation should try to preserve attributes, like shared
     value = eval(args.value) # yikes! but, this prevents argument like '[1, 4]' being written into database as string, whereas we need an array of size 2

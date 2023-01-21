@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionInterceptBall.cpp
@@ -68,7 +68,7 @@ actionResultTypeEnum MP_ActionInterceptBall::execute()
     }
     // check ball possession
     if (_wm->hasBall())
-    {
+    {   
         return actionResultTypeEnum::PASSED;
     }
     if (_wm->teamHasBall())
@@ -118,8 +118,10 @@ actionResultTypeEnum MP_ActionInterceptBall::execute()
     }
     else
     {
-        // Do not intercept: return FAILED
-        return actionResultTypeEnum::FAILED;
+        _target.x = _R.x;
+        _target.y = _R.y;
+
+        TRACE("wait for intercept at robot location (%.2f, %.2f)", _target.x, _target.y);
     }
 
     // execute the move

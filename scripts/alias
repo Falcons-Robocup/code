@@ -14,13 +14,14 @@ alias remotev="cd $FALCONS_CODE_PATH/tools/multiCamRemote/build && make"
 alias remotevf="cd $FALCONS_CODE_PATH/tools/multiCamRemote/build && make clean && make"
 alias cdcmps="cd $FALCONS_CODE_PATH/tools/cmps10Calibrate"
 alias cds="cd $FALCONS_SCRIPTS_PATH"
-alias cdm="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make"
-alias cdm1="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r1"
-alias cdm2="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r2"
-alias cdm3="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r3"
-alias cdm4="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r4"
-alias cdm5="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r5"
-alias cdm6="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make r6"
+alias cdm="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make -j8"
+alias cdm1="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make -j8 r1"
+alias cdm2="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make -j8 r2"
+alias cdm3="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make -j8 r3"
+alias cdm4="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make -j8 r4"
+alias cdm5="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make -j8 r5"
+alias cdm6="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make -j8 r6"
+alias cdm7="cd $FALCONS_CODE_PATH/packages/multiCam/alone && make -j8 r7"
 alias cdmc="cd $FALCONS_CODE_PATH/packages/raspiControl/alone && make"
 alias cdmv="cd $FALCONS_CODE_PATH/tools/multiCamViewer/build && make"
 alias cdjpg="cd $FALCONS_DATA_PATH/internal/vision/multiCam"
@@ -30,7 +31,7 @@ alias cdz="cd $FALCONS_CODE_PATH/tools/zynqControl/build"
 alias cdrg="cd $FALCONS_CODE_PATH/peripherals/raspiGrab/armBuild"
 alias cdra="cd $FALCONS_CODE_PATH/peripherals/raspiAnalyze/armBuild"
 alias cdrx="cd $FALCONS_CODE_PATH/peripherals/raspiAnalyze/x86Build"
-alias cdrc="cd $FALCONS_CODE_PATH/packages/raspiControl/alone && make"
+alias cdrc="cd $FALCONS_CODE_PATH/packages/raspiControl/alone && make -j8 && ./raspiControl"
 alias cdrs="cd $FALCONS_CODE_PATH/tools/raspiSetup"
 alias cdrsync="cd $FALCONS_CODE_PATH/packages/raspiSync/alone && make"
 alias ne="nedit-nc $@"
@@ -39,6 +40,9 @@ alias cdc="cd $FALCONS_CODE_PATH/config"
 alias start_refbox="cd $FALCONS_DATA_PATH/external/refbox; java -jar rb-gui-main-2013-2.02.jar"
 alias subfab="cd $FALCONS_CODE_PATH && git pull && fb"
 alias behavior3="google-chrome $FALCONS_DATA_PATH/external/behavior3/build/index.html"
+alias groot="$FALCONS_DATA_PATH/external/Groot/build/Groot"
+alias hmedit="python3 $FALCONS_CODE_PATH/packages/teamplay2/scripts/heightmap_edit.py"
+alias coachMonitor="coachControl -m"
 
 alias mcb='cd ~/falcons/mcb'
 alias sshmcb='ssh root@10.42.0.2'
@@ -69,7 +73,7 @@ alias wifics="nm-connection-editor"
 alias nedit="nedit -xrm '*font: -*-dina-medium-r-*-*-16-*-*-*-*-*-*-*'"
 
 # rtdb & logging
-source $FALCONS_CODE_PATH/packages/facilities/rtdb/alias
+source $FALCONS_CODE_PATH/packages/facilities/frtdb/alias
 alias rdlinfo='frun logging rdlinfo'
 alias rdldump='python3 $FALCONS_CODE_PATH/packages/facilities/logging/scripts/rdlDump.py'
 alias rdlfilter='python3 $FALCONS_CODE_PATH/packages/facilities/logging/scripts/rdlFilter.py'

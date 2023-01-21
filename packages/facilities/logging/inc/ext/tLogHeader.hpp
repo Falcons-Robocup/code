@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * tLogHeader.hpp
@@ -17,8 +17,11 @@ struct tLogHeader
     float       duration; // Deprecated. Do not use.
     std::string filename;
     int         frequency;
+    std::string commit_code;
+    std::string commit_teamplay_data;
+
     
-    SERIALIZE_DATA_FIXED(hostname, creation, compression, duration, filename, frequency);
+    SERIALIZE_DATA_FIXED(hostname, creation, compression, duration, filename, frequency, commit_code, commit_teamplay_data);
 };
 
 #endif

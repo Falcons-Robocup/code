@@ -20,12 +20,16 @@ if __name__ == '__main__':
     logging.info('Stopping blockly')
     subprocess.Popen(['processStop', 'blockly'])
 
+    logging.info('Stopping execution')
+    subprocess.Popen(['processStop', 'execution'])
+
     logging.info('Stopping simworld')
     subprocess.Popen(['processStop', 'simworld'])
 
     logging.info('Stopping refbox')
     subprocess.Popen(['processStop', 'refboxGui'])
-    subprocess.Popen(['processStop', 'refboxRelay'])
+    subprocess.Popen(['jobStop', 'A0_coachPart1'])
+    subprocess.Popen(['jobStop', 'B0_coachPart1'])
 
     logging.info('Stopping processes for all robots')
     for team in TEAMS:

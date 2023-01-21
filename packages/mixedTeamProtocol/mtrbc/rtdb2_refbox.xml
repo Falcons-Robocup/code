@@ -1,0 +1,31 @@
+<!--
+    RtDB2 configuration for mixed team refbox client.
+
+    Configuration documentation: https://github.com/RoboCup-MSL/rtdb2/tree/rtdb3
+-->
+<RtDB2Configuration>
+  <Networks>
+    <Network name="refbox" database="refbox" loopback="false" send="true">
+      <MulticastAddress>224.16.32.201</MulticastAddress>
+      <MulticastPort>18001</MulticastPort>
+      <Interface>lo</Interface>
+      <Frequency>10</Frequency>
+    </Network>
+    <Network name="refboxclient" database="refbox" loopback="false" send="false">
+      <MulticastAddress>224.16.32.201</MulticastAddress>
+      <MulticastPort>18001</MulticastPort>
+      <Interface>lo</Interface>
+      <Frequency>10</Frequency>
+    </Network>
+  </Networks>
+  <Databases>
+    <Database name="refbox">
+      <Compression type="zstd"/>
+      <KeyDefaults/>
+      <Keys>
+        <Key id="COMMAND"/>
+        <Key id="TARGETTEAM"/>
+      </Keys>
+    </Database>
+  </Databases>
+</RtDB2Configuration>

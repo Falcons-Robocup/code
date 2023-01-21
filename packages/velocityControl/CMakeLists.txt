@@ -5,8 +5,10 @@ project(VelocityControl)
 find_package(Boost COMPONENTS system thread REQUIRED QUIET)
 find_package(Facilities)
 find_package(WorldModel)
+find_package(VelocityTransform)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror")
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 include_directories("include")
 
@@ -36,10 +38,11 @@ add_library(VelocityControl src/VelocityControl.cpp
                             src/algorithms/CalculateAccelerating.cpp
                             src/algorithms/Deadzone.cpp
                             src/algorithms/ApplyLimits.cpp
+                            src/algorithms/ApplyTokyoDrift.cpp
                             src/algorithms/ShiftBallOffset.cpp
                             src/algorithms/UnShiftBallOffset.cpp)
 
-target_link_libraries(VelocityControl vcRtdbAdapters wmClient ReflexxesTypeII Tracing FalconsCommon rtdb2 diagnostics EnvironmentField ${Boost_LIBRARIES})
+target_link_libraries(VelocityControl vcRtdbAdapters wmClient vtClient ReflexxesTypeII Tracing FalconsCommon FalconsRTDB diagnostics EnvironmentField ${Boost_LIBRARIES})
 
 add_executable(velocityControlNode src/main.cpp)
 target_link_libraries(velocityControlNode vcClient ${Boost_LIBRARIES})

@@ -14,7 +14,8 @@
 using namespace std;
 using namespace cv;
 
-multiCamViewer::multiCamViewer() {
+multiCamViewer::multiCamViewer(int singleCam) {
+	this->singleCam = singleCam;
 
 	size_t openCvVersion = CV_MAJOR_VERSION * 1000000 + CV_MINOR_VERSION * 1000 + CV_VERSION_REVISION;
 	if (openCvVersion < 2004001) {
@@ -28,7 +29,6 @@ multiCamViewer::multiCamViewer() {
 		printf("INFO      : openCV version %d.%d.%d\n", CV_MAJOR_VERSION, CV_MINOR_VERSION, CV_VERSION_REVISION);
 
 	}
-
 	camSysRecv = new camSysReceive();
 	camSysRecv->setImageGrabPath("."); // do not use "/dev/shm" which is used by multiCam
 
@@ -50,47 +50,50 @@ bool multiCamViewer::update() {
 	stringstream strForm;
 
 	for (size_t camIndex = 0; camIndex < 4; camIndex++) {
-		camSysRecv->getCameraFrame(camIndex).copyTo(image);
+		if (singleCam < 0 or singleCam == (int) camIndex) {
+			camSysRecv->getCameraFrame(camIndex).copyTo(image);
 
-		// Jan: this is the place to use the image
-		// camIndex indicates which camera
-		// cam0: front
-		// cam1: left
-		// cam2: rear
-		// cam3: right
+			// Jan: this is the place to use the image
+			// camIndex indicates which camera
+			// cam0: front
+			// cam1: left
+			// cam2: rear
+			// cam3: right
 
-		// for debugging the camera synchronization it is better to look at the non rotated images
+			// for debugging the camera synchronization it is better to look at the non rotated images
 #ifdef NONO
-		// rotate image depending on location on robot
-		if( camIndex == 0 ) {
-			// show front camera in camera viewer = rotate 90 degrees
-			transpose(image, image);
-			flip(image, image, 0);
-		} else if( camIndex == 1 ) {
-			// show left camera in camera viewer = rotate 180 degrees
-			flip(image, image, -1);
-		} else if( camIndex == 2 ) {
-			// show rear camera in camera viewer = rotate 270 degrees
-			transpose(image, image);
-			flip(image, image, 1);
-		} else {
-			// show right camera in camera viewer = keep
-		}
+			// rotate image depending on location on robot
+			if( camIndex == 0 ) {
+				// show front camera in camera viewer = rotate 90 degrees
+				transpose(image, image);
+				flip(image, image, 0);
+			} else if( camIndex == 1 ) {
+				// show left camera in camera viewer = rotate 180 degrees
+				flip(image, image, -1);
+			} else if( camIndex == 2 ) {
+				// show rear camera in camera viewer = rotate 270 degrees
+				transpose(image, image);
+				flip(image, image, 1);
+			} else {
+				// show right camera in camera viewer = keep
+			}
 #endif
 
-		camSystemSt cs = camSysRecv->getCamSystem(camIndex);
-		uint16_t sysApplUptime = cs.sysApplUptime;
-		hhMmSsSt sysUp = camSysRecv->secondsToHhMmSs(sysApplUptime);
-		sprintf(camText, "cam %zu system  uptime %02u:%02u:%02u", camIndex, sysUp.hours, sysUp.minutes, sysUp.seconds);
+			camSystemSt cs = camSysRecv->getCamSystem(camIndex);
+			uint16_t sysApplUptime = cs.sysApplUptime;
+			hhMmSsSt sysUp = camSysRecv->secondsToHhMmSs(sysApplUptime);
+			sprintf(camText, "cam %zu system  uptime %02u:%02u:%02u", camIndex, sysUp.hours, sysUp.minutes,
+					sysUp.seconds);
 
-		if (sysApplUptime < 10) {
-			putText(image, camText, textLocation0, 1, 1, color_err, 1);
-		} else {
-			putText(image, camText, textLocation0, 1, 1, color, 1);
+			if (sysApplUptime < 10) {
+				putText(image, camText, textLocation0, 1, 1, color_err, 1);
+			} else {
+				putText(image, camText, textLocation0, 1, 1, color, 1);
+			}
+
+			sprintf(camText, "cam %zu", camIndex);
+			imshow(camText, image);
 		}
-
-		sprintf(camText, "cam %zu", camIndex);
-		imshow(camText, image);
 	}
 
 	int key = waitKey(200);
@@ -107,15 +110,20 @@ bool multiCamViewer::update() {
 
 int main(int argc, char** argv) {
 	int opt = 0;
-	while ((opt = getopt(argc, argv, "h")) != -1) {
+	int singleCam = -1;
+	while ((opt = getopt(argc, argv, "h0")) != -1) {
 		switch (opt) {
+		case '0':
+			singleCam = 0;
+			break;
 		case 'h':
-			printf("INFO      : no arguments required\n");
+			printf("INFO      : arguments\n");
+			printf("            [-0] only cam 0\n");
 			break;
 		}
 	}
 
-	multiCamViewer *multCam = new multiCamViewer();
+	multiCamViewer *multCam = new multiCamViewer(singleCam);
 
 	printf("INFO      : wait for data from the camera's\n");
 	while (multCam->update()) {

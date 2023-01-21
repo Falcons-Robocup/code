@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBAdapterRobotStatus.hpp
@@ -10,7 +10,7 @@
 #ifndef INCLUDE_INT_ADAPTERS_CRTDBADAPTERROBOTSTATUS_HPP_
 #define INCLUDE_INT_ADAPTERS_CRTDBADAPTERROBOTSTATUS_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class cRTDBAdapterRobotStatus
 {

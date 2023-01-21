@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBrefboxAdapter.cpp
@@ -9,12 +9,11 @@
 
 #include "int/RTDBrefboxAdapter.hpp"
 #include "int/RTDBaccess.hpp"
-#include "int/generated_enum2str.hpp"
+#include "int/simulation_generated_enum2str.hpp"
 
 #include <stdexcept>
-#include "boost/format.hpp"
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "tracing.hpp"
 #include "ftime.hpp"
 
@@ -54,6 +53,7 @@ void RTDBRefBoxAdapter::sendCommand () const
 
 void RTDBRefBoxAdapter::registerGoal (const TeamID& teamID)
 {
+    TRACE_FUNCTION("team = %s", teamID);
     if (teamID == TeamID::A)
     {
         _score_for_team_A += 1;
@@ -88,11 +88,11 @@ void RTDBRefBoxAdapter::sendStop()
 }
 
 
-void RTDBRefBoxAdapter::sendSetpiece (const Setpiece& setpiece, const TeamID& teamID)
+void RTDBRefBoxAdapter::sendSetpiece (const SetpieceEnum& setpiece, const TeamID& teamID)
 {
-    TRACE_FUNCTION("");
+    TRACE_FUNCTION("setpiece = %s, team = %s", setpiece, teamID);
 
-    if (setpiece == Setpiece::DROPPED_BALL)
+    if (setpiece == SetpieceEnum::DROPPED_BALL)
     {
         _command_for_team_A = "DROP_BALL";
         _command_for_team_B = "DROP_BALL";

@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * adaptersCollector.cpp
@@ -40,7 +40,7 @@ adaptersCollector::~adaptersCollector()
 void adaptersCollector::initializeRTDB()
 {
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId);
 }
 
 void adaptersCollector::setBallAdministrator(ballAdministrator *ballAdmin)
@@ -160,12 +160,10 @@ bool checkBallCloseToObstacle(ballClass_t const &ball, std::vector<obstacleClass
     return false;
 }
 
-void adaptersCollector::calcBallPossession(ballPossessionTypeEnum &bpType, int &bpRobot)
+void adaptersCollector::calcSelfBallPossession(ballPossessionTypeEnum &bpType, int &bpRobot)
 {
-    // ballPossession is affected by multiple factors
-    // we require that balls and obstacles are calculated FIRST
-    // also, we will inspect other robot 'hasball' claims
-
+    TRACE_FUNCTION("");
+    
     // initialize    
     bpType = ballPossessionTypeEnum::FIELD;
     bpRobot = 0;
@@ -186,28 +184,43 @@ void adaptersCollector::calcBallPossession(ballPossessionTypeEnum &bpType, int &
             {
                 bpType = ballPossessionTypeEnum::TEAM;
                 bpRobot = it->getRobotID();
-            }
-        }
-        
-        if (bpType == ballPossessionTypeEnum::FIELD)
-        {
-            // step 3: check obstacles
-            std::vector<ballClass_t> balls;
-            _ballAdmin->getBalls(balls);
-            if (balls.size())
-            {
-                // only consider first one in list
-                auto ball = balls[0];
-                std::vector<obstacleClass_t> obstacles;
-                _obstacleAdmin->getObstacles(obstacles);
-                if (checkBallCloseToObstacle(ball, obstacles))
-                {
-                    bpType = ballPossessionTypeEnum::OPPONENT;
-                    bpRobot = 0;
-                }
+
+                Vector2D ball_pos_2d = getBallHandlerPosition(bpRobot);
+                static const double BALL_NOMINAL_Z = 0.10;
+                Vector3D ball_pos_3d(ball_pos_2d.x, ball_pos_2d.y, BALL_NOMINAL_Z); 
+                _ballAdmin->appendBallPossessionMeasurements(ball_pos_3d, bpRobot, rtime::now());
+                break;
             }
         }
     }
+    TRACE("bpType=%s bpRobot=%d", enum2str(bpType), bpRobot);
+}
+
+void adaptersCollector::calcOpponentBallPossession(ballPossessionTypeEnum &bpType, int &bpRobot)
+{
+    TRACE_FUNCTION("");
+    // oponnent ballPossession is affected by multiple factors
+    // we require that balls and obstacles are calculated FIRST
+
+    if (bpType == ballPossessionTypeEnum::FIELD)
+    {
+        // step 3: check obstacles
+        std::vector<ballClass_t> balls;
+        _ballAdmin->getBalls(balls);
+        if (balls.size())
+        {
+            // only consider first one in list
+            auto ball = balls[0];
+            std::vector<obstacleClass_t> obstacles;
+            _obstacleAdmin->getObstacles(obstacles);
+            if (checkBallCloseToObstacle(ball, obstacles))
+            {
+                bpType = ballPossessionTypeEnum::OPPONENT;
+                bpRobot = 0;
+            }
+        }
+    }
+    TRACE("bpType=%s bpRobot=%d", enum2str(bpType), bpRobot);
 }
 
 Vector2D adaptersCollector::getBallHandlerPosition(int robotId)
@@ -242,6 +255,7 @@ Vector2D adaptersCollector::getBallHandlerPosition(int robotId)
 
 void adaptersCollector::ballPossessionOverrule(int bpRobot, rtime timeNow)
 {
+    TRACE_FUNCTION("");
     /*
     * Ball Possession to Ball Location overrule:
     * in case one of our robots has the ball firmly within its ball handlers, then
@@ -275,30 +289,40 @@ void adaptersCollector::heartBeatRecalculation(rtime const timeNow)
         TRACE("> t=%16.6f", double(timeNow));
 
         if((_robotAdmin != NULL) &&
-            (_ballAdmin != NULL) &&
-            (_obstacleAdmin != NULL))
+           (_ballAdmin != NULL) &&
+           (_obstacleAdmin != NULL))
         {
-
             // Update configuration
             T_CONFIG_WORLDMODELSYNC config;
             _configAdapter.get(config);
             _rtdbInputAdapter->updateConfig(config);
             _rtdbOutputAdapter->updateConfig(config);
 
+            // vision frame is required for the proccess functions
+            _rtdbInputAdapter->getVisionFrame();
+
             // First get the localization measurements, and perform the localization tick
             // We do this first because the balls and obstacle measurements need the robot position for conversion to FCS
-            _rtdbInputAdapter->getLocalizationCandidates();
+            _rtdbInputAdapter->processLocalizationCandidates();
             _rtdbInputAdapter->getInPlayState(timeNow);
             _robotAdmin->performCalculation(timeNow);
 
             // Then get all remaining data
-            _rtdbInputAdapter->getBallCandidates();
-            _rtdbInputAdapter->getObstacleCandidates();
+            _rtdbInputAdapter->processBallCandidates();
+            _rtdbInputAdapter->processObstacleCandidates();
+
             _rtdbInputAdapter->getVisionBallPossession();
             _rtdbInputAdapter->getRobotDisplacement(timeNow);
             _rtdbInputAdapter->getRobotVelocity(timeNow);
             _rtdbInputAdapter->getBallHandlingBallPossession();
             _rtdbInputAdapter->getTeamMembers();
+
+            // when ball is in possession of our own team, that info is used
+            // by ball tracking, so calculating self ball possession must be done
+            // before calculating ball tracking
+            ballPossessionTypeEnum bpType = ballPossessionTypeEnum::UNKNOWN;
+            int bpRobot = 0;
+            calcSelfBallPossession(bpType, bpRobot);
 
             // BallTracking -- BallAdministrator needs robot position for ownBallsFirst
             robotClass_t robot = _robotAdmin->getLocalRobotPosition(timeNow);
@@ -312,9 +336,9 @@ void adaptersCollector::heartBeatRecalculation(rtime const timeNow)
 
             // Ball possession
             _ballAdmin->getBalls(_balls);
-            ballPossessionTypeEnum bpType = ballPossessionTypeEnum::UNKNOWN;
-            int bpRobot = 0;
-            calcBallPossession(bpType, bpRobot);
+            // opponent ball possession depends on the balls positions and obstacle positions
+            // so it must only be done after those calculations
+            calcOpponentBallPossession(bpType, bpRobot);
             if (bpType == ballPossessionTypeEnum::TEAM)
             {
                 ballPossessionOverrule(bpRobot, timeNow);

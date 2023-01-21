@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Coen Tempelaars (Falcons)
+// Copyright 2015-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Author: ctempela
@@ -22,14 +22,17 @@ namespace geometry
 class Velocity2D : public Vector2D
 {
 public:
+
+    double Rz;
+
     Velocity2D () : Vector2D()
-{
-        m_phi = 0.0;
-};
+    {
+            Rz = 0.0;
+    };
 
     Velocity2D (double x, double y, double phi) : Vector2D(x, y)
     {
-        m_phi = phi;
+        Rz = phi;
     };
 
     ~Velocity2D ()
@@ -39,7 +42,7 @@ public:
 
     Velocity2D (const Velocity2D &other) : Vector2D(other)
     {
-        m_phi = other.m_phi;
+        Rz = other.Rz;
     }
 
     // operations
@@ -49,7 +52,7 @@ public:
         {
             x = other.x;
             y = other.y;
-            m_phi = other.m_phi;
+            Rz = other.Rz;
         }
         return *this;
     }
@@ -58,7 +61,7 @@ public:
     {
         this->x += dx;
         this->y += dy;
-        this->m_phi += dphi;
+        this->Rz += dphi;
         return *this;
     }
 
@@ -66,7 +69,7 @@ public:
     Velocity2D& transformFCS2RCS (const Pose2D& robotpos)
     {
         // first translate, then rotate
-        double angle = (M_PI/2 - robotpos.getPhi());
+        double angle = (M_PI/2 - robotpos.Rz);
         Vector2D xynew = Vector2D(x, y).rotate(angle);
         x = xynew.x;
         y = xynew.y;
@@ -77,7 +80,7 @@ public:
     Velocity2D& transformRCS2FCS (const Pose2D& robotpos)
     {
         // first rotate, then translate
-        double angle = -(M_PI/2 - robotpos.getPhi());
+        double angle = -(M_PI/2 - robotpos.Rz);
         Vector2D xynew = Vector2D(x, y).rotate(angle);
         x = xynew.x;
         y = xynew.y;
@@ -120,14 +123,11 @@ public:
         return y;
     }
 
-    double getPhi () const
+    double getRz () const
     {
-        return m_phi;
+        return Rz;
     }
 
-
-private:
-    double m_phi;
 };
 
 }

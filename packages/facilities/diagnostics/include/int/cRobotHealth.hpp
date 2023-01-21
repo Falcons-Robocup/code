@@ -1,4 +1,4 @@
-// Copyright 2018 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRobotHealth.hpp
@@ -11,7 +11,7 @@
 #define CROBOTHEALTH_HPP_
 
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 
 class cRobotHealth

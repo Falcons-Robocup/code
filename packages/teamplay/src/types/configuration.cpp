@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Coen Tempelaars (Falcons)
+// Copyright 2016-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * configuration.cpp
@@ -21,7 +21,7 @@ configuration::~configuration()
 {
 }
 
-void configuration::update (const configTeamplay& c)
+void configuration::update (const ConfigTeamplay& c)
 {
     _config = c;
 }

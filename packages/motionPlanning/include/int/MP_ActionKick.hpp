@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionKick.hpp
@@ -23,6 +23,9 @@ public:
     MP_ActionKick();
     actionResultTypeEnum execute();
     void unpackParameters();
+
+    void initialize() override;
+
 private:
     float _kickPower = 0.0;
     float _kickHeight = 0.0;

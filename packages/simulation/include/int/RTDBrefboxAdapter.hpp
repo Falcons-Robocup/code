@@ -1,4 +1,4 @@
-// Copyright 2019 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBrefboxAdapter.hpp
@@ -20,7 +20,7 @@ public:
     virtual void republish() const;
     virtual void sendStart();
     virtual void sendStop();
-    virtual void sendSetpiece (const Setpiece&, const TeamID&);
+    virtual void sendSetpiece (const SetpieceEnum&, const TeamID&);
     virtual void registerGoal (const TeamID&);
 
 private:

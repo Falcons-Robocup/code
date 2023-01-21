@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * PathPlanningClient.cpp
@@ -23,33 +23,40 @@
 // visible to motionPlanning via PathPlanningClient.hpp
 RTDBInputAdapter *g_rtdbInputAdapter;
 RTDBOutputAdapter *g_rtdbOutputAdapter;
-ConfigRTDBAdapter<ConfigPathPlanning> *g_configAdapter;
+ConfigRTDBAdapter<ConfigPathPlanning> *g_configAdapterPP;
+ConfigRTDBAdapter<ConfigExecution> *g_configAdapterEx; // tick frequency
 PathPlanning *g_pp;
 
 
 PathPlanningClient::PathPlanningClient()
 {
-    INIT_TRACE;
-
     // setup adapters
     TRACE("setting up RTDBInputAdapter");
     g_rtdbInputAdapter = new RTDBInputAdapter();
+
     TRACE("setting up RTDBOutputAdapter");
     g_rtdbOutputAdapter = new RTDBOutputAdapter(true);
-    TRACE("setting up ConfigRTDBAdapter");
-    g_configAdapter = new ConfigRTDBAdapter<ConfigPathPlanning>(CONFIG_PATHPLANNING);
+
+    TRACE("setting up ConfigRTDBAdapterPP");
+    g_configAdapterPP = new ConfigRTDBAdapter<ConfigPathPlanning>(CONFIG_PATHPLANNING);
     std::string configFile = determineConfig("PathPlanning");
-    g_configAdapter->loadYAML(configFile);
+    g_configAdapterPP->loadYAML(configFile);
+
+    TRACE("setting up ConfigRTDBAdapterEx");
+    g_configAdapterEx = new ConfigRTDBAdapter<ConfigExecution>(CONFIG_EXECUTION);
+    configFile = determineConfig("execution");
+    g_configAdapterEx->loadYAML(configFile);
 
     // setup PathPlanning, connect adapters
     TRACE("setting up PathPlanning");
-    g_pp = new PathPlanning(g_configAdapter, g_rtdbInputAdapter, g_rtdbOutputAdapter);
+    g_pp = new PathPlanning(g_configAdapterPP, g_configAdapterEx, g_rtdbInputAdapter, g_rtdbOutputAdapter);
 }
 
 PathPlanningClient::~PathPlanningClient()
 {
     delete g_pp;
-    delete g_configAdapter;
+    delete g_configAdapterPP;
+    delete g_configAdapterEx;
     delete g_rtdbOutputAdapter;
     delete g_rtdbInputAdapter;
 }

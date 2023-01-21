@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * vcConfigRTDBAdapter.hpp
@@ -10,7 +10,7 @@
 #ifndef VCCONFIGRTDBADAPTER_VELOCITYCONTROL_HPP_
 #define VCCONFIGRTDBADAPTER_VELOCITYCONTROL_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "ConfigRTDBAdapter.hpp"
 
 

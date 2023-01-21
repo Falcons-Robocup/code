@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Coen Tempelaars (Falcons)
+// Copyright 2016-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * timer.hpp
@@ -10,7 +10,7 @@
 #ifndef TIMER_HPP_
 #define TIMER_HPP_
 
-#include "FalconsRtDB2.hpp" // for rtime
+#include "FalconsRTDB.hpp" // for rtime
 
 namespace teamplay
 {

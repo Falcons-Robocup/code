@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // minitrace
 // Copyright 2014 by Henrik Rydgård
@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #ifdef _WIN32
 #pragma warning (disable:4996)
@@ -44,7 +45,7 @@
 // Ugh, this struct is already pretty heavy.
 // Will probably need to move arguments to a second buffer to support more than one.
 typedef struct raw_event {
-	const char *name;
+	char name[255];
 	const char *cat;
 	void *id;
 	int64_t ts;
@@ -300,9 +301,9 @@ void mtr_flush() {
 		}
 		if (raw->id) {
 			switch (raw->ph) {
-			case 'S':
-			case 'T':
-			case 'F':
+			case 'b':
+			case 'n':
+			case 'e':
 				// TODO: Support full 64-bit pointers
 				snprintf(id_buf, ARRAY_SIZE(id_buf), ",\"id\":\"0x%08x\"", (uint32_t)(uintptr_t)raw->id);
 				break;
@@ -329,9 +330,28 @@ void mtr_flush() {
 		}
 #endif
 
-		len = snprintf(linebuf, ARRAY_SIZE(linebuf), "%s{\"cat\":\"%s\",\"pid\":%i,\"tid\":%i,\"ts\":%" PRId64 ",\"ph\":\"%c\",\"name\":\"%s\",\"args\":{%s}%s}",
+        // EKPC 2021-12-28
+        // Convert timestamp to human-readable timestamp
+        time_t ts_time_t = (time_t)(raw->ts / 1E6);
+        struct tm* ts = gmtime( &ts_time_t );
+        char ts_str[26];
+        strftime(ts_str, sizeof ts_str, "%Y-%m-%d %H:%M:%S", ts);
+        char us_str[20];
+        snprintf(us_str, sizeof us_str, ".%ld", (raw->ts % (int64_t)1E6));
+        strcat(ts_str, us_str);
+
+        char ts_json[128];
+        snprintf(ts_json, sizeof ts_json, "\"ts%c\":\"%s\"", raw->ph, ts_str);
+
+        // If argument given, add a comma to the argument
+        if (strlen(arg_buf) > 0)
+        {
+            strcat(arg_buf, ",");
+        }
+
+		len = snprintf(linebuf, ARRAY_SIZE(linebuf), "%s{\"cat\":\"%s\",\"pid\":%i,\"tid\":%i,\"ts\":%" PRId64 ",\"ph\":\"%c\",\"name\":\"%s\",\"args\":{%s%s}%s}",
 				first_line ? "" : ",\n",
-				cat, raw->pid, raw->tid, raw->ts - time_offset, raw->ph, raw->name, arg_buf, id_buf);
+				cat, raw->pid, raw->tid, raw->ts - time_offset, raw->ph, raw->name, arg_buf, ts_json, id_buf);
 		fwrite(linebuf, 1, len, f);
 		first_line = 0;
 	}
@@ -384,7 +404,7 @@ void internal_mtr_raw_event(const char *category, const char *name, char ph, voi
 #endif
 
 	ev->cat = category;
-	ev->name = name;
+	snprintf(ev->name, sizeof(ev->name), "%s", name);
 	ev->id = id;
 	ev->ph = ph;
 	if (ev->ph == 'X') {
@@ -425,7 +445,7 @@ void internal_mtr_raw_event_arg(const char *category, const char *name, char ph,
 #endif
 
 	ev->cat = category;
-	ev->name = name;
+	snprintf(ev->name, sizeof(ev->name), "%s", name);
 	ev->id = id;
 	ev->ts = (int64_t)(ts * 1000000);
 	ev->ph = ph;

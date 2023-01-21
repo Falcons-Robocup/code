@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Tim Kouters (Falcons)
+// Copyright 2015-2021 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cWorldModel.hpp
@@ -30,7 +30,7 @@ class cWorldModel
 {
 public:
     cWorldModel();
-    ~cWorldModel();
+    virtual ~cWorldModel();
     void enableInplayOverrule();
 
     void run(); // block on waitForPut

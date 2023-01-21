@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Michel Koenen (Falcons)
+// Copyright 2016-2022 Michel Koenen (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cEnvironmentCommon.hpp
@@ -16,7 +16,7 @@ namespace environmentCommon
 
     // in: root value to load (e.g., field, ball, robot)
     // out: vector with string pairs (e.g., values[0].first == goalHeight && values[0].second == 1.0)
-	bool readYAML(std::string root, std::vector< std::pair<std::string,std::string> > &values);
+    bool readYAML(std::string root, std::vector< std::pair<std::string,std::string> > &values, std::string config = "cEnvironment");
 }
 
 // This class provides a predicate for finding the yaml values

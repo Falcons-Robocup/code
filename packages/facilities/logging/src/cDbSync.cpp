@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cDbSync.cpp
@@ -11,19 +11,17 @@
 #include <boost/bind.hpp>
 
 #include "ext/cDbSync.hpp"
+#include "ext/cDbConnection.hpp"
 
 #include "tracing.hpp"
 
-// TODO make arguments, relay from main()
-#define RTDB2_STORAGE_PRODUCTION ("/tmp/rtdb2_storage")
-#define RTDB2_STORAGE_PLAYBACK ("/tmp/rtdb2_playback")
 
 cDbSync::cDbSync(int frequency)
     : _frequency(frequency)
 {
     // use agent id 0 - it does not matter since we deal with entire frames
-    _src = new RtDB2(0, RTDB2_STORAGE_PRODUCTION);
-    _tgt = new RtDB2(0, RTDB2_STORAGE_PLAYBACK);
+    _src = FalconsRTDBStore::getInstance().getFalconsRTDB(0, RTDB_STORAGE_PRODUCTION);
+    _tgt = FalconsRTDBStore::getInstance().getFalconsRTDB(0, RTDB_STORAGE_PLAYBACK);
 }
 
 cDbSync::~cDbSync()

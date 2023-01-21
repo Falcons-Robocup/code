@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * observerRtDB.hpp
@@ -15,14 +15,16 @@
 
 #include <boost/thread/thread.hpp>
 #include "boost/thread/mutex.hpp"
+#include "rtdbStructs.hpp"
+#include "RtDB2.h"
 #include "cDiagnostics.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class observerRtDB: public observer
 {
 
     public:
-        observerRtDB(const uint robotID, const bool cameraCorrectlyMounted, const float minimumLockTime, const float frequency);
+        observerRtDB(const uint robotID, const bool cameraCorrectlyMounted, const float minimumLockTime);
         virtual ~observerRtDB();
 
         virtual void update_own_position(std::vector<robotLocationType> robotLocations, double timestampOffset);
@@ -34,7 +36,6 @@ class observerRtDB: public observer
         RtDB2 *_rtdb;
         int _myRobotId;
         boost::mutex mtx;
-        float _frequency;
 
         // data may be written asynchronously using the update* function
         // there is one thread which writes into RTDB hence triggering worldModel and the rest of the software

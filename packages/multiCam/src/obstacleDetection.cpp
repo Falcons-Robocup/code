@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Andre Pool (Falcons)
+// Copyright 2018-2021 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Jan Feitsma, december 2019
 
@@ -6,7 +6,9 @@
 
 #include <math.h>
 
+#ifndef NOROS
 #include "tracing.hpp"
+#endif
 
 using namespace std;
 using namespace cv;
@@ -131,7 +133,9 @@ void obstacleDetection::findClosestLineGroups() {
 // Note: The radius is measured from the closest yellow pixel, but because of the camera position, this
 // is roughly the same as the center of the obstacle.
 void obstacleDetection::update() {
+#ifndef NOROS
     TRACE_FUNCTION("");
+#endif
 // get the pixels of the camera
     vector<linePointSt> cartesian;
 
@@ -156,7 +160,9 @@ void obstacleDetection::update() {
 
 // construct "image" from received points
     {
+#ifndef NOROS
     TRACE_SCOPE("CONSTRUCT_AND_EXPORT_OBSTACLE", "");
+#endif
     exportMutex.lock();
     inRangeFrame = Mat::zeros(height, width, CV_8UC1);
     for (size_t ii = 0; ii < cartesian.size(); ii++) {

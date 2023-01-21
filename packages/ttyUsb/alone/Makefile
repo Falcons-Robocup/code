@@ -9,7 +9,7 @@ OBJECTS = drv8301.o motorBoard.o serial.o ttyUsbAlone.o ttyUsb.o
 MAKEFLAGS = -j8
 
 CFLAGS0 = -g3 -O2 -m64 -ansi -Wextra -Wpedantic -Wno-unused-but-set-variable -Wno-unused-parameter
-CFLAGS = $(CFLAGS0) -Wall -std=c++11
+CFLAGS = $(CFLAGS0) -Wall -std=c++17
 
 LDFLAGS = -L/usr/local/lib 
 LDLIBS = -lpthread

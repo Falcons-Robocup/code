@@ -1,4 +1,4 @@
-// Copyright 2018 Jan Feitsma (Falcons)
+// Copyright 2018-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * diagTeamplay.hpp
@@ -13,6 +13,7 @@
 
 #include "RtDB2.h" // required for serialization
 #include <string>
+#include "HeightmapNames.hpp"
 
 struct diagTeamplay
 {
@@ -24,8 +25,9 @@ struct diagTeamplay
     bool          aiming;
     float         shootTargetX;
     float         shootTargetY;
+    CompositeHeightmapName activeHeightmap;
     
-    SERIALIZE_DATA(action, behavior, role, state, trees, aiming, shootTargetX, shootTargetY);
+    SERIALIZE_DATA(action, behavior, role, state, trees, aiming, shootTargetX, shootTargetY, activeHeightmap);
 };
 
 #endif

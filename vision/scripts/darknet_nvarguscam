@@ -1,0 +1,59 @@
+#!/bin/bash -e
+
+# Andre Pool, created may 2020
+
+# imx219 native sensor resolution is 3280 x 2464
+# for horizontal and vertical binningthe resolution becomes 1640 x 1232
+# this resolution uses the full frame of the camera sensor
+
+# use DISPLAY=:0 and "xhost +" on remote system to see the camera with overlay output
+
+# with the -dont_show option the fps increase from about 7.5 to 9
+# -dont_show \
+
+# use the -ext_output option for more detailed information
+
+# cam1: sensor-id=0
+# cam0: sensor-id=1
+
+# use the following command to get the availabe camera options
+# gst-inspect-1.0 nvarguscamerasrc
+# unfortunately it does not provide input for the manual white balance values
+
+# TODO: use jetsonSystem to control the fps (by changing the imx219 amount of lines)
+# NOTE: if the jetson cannot keepup with the framerate the latency will significantly incraese
+
+./darknet \
+   detector demo \
+   robocup_ml/obj.data \
+   robocup_ml/yolov4.cfg \
+   yolov4_final.weights_20201112 \
+   -thresh 0.01 \
+   -json_port 8070 \
+   "nvarguscamerasrc \
+      aelock=1 \
+      awblock=0 \
+      aeantibanding=2 \
+      ee-mode=0 \
+      exposurecompensation=0 \
+      exposuretimerange='20000000 20000000' \
+      ispdigitalgainrange='1 1' \
+      gainrange='3 3' \
+      saturation=1.0 \
+      sensor-id=0 \
+      tnr-mode=1 \
+      wbmode=9 \
+   ! video/x-raw(memory:NVMM),\
+      width=1640,\
+      height=1232,\
+      format=NV12,\
+      framerate=(fraction)7/1 \
+   ! nvvidconv flip-method=1 \
+   ! video/x-raw, format=(string)BGRx, \
+      width=616, \
+      height=820 \
+   ! videoconvert \
+   ! video/x-raw, format=(string)BGR \
+   ! appsink"
+
+

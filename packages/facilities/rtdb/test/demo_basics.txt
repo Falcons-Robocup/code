@@ -1,0 +1,19 @@
+[INFO] Loading database named: default
+me: 2
+processType: dbclient
+rootPath: /tmp/rtdb2_storage
+configFileName: config/rtdb2_configuration.xml
+networkName: 
+databaseName: default
+databasePath: /tmp/rtdb2_storage/2/default
+writing struct data into RTDB:
+alive = 1
+pos = (1.1, 2.5, 0)
+intention = WIN
+
+sleeping a bit ...
+reading struct data from RTDB:
+alive = 1
+pos = (1.1, 2.5, 0)
+intention = WIN
+

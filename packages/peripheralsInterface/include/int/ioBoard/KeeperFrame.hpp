@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * KeeperFrame.hpp
@@ -11,7 +11,7 @@
 #define INCLUDE_INT_KEEPER_FRAME_HPP_
 
 #include "int/ioBoard/IoBoard.hpp"
-#include "FalconsRtDB2.hpp" // rtime
+#include "FalconsRTDB.hpp" // rtime
 
 
 // only allow a setpoint once every x seconds 

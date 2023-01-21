@@ -1,4 +1,4 @@
-# Copyright 2020 Erik Kouters (Falcons)
+# Copyright 2020-2021 Erik Kouters (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 import tarfile
 import subprocess
@@ -462,7 +462,7 @@ def constructJsonObjectFromTraceFiles(traceFiles):
 
 def augmentTraceObjWithTimestamps(traceObj):
 
-    for traceEvent in traceObj["traceEvents"]:
-        ts = datetime.fromtimestamp( traceEvent["ts"] / 1E6 )
-        traceEvent["args"]["ts"] = ts.strftime("%Y-%m-%d %H:%M:%S.%f")
+    #for traceEvent in traceObj["traceEvents"]:
+    #    ts = datetime.fromtimestamp( traceEvent["ts"] / 1E6 )
+    #    traceEvent["args"]["ts"] = ts.strftime("%Y-%m-%d %H:%M:%S.%f")
     return traceObj

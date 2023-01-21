@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Andre Pool (Falcons)
+// Copyright 2018-2022 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2014-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
@@ -6,7 +6,7 @@
 #ifndef CONFIGURATOR_HPP
 #define CONFIGURATOR_HPP
 
-#include "opencv2/highgui/highgui.hpp"
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 #include <mutex>

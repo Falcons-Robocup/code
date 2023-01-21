@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * PathPlanning.hpp
@@ -24,13 +24,14 @@
 #include "int/PathPlanningData.hpp"
 
 // use a short alias
-using CFI = ConfigInterface<ConfigPathPlanning>;
+using ppCFI = ConfigInterface<ConfigPathPlanning>;
+using exCFI = ConfigInterface<ConfigExecution>;
 
 
 class PathPlanning
 {
 public:
-    PathPlanning(CFI *configInterface = NULL, InputInterface *inputInterface = NULL, OutputInterface *outputInterface = NULL);
+    PathPlanning(ppCFI *configInterfacePP = NULL, exCFI *configInterfaceEx = NULL, InputInterface *inputInterface = NULL, OutputInterface *outputInterface = NULL);
     ~PathPlanning();
 
     // full iteration:
@@ -57,7 +58,8 @@ private:
     void getInputs();
     diagPathPlanning makeDiagnostics();
 
-    CFI                       *_configInterface;
+    ppCFI                     *_configInterfacePP;
+    exCFI                     *_configInterfaceEx;
     InputInterface            *_inputInterface;
     OutputInterface           *_outputInterface;
 

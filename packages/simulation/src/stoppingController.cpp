@@ -1,4 +1,4 @@
-// Copyright 2019 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * stoppingController.cpp
@@ -44,11 +44,13 @@ void StoppingController::control (const ArbiterGameData& gamedata,
 
     if (!gamedata.anyRobotIsMoving())
     {
+        TRACE("No more robots moving, stopped.");
         declareGameStopped();
     }
 
     if (secondsSinceLastTransition > maximumWaitingTime)
     {
+        TRACE("Maximum waiting time exceeded, stopped.");
         declareGameStopped();
     }
 }

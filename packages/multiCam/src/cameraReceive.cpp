@@ -1,9 +1,11 @@
-// Copyright 2018-2020 Andre Pool (Falcons)
+// Copyright 2018-2021 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2017-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef NOROS
 #include "tracing.hpp"
+#endif
 
 #include "cameraReceive.hpp"
 
@@ -114,7 +116,9 @@ cameraReceive::cameraReceive(configurator *conf) {
 }
 
 void cameraReceive::block() {
+#ifndef NOROS
 	TRACE_FUNCTION("Waiting for data...");
+#endif
 	while (waitForData) {
 		usleep(100);
 	}
@@ -122,9 +126,9 @@ void cameraReceive::block() {
 }
 
 void cameraReceive::receive() {
-
+#ifndef NOROS
 	TRACE_FUNCTION("");
-
+#endif
 	while (true) {
 		// block until data received
 		struct sockaddr_in fromAddr;
@@ -219,7 +223,9 @@ void cameraReceive::receive() {
 				}
 
 			} else if ((rxPacket.id & 0x3f) == 2) { // ## line points from long axis camera ##
+#ifndef NOROS
 				TRACE_SCOPE("cameraReceive::line_points_from_long_axis_camera", "");
+#endif
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				{
 					lock_guard < mutex > lineMutex(linePointListLongAxisExportMutex); // lock the mutex
@@ -250,7 +256,9 @@ void cameraReceive::receive() {
 					linePointListLongAxisAge[camIndex] = 0; // used to determine if line points are valid and can be exported to line point detection
 				}
 			} else if ((rxPacket.id & 0x3f) == 6) { // ## line points from short axis camera ##
+#ifndef NOROS
 				TRACE_SCOPE("cameraReceive::line_points_from_short_axis_camera", "");
+#endif
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				{
 					lock_guard < mutex > lineMutex(linePointListShortAxisExportMutex); // lock the mutex
@@ -275,7 +283,9 @@ void cameraReceive::receive() {
 					linePointListShortAxisAge[camIndex] = 0; // used to determine if line points are valid and can be exported to line point detection
 				}
 			} else if ((rxPacket.id & 0x20) == 0x20) { // bit 5 is used to identify as camera frame packet = image
+#ifndef NOROS
 				TRACE_SCOPE("cameraReceive::camera_frame_packet", "");
+#endif
 				// the image does not fit in one packet, receive in multiple packets, use id to inform receiver
 				// which part of the image it received
 				uint8_t imagePart = rxPacket.id & 0x1f; // maximal size 32 parts
@@ -314,7 +324,9 @@ void cameraReceive::receive() {
 				}
 
 			} else if ((rxPacket.id & 0x3f) == 3) { // ## ball ##
+#ifndef NOROS
 				TRACE_SCOPE("cameraReceive::ball", "");
+#endif
 				struct timeval tv;
 				gettimeofday(&tv, NULL);
 				ballReceiveTime[camIndex] = 1.0 * tv.tv_sec + 0.000001 * tv.tv_usec;
@@ -346,7 +358,9 @@ void cameraReceive::receive() {
 				ballDetCondVar.notify_all(); // inform all 4 waiting threads new data is available (only the one with ballPointListValid = true will continue)
 
 			} else if ((rxPacket.id & 0x3f) == 7) { // ## ballFar ##
+#ifndef NOROS
 				TRACE_SCOPE("cameraReceive::ball_far", "");
+#endif
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				if (points > 0) {
 					printf("INFO      : cam %zu received %zu ballFar points\n", camIndex, points);
@@ -376,7 +390,9 @@ void cameraReceive::receive() {
 				ballFarDetCondVar.notify_all(); // inform all 4 waiting threads new data is available (only the one with ballFarPointListValid = true will continue)
 
 			} else if ((rxPacket.id & 0x3f) == 5) { // ## floor ##
+#ifndef NOROS
 				TRACE_SCOPE("cameraReceive::floor", "");
+#endif
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				// printf("INFO      : received %zu floor points\n", points);
 				{
@@ -403,7 +419,9 @@ void cameraReceive::receive() {
 				}
 
 			} else if ((rxPacket.id & 0x3f) == 4) { // ## obstacle ##
+#ifndef NOROS
 				TRACE_SCOPE("cameraReceive::obstacle", "");
+#endif
 				size_t points = (rxPacket.size - CAM_PACKET_HEADER_SIZE) / (2 * 4); // see sender to determine how many bytes per point
 				{
 					lock_guard < mutex > obstacleMutex(obstaclePointListExportMutex); // lock the mutex
@@ -437,7 +455,9 @@ void cameraReceive::receive() {
 }
 
 size_t cameraReceive::getLinePointsLongAxisAmount(size_t camIndex) {
+#ifndef NOROS
 	TRACE_FUNCTION("");
+#endif
 	if (camIndex >= 4) {
 		printf(
 				"ERROR     : tried to get the amount long axis line points from camera index %zu, while the index goes to 3",
@@ -451,7 +471,9 @@ size_t cameraReceive::getLinePointsLongAxisAmount(size_t camIndex) {
 }
 
 size_t cameraReceive::getLinePointsShortAxisAmount(size_t camIndex) {
+#ifndef NOROS
 	TRACE_FUNCTION("");
+#endif
 	if (camIndex >= 4) {
 		printf(
 				"ERROR     : tried to get the amount short axix line points from camera index %zu, while the index goes to 3",
@@ -465,7 +487,9 @@ size_t cameraReceive::getLinePointsShortAxisAmount(size_t camIndex) {
 }
 
 vector<linePointSt> cameraReceive::getLinePointsLongAxis(size_t camIndex) {
+#ifndef NOROS
 	TRACE_FUNCTION("");
+#endif
 	if (camIndex >= 4) {
 		printf("ERROR     : tried to get long axis line points from camera index %zu, while the index goes to 3",
 				camIndex);
@@ -493,7 +517,9 @@ vector<linePointSt> cameraReceive::getLinePointsLongAxis(size_t camIndex) {
 }
 
 vector<linePointSt> cameraReceive::getLinePointsShortAxis(size_t camIndex) {
+#ifndef NOROS
 	TRACE_FUNCTION("");
+#endif
 	if (camIndex >= 4) {
 		printf("ERROR     : tried to get short axis line points from camera index %zu, while the index goes to 3",
 				camIndex);
@@ -521,7 +547,9 @@ vector<linePointSt> cameraReceive::getLinePointsShortAxis(size_t camIndex) {
 }
 
 vector<linePointSt> cameraReceive::getAndClearBallPointsWait(size_t camIndex) {
+#ifndef NOROS
 	TRACE_FUNCTION("");
+#endif
 	// acquire mutex used to protect the ballPointList and ballPointListValid
 	std::unique_lock < std::mutex > myLock(ballPointListExportMutex);
 	// wait for data
@@ -549,7 +577,9 @@ vector<linePointSt> cameraReceive::getAndClearBallPointsWait(size_t camIndex) {
 }
 
 vector<linePointSt> cameraReceive::getAndClearBallFarPointsWait(size_t camIndex) {
+#ifndef NOROS
 	TRACE_FUNCTION("");
+#endif
 	// acquire mutex used to protect the ballFarPointList and ballFarPointListValid
 	std::unique_lock < std::mutex > myLock(ballFarPointListExportMutex);
 	// wait for data
@@ -577,7 +607,9 @@ vector<linePointSt> cameraReceive::getAndClearBallFarPointsWait(size_t camIndex)
 }
 
 vector<linePointSt> cameraReceive::getFloorPoints(size_t camIndex) {
+#ifndef NOROS
 	TRACE_FUNCTION("");
+#endif
 	if (camIndex >= 4) {
 		printf("ERROR     : tried to get floor points from camera index %zu, while the index goes to 3", camIndex);
 		exit(EXIT_FAILURE);
@@ -598,7 +630,9 @@ vector<linePointSt> cameraReceive::getFloorPoints(size_t camIndex) {
 
 // get the latest obstacle points, blocks until new obstacle points have been received
 vector<linePointSt> cameraReceive::getObstaclePointsWait(size_t camIndex) {
+#ifndef NOROS
 	TRACE_FUNCTION("");
+#endif
 	// acquire mutex used to protect the obstaclePointList and obstaclePointListValid
 	std::unique_lock < std::mutex > myLock(obstaclePointListExportMutex);
 	// wait for data

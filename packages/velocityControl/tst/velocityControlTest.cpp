@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * velocityControlTest.cpp
@@ -103,6 +103,8 @@ TEST(velocityControlTest, simpleMove_shouldMoveForward_VEL_ONLY)
 
     // Arrange
     auto vc = defaultVelocityControlSetup();
+    vc.data.robot.position = pose(0, 0, M_PI_2); // RCS.y == FCS.y
+    vc.data.robot.velocity = pose(0, 0, 0);
     vc.data.target.pos = pose(2, 0, 0);
     vc.data.target.vel = pose(0, 2, 0);
     vc.data.robotPosVelMoveType = robotPosVelEnum::VEL_ONLY;
@@ -266,18 +268,18 @@ public:
 INSTANTIATE_TEST_CASE_P(velocityControlTest,
                         LimiterTest,
                         ::testing::Values(
-                            std::make_tuple("X",   1.0,  1.0,  1.1), // acc
+                            std::make_tuple("X",   1.0,  1.0,  1.2), // acc
                             std::make_tuple("X",   1.0, -0.2,  0.8), // dec
                             std::make_tuple("X",  -1.0,  0.2, -0.8), // dec
-                            std::make_tuple("X",  -1.0, -1.0, -1.1), // acc
-                            std::make_tuple("Y",   1.0,  1.0,  1.1), // acc
+                            std::make_tuple("X",  -1.0, -1.0, -1.2), // acc
+                            std::make_tuple("Y",   1.0,  1.0,  1.2), // acc
                             std::make_tuple("Y",   1.0, -0.2,  0.8), // dec
                             std::make_tuple("Y",  -1.0,  0.2, -0.8), // dec
-                            std::make_tuple("Y",  -1.0, -1.0, -1.1), // acc
-                            std::make_tuple("Rz",  1.0,  1.0,  1.1), // acc
+                            std::make_tuple("Y",  -1.0, -1.0, -1.2), // acc
+                            std::make_tuple("Rz",  1.0,  1.0,  1.2), // acc
                             std::make_tuple("Rz",  1.0, -0.2,  0.8), // dec
                             std::make_tuple("Rz", -1.0,  0.2, -0.8), // dec
-                            std::make_tuple("Rz", -1.0, -1.0, -1.1)  // acc
+                            std::make_tuple("Rz", -1.0, -1.0, -1.2)  // acc
                             )
                         );
 
@@ -295,7 +297,7 @@ TEST_P(LimiterTest, LimiterTests)
 
     // Arrange
     auto vc = defaultVelocityControlSetup();
-    vc.data.currentMotionTypeConfig.velocityControllers.shortStroke.type = VelocitySetpointControllerTypeEnum::LINEAR;
+    vc.data.currentMotionTypeConfig.velocityControllers.shortStroke.type = VelocitySetpointControllerTypeEnum::SPG;
     vc.data.currentMotionTypeConfig.limits.maxAccX = 2.0;
     vc.data.currentMotionTypeConfig.limits.maxAccYforward = 2.0;
     vc.data.currentMotionTypeConfig.limits.maxAccYbackward = 2.0;
@@ -312,6 +314,7 @@ TEST_P(LimiterTest, LimiterTests)
     {
         vc.data.robot.velocity.x = currentSpeed;
         vc.data.previousVelocityRcs.x = currentSpeed;
+        vc.data.previousVelocitySetpointFcs.x = currentSpeed;
         vc.data.target.pos.x = newPosition;
         expectedVelocity.x = expectedSpeed;
     }
@@ -319,6 +322,7 @@ TEST_P(LimiterTest, LimiterTests)
     {
         vc.data.robot.velocity.y = currentSpeed;
         vc.data.previousVelocityRcs.y = currentSpeed;
+        vc.data.previousVelocitySetpointFcs.y = currentSpeed;
         vc.data.target.pos.y = newPosition;
         expectedVelocity.y = expectedSpeed;
     }
@@ -326,6 +330,7 @@ TEST_P(LimiterTest, LimiterTests)
     {
         vc.data.robot.velocity.Rz = currentSpeed;
         vc.data.previousVelocityRcs.phi = currentSpeed;
+        vc.data.previousVelocitySetpointFcs.phi = currentSpeed;
         vc.data.target.pos.Rz += newPosition;
         expectedVelocity.phi = expectedSpeed;
     }
@@ -348,9 +353,9 @@ TEST(velocityControlTest, limiter_maxVelXY_positive)
 
     // Arrange
     auto vc = defaultVelocityControlSetup();
-    vc.data.currentMotionTypeConfig.velocityControllers.shortStroke.type = VelocitySetpointControllerTypeEnum::LINEAR;
+    vc.data.currentMotionTypeConfig.velocityControllers.shortStroke.type = VelocitySetpointControllerTypeEnum::SPG;
     vc.data.currentMotionTypeConfig.velocityControllers.shortStroke.coordinateSystem = CoordinateSystemEnum::RCS;
-    vc.data.vcSetpointConfig.type = VelocitySetpointControllerTypeEnum::LINEAR;
+    vc.data.vcSetpointConfig.type = VelocitySetpointControllerTypeEnum::SPG;
     vc.data.vcSetpointConfig.coordinateSystem = CoordinateSystemEnum::RCS;
     vc.data.target.pos.x = 2.0;
     vc.data.target.pos.y = 2.0;
@@ -369,7 +374,7 @@ TEST(velocityControlTest, limiter_maxVelXY_positive)
     // Assert
     auto vel = vc.data.resultVelocityRcs;
     EXPECT_NEAR(vel.x, -0.50, NUMERICAL_TOLERANCE);
-    EXPECT_NEAR(vel.y, 0.60, NUMERICAL_TOLERANCE);
+    EXPECT_NEAR(vel.y, 0.50, NUMERICAL_TOLERANCE);
     EXPECT_NEAR(vel.phi, 0.0, NUMERICAL_TOLERANCE);
 }
 
@@ -379,7 +384,7 @@ TEST(velocityControlTest, limiter_maxVelXY_negative)
 
     // Arrange
     auto vc = defaultVelocityControlSetup();
-    vc.data.currentMotionTypeConfig.velocityControllers.shortStroke.type = VelocitySetpointControllerTypeEnum::LINEAR;
+    vc.data.currentMotionTypeConfig.velocityControllers.shortStroke.type = VelocitySetpointControllerTypeEnum::SPG;
     vc.data.currentMotionTypeConfig.velocityControllers.shortStroke.coordinateSystem = CoordinateSystemEnum::RCS;
     vc.data.target.pos.x = -2.0;
     vc.data.target.pos.y = -2.0;
@@ -398,7 +403,7 @@ TEST(velocityControlTest, limiter_maxVelXY_negative)
     // Assert
     auto vel = vc.data.resultVelocityRcs;
     EXPECT_NEAR(vel.x, 0.50, NUMERICAL_TOLERANCE);
-    EXPECT_NEAR(vel.y, -0.60, NUMERICAL_TOLERANCE);
+    EXPECT_NEAR(vel.y, -0.50, NUMERICAL_TOLERANCE);
     EXPECT_NEAR(vel.phi, 0.0, NUMERICAL_TOLERANCE);
 }
 
@@ -508,6 +513,7 @@ TEST(velocityControlTest, limiter_maxAccRz_breaking_positive)
     vc.data.currentMotionTypeConfig.limits.maxAccRz = 5.0;
     vc.data.currentMotionTypeConfig.limits.maxDecRz = 5.0;
     vc.data.previousVelocityRcs = Velocity2D(0, 0, 1.0);
+    vc.data.previousVelocitySetpointFcs = Velocity2D(0.0, 0.0, 1.0);
 
     // Act
     vc.calculate();
@@ -530,6 +536,7 @@ TEST(velocityControlTest, limiter_maxAccRz_breaking_negative)
     vc.data.currentMotionTypeConfig.limits.maxAccRz = 5.0;
     vc.data.currentMotionTypeConfig.limits.maxDecRz = 5.0;
     vc.data.previousVelocityRcs = Velocity2D(0, 0, -1.0);
+    vc.data.previousVelocitySetpointFcs = Velocity2D(0.0, 0.0, -1.0);
 
     // Act
     vc.calculate();
@@ -569,10 +576,9 @@ TEST(velocityControlTest, spg_workaround_necessity)
     EXPECT_NEAR(vel.phi, 0.08, NUMERICAL_TOLERANCE);
 }
 
-
 int main(int argc, char **argv)
 {
-    INIT_TRACE;
+    INIT_TRACE("velocityControlTest");
     InitGoogleTest(&argc, argv);
     int r = RUN_ALL_TESTS();
     WRITE_TRACE;

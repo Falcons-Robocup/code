@@ -48,7 +48,7 @@ for robot in $robots; do
     if [ "$?" == "0" ]
     then
         echo "running command on $robot"
-        ssh $robot $FALCONS_CODE_PATH/packages/coachCommands/rwrap $cmd
+        ssh robocup@$robot $FALCONS_CODE_PATH/packages/coachCommands/rwrap $cmd
     else
         echo "ERROR: could not reach $robot"
     fi

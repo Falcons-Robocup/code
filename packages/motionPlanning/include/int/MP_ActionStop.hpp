@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionStop.hpp
@@ -17,6 +17,9 @@ class MP_ActionStop: public MP_AbstractAction
 public:
     actionResultTypeEnum execute();
     void unpackParameters();
+
+    void initialize() override;
+
 private:
     bool _ballHandlersEnabled;
 };

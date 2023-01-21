@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cMotionPlanningClient.cpp
@@ -56,12 +56,17 @@ T_ACTION_RESULT cMotionPlanningClient::executeAction(const T_ACTION actionData)
     tprintf("executeAction %s position=[%6.2f, %6.2f, %6.2f] motionType=%s bh=%d",
         enum2str(actionData.action), actionData.position.x, actionData.position.y, actionData.position.z, enum2str(actionData.motionType), actionData.ballHandlersEnabled);
 
+    // Set the action.
+    // If the same action is already active, the old action is kept alive.
+    // Otherwise, a new action is created.
+    _motionPlanner->setAction(actionData.action);
+
+    // For each action, retrieve the parameters and store for use when executing the action
     std::vector<std::string> params;
     switch(actionData.action)
     {
         case actionTypeEnum::MOVE:
         {
-            _motionPlanner->setAction(MP_ActionMoveToTarget());
             params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
             params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
             params.push_back(boost::lexical_cast<std::string>(actionData.position.z)); // Rz actually
@@ -71,21 +76,18 @@ T_ACTION_RESULT cMotionPlanningClient::executeAction(const T_ACTION actionData)
         }
         case actionTypeEnum::KICK:
         {
-            _motionPlanner->setAction(MP_ActionKick());
             params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
             params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
             break;
         }
         case actionTypeEnum::PASS:
         {
-            _motionPlanner->setAction(MP_ActionPassToTarget());
             params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
             params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
             break;
         }
         case actionTypeEnum::SHOOT:
         {
-            _motionPlanner->setAction(MP_ActionShootAtTarget());
             params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
             params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
             params.push_back(boost::lexical_cast<std::string>(actionData.position.z));
@@ -94,7 +96,6 @@ T_ACTION_RESULT cMotionPlanningClient::executeAction(const T_ACTION actionData)
         }
         case actionTypeEnum::LOB:
         {
-            _motionPlanner->setAction(MP_ActionShootAtTarget());
             params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
             params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
             params.push_back(boost::lexical_cast<std::string>(actionData.position.z));
@@ -103,32 +104,26 @@ T_ACTION_RESULT cMotionPlanningClient::executeAction(const T_ACTION actionData)
         }
         case actionTypeEnum::STOP:
         {
-            _motionPlanner->setAction(MP_ActionStop());
             params.push_back(boost::lexical_cast<std::string>((int)actionData.ballHandlersEnabled));
             break;
         }
         case actionTypeEnum::GET_BALL:
         {
-            _motionPlanner->setAction(MP_ActionGetBall());
             params.push_back(boost::lexical_cast<std::string>((int)actionData.motionType));
             break;
         }
         case actionTypeEnum::TURN_AWAY_FROM_OPPONENT:
         {
-            _motionPlanner->setAction(MP_ActionTurnAwayFromOpponent());
             params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
             params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
             break;
         }
         case actionTypeEnum::KEEPER_MOVE:
         {
-            _motionPlanner->setAction(MP_ActionKeeperMove());
-            params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
             break;
         }
         case actionTypeEnum::INTERCEPT_BALL:
         {
-            _motionPlanner->setAction(MP_ActionInterceptBall());
             break;
         }
         default:
@@ -138,7 +133,6 @@ T_ACTION_RESULT cMotionPlanningClient::executeAction(const T_ACTION actionData)
         }
     }
     _motionPlanner->setActionParameters(params);
-
     T_ACTION_RESULT actionResult = _motionPlanner->execute();
     tprintf("             executeAction RESULT result=%s", enum2str(actionResult.result));
     return actionResult;

@@ -6,6 +6,7 @@ import argparse
 import os, shutil
 import subprocess
 import time
+from multiprocessing import cpu_count
 
 
 # constants
@@ -52,17 +53,20 @@ class Commands:
 
 def resolve_package_dirs(packages):
     result = []
+    # special case: '.'
+    if packages == ['.']:
+        # special case: running fmake without arguments and without option -a in code root
+        if os.getcwd() == FALCONS_CODE_PATH:
+            packages = [os.path.basename('packages')]
+        else: # take current dir
+            packages = [os.path.basename(os.getcwd())]
+    # standard: use fdir to resolve
     for d in packages:
-        # exception: allow '.'
-        if d == '.':
-            result.append(d)
+        output = subprocess.run(['fdir', d], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+        if len(output):
+            result.append(output)
         else:
-            # standard: use fdir to resolve
-            output = subprocess.run(['fdir', d], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
-            if len(output):
-                result.append(output)
-            else:
-                raise Exception("failed to resolve package dir " + d)
+            raise Exception("failed to resolve package dir " + d)
     return result
 
 
@@ -93,13 +97,20 @@ def run(args):
     # (useful for option --dry-run, in case people are interested in the underwater commands)
     commands = Commands()
 
-    # to go falcons root
+    # special case: option -a from anywhere (even out of the git tree) should lead to a full build
+    if args.all:
+        args.packages = ['packages']
+    
+    # resolve package folders
+    package_dirs = resolve_package_dirs(args.packages)
+
+    # go to falcons root
     # this needs to be done always, even in dry-run mode, to properly detect folders for cleanup
     commands.add("cd", FALCONS_CODE_PATH)
     os.chdir(FALCONS_CODE_PATH)
 
-    # resolve package folders
-    package_dirs = resolve_package_dirs(args.packages)
+    # check if cmake is needed
+    do_cmake = False if os.path.isdir("build") else True
 
     # pre-clean phase: remove build folders
     if do_clean:
@@ -124,10 +135,21 @@ def run(args):
     if do_build:
         # determine options for make
         make_opts = "-j" + str(args.jobs)
+        cmake_args = []
         if args.verbose:
             make_opts += " VERBOSE=1"
-        # run cmake to (re-)generate makefiles
-        commands.add("cmake", "..")
+        if args.debug_packages:
+            # run cmake to (re-)generate makefiles
+            cmake_args.append('-DDEBUG_PACKAGES="%s"' % args.debug_packages)
+            do_cmake = True # force rebuild 
+        #cmake_args += ['-E env CXXFLAGS="-DDEBUG=1" cmake'] # RTDB2 debugging
+        if do_cmake:
+            cmake_args += [".."]
+            commands.add("cmake", *cmake_args)
+        # special case: generated enums ... the build dependencies are apparently not water-tight
+        # so let's explicitly start with that target
+        # commands.add("make", "enum2str")
+        # build the requested/resolved package folders
         for d in package_dirs:
             # go into relative path in build tree
             b = FALCONS_CODE_PATH + "/build/" + d
@@ -170,11 +192,12 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--pre-clean', help='cleanup before build', action='store_true')
     parser.add_argument('-C', '--full-pre-clean', help='full cleanup before build (remove entire build/ directory)', action='store_true')
     parser.add_argument('-n', '--dry-run', help='print commands instead of executing them', action='store_true')
-    parser.add_argument('-j', '--jobs', help='number of parallel build jobs (threads) to run', type=int, default=4)
+    parser.add_argument('-j', '--jobs', help='number of parallel build jobs (threads) to run', type=int, default=cpu_count())
     parser.add_argument('-v', '--verbose', help='call make with its verbose option, which is useful to debug include directories and such', action='store_true')
     parser.add_argument('-t', '--test', help='build and test packages', action='store_true')
     # NOTE: currently, building test targets is done by default - as optimization we could treat them separately?
     parser.add_argument('--test-only', help='only run tests', action='store_true')
+    parser.add_argument('-d', '--debug-packages', help='semicolon (;) separated list of packages to be build in debug')
     parser.add_argument('packages', help='package(s) to build, default all', nargs='*', default=['.'])
     args       = parser.parse_args()
 

@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Diana Koenraadt (Falcons)
+// Copyright 2016-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef FIELDWIDGET3D_H
 #define FIELDWIDGET3D_H
@@ -20,6 +20,7 @@
 #include <vtkCommand.h>
 
 // Internal:
+#include "int/widgets/Field/Annotation/RobotLabel.h"
 #include "int/widgets/Field/CamFeedParams.h"
 #include "int/widgets/Field/Visualization/BallVisualization.h"
 #include "int/widgets/Field/Visualization/ObstacleVisualization.h"
@@ -30,13 +31,13 @@
 #include "int/widgets/Field/Visualization/ShootTargetVisualization.h"
 #include "int/widgets/Field/Visualization/projectSpeedVisualization.h"
 #include "int/widgets/Widget.h"
-#include "int/widgets/SettingsDialog.h"
 
 // External:
 #include "polygon2D.hpp"
 #include "linepoint2D.hpp"
 #include "rtdbStructs.hpp"
-#include "heightmapNames.hpp"
+#include "HeightmapNames.hpp"
+#include "HeightmapVisualizer.hpp"
 
 #define OBSTACLE_HEIGHT 0.2
 
@@ -72,6 +73,7 @@ public Q_SLOTS:
     virtual void onBallPossessionChanged(uint8_t senderRobotId, SignalMode signalMode, BallPossessionType type, uint8_t robotId) override; // Ball possession according to one robot
     virtual void onOwnTeamPositionChanged(uint8_t senderRobotId, SignalMode signalMode, uint8_t robotId, PositionVelocity& posvel) override; // Team member position according to one robot
     virtual void onRobotStatusChanged(uint8_t senderRobotId, SignalMode signalMode, uint8_t robotId, int status) override;
+    virtual void onRobotRoleChanged(uint8_t robotId, std::string role) override;
     virtual void onObstaclePositionChanged(ObjectId id, SignalMode signalMode, PositionVelocity& posvel) override; // Obstacle position according to one robot
     virtual void onForbiddenAreaChanged(ObjectId id, SignalMode signalMode, polygon2D& area) override; // Obstacle position according to one robot
     virtual void onShootTargetChanged(uint8_t senderRobotId, SignalMode mode, PositionVelocity& posvel, bool aiming) override; // Shoot target according to one robot
@@ -80,6 +82,7 @@ public Q_SLOTS:
     virtual void onTrueBallUpdate(uint8_t senderRobotId, SignalMode signalMode, T_DIAG_TRUE_BALL& worldmodel_local) override;
 
     virtual void onPathPlanningInProgress(uint8_t senderRobotId, std::vector<PositionVelocity>& path) override;
+    virtual void onValue(uint8_t senderRobotId, std::string category, std::string key, std::string heightmap) override;
 };
 
 class FieldEventHandler;
@@ -112,12 +115,14 @@ public Q_SLOTS:
     void resetZoomPanRotate();
     void flip(bool flip); // Rotate field 180 degrees (resets camera position as well)
     void switchHeightmapToNone(void);
+    void switchHeightmapToActiveHeightmap(void);
     void switchHeightmapToDefendAttackingOpponent(void);
     void switchHeightmapToDribble(void);
     void switchHeightmapToMoveToFreeSpot(void);
     void switchHeightmapToPositionForOppSetpiece(void);
-    void switchHeightmapToPositionForOwnSetpiece(void);
+    void switchHeightmapToPositionAttackerForOwnSetpiece(void);
     void switchHeightmapForRobot(int robotId);
+    void switchHeightmapForRole(QString role);
 
 protected:
     virtual void resizeEvent(QResizeEvent * event);
@@ -128,6 +133,8 @@ private Q_SLOTS:  /* == Rendering == */
 public:
     vtkRenderer* getRenderer() { return _mainRenderer; };
     vtkSmartPointer<RobotVisualization> getTeamRobot(uint8_t robotId); // key: robotId [1..n]
+    void setRole(uint8_t robotId, const std::string&); 
+    void setActiveHeightmap(uint8_t robotId, CompositeHeightmapName activeHeightmap);
     void setLogTimeStamp(double t);
     void setClockTick(double elapsedTime, double actualTime);
 
@@ -148,14 +155,23 @@ private:
 
     bool _flipField = false; // Flip field 180 to reflect that the playing direction changed. Note: This just changes the camera orientation, field rendering doesn't change!
 
-    CompositeHeightmapName _heightmapName = CompositeHeightmapName::INVALID;
-    int _robotID;
+    struct ActiveHeightmap { CompositeHeightmapName heightmap = CompositeHeightmapName::INVALID; }; // Alias to make displaHeightmap variant readable
+    struct SelectedHeightmap { CompositeHeightmapName heightmap = CompositeHeightmapName::INVALID; }; // Alias to make displaHeightmap variant readable
+    std::variant<SelectedHeightmap, ActiveHeightmap> _displayedHeightmap = SelectedHeightmap();
+    std::map<uint8_t, CompositeHeightmapName> _activeHeightmaps;
+    std::map<uint8_t, std::string> _roles;
+    std::variant<int, std::string> _robot;
+    CompositeHeightmapName getHeightmapToDisplay();
+    int getRobotIdToDisplay();
+
 
     void clear(); // Make all actors invisible
     void cleanup();
 
     /* == Cam feed rendering (prototyping #435) == */
-    vtkSmartPointer<FieldVideoActor> fieldVideoActor;
+    vtkSmartPointer<FieldVideoActor> _fieldVideoActor;
+    HeightmapVisualizer _hmv;
+    vtkSmartPointer<vtkActor> _movingDotActor;
 
     /* == Field rendering == */
     void addFieldActors();
@@ -166,6 +182,7 @@ private:
 
     /* == Team rendering == */
     std::map<uint8_t, vtkSmartPointer<RobotVisualization>> _teamActors; // key: robotId, index is not zero-based but one-based
+    std::map<uint8_t, vtkSmartPointer<RobotLabel>> _teamLabels;
     void addRobotActor(uint8_t robotId);
 
     /* == Obstacle rendering == */

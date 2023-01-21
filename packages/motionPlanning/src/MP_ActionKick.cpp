@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionKick.cpp
@@ -21,6 +21,11 @@ MP_ActionKick::MP_ActionKick()
     // a bit long, but we have no feedback nor any guarantee how fast the height lever will move ... 
     // since this action is mostly intended for calibration purposes, better safe than sorry!
     _bhTimer.setDuration(getConfig().shootAtTargetConfig.disableBhDelay); // shared with pass- and shoot action
+}
+
+void MP_ActionKick::initialize()
+{
+    TRACE_FUNCTION("");
 }
 
 void MP_ActionKick::unpackParameters()

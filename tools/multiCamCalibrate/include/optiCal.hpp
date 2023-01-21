@@ -51,6 +51,7 @@ public:
     void selectCamera(int cameraId);
     void connectVideo(multiCamVideoFeed *videoFeed);
     void run();
+    void setPylon();
     
 private:
     multiCamVideoFeed *_videoFeed = NULL;
@@ -77,6 +78,7 @@ private:
     std::vector<cv::Point2f> _landmarksRcsMM;
     int          _selectedLandmark = 0;
     std::vector<cv::Point2f> _boundariesRcsMM; // for grid drawing
+    bool         _usePylonCam;
 
     // main functionality: implementations in optiCal.cpp
     void calibrateFisheye();

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+
+# similar to standard aliases in package rtdb, but specialized to Falcons storage location
+
+RTDB_TOOLS_FOLDER=$(fdir rtdb -a)/python
+RTDB_STORAGE=/tmp/rtdb_teamA # equal to #define RTDB_STORAGE_PRODUCTION in FalconsRTDB.hpp
+
+alias rget="python3 $RTDB_TOOLS_FOLDER/rtdb2_get.py -p $RTDB_STORAGE $@"
+alias rput="python3 $RTDB_TOOLS_FOLDER/rtdb2_put.py -p $RTDB_STORAGE $@"
+alias rdump="python3 $RTDB_TOOLS_FOLDER/rtdb2_dump.py -p $RTDB_STORAGE $@"
+alias rmon="python3 $RTDB_TOOLS_FOLDER/rtdb2_mon.py -p $RTDB_STORAGE $@"
+alias rtop="python3 $RTDB_TOOLS_FOLDER/rtdb2_top.py -p $RTDB_STORAGE $@"
+alias redit="python3 $RTDB_TOOLS_FOLDER/rtdb2_edit.py -p $RTDB_STORAGE $@"
+

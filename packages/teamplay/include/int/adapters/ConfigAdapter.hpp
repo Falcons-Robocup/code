@@ -1,4 +1,4 @@
-// Copyright 2019 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ConfigAdapter.hpp
@@ -12,7 +12,7 @@
 
 #include <boost/thread/thread.hpp>
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class ConfigAdapter
 {
@@ -23,9 +23,9 @@ public:
     void loadYAML(std::string const &yamlFile);
 
 private:
-    RtDB2 *_rtdb = NULL;
+    FalconsRTDB *_rtdb = NULL;
     int _myRobotId = 0;
-    configTeamplay _config;
+    ConfigTeamplay _config;
 
     boost::thread _updateThread;
     void loopUpdate();

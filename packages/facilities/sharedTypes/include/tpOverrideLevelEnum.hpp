@@ -1,4 +1,4 @@
-// Copyright 2019 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * tpOverrideLevelEnum.hpp
@@ -16,11 +16,7 @@ enum class tpOverrideLevelEnum
 {
     INVALID,
     GAMESTATE,
-    ROLE,
-    BEHAVIOR,
-    TP_ACTION,
-    MP_ACTION,
-    DISABLED
+    ROLE
 };
 
 SERIALIZE_ENUM(tpOverrideLevelEnum);

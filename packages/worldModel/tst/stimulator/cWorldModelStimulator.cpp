@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cWorldModelStimulator.cpp
@@ -18,14 +18,15 @@
 // internal includes
 #include "cWorldModelStimulator.hpp"
 
-cWorldModelStimulator::cWorldModelStimulator(int agentId, std::string inputFile, std::string outputFile)
+cWorldModelStimulator::cWorldModelStimulator(int agentId, std::string inputFile, std::string outputFile) :
+    cAbstractStimulator(agentId)
 {
     _inputFile = inputFile;
     _outputFile = outputFile;
     _agentId = agentId; // TODO I think we can strip this -- script sets env, wm knows itself which agent it is
     _component = "worldModel";
     _overruleRobotPos = false;
-    INIT_TRACE;
+    INIT_TRACE("WorldModelStimulator");
 }
 
 cWorldModelStimulator::~cWorldModelStimulator()

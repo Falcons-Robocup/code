@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * PathPlanningData.cpp
@@ -59,8 +59,8 @@ void PathPlanningData::insertSubTarget(Position2D const &pos, Velocity2D const &
     // only insert if subtarget is sufficiently far away
     Position2D deltaPositionFcsLocal = pos - currentPositionFcs;
     deltaPositionFcsLocal.phi = project_angle_mpi_pi(deltaPositionFcsLocal.phi);
-    bool xyFar = deltaPositionFcsLocal.xy().size() >= config.deadzone.toleranceXY;
-    bool RzFar = fabs(deltaPositionFcsLocal.phi) >= config.deadzone.toleranceRz;
+    bool xyFar = deltaPositionFcsLocal.xy().size() >= configPP.deadzone.toleranceXY;
+    bool RzFar = fabs(deltaPositionFcsLocal.phi) >= configPP.deadzone.toleranceRz;
     TRACE("xyFar=%d RzFar=%d", xyFar, RzFar);
     if (xyFar || RzFar)
     {

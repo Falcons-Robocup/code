@@ -4,5 +4,17 @@
 # comm expects an agent environment variable, so we map our own
 export AGENT=${TURTLE5K_ROBOTNUMBER}
 
-# no further arguments -- these are handled via configuration XML
-$FALCONS_CODE_PATH/build/packages/facilities/rtdb/comm/comm
+# see also configuration XML
+extraArgs=""
+#if [ $AGENT = 0 ]; then
+#    # TODO: should switch on wired/wireless...
+#    extraArgs=" -i enp0s31f6" # this interface is blacklisted for robots (multiCam)
+#fi
+
+# Use a slightly modified version of the rtdb configuration on robots which blacklists the multicam interface
+# TODO: Configure this blacklist more elegantly
+if [ -n "$TURTLE5K_ROBOTNUMBER" ] && [ ! "$TURTLE5K_ROBOTNUMBER" = 0 ]; then
+    extraArgs="--config $FALCONS_CONFIG_PATH/rtdb2_configuration_robot.xml"
+fi
+
+$FALCONS_CODE_PATH/build/packages/facilities/rtdb/comm/comm -p /tmp/rtdb_teamA $extraArgs

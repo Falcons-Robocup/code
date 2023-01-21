@@ -1,5 +1,6 @@
-# Copyright 2020 Jan Feitsma (Falcons)
+# Copyright 2020-2022 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
+import os
 import npyscreen
 import curses
 import argparse
@@ -189,9 +190,9 @@ if __name__ == "__main__":
     parser.add_argument('key', help='RtDB key to edit')
     args       = parser.parse_args()
 
-    dataHandler = RtDBDataHandler(args.path, args.agent, args.key)
+    p = os.path.join(args.path, str(args.agent), 'default')
+    dataHandler = RtDBDataHandler(p, args.agent, args.key)
 
     App = TestApp()
     App.setDataHandler(dataHandler)
     App.run()
-

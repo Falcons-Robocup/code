@@ -346,75 +346,8 @@
   </category>
   <category name="Teamplay" colour="#9fa55b">
     <block type="tp_blockuntilpassedorfailed"></block>
-    <block type="tp_action">
-      <field name="action">STOP</field>
-      <value name="params">
-        <block type="tp_dictitem">
-          <value name="key">
-            <block type="text">
-              <field name="TEXT">role</field>
-            </block>
-          </value>
-          <value name="value">
-            <block type="text">
-              <field name="TEXT">attackerMain</field>
-            </block>
-          </value>
-        </block>
-      </value>
-    </block>
-    <block type="tp_behavior">
-      <field name="behavior">B_ROBOT_STOP</field>
-      <value name="params">
-        <block type="tp_dictitem">
-          <value name="key">
-            <block type="text">
-              <field name="TEXT">role</field>
-            </block>
-          </value>
-          <value name="value">
-            <block type="text">
-              <field name="TEXT">attackerMain</field>
-            </block>
-          </value>
-        </block>
-      </value>
-    </block>
-    <block type="tp_setpiecebehavior">
-      <field name="ownopp">OWN</field>
-      <field name="setpiece">KICKOFF</field>
-      <field name="prepexecutesearch">PREPARE</field>
-      <value name="params">
-        <block type="tp_dictitem">
-          <value name="key">
-            <block type="text">
-              <field name="TEXT">role</field>
-            </block>
-          </value>
-          <value name="value">
-            <block type="text">
-              <field name="TEXT">attackerMain</field>
-            </block>
-          </value>
-        </block>
-      </value>
-    </block>
     <block type="tp_role">
-      <field name="role">R_ROBOT_STOP</field>
-      <value name="params">
-        <block type="tp_dictitem">
-          <value name="key">
-            <block type="text">
-              <field name="TEXT">role</field>
-            </block>
-          </value>
-          <value name="value">
-            <block type="text">
-              <field name="TEXT">attackerMain</field>
-            </block>
-          </value>
-        </block>
-      </value>
+      <field name="role">ROBOT_STOP</field>
     </block>
     <block type="tp_gamestate">
       <field name="inMatch">IN_MATCH</field>
@@ -422,32 +355,6 @@
       <field name="ownopp_f">OWN</field>
       <field name="setpiece">KICKOFF</field>
       <field name="prepexecute">PREPARE</field>
-      <value name="params">
-        <block type="tp_dictitem">
-          <value name="key">
-            <block type="text">
-              <field name="TEXT">role</field>
-            </block>
-          </value>
-          <value name="value">
-            <block type="text">
-              <field name="TEXT">attackerMain</field>
-            </block>
-          </value>
-        </block>
-      </value>
-    </block>
-    <block type="tp_dictitem">
-      <value name="key">
-        <block type="text">
-          <field name="TEXT">role</field>
-        </block>
-      </value>
-      <value name="value">
-        <block type="text">
-          <field name="TEXT">attackerMain</field>
-        </block>
-      </value>
     </block>
     <block type="tp_teleportball">
       <value name="x">
@@ -464,11 +371,8 @@
   </category>
   <category name="Motion" colour="#5b67a5">
     <block type="motion_stop"></block>
-    <block type="motion_teamplaymove">
-      <field name="slow">False</field>
-    </block>
-    <block type="motion_motionplanningmove">
-      <value name="pose">
+    <block type="motion_motionplanning_action">
+      <value name="pos">
         <block type="pos_createpose">
           <value name="x">
             <block type="math_number">
@@ -488,6 +392,7 @@
         </block>
       </value>
     </block>
+    <block type="motion_blockuntilpassedorfailed"></block>
     <block type="motion_velocitycontrolmove_pos_only">
       <value name="pose">
         <block type="pos_createpose">
@@ -664,6 +569,23 @@
     </block>
   </category>
   <category name="System" colour="#5ba58c">
+    <block type="sys_abort">
+      <value name="message">
+          <shadow type="text">
+            <field name="TEXT">abc</field>
+          </shadow>
+        </value>
+    </block>
+    <block type="sys_message">
+      <value name="message">
+          <shadow type="text">
+            <field name="TEXT">abc</field>
+          </shadow>
+        </value>
+    </block>
+    <block type="sys_sleep">
+      <field name="duration">1</field>
+    </block>
     <block type="sys_system"></block>
   </category>
 </xml>

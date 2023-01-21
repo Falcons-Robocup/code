@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBInputAdapter.hpp
@@ -12,7 +12,7 @@
 
 #include "int/cShootPlanner.hpp"
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class cRTDBInputAdapter
 {
@@ -26,8 +26,8 @@ class cRTDBInputAdapter
 
   private:
     int _myRobotId;
-    RtDB2 *_rtdb;
-    cShootPlanner* _shootPlanner;
+    FalconsRTDB *_rtdb = NULL;
+    cShootPlanner* _shootPlanner = NULL;
 
 };
 

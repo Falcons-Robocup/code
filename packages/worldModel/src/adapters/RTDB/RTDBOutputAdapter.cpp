@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBOutputAdapter.cpp
@@ -17,7 +17,7 @@ RTDBOutputAdapter::RTDBOutputAdapter()
 {
     TRACE_FUNCTION("");
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId);
     _ballPossessionType = ballPossessionTypeEnum::UNKNOWN;
     _ballPossessionRobot = 0;
 }
@@ -155,7 +155,7 @@ void RTDBOutputAdapter::setBalls(std::vector<ballClass_t> const &balls)
 
 void RTDBOutputAdapter::setObstacles()
 {
-    TRACE_FUNCTION("");
+    //TRACE_FUNCTION("");
     std::vector<obstacleClass_t> obstacles;
     _obstacleAdmin->getObstacles(obstacles);
 

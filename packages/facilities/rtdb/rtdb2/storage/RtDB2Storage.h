@@ -1,4 +1,4 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef CAMBADA_RTDB2STORAGE_H
 #define CAMBADA_RTDB2STORAGE_H
@@ -8,7 +8,7 @@
 #include <fstream>
 #include <vector>
 
-#include "../RtDB2SyncPoint.h"
+#include "RtDB2SyncPoint.h"
 
 class RtDB2Storage {
 public:

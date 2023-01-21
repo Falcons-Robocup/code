@@ -9,6 +9,9 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/../packages/facilities/rtdb/client
 include_directories(${CMAKE_CURRENT_LIST_DIR}/../packages/facilities/rtdb/utils/include)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/../packages/facilities/rtdb/definitions/include)
 
+# Falcons RTDB adapter
+include_directories(${CMAKE_CURRENT_LIST_DIR}/../packages/facilities/frtdb/include/ext)
+
 # FTime
 include_directories(${CMAKE_CURRENT_LIST_DIR}/../packages/facilities/ftime/include/ext)
 

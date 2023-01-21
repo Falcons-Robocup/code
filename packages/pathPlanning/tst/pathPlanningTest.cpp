@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * pathPlanningTest.cpp
@@ -138,7 +138,7 @@ TEST(pathPlanningTest, targetOutOfBounds_shouldFail)
 
     // Arrange
     auto pp = defaultPathPlanningSetup();
-    pp.data.config.boundaries.targetOutsideField = BoundaryOptionEnum::STOP_AND_FAIL;
+    pp.data.configPP.boundaries.targetOutsideField = BoundaryOptionEnum::STOP_AND_FAIL;
     pp.data.target.pos = pose(99, 99, 0);
 
     // Act
@@ -155,8 +155,8 @@ TEST(pathPlanningTest, targetX_OutOfBounds_shouldClip)
 
     // Arrange
     auto pp = defaultPathPlanningSetup();
-    pp.data.config.boundaries.targetOutsideField = BoundaryOptionEnum::CLIP;
-    pp.data.config.boundaries.fieldMarginX = 0.9; // TODO stub environmentField
+    pp.data.configPP.boundaries.targetOutsideField = BoundaryOptionEnum::CLIP;
+    pp.data.configPP.boundaries.fieldMarginX = 0.9; // TODO stub environmentField
     pp.data.target.pos = pose(99, 0, 0);
 
     // Act
@@ -176,8 +176,8 @@ TEST(pathPlanningTest, targetY_OutOfBounds_shouldClip)
 
     // Arrange
     auto pp = defaultPathPlanningSetup();
-    pp.data.config.boundaries.targetOutsideField = BoundaryOptionEnum::CLIP;
-    pp.data.config.boundaries.fieldMarginY = 0.4; // TODO stub environmentField
+    pp.data.configPP.boundaries.targetOutsideField = BoundaryOptionEnum::CLIP;
+    pp.data.configPP.boundaries.fieldMarginY = 0.4; // TODO stub environmentField
     pp.data.target.pos = pose(0, 99, 0);
 
     // Act
@@ -197,7 +197,7 @@ TEST(pathPlanningTest, targetY_ownHalf_notAllowed)
 
     // Arrange
     auto pp = defaultPathPlanningSetup();
-    pp.data.config.boundaries.targetOnOwnHalf = BoundaryOptionEnum::STOP_AND_FAIL;
+    pp.data.configPP.boundaries.targetOnOwnHalf = BoundaryOptionEnum::STOP_AND_FAIL;
     pp.data.target.pos = pose(0.0, -6.0, 0.0);
 
     // Act
@@ -214,7 +214,7 @@ TEST(pathPlanningTest, targetY_ownHalf_clip)
 
     // Arrange
     auto pp = defaultPathPlanningSetup();
-    pp.data.config.boundaries.targetOnOwnHalf = BoundaryOptionEnum::CLIP;
+    pp.data.configPP.boundaries.targetOnOwnHalf = BoundaryOptionEnum::CLIP;
     pp.data.target.pos = pose(1.0, -6.0, 0.0);
 
     // Act
@@ -234,7 +234,7 @@ TEST(pathPlanningTest, targetY_oppHalf_notAllowed)
 
     // Arrange
     auto pp = defaultPathPlanningSetup();
-    pp.data.config.boundaries.targetOnOpponentHalf = BoundaryOptionEnum::STOP_AND_FAIL;
+    pp.data.configPP.boundaries.targetOnOpponentHalf = BoundaryOptionEnum::STOP_AND_FAIL;
     pp.data.target.pos = pose(0.0, 6.0, 0.0);
 
     // Act
@@ -251,7 +251,7 @@ TEST(pathPlanningTest, targetY_oppHalf_clip)
 
     // Arrange
     auto pp = defaultPathPlanningSetup();
-    pp.data.config.boundaries.targetOnOpponentHalf = BoundaryOptionEnum::CLIP;
+    pp.data.configPP.boundaries.targetOnOpponentHalf = BoundaryOptionEnum::CLIP;
     pp.data.target.pos = pose(1.0, 6.0, 0.0);
 
     // Act
@@ -334,7 +334,7 @@ TEST(pathPlanningTest, avoid_teammember_left)
     EXPECT_EQ(result, actionResultTypeEnum::RUNNING);
     auto subtarget = pp.data.path.front();
     EXPECT_NEAR(subtarget.pos.x, 2.0, 0.5);
-    EXPECT_NEAR(subtarget.pos.y, pp.data.config.obstacleAvoidance.subTargetDistance, NUMERICAL_TOLERANCE);
+    EXPECT_NEAR(subtarget.pos.y, pp.data.configPP.obstacleAvoidance.subTargetDistance, NUMERICAL_TOLERANCE);
     EXPECT_NEAR(subtarget.pos.Rz, 0.0, NUMERICAL_TOLERANCE);
 }
 
@@ -356,7 +356,7 @@ TEST(pathPlanningTest, avoid_teammember_right)
     EXPECT_EQ(result, actionResultTypeEnum::RUNNING);
     auto subtarget = pp.data.path.front();
     EXPECT_NEAR(subtarget.pos.x, 2.0, 0.5);
-    EXPECT_NEAR(subtarget.pos.y, -pp.data.config.obstacleAvoidance.subTargetDistance, NUMERICAL_TOLERANCE);
+    EXPECT_NEAR(subtarget.pos.y, -pp.data.configPP.obstacleAvoidance.subTargetDistance, NUMERICAL_TOLERANCE);
     EXPECT_NEAR(subtarget.pos.Rz, 0.0, NUMERICAL_TOLERANCE);
 }
 
@@ -379,7 +379,7 @@ TEST(pathPlanningTest, avoid_moving_teammember)
     EXPECT_EQ(result, actionResultTypeEnum::RUNNING);
     auto subtarget = pp.data.path.front();
     EXPECT_NEAR(subtarget.pos.x, 2.0, 0.5);
-    EXPECT_NEAR(subtarget.pos.y, -pp.data.config.obstacleAvoidance.subTargetDistance, NUMERICAL_TOLERANCE);
+    EXPECT_NEAR(subtarget.pos.y, -pp.data.configPP.obstacleAvoidance.subTargetDistance, NUMERICAL_TOLERANCE);
     EXPECT_NEAR(subtarget.pos.Rz, 0.0, NUMERICAL_TOLERANCE);
 }
 
@@ -401,7 +401,7 @@ TEST(pathPlanningTest, avoid_obstacle)
     EXPECT_EQ(result, actionResultTypeEnum::RUNNING);
     auto subtarget = pp.data.path.front();
     EXPECT_NEAR(subtarget.pos.x, 2.0, 0.5);
-    EXPECT_NEAR(subtarget.pos.y, obst.position.y + pp.data.config.obstacleAvoidance.subTargetDistance, 0.1);
+    EXPECT_NEAR(subtarget.pos.y, obst.position.y + pp.data.configPP.obstacleAvoidance.subTargetDistance, 0.1);
     EXPECT_NEAR(subtarget.pos.Rz, 0.0, NUMERICAL_TOLERANCE);
 }
 
@@ -546,9 +546,9 @@ TEST_P(ObstacleDriveThroughTest, ObstacleDriveThroughTests)
 
     // Arrange
     auto pp = yamlPathPlanningSetup(yamlfile);
-    pp.data.config.obstacleAvoidance.enabled = true; // make sure it is enabled, yaml might temporarily use false
-    pp.data.config.forwardDriving.withoutBall.enabled = false; // prevent extra sub-targets
-    EXPECT_GT(pp.data.config.obstacleAvoidance.subTargetDistance, 0.1); // sanity check if YAML was properly loaded
+    pp.data.configPP.obstacleAvoidance.enabled = true; // make sure it is enabled, yaml might temporarily use false
+    pp.data.configPP.forwardDriving.withoutBall.enabled = false; // prevent extra sub-targets
+    EXPECT_GT(pp.data.configPP.obstacleAvoidance.subTargetDistance, 0.1); // sanity check if YAML was properly loaded
     pp.data.robot.position.y = offsetY;
     pp.data.target.pos = pose(4.0, offsetY, 0.0);
     obstacleResult obst;
@@ -1011,7 +1011,7 @@ TEST(pathPlanningTest, avoid_forbidden_area_right)
 
 int main(int argc, char **argv)
 {
-    INIT_TRACE;
+    INIT_TRACE("pathPlanningTest");
     InitGoogleTest(&argc, argv);
     int r = RUN_ALL_TESTS();
     WRITE_TRACE;

@@ -1,4 +1,4 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include "RtDB2.h"
 #include <iostream>
@@ -11,12 +11,15 @@
 #include "compressor/RtDB2CompressorLZ4.h"
 #include "tprintf.hpp"
 
+#include "RtDB2Monitor.h"
 #include "RtDB2SyncPoint.h"
 
 void RtDB2::construct()
 {
+    // debug
+    std::cout << _context;
     // compressor
-    const CompressorSettings compressor_settings = _configuration.get_compressor_settings();
+    const CompressorSettings compressor_settings = _context.getConfiguration().get_compressor_settings();
     if (compressor_settings.name == "lz4")
     {
         _compressor = boost::make_shared<RtDB2CompressorLZ4>();
@@ -43,14 +46,28 @@ void RtDB2::construct()
     }
 }
 
-RtDB2::RtDB2(int agentId, std::string const &path)
+RtDB2::RtDB2(RtDB2Context const &context)
 :
-    _agentId(agentId),
-    _path(path),
-    _configuration(),
-    _compressor(NULL)
+    _agentId(context.getAgentId()),
+    _compressor(NULL),
+    _context(context)
 {
     construct();
+}
+
+RtDB2::RtDB2(RtDB2Context const &context, int remoteAgentId)
+:
+    _agentId(remoteAgentId),
+    _compressor(NULL),
+    _context(context)
+{
+    construct();
+    rdebug("constructed for agent=%d path=%s at p=%p", agentId, path.c_str(), this);
+}
+
+RtDB2Context const &RtDB2::getContext() const
+{
+    return _context;
 }
 
 boost::shared_ptr<RtDB2Storage> RtDB2::getStorage(int agentId, bool isSync)
@@ -65,7 +82,7 @@ boost::shared_ptr<RtDB2Storage> RtDB2::getStorage(int agentId, bool isSync)
     if (!s->count(agentId))
     {
         s->insert(std::pair<int, boost::shared_ptr<RtDB2Storage> >(
-                agentId, boost::make_shared<RtDB2LMDB>(_path, createAgentName(agentId, isSync))));
+                agentId, boost::make_shared<RtDB2LMDB>(_context.getDatabasePath(), createAgentName(agentId, isSync))));
     }
     return s->at(agentId);
 }
@@ -73,12 +90,7 @@ boost::shared_ptr<RtDB2Storage> RtDB2::getStorage(int agentId, bool isSync)
 std::string RtDB2::createAgentName(int agentId, bool isSync)
 {
     std::stringstream stream;
-    stream << DB_PREPEND_NAME;
-    if (isSync)
-    {
-        stream << "_sync";
-    }
-    stream << agentId;
+    stream << (isSync ? DB_SYNC_PREPEND_NAME : DB_PREPEND_NAME) << agentId;
     return stream.str();
 }
 
@@ -103,7 +115,7 @@ RtDB2Item RtDB2::makeItem(std::string const &key, int agentId, std::string const
     // it was considered to also make key and agentId part of item, but this was dropped after discussion with Ricardo due to data being redundant
     item.data = serialized_data;
     item.timestamp = rtime::now();
-    item.shared = _configuration.get_key_details(key).shared;
+    item.shared = _context.getConfiguration().get_key_details(key).shared;
     return item;
 }
 
@@ -133,7 +145,7 @@ int RtDB2::getItem(std::string const &key, RtDB2Item &item)
 
 int RtDB2::getCore(std::string const &key, RtDB2Item &item, int agentId, bool consume)
 {
-    rdebug("getCore start agent=%d consume=%d key=%s", agentId, consume, key.c_str());
+    rdebug("getCore start agent=%d consume=%d key=%s at p=%p", agentId, consume, key.c_str(), this);
     int err = 0;
 
     // acquire storage, initialize if needed
@@ -258,8 +270,7 @@ int RtDB2::getFrame(RtDB2Frame &frame, RtDB2FrameSelection const &selection, int
     // Get data from all storages as serialized RtDB2Item objects
     // Tuple: agent, key, serialized_item
     std::vector<std::tuple<int, std::string, std::string>> data;
-    // TODO: how to visit only existing storages? iterating over assumed agents is not a nice solution ...
-    for (int agent = 0; agent < 10; ++agent)
+    for (auto &agent : getAgentIds())
     {
         auto storage = getStorage(agent, false);
         std::vector<std::pair<std::string, std::string>> tmpdata;
@@ -296,7 +307,7 @@ int RtDB2::getFrame(RtDB2Frame &frame, RtDB2FrameSelection const &selection, int
         // check selection criteria
         if (errItem == RTDB2_SUCCESS)
         {
-            const KeyDetail& detail = _configuration.get_key_details(frameItem.key);
+            const KeyDetail& detail = _context.getConfiguration().get_key_details(frameItem.key);
             // locality attribute check
             if (keep)
             {
@@ -420,7 +431,7 @@ int RtDB2::waitForPut(std::string const &key, int agentId)
     if(it == sync_.end())
     {
         it = sync_.insert(std::pair<int, boost::shared_ptr<RtDB2Storage> >(
-                agentId, boost::make_shared<RtDB2LMDB>(_path, createAgentName(agentId, true)))).first;
+                agentId, boost::make_shared<RtDB2LMDB>(_context.getDatabasePath(), createAgentName(agentId, true)))).first;
     }
     it->second->append_to_sync_list(key, syncPoint);
 
@@ -446,11 +457,6 @@ int RtDB2::waitForPut(std::string const &key, int agentId)
 
     rdebug("waitForPut end");
     return RTDB2_SUCCESS;
-}
-
-const RtDB2Configuration& RtDB2::getConfiguration() const
-{
-    return _configuration;
 }
 
 void RtDB2::compress(std::string &s)
@@ -479,3 +485,26 @@ void RtDB2::decompress(std::string &s)
     }
 }
 
+std::set<int> RtDB2::getAgentIds() const
+{
+    RtDB2Monitor& monitor = RtDB2Monitor::monitor(_context.getDatabasePath());
+    std::set<std::string> entries = monitor.getPathEntries();
+
+    // Derive agents from path entries
+    std::set<int> result;
+    for (auto &entry : entries)
+    {
+        if (entry.rfind(DB_SYNC_PREPEND_NAME) != std::string::npos) {
+            // skip
+            continue;
+        }
+        std::size_t start = entry.rfind(DB_PREPEND_NAME);
+        if (start == 0) {
+            std::string myentry(entry);
+            myentry = myentry.replace(0, DB_PREPEND_NAME.length(), "");
+            int value = std::stoi(myentry);
+            result.insert(value);
+        }
+    }
+    return result;
+}

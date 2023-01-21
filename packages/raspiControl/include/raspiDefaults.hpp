@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Andre Pool (Falcons)
+// Copyright 2019-2022 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2018-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
@@ -22,10 +22,13 @@
 
 // camera control
 #define TEST_PATTERN 0
-#define ANALOG_GAIN 236
+#define ANALOG_GAIN 229
+#define ANALOG_GAIN_JETSON 171
 // TODO: try lower shutter value in the Locht (test with fast rotating robot)
 #define SHUTTER 400 // 0x015a : 0x0523, 16 bits, course integration time, use this one to compensate for the 50Hz mains frequency
+#define SHUTTER_JETSON 1057 // 0x015a
 #define BLACK_LEVEL 50 // 0xd1ea : 0x0040, 10 bits, DT_PEDESTAL
+#define BLACK_LEVEL_JETSON 64 // 0xd1ea: 10 bits, DT_PEDESTAL
 
 // camera dimensions
 // number of effective pixels 3296 x 2480
@@ -50,8 +53,13 @@
 // X_START, X_END, Y_START and Y_END are without binning and for full frame they should be: 0, 3279, 0 and 2463, as set below
 // X_SIZE and Y_SIZE are after the x2 binning and for full frame should be 3280/2 = 1640 and 2464/2 = 1232, as set below
 // TODO: investigate why lines 1322 (all other things below make sense)
-#define LINES 1322   // 0x0160-0x0161 : 0x052a = 1322, FRM_LENGTH_A : how does this relate to 1232 lines, e.g. 1322 - 1232 = 90
-#define PIXELS 3448  // 0x0162-0x0163 : 0x0d78 = 3448, LINE_LENGTH_A : 3280 (active pixels) + 168 (blanking)
+// would expect 3280 + 32 (0x20)(frame blanking) for the lines
+// apparently it is used to control the fps
+#define LINES 1322   // 0x0160-0x0161 : 0x052a = 1322, FRM_LENGTH_A : for 40 fps
+// #define LINES_JETSON 1763   // 0x0160-0x0161 : FRM_LENGTH_A : for 30 fps
+#define LINES_JETSON 7557   // 0x0160-0x0161 : FRM_LENGTH_A : for 7 fps
+// #define LINES_JETSON (3280+32)   // 0x0160-0x0161 : FRM_LENGTH_A :
+#define PIXELS 3448  // 0x0162-0x0163 : 0x0d78 = 3448, LINE_LENGTH_A : 3280 (active pixels) + 168 (0xa8)(line blanking)
 #define X_START 0    // 0x0164-0x0165 : 0x0000 =    0, X_ADD_STA_A : X-address on the top left corner of the visible pixel data, default 0
 #define X_END 3279   // 0x0166-0x0167 : 0x0ccf = 3279, X_ADD_END_A : X-address on the bottom right corner of the visible pixel data, default 3279
 #define X_SIZE 1640  // 0x016c-0x016d : 0x0668 = 1640, X_OUTPUT_SIZE_A : width of output image 3280/2 = 1640
@@ -61,8 +69,8 @@
 #define IMAGE_ORIENTATION 0 // 0x0172   : 0x00, bit[0] : horizontal, bit[1] : vertical
 
 // line point detection
-#define LINE_VAL_MIN 160
-#define LINE_SAT_MAX 50 // low for ball in ball handler, high for lines far away
+#define LINE_VAL_MIN 170
+#define LINE_SAT_MAX 40 // low for ball in ball handler, high for lines far away
 #define LINE_TRANSFER_PIXELS_MAX 32 // needs to large for close by white lines
 #define LINE_FLOOR_WINDOW_SIZE 15
 #define LINE_FLOOR_PIXELS_MIN 10
@@ -70,19 +78,19 @@
 #define LINE_PIXELS_MIN 0 // small to be able to catch far away pixels
 
 // ball point detection
-#define BALL_VAL_MIN 140 // test with shadow area
-#define BALL_SAT_MIN 105 // low value for bright ball (in ball handler)
-#define BALL_HUE_MIN 22 // low (below 17) is orange, test for near by, test for TechUnited, yellow is 60 degrees => 60/2=30, 10 results into problems with orange TechUnited cover
-#define BALL_HUE_MAX 37 // high is green, test for far away
-#define BALL_WINDOW_SIZE 4
-#define BALL_PIXELS_MIN 2 // TODO: set larger (check values Portugal 2019) and use BALL_FAR for smaller (to prevent orange to green)
-#define BALL_FALSE_PIXELS_MAX 4
+#define BALL_VAL_MIN 150 // test with shadow area
+#define BALL_SAT_MIN 65 // low value for bright ball (in ball handler)
+#define BALL_HUE_MIN 15 // low (below 17) is orange, test for near by, test for TechUnited, yellow is 60 degrees => 60/2=30, 10 results into problems with orange TechUnited cover
+#define BALL_HUE_MAX 35 // high is green, test for far away
+#define BALL_WINDOW_SIZE 30
+#define BALL_PIXELS_MIN 15 // TODO: set larger (check values Portugal 2019) and use BALL_FAR for smaller (to prevent orange to green)
+#define BALL_FALSE_PIXELS_MAX 5
 
 // ball far point detection
-#define BALL_FAR_VAL_MIN 120 // test with shadow area
-#define BALL_FAR_SAT_MIN 160
-#define BALL_FAR_HUE_MIN 35 // low is orange, test for near by, test for TechUnited, yellow is 60 degrees => 60/2=30, 10 results into problems with orange TechUnited cover
-#define BALL_FAR_HUE_MAX 40 // high is green, test for far away
+#define BALL_FAR_VAL_MIN 100 // test with shadow area
+#define BALL_FAR_SAT_MIN 115
+#define BALL_FAR_HUE_MIN 40 // low is orange, test for near by, test for TechUnited, yellow is 60 degrees => 60/2=30, 10 results into problems with orange TechUnited cover
+#define BALL_FAR_HUE_MAX 55 // high is green, test for far away
 #define BALL_FAR_WINDOW_SIZE 4
 #define BALL_FAR_PIXELS_MIN 2
 #define BALL_FAR_FALSE_PIXELS_MAX 2
@@ -97,10 +105,10 @@
 #endif
 
 // floor point detection
-#define FLOOR_VAL_MIN 30 // TODO: set higher, so far away line points will not be eaten up by floor (see Portugal 2019 values)
-#define FLOOR_SAT_MIN 60 // verify if not eating to much white lines, so should be high, otherwise white lines will become green, or low when sun spots are recognized as lines
-#define FLOOR_HUE_MIN 50 // floor is 200 degrees => 200/2=100
-#define FLOOR_HUE_MAX 120 // above 95 is blue
+#define FLOOR_VAL_MIN 50 // TODO: set higher, so far away line points will not be eaten up by floor (see Portugal 2019 values)
+#define FLOOR_SAT_MIN 65 // verify if not eating to much white lines, so should be high, otherwise white lines will become green, or low when sun spots are recognized as lines
+#define FLOOR_HUE_MIN 57 // floor is 200 degrees => 200/2=100
+#define FLOOR_HUE_MAX 77 // above 95 is blue
 
 // obstacle point detection
 // TODO: needs to be calibrated
@@ -131,7 +139,7 @@
 // NOTE: if there is an error on the boards about wrong packet, first run to ./copyBuildRaspi to update the binary on the board
 // if it then still does not solve the issue also try a ./raspiReboot
 
-#define GRABBER_RED_GAIN 145
-#define GRABBER_BLUE_GAIN 215
+#define GRABBER_RED_GAIN 200
+#define GRABBER_BLUE_GAIN 180
 
 #endif

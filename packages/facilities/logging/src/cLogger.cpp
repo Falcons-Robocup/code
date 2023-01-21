@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cLogger.cpp
@@ -20,13 +20,14 @@
 #include "tracing.hpp"
 #include "ftime.hpp"
 
+#include "pstream/pstream.h"
 
 cLogger::cLogger()
     : _frequency(10)
 {
     _t0 = ftime::now();
     _te = _t0;
-    _rtdb = new RtDB2(0); // agent id is irrelevant when getting entire frames at once
+    _rtdb = new FalconsRTDB(getRobotNumber());
     _header.compression = true; // TODO should not hardcode ...
 }
     
@@ -79,6 +80,12 @@ void cLogger::writeToFile(std::string filename)
     char hostname[HOST_NAME_MAX];
     gethostname(hostname, HOST_NAME_MAX);
     _header.hostname = hostname;
+
+    redi::ipstream proc_descr_code("cd $FALCONS_CODE_PATH; git describe --tags --long");
+    std::getline(proc_descr_code.out(), _header.commit_code);
+    redi::ipstream proc_descr_tp_data("cd $FALCONS_TPDATA_PATH; git describe --tags --long");
+    std::getline(proc_descr_tp_data.out(), _header.commit_teamplay_data);
+
     _logFile->writeHeader(_header);
 }
 

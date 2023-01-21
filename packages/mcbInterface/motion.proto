@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package Motion;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+message BallhandlerVector {
+    float right = 1;
+    float left = 2;
+}
+
+message RobotVector {
+    float x = 1;
+    float y = 2;
+    float phi = 3;
+}
+
+service Motion {
+    rpc enable_ballhandlers(google.protobuf.Empty) returns(google.protobuf.Empty);
+    rpc disable_ballhandlers(google.protobuf.Empty) returns(google.protobuf.Empty);
+    rpc is_ballhandlers_enabled(google.protobuf.Empty) returns(google.protobuf.BoolValue);
+
+    rpc set_ballhandler_angle_setpoints(BallhandlerVector) returns(google.protobuf.Empty);
+    rpc get_ballhandler_angle_setpoints(google.protobuf.Empty) returns(BallhandlerVector);
+
+    rpc set_robot_velocity_setpoint(RobotVector) returns(google.protobuf.Empty);
+    rpc get_robot_velocity_setpoint(google.protobuf.Empty) returns(RobotVector);
+}
+

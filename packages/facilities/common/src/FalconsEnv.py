@@ -1,4 +1,4 @@
-# Copyright 2015-2020 Tim Kouters (Falcons)
+# Copyright 2015-2021 Tim Kouters (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 #!/usr/bin/env python3
 
@@ -37,8 +37,6 @@ def get_team_name():
 
 def get_simulated():
     """Returns if we are in simulation mode (see setupEnv.sh)."""
-    if get_on_real_robot():
-        return False
     if (os.environ.get('SIMULATED') == "1"):
         return True
     return False

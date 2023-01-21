@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ConfigRTDBAdapter.hpp
@@ -10,7 +10,7 @@
 #ifndef CONFIGRTDBADAPTER_HPP_
 #define CONFIGRTDBADAPTER_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "ConfigInterface.hpp"
 
 #include <boost/thread/thread.hpp>
@@ -37,7 +37,7 @@ public:
 protected:
     T _config;
     std::string _configKey;
-    RtDB2 *_rtdb = NULL;
+    FalconsRTDB *_rtdb = NULL;
 
 private:
     int _myRobotId = 0;
@@ -45,6 +45,7 @@ private:
     bool _verbose = false;
     bool _testmode = false;
     bool _firstChange = true; // prevent init spam
+    bool _terminateRequested = false; // used to break out of the while(true) when terminating
     boost::thread _updateThread;
     boost::mutex _configuration_mutex;
     std::function<void()> _callbackFunc; // this function ptr allows an update to the client when the configuration changes
@@ -52,6 +53,7 @@ private:
     void startLoopUpdate();
     void loopUpdate();
     void update(bool allowOldData);
+    void terminate();
 
 };
 

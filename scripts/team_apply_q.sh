@@ -47,7 +47,7 @@ for robot in $robots; do
     then
         echo "starting command silently on $robot"
         (
-            ssh $robot $FALCONS_CODE_PATH/packages/coachCommands/rwrap $cmd
+            ssh robocup@$robot /home/robocup/falcons/code/scripts/rwrap $cmd
         ) > /var/tmp/team_apply_q_$robot.out 2>&1 &
     else
         echo "ERROR: could not reach $robot"

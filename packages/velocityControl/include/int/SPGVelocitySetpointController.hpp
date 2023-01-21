@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * SPGVelocitySetpointController.hpp
@@ -38,20 +38,25 @@ public:
     bool calculate(VelocityControlData &data, Velocity2D &resultVelocity);
 
 private:
-    bool calculateUsingSyncFlag(VelocityControlData &data, Velocity2D &resultVelocity, SpgLimits const &spgLimits);
-    bool calculateUsingLimits(VelocityControlData &data, Velocity2D &resultVelocity, SpgLimits const &spgLimits, bool synchronize);
-    bool isDofAccelerating(VelocityControlData &data, int dof, float threshold);
     SpgConfig _config;
-    int NUMBER_OF_DOFS = 3;
-    RMLOutputParameters* _reflexxesOutput = NULL;
 
-    // SPG with Position setpoint
-    RMLPositionOutputParameters* _reflexxesPosOutput = NULL;
-    bool calculatePosUsingLimits(VelocityControlData& data, const Velocity2D& currentVelocity, const SpgLimits& spgLimits, const Position2D& deltaPosition, const pose& targetVelocity, const bool synchronize, Velocity2D &resultVelocity);
+    bool calculateSPG(VelocityControlData& data, SpgLimits const &spgLimits, Position2D& resultPosition, Velocity2D &resultVelocity);
+    bool isDofAccelerating(const VelocityControlData &data, const Velocity2D& resultVelocity, int dof, float threshold);
+
+    // Position SPG
+    bool calculatePosXYRzPhaseSynchronized(VelocityControlData& data, SpgLimits const &spgLimits, Position2D& resultPosition, Velocity2D &resultVelocity);
+    bool calculatePosXYPhaseSynchronized(VelocityControlData& data, SpgLimits const &spgLimits, Position2D& resultPosition, Velocity2D &resultVelocity);
+    bool calculatePosRzNonSynchronized(VelocityControlData& data, SpgLimits const &spgLimits, Position2D& resultPosition, Velocity2D &resultVelocity);
+
+    // Velocity SPG
+    bool calculateVelXYRzPhaseSynchronized(VelocityControlData& data, SpgLimits const &spgLimits, Position2D& resultPosition, Velocity2D &resultVelocity);
+
+    // data stored for open loop
+    Position2D _deltaPositionRCS;
+    Velocity2D _currentVelocityRCS;
+    Velocity2D _targetVelocityRCS;
 
     // SPG with Velocity setpoint
-    RMLVelocityOutputParameters* _reflexxesVelOutput = NULL;
-    bool calculateVelUsingLimits(VelocityControlData& data, const Velocity2D& currentVelocity, const SpgLimits& spgLimits, const pose& targetVelocity, const bool synchronize, Velocity2D &resultVelocity);
 
 };
 

@@ -13,8 +13,10 @@ private:
     camSysReceive *camSysRecv;
 	std::thread camSysRecvThread;
 
+	int singleCam;
+
 public:
-	multiCamViewer();
+	multiCamViewer(int singleCam);
 	~multiCamViewer();
 	bool update();
 };

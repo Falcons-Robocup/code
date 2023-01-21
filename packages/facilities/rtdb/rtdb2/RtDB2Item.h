@@ -1,4 +1,4 @@
-// Copyright 2020 Jan Feitsma (Falcons)
+// Copyright 2020-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef _INCLUDED_RTDB2ITEM_H_
 #define _INCLUDED_RTDB2ITEM_H_
@@ -15,8 +15,8 @@ struct RtDB2Item
     std::string data;
     rtime       timestamp;
     bool        shared = false;
-    bool        list = false;
-    
+    bool        list = false; // TODO: strip. This was quite experimental, when we (Falcons) were working briefly with sending buffers (before introducing get_and_clear)
+
     SERIALIZE_DATA_FIXED(data, timestamp, shared, list);
     
     // interpret data

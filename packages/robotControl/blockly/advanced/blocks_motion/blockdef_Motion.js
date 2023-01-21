@@ -10,39 +10,38 @@ Blockly.Blocks['motion_stop'] = {
   }
 };
 
-Blockly.Blocks['motion_teamplaymove'] = {
+Blockly.Blocks['motion_motionplanning_action'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("[Teamplay] Move to");
-    this.appendValueInput("target")
-        .setCheck("Position")
-        .appendField("pos=");
-    this.appendDummyInput()
-        .appendField("at")
-        .appendField(new Blockly.FieldDropdown([["slow","True"], ["normal","False"]]), "slow")
-        .appendField("speed");
-    this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour(230);
- this.setTooltip("teamplayMove ( [Position] pos, [Boolean] slow ) NOTE: Will always face ball");
- this.setHelpUrl("");
-  }
-};
-
-Blockly.Blocks['motion_motionplanningmove'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField("[MotionPlanning] Move to");
-    this.appendValueInput("pose")
+        .appendField("[MotionPlanning] Action ")
+        .appendField(new Blockly.FieldDropdown([["Move","MOVE"], ["Pass","PASS"], ["Shoot","SHOOT"], ["Lob","LOB"], ["Stop","STOP"], ["GetBall","GET_BALL"], ["TurnAwayFromOpponent","TURN_AWAY_FROM_OPPONENT"], ["KeeperMove","KEEPER_MOVE"], ["Kick","KICK"], ["InterceptBall","INTERCEPT_BALL"]]), "action");
+    this.appendValueInput("pos")
         .setCheck("Pose")
-        .appendField("pose=");
+        .appendField("Pos=");
+    this.appendDummyInput()
+        .appendField("MotionType=")
+        .appendField(new Blockly.FieldDropdown([["Normal","NORMAL"], ["WithBall","WITH_BALL"], ["Accurate","ACCURATE"], ["Intercept","INTERCEPT"], ["Slow","SLOW"], ["Sprint","SPRINT"]]), "motionType")
+    this.appendDummyInput()
+        .appendField("BallHandlersEnabled=")
+        .appendField(new Blockly.FieldDropdown([["Enabled","True"], ["Disabled","False"]]), "bhEnabled");
     this.setInputsInline(true);
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour(230);
  this.setTooltip("motionPlanningMove( [Pose] pose )");
  this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_blockuntilpassedorfailed'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Block until MotionPlanning PASSED or FAILED");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip("Blocking until PASSED or FAILED is returned by MotionPlanning");
+    this.setHelpUrl("");
   }
 };
 

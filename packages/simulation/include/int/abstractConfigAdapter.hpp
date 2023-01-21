@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * abstractConfigAdapter.hpp
@@ -12,16 +12,15 @@
 
 #include "teamID.hpp"
 #include <string>
-#include "FalconsRtDB2.hpp" // simulationTimeEnum
+#include "FalconsRTDB.hpp" // simulationTimeEnum
 
 class AbstractConfigAdapter {
 public:
     virtual ~AbstractConfigAdapter() {}
 
-    virtual std::string getArbiter() const = 0;
-    virtual int getSize(const TeamID) const = 0;
-    virtual int getTickFrequency() const = 0;
-    virtual int getStepSizeMs() const = 0;
+    virtual float getTickFrequency() const = 0;
+    virtual float getSimulationSpeedupFactor() const = 0;
+    virtual std::string getTickFinishRtdbKey() const = 0;
 };
 
 #endif /* ABSTRACTCONFIGADAPTER_HPP_ */

@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBInputAdapter.hpp
@@ -12,8 +12,7 @@
 
 #include <vector>
 
-#include "FalconsRtDB2.hpp"
-#include "cRtDBClient.hpp"
+#include "FalconsRTDB.hpp"
 
 #include "int/cMotionPlanner.hpp"
 
@@ -28,7 +27,7 @@ class MP_RTDBInputAdapter
     void waitForActionData();
 
   private:
-    RtDB2 *_rtdb;
+    FalconsRTDB *_rtdb;
     int _myRobotId;
 
     cMotionPlanner* _motionPlanner;

@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Erik Kouters (Falcons)
+// Copyright 2016-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cDecisionTree.cpp
@@ -371,7 +371,7 @@ cDecisionTree::cDecisionTree()
         ( tpActionEnum::DRIBBLE,  boost::make_shared<cActionDribble>())
         ;
 
-    _rtdb = RtDB2Store::getInstance().getRtDB2(getRobotNumber(), getTeamChar());
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(getRobotNumber(), getTeamChar());
 }
 
 cDecisionTree::~cDecisionTree()

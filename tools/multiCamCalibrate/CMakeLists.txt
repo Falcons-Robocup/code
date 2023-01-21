@@ -11,7 +11,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror")
 include_directories(/usr/include/opencv4)
 link_directories(/usr/local/lib)
 
-include_directories(./include ./../../packages/multiCam/include $ENV{FALCONS_CODE_PATH}/packages/facilities/common/include/ext)
+include_directories(./include)
+include_directories(./../../packages/multiCam/include)
+include_directories(./../../packages/facilities/common/include/ext)
+
+include_directories(./../../vision/pylonToOpenCv)
+
+include_directories(/opt/pylon/include)
+link_directories(/opt/pylon/lib)
 
 add_library(optiCalLib 
     src/optiCal.cpp
@@ -20,6 +27,7 @@ add_library(optiCalLib
     src/cvmatio.cpp
     src/multiCamVideoFeed.cpp
     ./../../packages/multiCam/src/camSysReceive.cpp
+    ./../../vision/pylonToOpenCv/grabber.cpp
 )
 
 add_executable(optiCal src/optiCalMain.cpp)
@@ -34,6 +42,10 @@ target_link_libraries(optiCal
     opencv_videoio
     pthread
     FalconsCommon
+    pylonbase
+    pylonutility
+    GenApi_gcc_v3_1_Basler_pylon
+    GCBase_gcc_v3_1_Basler_pylon
 )
 
 add_executable(upgradeDewarpCalibration src/upgradeCalibration.cpp)
@@ -48,5 +60,9 @@ target_link_libraries(upgradeDewarpCalibration
     opencv_videoio
     pthread
     FalconsCommon
+    pylonbase
+    pylonutility
+    GenApi_gcc_v3_1_Basler_pylon
+    GCBase_gcc_v3_1_Basler_pylon
 )
 

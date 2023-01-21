@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * vcRTDBInputAdapter.cpp
@@ -18,7 +18,7 @@ vcRTDBInputAdapter::vcRTDBInputAdapter()
     TRACE_FUNCTION("");
     _myRobotId = getRobotNumber();
     auto teamChar = getTeamChar();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, teamChar);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, teamChar);
     _wmClient = new cWorldModelClient();
 }
 

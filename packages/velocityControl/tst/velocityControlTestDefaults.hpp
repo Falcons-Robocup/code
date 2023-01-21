@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * velocityControlTestDefaults.hpp
@@ -14,7 +14,7 @@
 
 
 // common setup and some config values (we normally don't want to be sensitive to production yamls)
-VelocityControl velocityControlSetup(vcCFI *vcConfig, ppCFI *ppConfig, OutputInterface *output = NULL);
+VelocityControl velocityControlSetup(vcCFI *vcConfig, ppCFI *ppConfig, exCFI *exConfig, OutputInterface *output = NULL);
 VelocityControl defaultVelocityControlSetup();
 
 

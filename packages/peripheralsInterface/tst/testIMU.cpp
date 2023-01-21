@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * testIMU.cpp
@@ -8,7 +8,7 @@
  */
 
 #include "int/IMU/IMU.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 // MAIN
 int main(int argc, char **argv)

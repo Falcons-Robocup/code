@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBOutputAdapter.cpp
@@ -19,7 +19,7 @@ MP_RTDBOutputAdapter::MP_RTDBOutputAdapter()
     TRACE_FUNCTION("");
     _myRobotId = getRobotNumber();
     auto teamChar = getTeamChar();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, teamChar);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, teamChar);
 }
 
 MP_RTDBOutputAdapter::~MP_RTDBOutputAdapter()

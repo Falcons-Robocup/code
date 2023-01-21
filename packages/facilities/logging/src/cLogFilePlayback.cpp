@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cLogFilePlayback.cpp
@@ -11,7 +11,8 @@
 #include "tracing.hpp"
 
 
-cLogFilePlayback::cLogFilePlayback(std::string const &filename)
+cLogFilePlayback::cLogFilePlayback(std::string const &filename) :
+    cLogPlayback(0) // TODO: is agentid 0 going to work for this? Untested
 {
     _logFile = new cLogFileReader(filename);
     load(); // TODO: could take a while ... move this into separate thread?

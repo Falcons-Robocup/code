@@ -291,7 +291,11 @@ void opticalCalibrator::toggleCamera()
     if (_videoFeed != NULL)
     {
         _videoFeed->selectInput(_cameraId);
-        _videoFeed->setMode(videoInputMode::MULTICAM);
+        if( _usePylonCam ) {
+            _videoFeed->setMode(videoInputMode::PYLONCAM);
+        } else {
+            _videoFeed->setMode(videoInputMode::MULTICAM);
+        }
     }
     calcLandMarks();
 }
@@ -403,7 +407,17 @@ void opticalCalibrator::handleKeyPress(int key)
         _selectedLandmark = key - '0';
         break;
     case ('i'):
-        cv::imwrite("/var/tmp/optiCalFrame.png", removeBorder(getCamFrame()));
+        {
+            // automatically determine output filename
+            time_t rawtime;
+            struct tm *timeinfo;
+            char buffer[80];
+            time(&rawtime);
+            timeinfo = localtime(&rawtime);
+            std::string s = "r" + std::to_string(getRobotNumber()) + "_cam" + std::to_string(_cameraId);
+            strftime(buffer, sizeof(buffer), ("/var/tmp/%Y%m%d_%H%M%S_" + s + ".jpg").c_str(), timeinfo);
+    		cv::imwrite(buffer, removeBorder(getCamFrame()));
+        }
         break;
     }
 }

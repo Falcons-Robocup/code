@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2020 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cameraEnum.hpp
@@ -17,7 +17,8 @@ enum class cameraEnum
     INVALID,
     OMNIVISION,
     FRONTCAMERA,
-    MULTICAMERA // no need to distinguish which one
+    MULTICAMERA, // no need to distinguish which one
+    MACHINELEARNING // new prototype, how to fuse with MULTICAMERA? or should we clean this enum up entirely?
 };
 
 SERIALIZE_ENUM(cameraEnum);

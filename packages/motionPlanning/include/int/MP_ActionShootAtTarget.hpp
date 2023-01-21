@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionShootAtTarget.hpp
@@ -37,7 +37,7 @@ protected:
     virtual void executeShot();
     virtual void unpackParameters();
     
-    void initialize();
+    void initialize() override;
 
 private:
     // lots of tiny helper functions
@@ -47,7 +47,6 @@ private:
     void calculateAngles();
     bool checkOk();
     void finalize();
-    void checkDisableBh();
     void shoot();
     void moveToTarget();
     void enterPhaseRotate();
@@ -61,11 +60,9 @@ private:
     // data members
     actionResultTypeEnum _result;
     bool       _didShoot;
-    bool       _disabledBh;
     bool       _aimWithinTolerance;
     bool       _settledOk;
     double     _timestamp;
-    cTimer     _bhTimer;
     cTimer     _shootTimer;
     cTimer     _aimTimer;
     cTimer     _settleTimer;
@@ -76,7 +73,6 @@ private:
     float      _moveAngleThreshold;
     float      _aimSettleTime;
     float      _coarseAngle;
-    float      _disableBhDelay;
     float      _sleepAfterShoot;
     phaseEnum  _currentPhase;
     phaseEnum  _previousPhase;

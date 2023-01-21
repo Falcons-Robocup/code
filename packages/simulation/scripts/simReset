@@ -1,9 +1,8 @@
 #! /usr/bin/env python3
 
 import falconspy
+import falconsrtdb
 
-
-from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
 
 BALL = [
          [0.0, 0.0, 0.0],   # position
@@ -34,11 +33,10 @@ ROBOT_POSITIONS = [
 
 if __name__ == '__main__':
 
-    rtdb2Store = RtDB2Store(RTDB2_DEFAULT_PATH, False)
-    rtdb2Store.refresh_rtdb_instances()
+    rtdbStore = falconsrtdb.FalconsRtDBStore(readonly=False) # write mode
 
-    rtdb2Store.rtdb_instances["agent_shared0"].put("BALLS", [BALL])
-    rtdb2Store.rtdb_instances["agent_shared0"].put("MATCH_STATE", MATCH_STATE)
+    rtdbStore.rtdb_instances["agent_shared0"].put("BALLS", [BALL])
+    rtdbStore.rtdb_instances["agent_shared0"].put("MATCH_STATE", MATCH_STATE)
 
     robot_id = 1
     for p in ROBOT_POSITIONS:
@@ -52,5 +50,5 @@ if __name__ == '__main__':
                       ]
 
         agent = "agent_shared{}".format(robot_id)
-        rtdb2Store.rtdb_instances[agent].put("ROBOT_STATE", robot_state)
+        rtdbStore.rtdb_instances[agent].put("ROBOT_STATE", robot_state)
         robot_id += 1

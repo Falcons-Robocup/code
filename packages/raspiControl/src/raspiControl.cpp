@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Andre Pool (Falcons)
+// Copyright 2019-2021 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2018-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
@@ -188,7 +188,7 @@ void raspiControl::camControlSetup() {
 
 	string sizeConfig = "dimensions";
 	namedWindow(sizeConfig, cv::WINDOW_NORMAL);
-	createTrackbar("lines", sizeConfig, &lines, 3000);
+	createTrackbar("lines", sizeConfig, &lines, 7557);
 	createTrackbar("pixels", sizeConfig, &pixels, 4000);
 	createTrackbar("p offset cam0", sizeConfig, &pixelsOffset[0], 32);
 	createTrackbar("p offset cam1", sizeConfig, &pixelsOffset[1], 32);

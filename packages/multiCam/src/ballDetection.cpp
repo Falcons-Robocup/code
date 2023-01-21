@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Andre Pool (Falcons)
+// Copyright 2018-2022 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2014-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
@@ -7,7 +7,9 @@
 
 #include <math.h>
 
+#ifndef NOROS
 #include "tracing.hpp"
+#endif
 
 using namespace std;
 using namespace cv;
@@ -63,7 +65,9 @@ void ballDetection::keepGoing() {
 // The dewarp function is used to convert the ball camera pixels to angles
 // The angles (azimuth and elevation) are relative to the (mounting-corrected) camera optical axis
 void ballDetection::update() {
+#ifndef NOROS
 	TRACE_FUNCTION("");
+#endif
 // get the pixels of the camera
 	vector<linePointSt> cartesian;
 
@@ -77,8 +81,14 @@ void ballDetection::update() {
 // TODO: apparently the same ghost ball is send multiple times to world model ???
     if (type == ballType) {
         cartesian = camRecv->getAndClearBallPointsWait(camIndex);
+//        for( size_t ii = 0; ii < cartesian.size(); ii++ ) {
+//          // yBegin is same as YEnd
+//        	printf("INFO     : cam %zu, index %2zu  xBegin %3u  xEnd %3u  y %3u  size %u\n", camIndex, ii,
+//        			cartesian[ii].xBegin, cartesian[ii].xEnd, cartesian[ii].yBegin, cartesian[ii].size );
+//        }
     } else if (type == ballFarType) {
         cartesian = camRecv->getAndClearBallFarPointsWait(camIndex);
+        printf("WARNING   : shall not happen because far balls are exported as normal balls by raspiAnalyze");
     } else if (type == obstacleType) {
         printf("ERROR     : ballDetection is not used anymore for obstacleDetection\n");
         exit(EXIT_FAILURE);
@@ -93,7 +103,9 @@ void ballDetection::update() {
 
 // construct "image" from received points
     {
-    TRACE_SCOPE("CONSTRUCT_AND_EXPORT_BALL", "");
+#ifndef NOROS
+	TRACE_SCOPE("CONSTRUCT_AND_EXPORT_BALL", "");
+#endif
 	exportMutex.lock();
 	inRangeFrame = Mat::zeros(height, width, CV_8UC1);
 	for (size_t ii = 0; ii < cartesian.size(); ii++) {
@@ -214,7 +226,11 @@ void ballDetection::update() {
                 bool distanceCalculatedOk = false;
 
                 // feed the estimator, but only when ball is low enough
-                if (elevationDewarp < -0.1)
+                // the right camera of robot5 shows a ball on 5 meter gets a elevationDewarp of 36 degrees
+                // slightly increase the elevation threshold to 5 degrees, this will not solve the issue
+                // with right camera of robot 5, but solves potential misses of other robots
+                // making it to high might introduce a lot of flying balls
+                if (elevationDewarp < (2*M_PI * 5/360)  )
                 {
                     int16_t xField = 0;
                     int16_t yField = 0;
@@ -264,6 +280,8 @@ void ballDetection::update() {
                             }
                         }
                     }
+                } else {
+                    // printf("WARNING   : cam %zu ball  xCenter %3d  yCenter %3d  elevation %.0f degrees\n", camIndex, xCenter, yCenter, 360.0 * elevationDewarp / (2 * M_PI ));
                 }
 
                 // fallback in case dewarp floor did not cover it

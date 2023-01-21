@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.5.1)
 find_package(Boost COMPONENTS system thread filesystem REQUIRED QUIET)
 find_package(Facilities)
 
-# using shared_ptr
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror -fPIC")
+
+add_compile_options(-fPIC)
 
 include_directories("include/ext" "include")
 
@@ -16,12 +16,12 @@ add_library(FalconsCommon
     src/falconsCommonEnv.cpp
     src/falconsCommonConfig.cpp
     src/falconsCommonLegacy.cpp
-    src/fsm.cpp
     src/cLinearRegression.cpp
 )
 
 target_link_libraries(FalconsCommon
                       FalconsTypes
+                      Tracing
                       ${Boost_LIBRARIES})
 
 # Add dependency on generated_enum2str.hpp created by sharedTypes

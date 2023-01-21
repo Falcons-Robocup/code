@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RtdbAdapterControlOverride.cpp
@@ -15,7 +15,7 @@
 RtdbAdapterControlOverride::RtdbAdapterControlOverride()
 {
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, getTeamChar());
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, getTeamChar());
 }
 
 RtdbAdapterControlOverride::~RtdbAdapterControlOverride()

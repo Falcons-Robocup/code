@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# Link RTDB storage(s).
+# Used for simulation only, to allow RTDB3 inter-agent communication without comm processes.
+# The symlink trick was invented by Rob Burgers from VDL-RobotSports.
+# But Jan/Rob are arguing that rtdb3 might need to provide a more fundamental solution for this.
+# (API change? reconsider the (multi-)stores?)
+
+
+dblink=${FALCONS_CODE_PATH}/packages/mixedTeamProtocol/mtp/tst/databaseLinkTrick.py
+
+
+# convention: teamA = good guys, teamB = bad guys
+
+
+# MTP
+MTP_RTDB_STORAGE_PATH="/tmp/rtdb_mixedteam"
+$dblink ${MTP_RTDB_STORAGE_PATH}_A ${MTP_RTDB_STORAGE_PATH}_B
+
+# MTP-refbox
+MTP_REFBOX_RTDB_STORAGE_PATH="/tmp/rtdb_refbox"
+$dblink ${MTP_REFBOX_RTDB_STORAGE_PATH}_A ${MTP_REFBOX_RTDB_STORAGE_PATH}_B
+
+# Falcons teams
+$dblink /tmp/rtdb_teamA /tmp/rtdb_teamB
+
+

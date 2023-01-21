@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Diana Koenraadt (Falcons)
+// Copyright 2016-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * FieldWidgetGameSignalSubscriber.h
@@ -36,6 +36,7 @@ void FieldWidgetGameSignalSubscriber::subscribe(GameSignalAdapter* gameSignalAda
 
     QObject::connect(gameSignalAdapter, SIGNAL(signalOwnTeamPositionChanged(uint8_t, SignalMode, uint8_t, PositionVelocity&)), this, SLOT(onOwnTeamPositionChanged(uint8_t, SignalMode, uint8_t, PositionVelocity&)));
     QObject::connect(gameSignalAdapter, SIGNAL(signalRobotStatusChanged(uint8_t, SignalMode, uint8_t, int)), this, SLOT(onRobotStatusChanged(uint8_t, SignalMode, uint8_t, int)));
+    QObject::connect(gameSignalAdapter, SIGNAL(signalRobotRoleChanged(uint8_t, std::string)), this, SLOT(onRobotRoleChanged(uint8_t, std::string)));
 
     QObject::connect(gameSignalAdapter, SIGNAL(signalClearAll()), this, SLOT(onClearRequest()));
     QObject::connect(gameSignalAdapter, SIGNAL(signalElapsedTimeChanged(double)), this, SLOT(onElapsedTimeChanged(double)));
@@ -46,6 +47,8 @@ void FieldWidgetGameSignalSubscriber::subscribe(GameSignalAdapter* gameSignalAda
 
     QObject::connect(gameSignalAdapter, SIGNAL(signalGaussianObstaclesUpdate(uint8_t, SignalMode, T_DIAG_WORLDMODEL_LOCAL&)), this, SLOT(onGaussianObstacleUpdate(uint8_t, SignalMode, T_DIAG_WORLDMODEL_LOCAL&)));
     QObject::connect(gameSignalAdapter, SIGNAL(signalTrueBallUpdate(uint8_t, SignalMode, T_DIAG_TRUE_BALL&)), this, SLOT(onTrueBallUpdate(uint8_t, SignalMode, T_DIAG_TRUE_BALL&)));
+
+    QObject::connect(gameSignalAdapter, SIGNAL(signalValue(uint8_t, std::string, std::string, std::string)), this, SLOT(onValue(uint8_t, std::string, std::string, std::string)));
 }
 
 void FieldWidgetGameSignalSubscriber::onTeamModeChanged()
@@ -87,60 +90,35 @@ void FieldWidgetGameSignalSubscriber::onClockTick(double elapsedTime, double act
 *           Robot view
 * ========================================
 */
+
+void FieldWidgetGameSignalSubscriber::onValue(uint8_t senderRobotId, std::string category, std::string key, std::string value)
+{
+    if (key.compare("activeHeightmap") == 0)
+    {
+        CompositeHeightmapName hmName;
+        str2enum(value, hmName);
+        _widget->setActiveHeightmap(senderRobotId, hmName);
+    }
+}
+
 bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, const SignalMode& signalMode, const DataType &dataType)
 {
     // When returned true, onXXXChanged data is drawn.
     // TODO: this function is getting quite complex. Ideally it captures the requirements via a set of matrices. A tst utility would be nice too.
     bool result = false;
-    if (_viewMode == ROBOT)
-    {
-        if( _viewSignalMode == signalMode &&
-            _robotModeId == robotID)
-        {
-            result = true;
-        }
-
-        if(_viewSignalMode == SignalMode::GAUSSIAN_WORLD || _viewSignalMode == SignalMode::OBSTABLE_MEASUREMENTS || _viewSignalMode == BALL_MEASUREMENTS)
-        {
-            if(_robotModeId == robotID)
-            {
-                if( (signalMode == SignalMode::GAUSSIAN_WORLD) ||                    
-                    (dataType == DataType::OBSTACLEPOSITION && signalMode == SignalMode::WORLD ))
-                {
-                    result = true;
-                }
-            }
-
-            if(dataType == DataType::ROBOTPOSITION)
-            {
-                result = true;
-            }
-
-            if (dataType == DataType::PATHPLANNINGPROGRESS)
-            {
-                return false;
-            }
-
-        }
-    }
-    else if (_viewMode == TEAM)
+    if (std::holds_alternative<TEAM>(_viewMode))
     {
         // For signalMode WorldModel, we stack the robots
         // but not the balls- and obstacles
         if (_viewSignalMode == SignalMode::WORLD)
         {
-            if (dataType == DataType::ROBOTPOSITION || dataType == DataType::PATHPLANNINGPROGRESS)
+            if (   (dataType == DataType::ROBOTPOSITION)
+                || (dataType == DataType::PATHPLANNINGPROGRESS)
+                || (dataType == DataType::BALLPOSITION) 
+                || (dataType == DataType::OBSTACLEPOSITION) )
             {
                 result = true;
-            }
-            else if (_robotModeId == robotID)
-            {
-                if ((dataType == DataType::BALLPOSITION) ||
-                    (dataType == DataType::OBSTACLEPOSITION && signalMode == SignalMode::WORLD) )
-                {
-                    result = true;
-                }
-            }
+            }            
         }
         else if (_viewSignalMode == SignalMode::VISION)
         {
@@ -186,17 +164,48 @@ bool FieldWidgetGameSignalSubscriber::displayDataFilter(const uint8_t& robotID, 
         // For all other signalModes, we only want the active signalMode.
         else if (_viewSignalMode == signalMode)
         {
-            // Team data is handled as robotID 0
-            if (robotID == 0)
+            result = true;
+        }
+    }
+    else if (std::holds_alternative<RobotId>(_viewMode))
+    {
+        RobotId robotModeId = std::get<RobotId>(_viewMode);
+        if( robotModeId == robotID)
+        {
+            if( _viewSignalMode == signalMode )
+            {
+                result = true;
+            }
+
+            if( _viewSignalMode == SignalMode::VISION && dataType == DataType::ROBOTPOSITION )
             {
                 result = true;
             }
         }
+
+        if(_viewSignalMode == SignalMode::GAUSSIAN_WORLD || _viewSignalMode == SignalMode::OBSTABLE_MEASUREMENTS || _viewSignalMode == BALL_MEASUREMENTS)
+        {
+            if(robotModeId == robotID)
+            {
+                if( (signalMode == SignalMode::GAUSSIAN_WORLD) ||                    
+                    (dataType == DataType::OBSTACLEPOSITION && signalMode == SignalMode::WORLD ))
+                {
+                    result = true;
+                }
+            }
+
+            if( dataType == DataType::ROBOTPOSITION )
+            {
+                result = true;
+            }
+
+            if (dataType == DataType::PATHPLANNINGPROGRESS)
+            {
+                return false;
+            }
+        }
     }
-    if (_viewMode == ROBOT && _robotModeId == robotID && _viewSignalMode == SignalMode::VISION && dataType == DataType::ROBOTPOSITION)
-    {
-        result = true;
-    }
+
     if (dataType == DataType::PATHPLANNINGPROGRESS) // always show robot targets
     {
         result = true;
@@ -267,6 +276,11 @@ void FieldWidgetGameSignalSubscriber::onForbiddenAreaChanged(ObjectId id, Signal
 void FieldWidgetGameSignalSubscriber::onRobotStatusChanged(uint8_t senderRobotId, SignalMode signalMode, uint8_t robotId, int status)
 {
     _widget->getTeamRobot(robotId)->setStatus(status);
+}
+
+void FieldWidgetGameSignalSubscriber::onRobotRoleChanged(uint8_t robotId, std::string role)
+{
+    _widget->setRole(robotId, role);
 }
 
 void FieldWidgetGameSignalSubscriber::onOwnTeamPositionChanged(uint8_t senderRobotId, SignalMode signalMode, uint8_t robotId, PositionVelocity& posvel)

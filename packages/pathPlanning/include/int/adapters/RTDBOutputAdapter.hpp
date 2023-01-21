@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBOutputAdapter.hpp
@@ -13,7 +13,7 @@
 #include "int/OutputInterface.hpp"
 
 #include "falconsCommon.hpp" //getRobotNumber(), getTeamChar()
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class RTDBOutputAdapter : public OutputInterface
 {
@@ -26,7 +26,7 @@ public:
     void setDiagnostics(diagPathPlanning const &diagnostics);
 
 private:
-    RtDB2 *_rtdb;
+    FalconsRTDB *_rtdb;
     int _myRobotId;
     bool _verbose = false;
 

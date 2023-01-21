@@ -54,6 +54,10 @@ void CalculateVelocity::execute(VelocityControlData &data)
         data.resultVelocityRcs = resultVelocity;
     }
 
+    // store for next iteration
+    data.previousTimestamp = data.timestamp;
+    data.previousVelocityRcs = data.resultVelocityRcs;
+
     TRACE("vx=%8.4f vy=%8.4f vphi=%8.4f (RCS) success=%d", data.resultVelocityRcs.x, data.resultVelocityRcs.y, data.resultVelocityRcs.phi, success);
 }
 

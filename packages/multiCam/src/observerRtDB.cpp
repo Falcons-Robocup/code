@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include "observerRtDB.hpp"
 
@@ -12,11 +12,10 @@
 
 using std::runtime_error;
 
-observerRtDB::observerRtDB(const uint robotID, const bool cameraCorrectlyMounted, const float minimumLockTime, const float frequency)
+observerRtDB::observerRtDB(const uint robotID, const bool cameraCorrectlyMounted, const float minimumLockTime)
 {
     TRACE_FUNCTION("");
     _myRobotId = getRobotNumber();
-    _frequency = frequency;
 
     initializeRtDB();
 
@@ -43,7 +42,7 @@ observerRtDB::~observerRtDB()
 void observerRtDB::initializeRtDB()
 {
     TRACE_FUNCTION("");
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId);
 
     // start thread which communicates data to worldModel and pokes it
     _heartBeatThread = boost::thread(boost::bind(&observerRtDB::heartBeatLoop, this));
@@ -53,6 +52,9 @@ bool observerRtDB::heartBeatTick()
 {
     TRACE_FUNCTION("");
     mtx.lock();
+
+    static int heartbeat_counter = 0;
+    heartbeat_counter++;
 
     // report
     // minimize log pollution (to quickly see the real issues)
@@ -64,10 +66,14 @@ bool observerRtDB::heartBeatTick()
     _rtdb->put(LOCALIZATION_CANDIDATES, &_robotLocCandidates);
     _rtdb->put(OBSTACLE_CANDIDATES, &_obstacleCandidates);
     _rtdb->put(BALL_CANDIDATES, &_ballCandidates);
+
+    // heartbeat put will trigger worldmodel to update
+    _rtdb->put(HEARTBEAT_WORLDMODEL, &heartbeat_counter);
+
+    
     // be nice for the database, subsample effectively at about 1Hz
     {
-        static int counter = 0;
-        if (counter++ % 30 == 0)
+        if (heartbeat_counter % 30 == 0)
         {
             _rtdb->put(MULTI_CAM_STATISTICS, &_multiCamStats);
         }
@@ -89,8 +95,14 @@ bool observerRtDB::heartBeatTick()
 
 void observerRtDB::heartBeatLoop()
 {
+    INIT_TRACE_THREAD("heartBeatLoop");
     TRACE_FUNCTION("");
-    rtime::loop(_frequency, boost::bind(&observerRtDB::heartBeatTick, this), "observerRtDB::heartBeatTick");
+    while (true)
+    {
+        _rtdb->waitForPut(HEARTBEAT);
+
+        heartBeatTick();
+    }
 }
 
 void observerRtDB::update_own_position(std::vector<robotLocationType> robotLocations, double timestampOffset)

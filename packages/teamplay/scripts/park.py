@@ -1,4 +1,4 @@
-# Copyright 2020 Jan Feitsma (Falcons)
+# Copyright 2020-2021 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 #!/usr/bin/env python3
 
@@ -14,11 +14,11 @@ import time
 import threading
 import socket # for gethostname
 import falconspy
-from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
+import falconsrtdb
 
 
 # setup RTDB
-rtdb2Store = RtDB2Store(RTDB2_DEFAULT_PATH, False)
+rtdbStore = falconsrtdb.FalconsRtDBStore(readonly=False) # write mode
 
 
 
@@ -36,7 +36,7 @@ def isAlive(hostname):
 
 
 def isActive(robot):
-    item = rtdb2Store.get(robot, "ROBOT_STATE")
+    item = rtdbStore.get(robot, "ROBOT_STATE")
     return item != None
 
 
@@ -53,7 +53,7 @@ def parkUsingRobotCLI(robot, role, remote=False):
 
 
 def parkUsingRefbox():
-    rtdb2Store.put(0, "REFBOX_OVERRIDE", {"command": "PARK"})
+    rtdbStore.put(0, "REFBOX_OVERRIDE", {"command": "PARK"})
 
 
 if __name__ == '__main__':
@@ -66,7 +66,7 @@ if __name__ == '__main__':
             config.mode = "real"
         else:
             # quick check if a simulation is running
-            item = rtdb2Store.get(1, "TP_HEARTBEAT") # making use of the fact that key is configured to be local
+            item = rtdbStore.get(1, "TP_HEARTBEAT") # making use of the fact that key is configured to be local
             if item != None:
                 config.mode = "sim"
     if config.mode not in ["sim", "real"]:

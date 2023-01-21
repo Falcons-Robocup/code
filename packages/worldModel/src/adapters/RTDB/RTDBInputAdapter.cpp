@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Erik Kouters (Falcons)
+// Copyright 2018-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBInputAdapter.cpp
@@ -14,6 +14,10 @@
 #include "cDiagnostics.hpp"
 #include "tracing.hpp"
 
+
+#define CAMERA_HEIGHT 0.75 // meters above floor -- TODO: this is a multiCam property, should not be defined here ... putting it on interface is too expensive since it never changes -- maybe we should retrieve the config value via some library?
+
+
 RTDBInputAdapter::RTDBInputAdapter()
 {
     TRACE_FUNCTION("");
@@ -24,7 +28,7 @@ RTDBInputAdapter::RTDBInputAdapter()
     _robotAdmin = 0;
     _obstacleAdmin = 0;
     _myRobotId = getRobotNumber();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId);
     _robotDisplacementInitialized = false;
 
     _uIDGenerator = identifierGenerator(_myRobotId);
@@ -54,6 +58,11 @@ void RTDBInputAdapter::updateConfig(T_CONFIG_WORLDMODELSYNC const &config)
     _config = config;
 }
 
+void RTDBInputAdapter::getVisionFrame()
+{
+    (void)_rtdb->get(VISION_FRAME, &_visionFrame);
+}
+
 template <typename T1>
 T1 convertObjectRCSToFCS(T1 &objCandidate, Position2D &robotPos)
 {
@@ -74,7 +83,7 @@ bool RTDBInputAdapter::useVisionFromRobot(int robotId)
 {
     // get teamId belonging to given robotId
     T_ROBOT_STATE robotState;
-    int r = _rtdbClient._rtdb.at(robotId)->get(ROBOT_STATE, &robotState, robotId);
+    int r = _rtdb->get(ROBOT_STATE, &robotState, robotId);
     if (r != RTDB2_SUCCESS)
     {
         return false;
@@ -88,7 +97,68 @@ bool RTDBInputAdapter::useVisionFromRobot(int robotId)
     return false;
 }
 
-void RTDBInputAdapter::getBallCandidates()
+
+int RTDBInputAdapter::fillObjectCandidatesML(std::vector<objectMeasurement> &candidates, std::string const &objectType)
+{
+    // assume _visionFrame already retrieved, here we just convert data
+    //candidates.clear(); // no, this function may be called multiple times per objectType 
+    // TODO: make use of _visionFrame.frame counter, ignore dupes (sampling rates), etc.
+    for (auto it = _visionFrame.objects.begin(); it != _visionFrame.objects.end(); ++it)
+    {
+        if (it->className == objectType) // obstacle, human, ball, ...
+        {
+            objectMeasurement candidate;
+            candidate.identifier.robotID = _visionFrame.robot;
+            static int counter = 0;
+            candidate.identifier.uniqueID = counter++;
+            candidate.timestamp = rtime::now(); // HACK - we should take _visionFrame.timestamp but it can be more than a second too old w.r.t. robot clock
+            candidate.source = cameraEnum::MACHINELEARNING;
+            candidate.confidence = it->confidence;
+            candidate.azimuth = it->azimuth;
+            candidate.elevation = it->elevation;
+            candidate.radius = it->radius;
+            candidate.cameraX = 0.0;
+            candidate.cameraY = 0.0;
+            candidate.cameraZ = CAMERA_HEIGHT;
+            candidate.cameraPhi = 0.0;
+            candidate.color = objectColorEnum::UNKNOWN; // TODO cleanup? solve via className and training?
+            candidates.push_back(candidate);
+        }
+    }
+    return RTDB2_SUCCESS;
+}
+
+int RTDBInputAdapter::fillBallCandidatesOld(T_BALL_CANDIDATES &candidates)
+{
+    T_BALL_CANDIDATES temp_candidates;
+    int r = _rtdb->get(BALL_CANDIDATES, &temp_candidates);
+
+    if (r == RTDB2_SUCCESS)
+    {
+        for (auto& c : temp_candidates)
+        {
+            candidates.push_back(c);
+        }
+    }
+
+    return r;
+}
+
+int RTDBInputAdapter::getBallCandidates()
+{
+    // Acquire candidates from vision source(s)
+    int r = !RTDB2_SUCCESS;
+    
+    _ballCandidates.clear();
+
+    // The &= is effectively an "or" operation, because return 0 means success
+    r &= fillObjectCandidatesML(_ballCandidates, "ball");
+    r &= fillBallCandidatesOld(_ballCandidates);
+    
+    return r;
+}
+
+void RTDBInputAdapter::processBallCandidates()
 {
     TRACE_FUNCTION("");
     // only continue if valid loc
@@ -97,9 +167,11 @@ void RTDBInputAdapter::getBallCandidates()
         return;
     }
 
+    // Acquire candidates from vision source(s)
+    int r = getBallCandidates();
+    
     // First put the Local FCS data to RTDB
     T_BALL_CANDIDATES_FCS measurementsFcs;
-    int r = _rtdb->get(BALL_CANDIDATES, &_ballCandidates);
     if (r == RTDB2_SUCCESS)
     {
         // convert camera position from RCS to FCS for each ball measurement
@@ -128,19 +200,19 @@ void RTDBInputAdapter::getBallCandidates()
 
     // Then get the Shared FCS data from RTDB
     std::vector<int>::const_iterator it;
-    for (it = _rtdbClient._agentIds.begin(); it != _rtdbClient._agentIds.end(); ++it)
+    for (int agentId = 1; agentId <= MAX_ROBOTS; ++agentId)
     {
         // skipping self is only needed when sharevision if false, as then the data will not be on rtdb
-        if (*it != _myRobotId || _config.shareVision)
+        if (agentId != _myRobotId || _config.shareVision)
         {
             // Skip if configured to ignore
-            if (!useVisionFromRobot(*it))
+            if (!useVisionFromRobot(agentId))
             {
                 continue;
             }
 
             T_BALL_CANDIDATES_FCS sharedMeasurements;
-            r = _rtdbClient._rtdb.at(*it)->get(BALL_CANDIDATES_FCS, &sharedMeasurements, *it);
+            r = _rtdb->get(BALL_CANDIDATES_FCS, &sharedMeasurements, agentId);
 
             if (r == RTDB2_SUCCESS)
             {
@@ -154,7 +226,39 @@ void RTDBInputAdapter::getBallCandidates()
     _ballAdmin->appendBallMeasurements(measurementsFcs);
 }
 
-void RTDBInputAdapter::getObstacleCandidates()
+int RTDBInputAdapter::fillObstacleCandidatesOld(T_OBSTACLE_CANDIDATES &candidates)
+{
+    T_OBSTACLE_CANDIDATES temp_candidates;
+    int r = _rtdb->get(OBSTACLE_CANDIDATES, &temp_candidates);
+
+    if (r == RTDB2_SUCCESS)
+    {
+        for (auto& c : temp_candidates)
+        {
+            candidates.push_back(c);
+        }
+    }
+
+    return r;
+}
+
+int RTDBInputAdapter::getObstacleCandidates()
+{
+    // Acquire candidates from vision source(s)
+    int r = !RTDB2_SUCCESS;
+    
+    _obstacleCandidates.clear();
+
+    // The &= is effectively an "or" operation, because return 0 means success
+    r &= fillObjectCandidatesML(_obstacleCandidates, "obstacle");
+    r &= fillObjectCandidatesML(_obstacleCandidates, "human");
+    // TODO: how to make sure this list is complete? we now depend on ML internal tagging...
+    r &= fillObstacleCandidatesOld(_obstacleCandidates);
+    
+    return r;
+}
+
+void RTDBInputAdapter::processObstacleCandidates()
 {
     TRACE_FUNCTION("");
     // only continue if valid loc
@@ -162,11 +266,13 @@ void RTDBInputAdapter::getObstacleCandidates()
     {
         return;
     }
-
-    int r = _rtdb->get(OBSTACLE_CANDIDATES, &_obstacleCandidates);
+    
+    // Acquire candidates from vision source(s)
+    int r = getObstacleCandidates();
 
     // First put the Local FCS candidates to RTDB for sharing with other robots
     T_OBSTACLE_CANDIDATES_FCS measurementsFcs;
+
     if (r == RTDB2_SUCCESS)
     {
         // convert camera position from RCS to FCS for each obstacle measurement
@@ -197,19 +303,19 @@ void RTDBInputAdapter::getObstacleCandidates()
 
     // Then get the Shared FCS candidates from RTDB from other robots
     std::vector<int>::const_iterator it;
-    for (it = _rtdbClient._agentIds.begin(); it != _rtdbClient._agentIds.end(); ++it)
+    for (int agentId = 1; agentId <= MAX_ROBOTS; ++agentId)
     {
         // skipping self is only needed when sharevision if false, as then the data will not be on rtdb
-        if (*it != _myRobotId || _config.shareVision)
+        if (agentId != _myRobotId || _config.shareVision)
         {
             // Skip if configured to ignore
-            if (!useVisionFromRobot(*it))
+            if (!useVisionFromRobot(agentId))
             {
                 continue;
             }
 
             T_OBSTACLE_CANDIDATES_FCS sharedMeasurements;
-            r = _rtdbClient._rtdb.at(*it)->get(OBSTACLE_CANDIDATES_FCS, &sharedMeasurements, *it);
+            r = _rtdb->get(OBSTACLE_CANDIDATES_FCS, &sharedMeasurements, agentId);
 
             if (r == RTDB2_SUCCESS)
             {
@@ -223,10 +329,67 @@ void RTDBInputAdapter::getObstacleCandidates()
     _obstacleAdmin->appendObstacleMeasurements(measurementsFcs);
 }
 
-void RTDBInputAdapter::getLocalizationCandidates()
+
+int RTDBInputAdapter::fillLocalizationCandidatesML(T_LOCALIZATION_CANDIDATES &candidates, std::string const &objectType)
+{
+    // assume _visionFrame already retrieved, here we just convert data
+    //candidates.clear(); // no, this function may be called multiple times per objectType 
+    // TODO: make use of _visionFrame.frame counter, ignore dupes (sampling rates), etc.
+    for (auto it = _visionFrame.objects.begin(); it != _visionFrame.objects.end(); ++it)
+    {
+        if (it->className == objectType)
+        {
+            robotLocalizationMeasurement localization_candidate;
+
+            localization_candidate.identifier.robotID = _visionFrame.robot;
+            localization_candidate.timestamp = rtime::now(); // HACK - we should take _visionFrame.timestamp but it can be more than a second too old w.r.t. robot clock
+            localization_candidate.x = it->xCenter;
+            localization_candidate.y = it->yCenter;
+            localization_candidate.theta = it->azimuth;
+            localization_candidate.confidence = it->confidence;
+
+            candidates.push_back(localization_candidate);
+        }
+    }
+    return RTDB2_SUCCESS;
+}
+
+
+int RTDBInputAdapter::fillLocalizationCandidatesOld(T_LOCALIZATION_CANDIDATES &candidates)
+{
+    T_LOCALIZATION_CANDIDATES temp_candidates;
+    int r = _rtdb->get(LOCALIZATION_CANDIDATES, &temp_candidates);
+
+    if (r == RTDB2_SUCCESS)
+    {
+        for (auto& c : temp_candidates)
+        {
+            candidates.push_back(c);
+        }
+    }
+
+    return r;
+}
+
+int RTDBInputAdapter::getLocalizationCandidates()
+{
+    // Acquire candidates from vision source(s)
+    int r = !RTDB2_SUCCESS;
+    
+    _localizationCandidates.clear();
+
+    // The &= is effectively an "or" operation, because return 0 means success
+    r &= fillLocalizationCandidatesML(_localizationCandidates, "location");
+    r &= fillLocalizationCandidatesOld(_localizationCandidates);
+    
+    return r;
+}
+
+void RTDBInputAdapter::processLocalizationCandidates()
 {
     TRACE_FUNCTION("");
-    int r = _rtdb->get(LOCALIZATION_CANDIDATES, &_localizationCandidates, _myRobotId);
+
+    int r = getLocalizationCandidates();
     if (r != RTDB2_SUCCESS)
     {
         return;

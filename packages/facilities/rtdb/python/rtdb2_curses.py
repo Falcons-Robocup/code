@@ -1,4 +1,4 @@
-# Copyright 2020 Jan Feitsma (Falcons)
+# Copyright 2020-2022 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 import functools
 import curses
@@ -17,7 +17,9 @@ class RtDBCurses():
         self.ctrl_main = RtDBPanelController()
         self.ctrl_aux = RtDBPanelController()
         self.show_agent_specific = None # None = all, int = show particular agent id
+        self.show_key_filter = "" # only show keys starting with the specified filter
         self.show_details_item = None
+        self.show_details_follow = False
         self.show_details_type = 0
         self.sort_item_selected = None  # current_item, selected_item
 
@@ -54,12 +56,29 @@ class RtDBCurses():
         try:
             self.stdscr.timeout(15)
             key = self.stdscr.getch()
+
+            # When the filter view is active, typing characters takes precedence over navigating through the UI
+            if self.show_details_type == 3 and key != -1:
+                key_chr = chr(key)
+
+                if key == curses.KEY_BACKSPACE:
+                    self.show_key_filter = self.show_key_filter[:-1]
+                    return 1
+
+                if key_chr == " ":
+                    key_chr = "_"
+
+                if key_chr.isalnum() or key_chr == "_":
+                    self.show_key_filter += key_chr.upper()
+                    return 1
+
             if key == ord('q') or key == ord('Q'):
                 raise KeyboardInterrupt()
             elif key in [curses.KEY_ENTER, ord('\n')]:
                 if self.show_details_type == 0:
                     self.show_details_type = 1
-                    self.show_details_item = info_list[self.ctrl_main.vpos]
+                    self.show_details_follow = False
+                    self.show_details_item = info_list[self.ctrl_main.vpos + self.ctrl_main.overflow_vpos]
                     self.ctrl_main.hpos = 0
                 else:
                     self.show_details_type = 0
@@ -75,9 +94,15 @@ class RtDBCurses():
                     self.current_sort_order[self.sort_item_selected] = self.current_sort_order[self.ctrl_aux.vpos]
                     self.current_sort_order[self.ctrl_aux.vpos] = move_element
                     self.sort_item_selected = None
+            elif key == ord('f') or key == ord('F'):
+                if self.show_details_type == 1:
+                    self.show_details_follow = not self.show_details_follow
             elif key == curses.KEY_F3:
                 if not self.show_details_type:
                     self.show_details_type = 2
+            elif key == ord('/'):
+                if not self.show_details_type:
+                    self.show_details_type = 3
             elif key == curses.KEY_UP:
                 if self.show_details_type:
                     self.ctrl_aux.decrement_vertical()
@@ -156,6 +181,13 @@ class RtDBCurses():
                 if agent != self.show_agent_specific:
                     del info_list[idx]
 
+        # filter on key?
+        if self.show_key_filter:
+            for idx in reversed(range(len(info_list))):
+                key = info_list[idx].key
+                if not key.startswith(self.show_key_filter):
+                    del info_list[idx]
+
         info_list.sort(key=lambda element:
             functools.reduce(lambda r, h: r + [getattr(element, h.lower())], self.current_sort_order, [])
         )
@@ -177,6 +209,8 @@ class RtDBCurses():
 
         # This displays the current menu
         self.ctrl_main.max_vpos = len(info_list)
+        self.ctrl_main.window_max_vpos = height - 4
+        info_list = info_list[self.ctrl_main.overflow_vpos:]
 
         format_header = "%5s %-30s %-6s %6s %5s %-s"
         format_data   = "%5s %-30s %-6s %6s %5d %-s"
@@ -210,13 +244,23 @@ class RtDBCurses():
             self.panel_details.top()
 
         if self.show_details_type == 1:
+            follow_text = "Freeze value" if self.show_details_follow else "Follow value"
             self.display_bottom_bar([
+                ("F", follow_text),
                 ("Enter", "Close details"),
                 ("Q", "Quit")
             ])
 
             self.win_details.resize(height - 6, width - 14)
             self.panel_details.move(3, 7)
+
+            if self.show_details_follow:
+                for info in info_list:
+                    if info.key != self.show_details_item.key:
+                        continue
+                    if info.agent != self.show_details_item.agent:
+                        continue
+                    self.show_details_item = info
 
             height_details, width_details = self.win_details.getmaxyx()
             data = json.dumps(self.show_details_item.value, indent = 4, sort_keys=True).split('\n')
@@ -258,10 +302,20 @@ class RtDBCurses():
                 else:
                     self.addstr_wrapper(self.win_details, str(idx + 1) + ". " + value, color_white, idx + 4, 3)
 
+        elif self.show_details_type == 3:
+            self.display_bottom_bar([
+                ("Enter", "Close filter")
+            ])
+
+            self.win_details.resize(6, 40)
+            self.addstr_wrapper(self.win_details, "Key filter", color_title, 1, 4)
+            self.addstr_wrapper(self.win_details, self.show_key_filter, color_white, 3, 4)
+            self.panel_details.move(3, 7)
 
         else:
             self.display_bottom_bar([
                 ("F3", "Sort"),
+                ("/", "Filter keys"),
                 ("Enter", "Show details"),
                 ("Q", "Quit")
             ])

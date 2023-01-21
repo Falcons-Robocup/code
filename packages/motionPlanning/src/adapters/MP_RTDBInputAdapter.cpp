@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2022 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBInputAdapter.cpp
@@ -17,7 +17,7 @@ MP_RTDBInputAdapter::MP_RTDBInputAdapter(cMotionPlanner* mp)
     TRACE_FUNCTION("");
     _myRobotId = getRobotNumber();
     auto teamChar = getTeamChar();
-    _rtdb = RtDB2Store::getInstance().getRtDB2(_myRobotId, teamChar);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(_myRobotId, teamChar);
 
     _motionPlanner = mp;
 }
@@ -52,35 +52,38 @@ void MP_RTDBInputAdapter::getActionData()
 
     if (r == RTDB2_SUCCESS)
     {
+        // Set the action.
+        // If the same action is already active, the old action is kept alive and reused (to maintain state).
+        // Otherwise, a new action is created.
+        _motionPlanner->setAction(actionData.action);
+
+        // For each action, retrieve the parameters and store for use when executing the action
         std::vector<std::string> params;
         switch(actionData.action)
         {
             case actionTypeEnum::MOVE:
             {
-                _motionPlanner->setAction(MP_ActionMoveToTarget());
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
+                params.push_back(boost::lexical_cast<std::string>(actionData.position.z)); // Rz actually
                 params.push_back(boost::lexical_cast<std::string>((int)actionData.motionType));
                 params.push_back(boost::lexical_cast<std::string>((int)actionData.ballHandlersEnabled));
                 break;
             }
             case actionTypeEnum::KICK:
             {
-                _motionPlanner->setAction(MP_ActionKick());
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
                 break;
             }
             case actionTypeEnum::PASS:
             {
-                _motionPlanner->setAction(MP_ActionPassToTarget());
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
                 break;
             }
             case actionTypeEnum::SHOOT:
             {
-                _motionPlanner->setAction(MP_ActionShootAtTarget());
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.z));
@@ -89,7 +92,6 @@ void MP_RTDBInputAdapter::getActionData()
             }
             case actionTypeEnum::LOB:
             {
-                _motionPlanner->setAction(MP_ActionShootAtTarget());
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.z));
@@ -98,34 +100,26 @@ void MP_RTDBInputAdapter::getActionData()
             }
             case actionTypeEnum::STOP:
             {
-                _motionPlanner->setAction(MP_ActionStop());
                 params.push_back(boost::lexical_cast<std::string>((int)actionData.ballHandlersEnabled));
                 break;
             }
             case actionTypeEnum::GET_BALL:
             {
-                _motionPlanner->setAction(MP_ActionGetBall());
                 params.push_back(boost::lexical_cast<std::string>((int)actionData.motionType));
                 break;
             }
             case actionTypeEnum::TURN_AWAY_FROM_OPPONENT:
             {
-                _motionPlanner->setAction(MP_ActionTurnAwayFromOpponent());
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
                 params.push_back(boost::lexical_cast<std::string>(actionData.position.y));
-                params.push_back(boost::lexical_cast<std::string>((int)actionData.motionType));
                 break;
             }
             case actionTypeEnum::KEEPER_MOVE:
             {
-                _motionPlanner->setAction(MP_ActionKeeperMove());
-                params.push_back(boost::lexical_cast<std::string>(actionData.position.x));
                 break;
             }
             case actionTypeEnum::INTERCEPT_BALL:
             {
-                _motionPlanner->setAction(MP_ActionInterceptBall());
-                params.push_back(boost::lexical_cast<std::string>((int)actionData.motionType));
                 break;
             }
             default:

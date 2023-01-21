@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Coen Tempelaars (Falcons)
+// Copyright 2018-2022 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * simworldGameData.cpp
@@ -11,7 +11,6 @@
 #include "int/ballCapabilities.hpp"
 #include "int/robotCapabilities.hpp"
 #include "int/obstacle.hpp"
-#include "int/generated_enum2str.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -39,6 +38,19 @@ struct compareDistance
     }
 };
 
+// auxiliaries for filtering obstacles during collision handling: ball.getLocation(), BALL_RADIUS
+struct hasNoOverlap
+{
+    Vector2D mypos;
+    double myradius;
+    hasNoOverlap(Vector2D p, double r) : mypos(p), myradius(r) {};
+    inline bool operator()(Obstacle const &o)
+    {
+        double d = vectorsize(o.position - mypos) - o.radius - myradius;
+        return d > 0.00001; // true iff o has no potential overlap with a circle at mypos with radius myradius
+    }
+};
+
 void SimworldGameData::recalculateWorld(const float dt)
 {
     TRACE_FUNCTION("");
@@ -55,7 +67,7 @@ void SimworldGameData::recalculateWorld(const float dt)
     }
 }
 
-void SimworldGameData::recalculateRobot (Robot& robot, const float dt)
+void SimworldGameData::recalculateRobot(Robot& robot, const float dt)
 {
     std::vector<Obstacle> obstacles;
 
@@ -65,9 +77,8 @@ void SimworldGameData::recalculateRobot (Robot& robot, const float dt)
     {
         for (const auto& robotpair: teampair.second)
         {
-            const auto& potentialObstacle = robotpair.second;
-
-            if (potentialObstacle.getLocation() != robot.getLocation())
+            const Robot& potentialObstacle = robotpair.second;
+            if (&potentialObstacle != &robot) // variable 'robot' is not an obstacle
             {
                 obstacles.push_back(Obstacle(potentialObstacle.getCircumference(), potentialObstacle.getVelocityVector()));
             }
@@ -103,18 +114,6 @@ void SimworldGameData::recalculateRobot (Robot& robot, const float dt)
 void SimworldGameData::recalculateBall(const float dt)
 {
     TRACE_FUNCTION("");
-    std::vector<Obstacle> obstacles;
-
-    /* Make a list of all obstacles */
-    obstacles = nonRobotObstacles;
-    for (const auto& teampair: team)
-    {
-        for (const auto& robotpair: teampair.second)
-        {
-            const auto& robot = robotpair.second;
-            obstacles.push_back(Obstacle(robot.getCircumference(), robot.getVelocityVector()));
-        }
-    }
 
     /* determine if any robot has the ball */
     /* quick-and-dirty implementation: in case of a scrum, the lowest robot claims the ball */
@@ -123,13 +122,17 @@ void SimworldGameData::recalculateBall(const float dt)
         for (auto& robotpair: teampair.second)
         {
             auto& robot = robotpair.second;
+            bool hadBall = robot.hasBall();
             robot.recalculateBallPossession(ball.getPosition());
             if (robot.hasBall())
             {
                 auto mouthLocation = robot.getMouthLocation(ROBOT_RADIUS);
-                ball.setPickupLocation(mouthLocation);
-                ball.setLocation(mouthLocation);
                 ball.stopMoving();
+                ball.setLocation(mouthLocation);
+                if (!hadBall)
+                {   // pick up location is set only when the robot received the ball (the moment it obtains ball possession)
+                    ball.setPickupLocation(mouthLocation);
+                }
                 break;
             }
         }
@@ -138,24 +141,18 @@ void SimworldGameData::recalculateBall(const float dt)
     /* If none of the robots have the ball */
     if (!anyRobotHasBall())
     {
-        /* Resolve collisions with all close-by obstacles */
-        while (!obstacles.empty())
-        {
-            // sort the obstacles based on distance to ball
-            // re-sorting is required, because the ball may have been moved after a previous collision
-            std::sort(obstacles.begin(), obstacles.end(), compareDistance(ball.getLocation(), BALL_RADIUS));
+        std::vector<Obstacle> obstacles = getBallObstacles();
 
+        // filter obstacles: only keep potential collisions
+        // This allows us to check whether the ball potentially collides with multiple objects.
+        obstacles.erase(std::remove_if(obstacles.begin(), obstacles.end(), hasNoOverlap(ball.getLocation(), BALL_RADIUS)), obstacles.end());
+
+        // Only handle ball collision if there is just one potential source of collision
+        // Rationale for only 1: Multiple objects may move the ball producing an unpredictable location (even major jumps)
+        if (obstacles.size() == 1)
+        {
             const auto closest_obstacle = obstacles[0];
-            const auto closest_distance = vectorsize(closest_obstacle.position - ball.getLocation()) - closest_obstacle.radius - BALL_RADIUS;
-            if (closest_distance < 0.00001)
-            {
-                resolveBallToRobotCollision(closest_obstacle.asCircle(), closest_obstacle.velocity, dt);
-                obstacles.erase(obstacles.begin());
-            }
-            else
-            {
-                obstacles.clear();
-            }
+            resolveBallToRobotCollision(closest_obstacle.asCircle(), closest_obstacle.velocity, dt);
         }
 
         /* Reduce the speed of the ball due to friction */
@@ -173,7 +170,7 @@ void SimworldGameData::recalculateBall(const float dt)
                     if (robot.isKicking())
                     {
                         // teleport the ball just outside the robot's ball mouth to avoid the robot grabbing it again
-                        TRACE("robot %s of team %s is kicking the ball", enum2str(robotpair.first), enum2str(teampair.first));
+                        //TRACE("robot %s of team %s is kicking the ball", enum2str(robotpair.first), enum2str(teampair.first));
                         ball.setLocation(robot.getMouthLocation(ROBOT_RADIUS + BALL_RADIUS));
 
                         auto phi = robot.getAngle();
@@ -371,5 +368,21 @@ void SimworldGameData::setScene(SimulationScene const &scene)
     {
         nonRobotObstacles.push_back(Obstacle(Circle(obst.position.x, obst.position.y, ROBOT_RADIUS), Vector2D(obst.velocity.x, obst.velocity.y)));
     }
+}
+
+std::vector<Obstacle> SimworldGameData::getBallObstacles() const
+{
+    /* Make a list of all obstacles */
+    std::vector<Obstacle> obstacles = nonRobotObstacles;
+    for (const auto& teampair: team)
+    {
+        for (const auto& robotpair: teampair.second)
+        {
+            const auto& robot = robotpair.second;
+            obstacles.push_back(Obstacle(robot.getCircumference(), robot.getVelocityVector()));
+        }
+    }
+
+    return obstacles;
 }
 

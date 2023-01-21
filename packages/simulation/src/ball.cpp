@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Coen Tempelaars (Falcons)
+// Copyright 2018-2022 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ball.cpp
@@ -28,17 +28,17 @@ Point3D Ball::getPosition() const
     return _position;
 }
 
-Point3D Ball::getPositionFCS(const TeamID& teamID) const
-{
-    if (teamID == TeamID::A)
-    {
-        return _position;
-    }
-    else
-    {
-        return (_position * -1.0);
-    }
-}
+// Point3D Ball::getPositionFCS(const TeamID& teamID) const
+// {
+//     if (teamID == TeamID::A)
+//     {
+//         return _position;
+//     }
+//     else
+//     {
+//         return (_position * -1.0);
+//     }
+// }
 
 float Ball::getSpeed() const
 {

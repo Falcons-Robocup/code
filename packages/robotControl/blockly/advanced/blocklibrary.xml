@@ -904,9 +904,9 @@
                 <mutation options="[&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;]"/>
                 <field name="FIELDNAME">role</field>
                 <field name="USER0">RobotStop</field>
-                <field name="CPU0">R_ROBOT_STOP</field>
+                <field name="CPU0">ROBOT_STOP</field>
                 <field name="USER1">Goalkeeper</field>
-                <field name="CPU1">R_GOALKEEPER</field>
+                <field name="CPU1">GOALKEEPER</field>
                 <field name="USER2">Attacker Main</field>
                 <field name="CPU2">ATTACKER_MAIN</field>
                 <field name="USER3">Attacker Assist</field>

@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRefboxRelay.cpp
@@ -22,8 +22,8 @@ cRefboxRelay::cRefboxRelay()
 {
     TRACE_FUNCTION("");
     // init RTDB
-    _rtdb = RtDB2Store::getInstance().getRtDB2(0);
-    _rtdb_sim_team_B = RtDB2Store::getInstance().getRtDB2(0, TEAM_B);
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(0);
+    _rtdb_sim_team_B = FalconsRTDBStore::getInstance().getFalconsRTDB(0, TEAM_B);
     _refboxConfig.teamColor = refboxConfigTeamColor::CYAN;
     _refboxConfig.field = refboxConfigField::FIELD_LOCALHOST;
     _rtdb->put(REFBOX_CONFIG, &_refboxConfig);

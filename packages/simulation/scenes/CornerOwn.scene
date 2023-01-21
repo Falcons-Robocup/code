@@ -1,0 +1,24 @@
+# To launch this scene:
+#    simStart -A 5 -B 0
+#    simScene.py CornerOwn.scene
+balls:
+- position: [6.199999809265137, 10.5, 0.0]
+  velocity: [0.0, 0.0, 0.0]
+obstacles: []
+opponents: []
+robots:
+- position: [0.7500000596046448, -10.699999809265137, 1.5707963705062866]
+  robotId: 1
+  velocity: [0.0, 0.0, 0.0]
+- position: [3.792557954788208, -8.321819305419922, 1.443580150604248]
+  robotId: 2
+  velocity: [0.0, 0.0, 0.0]
+- position: [4.776331424713135, 8.088949203491211, 1.0374089479446411]
+  robotId: 3
+  velocity: [0.0, 0.0, 0.0]
+- position: [-3.2532098293304443, 8.785687446594238, 0.17939749360084534]
+  robotId: 4
+  velocity: [0.0, 0.0, 0.0]
+- position: [6.7084527015686035, 11.361089706420898, 4.179001808166504]
+  robotId: 5
+  velocity: [0.0, 0.0, 0.0]

@@ -1,4 +1,4 @@
-// Copyright 2019 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRTDBOutputAdapter.hpp
@@ -10,7 +10,7 @@
 #ifndef CRTDBOUTPUTADAPTER_HPP_
 #define CRTDBOUTPUTADAPTER_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 class cRTDBOutputAdapter
 {
@@ -22,7 +22,7 @@ class cRTDBOutputAdapter
 
   private:
     int _myRobotId;
-    RtDB2 *_rtdb;
+    FalconsRTDB *_rtdb = NULL;
 
 };
 

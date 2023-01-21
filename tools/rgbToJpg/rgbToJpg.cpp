@@ -1,4 +1,4 @@
-// Copyright 2019 Andre Pool
+// Copyright 2019-2021 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
 
 // convert raw rgb 8 bit image to jpg
@@ -28,13 +28,13 @@ rgbToJpg::rgbToJpg(std::string inputFileName, std::string outputFileName, bool v
 }
 
 void rgbToJpg::update() {
-	if (verbose) {
+	if( verbose ) {
 		printf("INFO      : convert %dx%d image %s to %s\n", IMAGE_WIDTH, IMAGE_HEIGHT, inputFileName.c_str(),
 				outputFileName.c_str());
 	}
 
 	FILE *readBin = NULL;
-	if ((readBin = fopen(inputFileName.c_str(), "rb")) == NULL) {
+	if( (readBin = fopen(inputFileName.c_str(), "rb")) == NULL ) {
 		printf("ERROR     : cannot read file %s, message %s\n", inputFileName.c_str(), strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -47,28 +47,33 @@ void rgbToJpg::update() {
 	size_t numPixels = 0;
 	size_t numBytes = 0;
 	int xx = 0, yy = 0;
-	while (!feof(readBin)) {
-		fread(&data, sizeof(data), 1, readBin);
-		if (colorIndex == 0) {
+	while( !feof(readBin) ) {
+		size_t readSize = fread(&data, sizeof(data), 1, readBin);
+		if( readSize > 1 ) {
+			printf("ERROR     : got %zu bytes but expected 0 or 1 bytes\n", readSize);
+			exit(EXIT_FAILURE);
+		}
+		if( colorIndex == 0 ) {
 			red = data;
 			colorIndex = 1;
-		} else if (colorIndex == 1) {
+		} else if( colorIndex == 1 ) {
 			green = data;
 			colorIndex = 2;
-		} else if (colorIndex == 2) {
+		} else if( colorIndex == 2 ) {
 			blue = data;
 			numPixels++;
-            cv::line(inputFrame, Point(xx, yy), Point(xx, yy), Scalar(blue, green, red), 1);
+			// write pixel by pixel in cv::Mat inputFrame
+			cv::line(inputFrame, Point(xx, yy), Point(xx, yy), Scalar(blue, green, red), 1);
 			colorIndex = 0; // start over for the next byte
 			xx++;
-			if (xx == IMAGE_WIDTH) {
+			if( xx == IMAGE_WIDTH ) {
 				xx = 0;
 				yy++;
 			}
 		}
 		numBytes++;
 	}
-	if (verbose) {
+	if( verbose ) {
 		printf("INFO      : bytes %zu, pixels %zu, next x pixel %d, next y pixel %d\n", numBytes, numPixels, xx, yy);
 	}
 
@@ -84,7 +89,7 @@ void rgbToJpg::update() {
 
 void rgbToJpg::display() {
 	bool keepGoing = true;
-	while (keepGoing) {
+	while( keepGoing ) {
 
 		imshow("original", inputFrame);
 
@@ -94,7 +99,7 @@ void rgbToJpg::display() {
 		imshow("compressed", readBackImage);
 
 		int key = waitKey(20);
-		switch (key) {
+		switch( key ) {
 		case 1048603: // escape
 		case 1179729: // caps lock q
 		case 1048689: // q
@@ -108,7 +113,7 @@ void rgbToJpg::display() {
 	}
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
 	string inputFileName = "grab.rgb";
 	string outputFileName = "grab.jpg";
 	bool help = false;
@@ -116,8 +121,8 @@ int main(int argc, char** argv) {
 	bool verbose = false;
 
 	int opt = 0;
-	while ((opt = getopt(argc, argv, "dhi:o:v")) != -1) {
-		switch (opt) {
+	while( (opt = getopt(argc, argv, "dhi:o:v")) != -1 ) {
+		switch( opt ) {
 		case 'd':
 			display = true;
 			break;
@@ -139,16 +144,16 @@ int main(int argc, char** argv) {
 
 	rgbToJpg *convert = new rgbToJpg(inputFileName, outputFileName, verbose);
 
-	if (!help) {
+	if( !help ) {
 		convert->update();
 
-		if (display) {
+		if( display ) {
 			convert->display();
 		}
 
 	}
 
-	if (verbose) {
+	if( verbose ) {
 		printf("INFO      : all done\n");
 	}
 

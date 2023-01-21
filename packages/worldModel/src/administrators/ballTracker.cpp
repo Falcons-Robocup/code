@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ballTracker.cpp
@@ -278,6 +278,9 @@ void ballTracker::calculateConfidence(rtime const t)
     // number of measurements (more is better)
     _confDetails.measScore = std::min(_tracker.getNumGood(), _wmConfig->getConfiguration().ballTracker.confidenceMeasLim) / (1.0 * _wmConfig->getConfiguration().ballTracker.confidenceMeasLim);
 
+    // TODO LCBD ballTracker is not really in use anymore, so the hack can stay
+    _confDetails.measScore = 1.0; // JFEI HACK for machine learning low data rate, although, this might also be useful for regular multiCam confidence heuristic! (underlying code looks a bit fragile)
+
     // age (higher is better) and freshness (time since last measurement - lower is better)
     _confDetails.ageScore = std::min(1.0, double(t - _t0) / _wmConfig->getConfiguration().ballTracker.confidenceAgeLim);
     _confDetails.freshScore = 1.0 - std::max(0.0, (double(t - _tmax) - _wmConfig->getConfiguration().ballTracker.confidenceFreshLim) / (_wmConfig->getConfiguration().ballTracker.solverTrackerTimeout - _wmConfig->getConfiguration().ballTracker.confidenceFreshLim));
@@ -548,9 +551,8 @@ std::string ballTracker::toStr(rtime const tcurr, bool details)
 
 void ballTracker::makeDiagnostics(diagBallTracker &diag, rtime const &tcur)
 {
-    //TRACE_FUNCTION("id=%s", (int)getBall().getId()); // TODO support standard printf syntax in tracing, make its API more uniform
-    //TRACE_FUNCTION("");
-    float nominalFrequency = 30.0; // TODO common config?
+    //TRACE_FUNCTION("id=%s", (int)getBall().getId());
+    float nominalFrequency = 40.0; // TODO common config?
     float trackingBufferDuration = _wmConfig->getConfiguration().ballTracker.solverTrackerBuffer;
     ballClass_t bc = getBall();
     ballResult br;

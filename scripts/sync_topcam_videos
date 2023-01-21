@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+# Setup the refbox application.
+# 
+
+python ${FALCONS_SCRIPTS_PATH}/sync_topcam_videos.py $1 $2 $3

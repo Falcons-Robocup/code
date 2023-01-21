@@ -1,4 +1,4 @@
-# Copyright 2020 Jan Feitsma (Falcons)
+# Copyright 2020-2021 Jan Feitsma (Falcons)
 # SPDX-License-Identifier: Apache-2.0
 #!/usr/bin/python
 
@@ -10,7 +10,7 @@ import threading
 from ball_data import BallData
 from plot_balls import BallPlotter, NUMROBOTS
 import falconspy
-from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
+import falconsrtdb
 
 
 
@@ -38,7 +38,7 @@ class LiveBallPlotter():
 class LiveBallDataAdapter(BallData):
     def __init__(self):
         BallData.__init__(self)
-        self.rtdb2Store = RtDB2Store(RTDB2_DEFAULT_PATH)
+        self.rtdbStore = falconsrtdb.FalconsRtDBStore()
         self.key2function = {}
         self.key2function["BALL_CANDIDATES_FCS"] = self.feedBallCandidates
         self.key2function["BALLS"] = self.feedBallResults
@@ -72,7 +72,7 @@ class LiveBallDataAdapter(BallData):
         for agent in range(0, NUMROBOTS+1):
             for key in self.key2function.keys():
                 # no check on item.age(), to prevent data disappearing when playback is paused
-                item = self.rtdb2Store.get(agent, key, timeout=False)
+                item = self.rtdbStore.get(agent, key, timeout=False)
                 if item != None:
                     # check if item is new
                     akey = (agent, key)

@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Andre Pool (Falcons)
+// Copyright 2018-2022 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2014-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
@@ -51,6 +51,7 @@ viewer::viewer(ballDetection *ballDet[4], ballDetection *ballFarDet[4], cameraRe
 	viewMode = bgr;
 	viewModeText = ""; // will be set in show function
 	ballView = false; // will be set in show function
+	ballFarView = false; // will be set in show function
 	cyanView = false;
 	magentaView = false;
 	floorOverlay = false;

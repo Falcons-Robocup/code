@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2021 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * obstacleAdministrator.cpp
@@ -27,7 +27,7 @@ obstacleAdministrator::obstacleAdministrator(WorldModelConfig& wmConfig)
 {
     _ownRobotID = getRobotNumber();
     _obstacleMeasurements.clear();
-    _obstacleDiscriminator = new obstacleDiscriminator();
+    _obstacleDiscriminator = new obstacleDiscriminator(&_wmConfig);
 }
 
 obstacleAdministrator::~obstacleAdministrator()

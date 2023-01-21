@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * WorldModelConfig.hpp
@@ -9,7 +9,7 @@
 #ifndef WORLDMODELCONFIG_HPP_
 #define WORLDMODELCONFIG_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "ConfigRTDBAdapter.hpp"
 
 
@@ -17,7 +17,7 @@ class WorldModelConfig
 {
 public:
     WorldModelConfig();
-    ~WorldModelConfig();
+    virtual ~WorldModelConfig();
 
     T_CONFIG_WORLDMODEL getConfiguration() const;
 

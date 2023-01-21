@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Kicker.cpp
@@ -8,7 +8,7 @@
  */
 
 #include "falconsCommon.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "ConfigRTDBAdapter.hpp"
 
 #include "int/ioBoard/Kicker.hpp"

@@ -1,4 +1,3 @@
-nominalFrequency:                         30
 motionTypes:
     NORMAL:
         velocityControllers:
@@ -26,7 +25,8 @@ motionTypes:
             accThresholdRz:                   0.0
         setPointGenerator:
             synchronizeRotation:                  true # true is good for motion crosstalk but not good for alwaysFacingBall since robot is choosing to rotate slow
-            weightFactorClosedLoop:               0.0
+            weightFactorClosedLoopVel:            0.0
+            weightFactorClosedLoopPos:            0.1
             latencyOffset:                        0.0
             convergenceWorkaround:                false
         pid:

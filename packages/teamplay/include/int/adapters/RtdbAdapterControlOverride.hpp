@@ -1,4 +1,4 @@
-// Copyright 2019 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RtdbAdapterControlOverride.hpp
@@ -10,7 +10,7 @@
 #ifndef RTDBADAPTERCONTROLOVERRIDE_HPP_
 #define RTDBADAPTERCONTROLOVERRIDE_HPP_
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 
 class RtdbAdapterControlOverride

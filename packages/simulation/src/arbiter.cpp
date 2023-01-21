@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * arbiter.cpp
@@ -10,9 +10,11 @@
 #include <stdexcept>
 #include <iostream>
 
-#include "int/arbiter.hpp"
-#include "int/RTDBrefboxAdapter.hpp"
 #include "tracing.hpp"
+
+#include "int/arbiter.hpp"
+#include "int/simulation_generated_enum2str.hpp"
+#include "int/RTDBrefboxAdapter.hpp"
 
 static RTDBRefBoxAdapter rtdbRefBoxAdapter;
 
@@ -23,7 +25,7 @@ Arbiter::Arbiter()
 , _secondsSinceLastTransition(0.0)
 {
     _lastJudgement.ballPosition = Point2D(0.0, 0.0);
-    _lastJudgement.setpiece = Setpiece::KICKOFF;
+    _lastJudgement.setpiece = SetpieceEnum::KICKOFF;
     _lastJudgement.teamID = TeamID::A;
 
     _preparingController.preparedSignalSubscribe(boost::bind(&Arbiter::preparedSignalHandler, this));
@@ -54,7 +56,7 @@ void Arbiter::initialize()
 
 GameData Arbiter::control(const GameData& gameData, const float simulationPeriod)
 {
-    TRACE_FUNCTION("");
+    TRACE_FUNCTION("_gameState = %s", _gameState);
 
     /* Sanity checks */
     if (_refBoxAdapter == nullptr)
@@ -116,7 +118,7 @@ GameState Arbiter::getGameState() const
 
 void Arbiter::goalSignalHandler(const TeamID& teamID)
 {
-    TRACE_FUNCTION("");
+    TRACE_FUNCTION("team = %s", teamID);
 
     try {
         _refBoxAdapter->registerGoal(teamID);
@@ -189,6 +191,7 @@ void Arbiter::stoppingSignalHandler()
 
 void Arbiter::stoppingSignalHandler(const Judgement& judgement)
 {
+    TRACE_FUNCTION("judgement = %s", judgement);
     _lastJudgement = judgement;
     stoppingSignalHandler();
 }

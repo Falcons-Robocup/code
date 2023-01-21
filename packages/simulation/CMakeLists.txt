@@ -2,33 +2,34 @@ cmake_minimum_required(VERSION 3.5.1)
 
 project(Simulation)
 
-find_package(Boost COMPONENTS system thread REQUIRED QUIET)
+find_package(Boost COMPONENTS system thread chrono REQUIRED QUIET)
 find_package(Facilities)
 
-### RELEASE
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror")
-
-### DEBUG
-#set(CMAKE_BUILD_TYPE Debug)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror -g")
-
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 include_directories("include" "include/int")
 
-#set the default path for built executables to the "bin" directory
-#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
+# setup the code generation build hook command
+# reading material: https://crascit.com/2017/04/18/generated-sources-in-cmake-builds/
+# the generated artefacts are now also stored in the build/ tree (FALCONS_CODEGEN_FOLDER)
+add_custom_command(
+    OUTPUT  ${CMAKE_CURRENT_SOURCE_DIR}/include/int/simulation_generated_enum2str.hpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_generated_enum2str.py
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../facilities/sharedTypes/src/generateEnums.py
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/include/int
+        -o ${CMAKE_CURRENT_SOURCE_DIR}/include/int/simulation_generated_enum2str.hpp
+        -p ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_generated_enum2str.py
+        SIMULATION
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/int/*.hpp
+)
 
-#############################
-# Code generators
-#############################
-add_custom_target(
-    enum_generator ALL
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/generateEnums.py -i ${CMAKE_CURRENT_SOURCE_DIR}/include/int -o ${CMAKE_CURRENT_SOURCE_DIR}/include/int/generated_enum2str.hpp -p ${CMAKE_CURRENT_SOURCE_DIR}/src/generated_enum2str.py
-    BYPRODUCTS generated_enum2str.hpp generated_enum2str.py
+# define a custom dummy target to let everything else depend on (via FalconsTypes)
+add_custom_target(enum_generator
+    ALL
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/int/simulation_generated_enum2str.hpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation_generated_enum2str.py
     COMMENT "Generating code from enums"
 )
 
@@ -117,11 +118,6 @@ target_link_libraries(
     RTDBaccess
 )
 
-add_dependencies(
-    motionAdapter
-    enum_generator
-)
-
 add_library(
     refboxAdapter
     src/RTDBrefboxAdapter.cpp
@@ -133,11 +129,6 @@ target_link_libraries(
     FTime
 )
 
-add_dependencies(
-    refboxAdapter
-    enum_generator
-)
-
 add_library(
     timeAdapter
     src/RTDBtimeAdapter.cpp
@@ -146,11 +137,6 @@ add_library(
 target_link_libraries(
     timeAdapter
     RTDBaccess
-)
-
-add_dependencies(
-    timeAdapter
-    enum_generator
 )
 
 add_library(
@@ -189,11 +175,6 @@ target_link_libraries(
     EnvironmentField
 )
 
-add_dependencies(
-    simworldGameData
-    enum_generator
-)
-
 add_library(
     simworldGameDataFactory
     src/simworldGameDataFactory.cpp
@@ -216,8 +197,9 @@ target_link_libraries(
     sw
     simworld
     Tracing
-    rtdb2
+    FalconsRTDB
     diagnostics
+    ${Boost_LIBRARIES}
 )
 
 #############################
@@ -278,3 +260,11 @@ add_executable(stoppingControllerTest tst/stoppingControllerTest.cpp)
 target_link_libraries(stoppingControllerTest arbiterControllers gtest)
 add_test(stoppingControllerTest stoppingControllerTest)
 set_tests_properties(stoppingControllerTest PROPERTIES TIMEOUT 1)
+
+# Add enum_generator as dependency for all targets
+get_property(targets DIRECTORY "${CMAKE_SOURCE_DIR}/packages/simulation" PROPERTY BUILDSYSTEM_TARGETS)
+foreach(target ${targets})
+    if(NOT ("${target}" STREQUAL "enum_generator"))
+        add_dependencies(${target} enum_generator)
+    endif()
+endforeach()

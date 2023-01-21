@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * arbiterTest.cpp
@@ -22,7 +22,7 @@ public:
     MOCK_CONST_METHOD0(republish, void());
     MOCK_METHOD0(sendStart, void());
     MOCK_METHOD0(sendStop, void());
-    MOCK_METHOD2(sendSetpiece, void(const Setpiece&, const TeamID&));
+    MOCK_METHOD2(sendSetpiece, void(const SetpieceEnum&, const TeamID&));
     MOCK_METHOD1(registerGoal, void(const TeamID&));
 };
 
@@ -58,7 +58,7 @@ public:
     AnArbiterForARunningGame()
     : _gameState(GameState::STOPPED)
     {
-        EXPECT_CALL(mockAbstractRefBoxAdapter, sendSetpiece(Setpiece::KICKOFF, TeamID::A));
+        EXPECT_CALL(mockAbstractRefBoxAdapter, sendSetpiece(SetpieceEnum::KICKOFF, TeamID::A));
         EXPECT_CALL(mockAbstractRefBoxAdapter, sendStart());
 
         /*
@@ -102,7 +102,7 @@ TEST_F(AnArbiterForARunningGame, DoesNotStopTheGameWhileTheBallIsInside)
 TEST_F(AnArbiterForARunningGame, ArrangesAThrowinIfTheBallIsAcrossTheSideline)
 {
     EXPECT_CALL(mockAbstractRefBoxAdapter, sendStop());
-    EXPECT_CALL(mockAbstractRefBoxAdapter, sendSetpiece(Setpiece::THROWIN, TeamID::B));
+    EXPECT_CALL(mockAbstractRefBoxAdapter, sendSetpiece(SetpieceEnum::THROWIN, TeamID::B));
 
     gameData.ball.setLocation(Point2D(7.1, 3.0));
     gameData.teamLastHoldingBall = TeamID::A;

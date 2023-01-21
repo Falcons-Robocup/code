@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cWorldModelClient.hpp
@@ -22,8 +22,7 @@
 #include "RTDBConfigAdapter.hpp" // TODO: not so nice to make this externally visible ..
 
 // RTDB
-#include "cRtDBClient.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 #include "falconsCommon.hpp" // TODO fix type dealing abuse, use geometry package
 
@@ -31,12 +30,14 @@
 #define ACTIVE_TIMEOUT 7.0 // seconds - ignore teammember if data is older
 
 
-class cWorldModelClient : public cRtDBClient
+class cWorldModelClient
 {
 public:
     cWorldModelClient();
     ~cWorldModelClient();
-    
+
+    void setRobotId(const int myRobotId);
+
     // update to GET all data from RTDB, store for all getters
     void update();
     void update(const int myRobotId);
@@ -58,6 +59,7 @@ public:
     bool getRobotState(T_ROBOT_STATE &robot, const int robotId); // return success
     bool getRobotState(T_ROBOT_STATE &robot, const int robotId, const int myRobotId);
     std::vector<T_ROBOT_STATE> getTeamMembersExcludingSelf() const;
+    int getLowestActiveRobotID() const;
     // TODO estimated ball direction (if opponent seems to have the ball)
     // TODO last known ball location
     
@@ -70,6 +72,9 @@ private:
     T_OBSTACLES _obstacles;
     RTDBConfigAdapter _configAdapter;
     T_CONFIG_WORLDMODELSYNC _config;
+
+    RtDB2 *_rtdb;
+    int _myRobotId;
 };
 
 #endif

@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Diana Koenraadt (Falcons)
+// Copyright 2017-2022 Diana Koenraadt (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * TableWidgetGameSignalSubscriber.h
@@ -89,6 +89,7 @@ void TableWidgetGameSignalSubscriber::subscribe(GameSignalAdapter* gameSignalAda
     _widget->_model->add("TEAMPLAY", "refboxCmd");
     _widget->_model->add("TEAMPLAY", "shootTargetX");
     _widget->_model->add("TEAMPLAY", "shootTargetY");
+    _widget->_model->add("TEAMPLAY", "activeHeightmap");
 }
 
 void TableWidgetGameSignalSubscriber::onValue(uint8_t senderRobotId, std::string category, std::string key, float value)

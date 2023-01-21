@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Coen Tempelaars (Falcons)
+// Copyright 2017-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ruleSetpieceExecuteFinishedTest.cpp
@@ -30,7 +30,7 @@ class RuleSetpieceExecuteFinishedTest : public TeamplayTest
 public:
     RuleSetpieceExecuteFinishedTest()
     {
-        configTeamplay config;
+        ConfigTeamplay config;
 
         config.rules.setpieceExecuteTimeout = 1;
         config.rules.penaltyExecuteTimeout = 2;

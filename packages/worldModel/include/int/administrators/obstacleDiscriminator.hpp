@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * obstacleDiscriminator.hpp
@@ -12,6 +12,7 @@
 
 #include <vector>
 
+#include "int/adapters/configurators/WorldModelConfig.hpp"
 #include "int/administrators/IobstacleDiscriminator.hpp"
 #include "int/types/robot/robotType.hpp"
 #include "obstacleMeasurement.hpp"
@@ -24,7 +25,7 @@
 class obstacleDiscriminator : public IobstacleDiscriminator
 {
 public:
-    obstacleDiscriminator();
+    obstacleDiscriminator(WorldModelConfig* wmConfig);
     virtual ~obstacleDiscriminator();
 
     virtual void addMeasurement(const obstacleMeasurement& measurement);
@@ -35,6 +36,9 @@ public:
     virtual void fillDiagnostics(diagWorldModel &diagnostics);
 
 private:
+
+    WorldModelConfig* wmConfig;
+
     std::vector<obstacleClass_t> obstacles;
 
     // The measurements are maintained in a double buffered manner so that
@@ -45,6 +49,12 @@ private:
 
     std::vector<GaussianObstacle> gaussianObstacles;
     const double obstacleMergeThreshold;
+    const double minAcceptedConfidence;
+    const double parallelAxisDistanceFactor;
+    const double parallelAxisOffset;
+    const double perpendicularAxisDistanceFactor;
+    const double perpendicularAxisOffset;
+    const double maxAllowedVariance;
 
     GaussianMeasurement gaussianMeasurementFromObstacleMeasurement(const obstacleMeasurement& measurement);
     GaussianPosition gaussianPositionFromRobotType(const robotClass_t& measurement);

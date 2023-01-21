@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBaccess.cpp
@@ -11,6 +11,12 @@
 
 #include <map>
 #include "falconsCommon.hpp"
+
+
+// simulation context switching
+#define RTDB2_SIM_TEAM_A_PATH       (RTDB_STORAGE_TEAMS + std::string("A"))
+#define RTDB2_SIM_TEAM_B_PATH       (RTDB_STORAGE_TEAMS + std::string("B"))
+
 
 static const std::map<RobotID, int> ROBOT_NUMBERS =
 {
@@ -27,22 +33,22 @@ static const std::map<TeamID, std::string> PATHS =
         {TeamID::B, RTDB2_SIM_TEAM_B_PATH}
 };
 
-RtDB2* getRTDBConnection()
+FalconsRTDB* getRTDBConnection()
 {
-    return RtDB2Store::getInstance().getRtDB2(COACH_AGENTID);
+    return FalconsRTDBStore::getInstance().getFalconsRTDB(COACH_AGENTID);
 }
 
-RtDB2* getRTDBConnection (const TeamID& teamID)
+FalconsRTDB* getRTDBConnection (const TeamID& teamID)
 {
     auto path = PATHS.at(teamID);
-    return RtDB2Store::getInstance().getRtDB2(COACH_AGENTID, path);
+    return FalconsRTDBStore::getInstance().getFalconsRTDB(COACH_AGENTID, path);
 }
 
-RtDB2* getRTDBConnection (const TeamID& teamID, const RobotID& robotID)
+FalconsRTDB* getRTDBConnection (const TeamID& teamID, const RobotID& robotID)
 {
     auto robotNumber = ROBOT_NUMBERS.at(robotID);
     auto path = PATHS.at(teamID);
-    return RtDB2Store::getInstance().getRtDB2(robotNumber, path);
+    return FalconsRTDBStore::getInstance().getFalconsRTDB(robotNumber, path);
 }
 
 int getRobotNumber (const RobotID& robotID)

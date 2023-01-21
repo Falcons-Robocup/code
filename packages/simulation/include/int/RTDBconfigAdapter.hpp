@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Coen Tempelaars (Falcons)
+// Copyright 2019-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBConfigAdapter.hpp
@@ -18,13 +18,12 @@ class RTDBConfigAdapter : public AbstractConfigAdapter {
 public:
     RTDBConfigAdapter();
     ~RTDBConfigAdapter();
-    virtual std::string getArbiter() const;
-    virtual int getSize(const TeamID) const;
-    virtual int getTickFrequency() const;
-    virtual int getStepSizeMs() const;
+    virtual float getTickFrequency() const;
+    virtual float getSimulationSpeedupFactor() const;
+    virtual std::string getTickFinishRtdbKey() const;
 
 private:
-    ConfigRTDBAdapter<T_CONFIG_SIMULATION>* _configAdapter;
+    ConfigRTDBAdapter<T_CONFIG_EXECUTION>* _configAdapter;
 };
 
 #endif /* RTDBCONFIGADAPTER_HPP_ */

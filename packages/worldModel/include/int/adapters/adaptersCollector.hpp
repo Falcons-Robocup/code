@@ -1,4 +1,4 @@
-// Copyright 2016-2019 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * adaptersCollector.hpp
@@ -13,7 +13,7 @@
 #include <vector>
 #include <map>
 
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 #include "int/types/ball/ballType.hpp"
 #include "diagWorldModel.hpp"
@@ -68,7 +68,8 @@ private:
     RTDBOutputAdapter *_rtdbOutputAdapter;
     RTDBConfigAdapter _configAdapter;
 
-    void calcBallPossession(ballPossessionTypeEnum &bpType, int &bpRobot);
+    void calcSelfBallPossession(ballPossessionTypeEnum &bpType, int &bpRobot);
+    void calcOpponentBallPossession(ballPossessionTypeEnum &bpType, int &bpRobot);
     void ballPossessionOverrule(int bpRobot, rtime timeNow);
     Vector2D getBallHandlerPosition(int robotId);
     

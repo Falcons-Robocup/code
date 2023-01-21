@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Coen Tempelaars (Falcons)
+// Copyright 2018-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * simworldGameDataTest.cpp
@@ -347,7 +347,7 @@ TEST_F(OneRobotWithBall, KicksTheBall)
 
 
 int main(int argc, char **argv){
-    INIT_TRACE;
+    INIT_TRACE("simworldGameDataTest");
     testing::InitGoogleTest(&argc, argv);
     int result = RUN_ALL_TESTS();
     WRITE_TRACE;

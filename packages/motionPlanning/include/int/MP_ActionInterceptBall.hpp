@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionInterceptBall.hpp
@@ -20,6 +20,8 @@ public:
     actionResultTypeEnum execute();
     void unpackParameters();
 
+    void initialize() override;
+
 private:
     bool _ballMovingTowardsOurFront = false;
     bool _ballMovingTowardsUs = false;
@@ -37,7 +39,6 @@ private:
     
     // helper functions
     void getCfg();
-    void initialize();
     void analyzeGeometry();
     bool shouldIntercept();
     void faceBall();

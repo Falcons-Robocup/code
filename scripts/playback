@@ -25,6 +25,7 @@ def run(logfile):
     assert(os.path.isfile(logfile))
     # clear RTDB
     os.system('rtdbClear')
+    os.system('rtdbSimLink') # a bit overkill, we only need /tmp/rtdb_teamA
     # ensure cache folder exists
     if not os.path.isdir(TMPLOGDIR):
         os.mkdir(TMPLOGDIR)

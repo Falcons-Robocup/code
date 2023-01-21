@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * WorldModelConfig.cpp
@@ -22,7 +22,7 @@ WorldModelConfig::WorldModelConfig()
 }
 
 WorldModelConfig::~WorldModelConfig()
-{
+{    
     delete _configAdapter;
 }
 

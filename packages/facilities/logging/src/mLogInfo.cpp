@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * mLogInfo.cpp
@@ -89,24 +89,26 @@ int main(int argc, char **argv)
     }
 
     // display basic statistics
-    std::cout << "     filename: " << header.filename << std::endl; // does not have to be consistent with actual filename
+    std::cout << "           filename: " << header.filename << std::endl; // does not have to be consistent with actual filename
     int sz = filesize(argv[1]);
     float mb = sz / 1024.0 / 1024.0;
-    std::cout << "     filesize: " << sz << " [B] (" << std::fixed << std::setprecision(2) << mb << "MB)"<< std::endl;
-    std::cout << "     hostname: " << header.hostname << std::endl;
-    std::cout << "     creation: " << header.creation.toStr() << std::endl;
-    std::cout << "     duration: " << std::fixed << std::setprecision(2) << maxAge << " [s]" << std::endl;
-    std::cout << "    frequency: " << header.frequency << " [Hz]" << std::endl;
-    std::cout << "   compressed: " << (header.compression ? "yes" : "no") << std::endl;
-    std::cout << "    numFrames: " << numFrames << std::endl;
+    std::cout << "           filesize: " << sz << " [B] (" << std::fixed << std::setprecision(2) << mb << "MB)"<< std::endl;
+    std::cout << "           hostname: " << header.hostname << std::endl;
+    std::cout << "           creation: " << header.creation.toStr() << std::endl;
+    std::cout << "           duration: " << std::fixed << std::setprecision(2) << maxAge << " [s]" << std::endl;
+    std::cout << "          frequency: " << header.frequency << " [Hz]" << std::endl;
+    std::cout << "         compressed: " << (header.compression ? "yes" : "no") << std::endl;
+    std::cout << "        commit code: " << header.commit_code << std::endl;
+    std::cout << "commit teamplayData: " << header.commit_teamplay_data << std::endl;
+    std::cout << "          numFrames: " << numFrames << std::endl;
 
     // display advanced statistics
-    std::cout << "  minDataSize: " << minDataSize << " [B]" << std::endl;
-    std::cout << "  maxDataSize: " << maxDataSize << " [B]" << std::endl;
-    std::cout << "  avgDataSize: " << std::fixed << std::setprecision(2) << (totalDataSize / 1.0 / numFrames) << " [B/frame]" << std::endl;
-    std::cout << " avgFrameSize: " << std::fixed << std::setprecision(2) << (sz / 1.0 / numFrames) << " [B/frame]" << std::endl;
-    std::cout << "  avgOverhead: " << std::fixed << std::setprecision(2) << ((sz - totalDataSize) / 1.0 / numFrames) << " [B/frame]" << std::endl;
-    std::cout << "  avgDataRate: " << std::fixed << std::setprecision(2) << (totalDataSize / 1024.0 / maxAge) << " [KB/s]" << std::endl;
+    std::cout << "        minDataSize: " << minDataSize << " [B]" << std::endl;
+    std::cout << "        maxDataSize: " << maxDataSize << " [B]" << std::endl;
+    std::cout << "        avgDataSize: " << std::fixed << std::setprecision(2) << (totalDataSize / 1.0 / numFrames) << " [B/frame]" << std::endl;
+    std::cout << "       avgFrameSize: " << std::fixed << std::setprecision(2) << (sz / 1.0 / numFrames) << " [B/frame]" << std::endl;
+    std::cout << "        avgOverhead: " << std::fixed << std::setprecision(2) << ((sz - totalDataSize) / 1.0 / numFrames) << " [B/frame]" << std::endl;
+    std::cout << "        avgDataRate: " << std::fixed << std::setprecision(2) << (totalDataSize / 1024.0 / maxAge) << " [KB/s]" << std::endl;
     return 0;
 }
 

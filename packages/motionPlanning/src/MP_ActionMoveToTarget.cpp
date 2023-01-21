@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionMoveToTarget.cpp
@@ -19,6 +19,11 @@ MP_ActionMoveToTarget::MP_ActionMoveToTarget()
     _result = actionResultTypeEnum::RUNNING;
 }
 
+void MP_ActionMoveToTarget::initialize()
+{
+    TRACE_FUNCTION("");
+}
+
 actionResultTypeEnum MP_ActionMoveToTarget::execute()
 {
     TRACE_FUNCTION("");
@@ -26,6 +31,7 @@ actionResultTypeEnum MP_ActionMoveToTarget::execute()
     // check basics conditions to return FAILED (robot not inplay)
     if (!_wm->isActive())
     {
+        TRACE("WM inactive -- robot is probably out of play");
         return actionResultTypeEnum::FAILED;
     }
 

@@ -1,4 +1,4 @@
-// Copyright 2019 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * RTDBInputAdapter.hpp
@@ -12,7 +12,7 @@
 
 #include "int/InputInterface.hpp"
 #include "cWorldModelClient.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 
 class RTDBInputAdapter : public InputInterface
@@ -33,7 +33,7 @@ public:
 
 private:
     cWorldModelClient* _wmClient;
-    RtDB2 *_rtdb;
+    FalconsRTDB *_rtdb;
     int _myRobotId;
 
     motionSetpoint              _motionSetpoint;

@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cLogPlayback.cpp
@@ -10,10 +10,10 @@
 
 #include "tracing.hpp"
 
-cLogPlayback::cLogPlayback()
+cLogPlayback::cLogPlayback(int agentId)
 {
     _index = 0;
-    _rtdb = new RtDB2(0); // agent id is irrelevant when dealing with entire frames at once
+    _rtdb = new FalconsRTDB(agentId); // agent id is relevant now
 }
 
 tLogHeader cLogPlayback::getHeader()

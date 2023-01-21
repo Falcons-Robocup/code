@@ -8,6 +8,8 @@
 #
 
 
+# preserve current working directory for building relative paths
+WORKDIR=`pwd`
 
 # go to codebase root
 cd $FALCONS_CODE_PATH
@@ -19,7 +21,7 @@ timeStamp=`date '+%Y%m%d'`
 gitId=`git log | head -1 | cut -c 8-13`
 imageName=
 imageServer=`imageServer`
-imageLocation=~/IMAGES
+imageLocation=
 # do not use option --exclude-vcs-ignore, it will filter too much (like some shared libraries)
 excludeOpts=" --exclude-vcs --exclude=wmTracking --exclude=*.jpg"
 doUpload=0
@@ -30,9 +32,11 @@ cd ..
 
 
 # option parsing
-while getopts "n:u" opt; do
+while getopts "n:p:u" opt; do
     case "$opt" in
     n)  imageName=$OPTARG
+        ;;
+    p)  imageLocation=$(cd "$WORKDIR"; realpath $OPTARG)
         ;;
     u)  doUpload=1
         ;;
@@ -42,6 +46,9 @@ shift $((OPTIND-1))
 
 
 # work out names
+if [ -z "$imageLocation" ]; then
+    imageLocation=~/IMAGES
+fi
 if [ ! -d $imageLocation ]; then
     mkdir $imageLocation
 fi

@@ -6,11 +6,6 @@ import os
 import subprocess
 import time
 
-import falconspy
-from rtdb2 import RtDB2Store, RTDB2_DEFAULT_PATH
-import sharedTypes
-
-
 VERSION = 2.3
 
 
@@ -22,15 +17,15 @@ def startRobot(team, robot):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Starts Falcons simulator version {}'.format(VERSION))
+    parser = argparse.ArgumentParser(description='Starts Falcons simulator imersion {}'.format(VERSION))
+    parser.add_argument('--noref', action="store_true",
+           help="don't start refbox")
     parser.add_argument('-a', '--autoref', action="store_true",
            help='start an automatic referee instead of a refbox')
     parser.add_argument('-A', '--sizeTeamA', type=int, default=5,
            help='the size of team A')
     parser.add_argument('-B', '--sizeTeamB', type=int, default=5,
            help='the size of team B')
-    parser.add_argument('-f', '--frequency', type=int,
-           help="frequency to simulate with. This option will enable a slow-motion or fast-forward on simulation. Nominal frequency is 20. (10==0.5x, 40==2x)")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
@@ -42,11 +37,12 @@ if __name__ == '__main__':
     logging.info('Starting communication layer')
     subprocess.Popen(['rtdbClear'])
     subprocess.Popen(['createLogdir'])
+    subprocess.Popen(['rtdbSimLink'])
 
     logging.info('Starting supporting processes')
-    subprocess.Popen(['processStart', 'A0', 'logger'])
-    subprocess.Popen(['processStart', 'A0', 'rtdbSync'])
-    subprocess.Popen(['processStart', 'A0', 'visualizer'])
+    subprocess.Popen(['processStart', 'logger'])
+    subprocess.Popen(['processStart', 'rtdbSync'])
+    subprocess.Popen(['processStart', 'visualizer'])
     time.sleep(3)
 
     for i in range(args.sizeTeamA):
@@ -57,33 +53,28 @@ if __name__ == '__main__':
 
     if args.autoref:
         logging.info('Starting autoref')
-        arbiter = "simworld"
+        arbiter = "autoref"
     else:
-        logging.info('Starting refbox')
-        subprocess.Popen(['processStart', 'A0', 'refboxGui'])
-        subprocess.Popen(['processStart', 'A0', 'refboxRelay'])
         arbiter = "user"
 
-    if args.frequency:
-        simFrequency = args.frequency
-    else:
-        simFrequency = 20 # TODO make configurable
-
-    config = {
-               "arbiter": arbiter,
-               "sizeTeamA": args.sizeTeamA,
-               "sizeTeamB": args.sizeTeamB,
-               "tick_stepsize_ms": 50,
-               "tick_frequency": simFrequency,
-             }
-
-    rtdb = RtDB2Store(RTDB2_DEFAULT_PATH, False)
-    rtdb.put(0, "CONFIG_SIMULATION", config)
+    if not args.autoref and not args.noref:
+        logging.info('Starting refbox')
+        subprocess.Popen(['processStart', 'refboxGui'])
+        os.environ['REFBOX_HOST'] = "localhost"
+        subprocess.Popen(['jobStart', 'A0_coachPart1']) # refboxRelayMTP for team A
+        time.sleep(1) # TODO: leaving this out creates either a race condition for getting team B selected, or sometimes a refbox freeze
+        subprocess.Popen(['jobStart', 'B0_coachPart1']) # refboxRelayMTP for team B
 
     logging.info('Starting simworld')
-    subprocess.Popen(['processStart', 'A0', 'simworld'])
+    os.environ['SIM_ARBITER'] = arbiter
+    os.environ['SIM_SIZE_TEAM_A'] = str(args.sizeTeamA)
+    os.environ['SIM_SIZE_TEAM_B'] = str(args.sizeTeamB)
+    subprocess.Popen(['processStart', 'simworld'])
+
+    logging.info('Starting execution')
+    subprocess.Popen(['processStart', 'execution'])
 
     logging.info('Starting blockly')
-    subprocess.Popen(['processStart', 'A0', 'blockly'])
+    subprocess.Popen(['processStart', 'blockly'])
 
     logging.info('Falcons simulator started')

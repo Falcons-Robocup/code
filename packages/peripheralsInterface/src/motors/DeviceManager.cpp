@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * DeviceManager.cpp
@@ -30,7 +30,7 @@
 #include "int/motors/MotionBoard.hpp"
 #include "int/motors/BallhandlerBoard.hpp"
 
-#define FIRMWARE_VERSION	(22)
+#define FIRMWARE_VERSION	(24)
 #define BH_CONTROLLERS		(2)
 #define MOTION_CONTROLLERS	(3)
 

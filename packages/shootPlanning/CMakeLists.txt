@@ -5,7 +5,8 @@ project(ShootPlanning)
 find_package(Boost COMPONENTS system thread REQUIRED QUIET)
 find_package(Facilities)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 include_directories("include")
 
@@ -17,12 +18,12 @@ add_executable(shoot_planner src/main.cpp
                              src/cShotCalibration.cpp
                              src/cShotSolver.cpp
                              src/cShootPlanner.cpp)
-target_link_libraries(shoot_planner spshootAdapters yaml-cpp ${Boost_LIBRARIES} Tracing FalconsCommon diagnostics rtdb2 filters)
+target_link_libraries(shoot_planner spshootAdapters yaml-cpp ${Boost_LIBRARIES} Tracing FalconsCommon diagnostics FalconsRTDB filters)
 
 
 add_executable(dumpTables  tst/dumpTables.cpp
                            src/cShotCalibration.cpp
                            src/cShotSolver.cpp)
-target_link_libraries(dumpTables Tracing rtdb2 FalconsTypes)
+target_link_libraries(dumpTables Tracing FalconsRTDB FalconsTypes)
 
 

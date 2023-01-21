@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * MiniSimulation.cpp
@@ -12,7 +12,7 @@
 #include "MiniSimulation.hpp"
 #include "pathPlanningTestDefaults.hpp"
 #include <boost/filesystem.hpp>
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 #include "tracing.hpp"
 #include "ftime.hpp"
 
@@ -49,7 +49,7 @@ void MiniSimulation::initialize()
         // setup RTDB adapters
         for (int robotId = 0; robotId <= 5; robotId++)
         {
-            _rtdb[robotId] = RtDB2Store::getInstance().getRtDB2(robotId, 'A');
+            _rtdb[robotId] = FalconsRTDBStore::getInstance().getFalconsRTDB(robotId, 'A');
         }
         _rtdbOutputAdapter = new RTDBOutputAdapter(false, _myRobotId);
     }

@@ -5,46 +5,82 @@
 # JFEI 2015-12-29 creation
 # MKOE 2016-05-17 change startup check needed for interactiveFieldSetup from reasoning_viewer file existence to ifs file existance
 
-
-
 # do not allow running on robot
 if onRobot ; then
     echo "do not run this script on robot"
     exit 1
 fi
 
+function usage() {
+    echo "Usage:
+  -r        Defines which computer runs the refbox { A | B | C | D | FALCONS | COACH }
+Optional:
+  -m        Enable monitoring mode"
+
+}
+
+function help_and_exit() {
+    usage
+    exit 1
+}
+
 # option parsing
-teamchar=A
-interactive=1
-tracing=1
-while getopts "bqt" opt; do
+while getopts "hmr:" opt; do
     case "$opt" in
-    b)  teamchar=B
-        interactive=0
+    r)
+        arg="$OPTARG"
+        if [ -n "$OPTARG" ]; then
+            if [ "$OPTARG" = "COACH" ]; then
+                export REFBOX_HOST="localhost"
+            elif [ "$OPTARG" = "A" ]; then
+                export REFBOX_HOST="172.16.1.2"
+            elif [ "$OPTARG" = "B" ]; then
+                export REFBOX_HOST="172.16.2.2"
+            elif [ "$OPTARG" = "C" ]; then
+                export REFBOX_HOST="172.16.3.2"
+            elif [ "$OPTARG" = "D" ]; then
+                export REFBOX_HOST="172.16.4.2"
+            elif [ "$OPTARG" = "FALCONS" ]; then
+                export REFBOX_HOST="172.16.74.10"
+            else
+                echo "Unknown refbox computer $OPTARG!"
+                help_and_exit
+            fi
+        else
+            echo "Refbox option not correctly set!"
+            help_and_exit
+        fi
         ;;
-    q)  interactive=0
+    m)
+        monitoring=1
         ;;
-    t)  tracing=0
+    h)
+        help
+        exit 0
         ;;
+    :)
+        help_and_exit
+        ;;
+    ?)
+        help_and_exit
+      ;;
     esac
 done
-shift $((OPTIND-1))
-[ "$1" = "--" ] && shift
-jobnames="${teamchar}0_coachPart1"
-# for teamB, run only part1 and not part2 
-# (use case: for 2-team simulation, we only want to see teamA visualizer etc, not teamB, but teamB does need refboxRelay etc)
-if [ $teamchar != "B" ]; then
-    if [ -z "$SIMULATED" -o "$SIMULATED" = 0 ] ; then
-        jobnames="$jobnames ${teamchar}0_coachPart2Real"
-    else
-        jobnames="$jobnames ${teamchar}0_coachPart2Sim"
-    fi
+shift "$(($OPTIND -1))"
+
+if [ -z "$REFBOX_HOST" ]; then
+    echo "Refbox option not correctly set!"
+    help_and_exit
 fi
 
-# simulation mode? wrapping simControl will set SIMULATED=1
-if [ -z "$SIMULATED" ]; then
-    export SIMULATED=0
+jobnames=""
+
+# prevent interfering with the real coach when we're just monitoring
+if [ -z $monitoring ]; then
+    jobnames="$jobnames A0_coachPart1"
 fi
+
+jobnames="$jobnames A0_coachPart2"
 
 # somewhat graceful exit
 function finish {
@@ -66,51 +102,52 @@ trap finish SIGINT
 # clear RTDB
 rtdbClear
 
-# first time (teamA) only
-if [ $teamchar != "B" ]; then
+# Make symlinks of rtdb databases, so everything is read/written from one single database
+rtdbSimLink
 
-    # make logging directory for stdout, stderr and tracing
-    createLogdir
+# make logging directory for stdout, stderr and tracing
+createLogdir
 
-    if [ "$tracing" = 1 ]; then
-        # enable tracing
-        set_tracing_trigger.sh `newest_logdir.py`
-    fi
+if [ "$tracing" = 1 ]; then
+    # enable tracing
+    set_tracing_trigger.sh `newest_logdir.py`
+fi
 
+# start refbox GUI
+if [ $REFBOX_HOST = "localhost" ] && [ -z $monitoring ]; then
+    (
+        processStart A0 refboxGui &
+    ) < /dev/null >/dev/null 2>&1
+fi
+
+if [ -n $monitoring ]; then
+    # tweak comm XML configuration to run in listen mode
+    commCfg=/home/robocup/falcons/code/packages/facilities/rtdb/config/rtdb2_configuration.xml
+    commCfgBak=$commCfg.bak
+    cp $commCfg $commCfgBak
+    sed -i 's/send="true"/send="false"/' $commCfg
 fi
 
 # start coach processes
-export TURTLE5K_TEAMNAME=team$teamchar
 for j in $jobnames; do
     jobStart $j &
 done
 
 # block?
-if [ "$interactive" = "0" ]; then
-    # called from simControl -- sleep forever (until simControl stops)
-    wait
-else
-    # prompt
-    while :; do
-        sleep 1
-        echo "  q   : quit"
-        echo "  r   : start refbox (2015) application"
-        echo -n "input command: "
-        read ans
-        if [ "$ans" = "q" ]; then
-            echo "shutting down..."
-            break
-        fi
-        if [ "$ans" = "r" ]; then
-            (
-                processStart A0 refboxGui &
-            ) < /dev/null >/dev/null 2>&1
-        fi
-    done
+# prompt
+while :; do
+    echo "  q   : Quit"
+    echo -n "Input command: "
+    read ans
+    if [ "$ans" = "q" ]; then
+        echo "Shutting down..."
+        break
+    fi
+done
+
+
+if [ -n $monitoring ]; then
+    # restore comm configuration
+    mv $commCfgBak $commCfg
 fi
-
-
-
-
-
 

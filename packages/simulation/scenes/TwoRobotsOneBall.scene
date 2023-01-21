@@ -1,0 +1,22 @@
+# To launch this scene:
+#    simStart --noref -A 3 -B 0
+#    refboxPutCommand.py -c START
+#    simScene.py TwoRobotsOneBall.scene
+# This scene is not very easy to reproduce, you might need several tries
+# Use the following command instead to reset the scene by pressing <enter>:
+#    refboxPutCommand -c START && while true; do simScene.py TwoRobotsOneBall.scene; read; done
+balls:
+- position: [0.0, 0.0, 0.0]
+  velocity: [0.0, 0.0, 0.0]
+obstacles: []
+opponents: []
+robots:
+- position: [0.0, -8.7, 1.57079632679]
+  robotId: 1
+  velocity: [0.0, 0.0, 0.0]
+- position: [-4.0, 0.0, 0.0]
+  robotId: 2
+  velocity: [0.0, 0.0, 0.0]
+- position: [4.0, 0.0, 3.14159265359]
+  robotId: 3
+  velocity: [0.0, 0.0, 0.0]

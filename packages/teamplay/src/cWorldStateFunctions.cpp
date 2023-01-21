@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Tim Kouters (Falcons)
+// Copyright 2015-2021 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cWorldStateFunctions.cpp
@@ -1274,7 +1274,7 @@ Position2D cWorldStateFunctions::getLocationOfRobot(const robotNumber &robotID)
         {
             if (it->first == robotID)
             {
-                Position2D pos = Position2D(it->second.position.getX(), it->second.position.getY(), it->second.position.getPhi());
+                Position2D pos = Position2D(it->second.position.getX(), it->second.position.getY(), it->second.position.getRz());
                 return pos;
             }
         }

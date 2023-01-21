@@ -1,4 +1,4 @@
-// Copyright 2019 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ForwardDriving.cpp
@@ -16,7 +16,7 @@ void ForwardDriving::execute(PathPlanningData &data)
     TRACE_FUNCTION("");
 
     // get applicable configuration
-    ForwardDrivingConfig config = (data.robot.hasBall ? data.config.forwardDriving.withBall : data.config.forwardDriving.withoutBall);
+    ForwardDrivingConfig config = (data.robot.hasBall ? data.configPP.forwardDriving.withBall : data.configPP.forwardDriving.withoutBall);
 
     // disabled?
     if (!config.enabled)

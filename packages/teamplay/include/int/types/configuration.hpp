@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Coen Tempelaars (Falcons)
+// Copyright 2016-2021 Coen Tempelaars (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * configuration.hpp
@@ -13,7 +13,7 @@
 #include <map>
 #include <vector>
 
-#include "configTeamplay.hpp" // sharedTypes
+#include "ConfigTeamplay.hpp" // sharedTypes
 #include "ext/heightmapNames.hpp"
 #include "int/types/heightmapEnumTypes.hpp"
 
@@ -26,7 +26,7 @@ public:
     configuration();
     virtual ~configuration();
 
-    virtual void update(const configTeamplay&);
+    virtual void update(const ConfigTeamplay&);
 
     virtual float getSetPieceExecuteTimeoutSeconds() const;
     virtual float getPenaltyExecuteTimeoutSeconds() const;
@@ -47,7 +47,7 @@ public:
     virtual float getHeightmapFactor (const CompositeHeightmapName& compositeHeightmap, const heightmapEnum& heightmap) const;
 
 private:
-    configTeamplay _config;
+    ConfigTeamplay _config;
 };
 
 

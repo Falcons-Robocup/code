@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Edwin Schreuder (Falcons)
+// Copyright 2016-2020 Edwin Schreuder (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * BallhandlerBoard.cpp
@@ -143,6 +143,7 @@ void BallhandlerBoard::handleAngleTachoZeroResponse(ReceivePackage &package) {
 void BallhandlerBoard::handleDefaultResponse(ReceivePackage &package) {
 	MotorControllerBoard::handleDefaultResponse(package);
 
+	ballhandlerData.tacho = package.getData<uint16_t>(18);
 	ballhandlerData.angle = package.getData<uint16_t>(19);
 }
 

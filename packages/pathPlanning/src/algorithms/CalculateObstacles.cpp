@@ -1,4 +1,4 @@
-// Copyright 2019 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * CalculateObstacles.cpp
@@ -83,7 +83,7 @@ void handleObstacle(obstacleResult const &obstacle, PathPlanningData &data)
     TRACE_FUNCTION("");
 
     // commonly used
-    auto config = data.config.obstacleAvoidance;
+    auto config = data.configPP.obstacleAvoidance;
     Vector2D r(data.robot.position.x, data.robot.position.y);
     Vector2D b(99, 99); // far outside field == ignore
     if (data.balls.size())
@@ -149,7 +149,7 @@ void CalculateObstacles::execute(PathPlanningData &data)
     data.calculatedForbiddenAreas = data.forbiddenAreas;
     TRACE("#calculatedForbiddenAreas: %d", (int)data.calculatedForbiddenAreas.size());
     TRACE("#calculatedObstacles: %d", (int)data.calculatedObstacles.size());
-    auto config = data.config.obstacleAvoidance;
+    auto config = data.configPP.obstacleAvoidance;
     Vector2D r(data.robot.position.x, data.robot.position.y);
     Vector2D b(99, 99); // far outside field == ignore
     if (data.balls.size())

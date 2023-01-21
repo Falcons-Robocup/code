@@ -6,7 +6,8 @@ find_package(Boost COMPONENTS system thread REQUIRED QUIET)
 find_package(Facilities)
 find_package(WorldModel)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror")
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 include_directories("include")
 
@@ -27,7 +28,7 @@ add_library(PathPlanning src/PathPlanning.cpp
                          src/algorithms/CalculateObstacles.cpp
                          src/algorithms/EscapeForbiddenAreas.cpp
                          src/algorithms/AvoidObstacles.cpp)
-target_link_libraries(PathPlanning ppRtdbAdapters wmClient Tracing FalconsCommon rtdb2 diagnostics EnvironmentField ${Boost_LIBRARIES})
+target_link_libraries(PathPlanning ppRtdbAdapters wmClient Tracing FalconsCommon FalconsRTDB diagnostics EnvironmentField ${Boost_LIBRARIES})
 
 add_executable(pathplanningNode src/main.cpp)
 target_link_libraries(pathplanningNode PathPlanning ${Boost_LIBRARIES})

@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Erik Kouters (Falcons)
+// Copyright 2019-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cActionGetBall.hpp
@@ -18,6 +18,8 @@ public:
     actionResultTypeEnum execute();
     void unpackParameters();
 
+    void initialize() override;
+
 private:
     motionTypeEnum _motionType = motionTypeEnum::INVALID;
     bool _ballMovingFastEnough = false;
@@ -32,7 +34,6 @@ private:
     
     // helper functions
     void getCfg();
-    void initialize();
     void analyzeGeometry();
     bool shouldIntercept();
     void faceBall();

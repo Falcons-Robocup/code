@@ -52,10 +52,10 @@ all: $(TARGET)
 	ssh cam0 "sudo killall raspiGrab"
 
 # rule for cross compiling on x86-64
-%.o: ../src/%.c Makefile ../../../tools/raspiControl/include/raspiDefaults.hpp
-	arm-linux-gnueabihf-gcc $(CFLAGS) $(INC) -o $@ -c $<
+%.o: ../src/%.c Makefile ../../../packages/raspiControl/include/raspiDefaults.hpp
+	arm-linux-gnueabihf-gcc-10 $(CFLAGS) $(INC) -o $@ -c $<
 
-# rule for building on the raspi
+# rule for building on the raspi (warning: raspi does not have arm-linux-gnueabihf-gcc-10)
 %.o: %.c raspiDefaults.hpp
 	arm-linux-gnueabihf-gcc $(CFLAGS) $(INC) -o $@ -c $<
 	cp $< ~/tmp
@@ -63,7 +63,8 @@ all: $(TARGET)
 %.o: $(USERLAND_DIR)/host_applications/linux/apps/raspicam/%.c
 	arm-linux-gnueabihf-gcc $(CFLAGS) $(INC) -o $@ -c $<
 
-$(TARGET): $(OBJECTS)
+# warning: raspi does not have arm-linux-gnueabihf-gcc-10
+$(TARGET): $(OBJECTS) 
 	arm-linux-gnueabihf-gcc $(LDFLAGS) -o $@ $^ -rdynamic $(LDLIBS) -Wl,-rpath,$(USERLAND_DIR)/build/lib
 
 clean:

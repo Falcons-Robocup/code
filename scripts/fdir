@@ -26,8 +26,10 @@ def find_package_dirs(falcons_root):
 def resolve_package_dir(name, package_dirs):
     candidates = []
     for d in package_dirs:
-        if d.endswith('/' + name + '/'):
+        if d.endswith('/' + name + '/') or d == name + '/':
             candidates.append(d)
+    #if name == 'code': # special case
+    #    return FALCONS_CODE_PATH
     if len(candidates) == 1:
         return candidates[0]
     return None
@@ -35,21 +37,27 @@ def resolve_package_dir(name, package_dirs):
 
 if __name__ == '__main__':
     # Argument parsing.
-    descriptionTxt = 'List of all falcons packages to be built. When provided one package name, expand its full directory. This is used in fcd.\n'
+    descriptionTxt = 'List of all falcons packages to be built. When provided one package name, expand its directory relative to current path. This is used in fcd.\n'
     exampleTxt = 'Examples:\n   fdir rtdb\n   packages/facilities/rtdb'
     parser     = argparse.ArgumentParser(description=descriptionTxt, epilog=exampleTxt, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-a', '--absolute', help='return absolute path(s)', action='store_true')
     parser.add_argument('name', help='optional package name to resolve', nargs='?')
     args       = parser.parse_args()
+
+    # determine prefix: either current path or none
+    prefix = ''
+    if args.absolute:
+        prefix = FALCONS_CODE_PATH + '/'
 
     # run
     package_dirs = find_package_dirs(FALCONS_CODE_PATH)
     if args.name:
         d = resolve_package_dir(args.name, package_dirs)
         if d:
-            print(d.rstrip('/'))
+            print(prefix + d.rstrip('/'))
         else:
             raise Exception("could not resolve a valid target directory from " + args.name)
     else:
         for d in package_dirs:
-            print(d.rstrip('/'))
+            print(prefix + d.rstrip('/'))
 

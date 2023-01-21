@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Edwin Schreuder (Falcons)
+// Copyright 2019-2021 Edwin Schreuder (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include <stdexcept>
 
@@ -14,14 +14,14 @@ RTDBInputAdapter::RTDBInputAdapter()
     TRACE_FUNCTION("");
 
     int robot_id = getRobotNumber();
-    rtdb = RtDB2Store::getInstance().getRtDB2(robot_id);
+    rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(robot_id);
 }
 
 RTDBInputAdapter::~RTDBInputAdapter()
 {
 }
 
-::motors::RobotVector RTDBInputAdapter::getRobotVelocitySetpoint()
+::Motion::RobotVector RTDBInputAdapter::getRobotVelocitySetpoint()
 {
     TRACE_FUNCTION("");
 
@@ -31,7 +31,7 @@ RTDBInputAdapter::~RTDBInputAdapter()
         throw(runtime_error("Failed to retrieve robot velocity setpoint."));
     }
 
-    ::motors::RobotVector velocity_setpoint;
+    ::Motion::RobotVector velocity_setpoint;
     velocity_setpoint.set_x(robot_velocity_setpoint.x);
     velocity_setpoint.set_y(robot_velocity_setpoint.y);
     velocity_setpoint.set_phi(robot_velocity_setpoint.Rz);
@@ -39,7 +39,7 @@ RTDBInputAdapter::~RTDBInputAdapter()
     return velocity_setpoint;
 }
 
-::motors::BallhandlerAngles RTDBInputAdapter::getBallhandlerAngleSetpoints()
+::Motion::BallhandlerVector RTDBInputAdapter::getBallhandlerAngleSetpoints()
 {
     TRACE_FUNCTION("");
 
@@ -49,7 +49,7 @@ RTDBInputAdapter::~RTDBInputAdapter()
         throw(runtime_error("Failed to retrieve ballhandler motor setpoint."));
     }
 
-    ::motors::BallhandlerAngles ballhandler_angles;
+    ::Motion::BallhandlerVector ballhandler_angles;
     ballhandler_angles.set_left(ballhandler_motor_setpoint.bhMotorData.angleLeft);
     ballhandler_angles.set_right(ballhandler_motor_setpoint.bhMotorData.angleRight);
 

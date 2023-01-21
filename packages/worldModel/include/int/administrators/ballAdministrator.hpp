@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ballAdministrator.hpp
@@ -30,6 +30,7 @@ class ballAdministrator
     	virtual ~ballAdministrator();
 
     	virtual void appendBallMeasurements(const std::vector<ballMeasurement> measurements);
+        virtual void appendBallPossessionMeasurements(const Vector3D& ball_pos, uint8_t robotID, rtime timestamp);
     	virtual void overruleBall(const ballClass_t ball);
     	virtual void getLocalBallMeasurements(std::vector<ballMeasurement> &measurements);
     	virtual void performCalculation(rtime const timeNow, Vector2D const &pos);

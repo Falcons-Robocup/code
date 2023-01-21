@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * CheckTargetReached.cpp
@@ -19,8 +19,8 @@ void CheckTargetReached::execute(PathPlanningData &data)
     Position2D deltaPositionFcs = targetPos - robotPos;
     deltaPositionFcs.phi = project_angle_mpi_pi(deltaPositionFcs.phi);
     // compare with tolerances
-    bool xyOk = deltaPositionFcs.xy().size() < data.config.deadzone.toleranceXY;
-    bool RzOk = fabs(deltaPositionFcs.phi) < data.config.deadzone.toleranceRz;
+    bool xyOk = deltaPositionFcs.xy().size() < data.configPP.deadzone.toleranceXY;
+    bool RzOk = fabs(deltaPositionFcs.phi) < data.configPP.deadzone.toleranceRz;
     TRACE("xyOk=%d RzOk=%d", xyOk, RzOk);
     // convergence criterion, especially useful for testing where overshoot can cause premature 'PASSED'
     static int tickCountTargetReached = 0;
@@ -28,7 +28,7 @@ void CheckTargetReached::execute(PathPlanningData &data)
     if (xyOk && RzOk)
     {
         tickCountTargetReached++;
-        if (tickCountTargetReached >= data.config.numExtraSettlingTicks)
+        if (tickCountTargetReached >= data.configPP.numExtraSettlingTicks)
         {
             data.resultStatus = actionResultTypeEnum::PASSED;
             data.done = true;
@@ -39,8 +39,8 @@ void CheckTargetReached::execute(PathPlanningData &data)
         tickCountTargetReached = 0;
         data.resultStatus = actionResultTypeEnum::RUNNING;
 
-        TRACE("xyOK=%d -> deltaPositionFcs=%6.2f < toleranceXY=%6.2f", xyOk, data.deltaPositionFcs.xy().size(), data.config.deadzone.toleranceXY);
-        TRACE("RzOK=%d -> deltaPositionFcs=%8.4f < toleranceRz=%8.4f", RzOk, fabs(deltaPositionFcs.phi), data.config.deadzone.toleranceRz);
+        TRACE("xyOK=%d -> deltaPositionFcs=%6.2f < toleranceXY=%6.2f", xyOk, data.deltaPositionFcs.xy().size(), data.configPP.deadzone.toleranceXY);
+        TRACE("RzOK=%d -> deltaPositionFcs=%8.4f < toleranceRz=%8.4f", RzOk, fabs(deltaPositionFcs.phi), data.configPP.deadzone.toleranceRz);
     }
 }
 

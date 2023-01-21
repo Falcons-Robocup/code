@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Tim Kouters (Falcons)
+// Copyright 2015-2021 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cWorldStateFunctionsTest.cpp
@@ -745,7 +745,7 @@ TEST(TestSuiteWorldStateFunctionsgetObstructingObstaclesInPath, TestObstructing1
     double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -778,7 +778,7 @@ TEST(TestSuiteWorldStateFunctionsgetObstructingObstaclesInPath, TestObstructing2
     double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -810,7 +810,7 @@ TEST(TestSuiteWorldStateFunctionsgetObstructingObstaclesInPath, TestObstructing3
     double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -845,7 +845,7 @@ TEST(TestSuiteWorldStateFunctionsgetObstructingObstaclesInPath, ReceivingTeammem
     double radiusBall = 0.125;
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -877,7 +877,7 @@ TEST(TestSuiteWorldStateFunctionsisPassToClosestTeammemberBlocked, Teammember1)
 
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -905,7 +905,7 @@ TEST(TestSuiteWorldStateFunctionsisPassToClosestTeammemberBlocked, Teammember2)
 
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -934,7 +934,7 @@ TEST(TestSuiteWorldStateFunctionsisPassToFurthestDefenderBlocked, test1)
 
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -964,7 +964,7 @@ TEST(TestSuiteWorldStateFunctionsisPassToFurthestDefenderBlocked, test2)
 
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -992,7 +992,7 @@ TEST(TestSuiteWorldStateFunctionsisLobShotOnGoalBlocked, Opponent1)
 
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -1023,7 +1023,7 @@ TEST(TestSuiteWorldStateFunctionsisPathToBallBlocked, PathBlocked_test1)
 
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -1053,7 +1053,7 @@ TEST(TestSuiteWorldStateFunctionsisPathToBallBlocked, PathBlocked_test2)
 
     std::vector<robotLocation> obstacles;
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.shooting.shootPathWidth = 0.25;
     teamplay::configurationStore::getConfiguration().update(config);
 
@@ -1078,7 +1078,7 @@ TEST(TestSuiteWorldStateFunctionsDefendingStrategyOnTest, defendingStrategyTest)
 {
     // Setup; set setDefendingStrategy to true
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.strategy.defendingStrategy = true;
     teamplay::configurationStore::getConfiguration().update(config);
     std::map<std::string, std::string> params;
@@ -1092,7 +1092,7 @@ TEST(TestSuiteWorldStateFunctionsDefendingStrategyOnTest, defendingStrategyTest2
 {
     // Setup; set setDefendingStrategy to false
 
-    configTeamplay config;
+    ConfigTeamplay config;
     config.strategy.defendingStrategy = false;
     teamplay::configurationStore::getConfiguration().update(config);
     std::map<std::string, std::string> params;

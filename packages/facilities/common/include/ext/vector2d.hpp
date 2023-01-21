@@ -1,4 +1,4 @@
-// Copyright 2015-2017 Tim Kouters (Falcons)
+// Copyright 2015-2021 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * Author: jfeitsma
@@ -12,7 +12,8 @@
 #define VECTOR2D_HPP
 
 #include <math.h>
-
+#include <iostream>
+#include <sstream>
 
 class Vector2D
 {
@@ -159,7 +160,21 @@ class Vector2D
         {
                return (x*v2.y) - (y*v2.x);
         }
+
+        std::string str() const
+        {
+            std::ostringstream oss;
+            oss << "(" << x << ", " << y << ")";
+            return oss.str();
+        }
+
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Vector2D& v)
+{
+    os << "(" << v.x << ", " << v.y << ")";
+    return os;
+}
 
 
 class Point2D : public Vector2D

@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Erik Kouters (Falcons)
+// Copyright 2016-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cAbstractAction.hpp
@@ -29,7 +29,7 @@
 #include "linepoint2D.hpp"
 
 #include "tracing.hpp"
-#include "FalconsRtDB2.hpp"
+#include "FalconsRTDB.hpp"
 
 // These vectors contain the valid parameter values for different actions.
 // e.g. a Move accepts a parameter "target", with as value "ball".

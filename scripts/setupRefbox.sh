@@ -7,7 +7,8 @@
 set -e
 
 PATH_PROCESSING=~/processing-3.5.3
-PATH_REFBOX=${FALCONS_DATA_PATH}/external/refbox2019beta/mslrb2015
+#PATH_REFBOX=${FALCONS_DATA_PATH}/external/refbox2019beta/mslrb2015
+PATH_REFBOX=${FALCONS_DATA_PATH}/external/refbox_2.0_beta/mslrb2015
 
 # require data repo to be uptodate
 if [ ! -d $PATH_REFBOX ]; then

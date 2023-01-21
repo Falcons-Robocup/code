@@ -1,23 +1,22 @@
-// Copyright 2015-2020 Jan Feitsma (Falcons)
+// Copyright 2015-2022 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #include <map>
 
 // Internal:
 #include "int/MainWindow.h"
-#include "int/RtdbGameSignalAdapter.h"
-#include "int/RtdbRefboxConfigAdapter.h"
+#include "int/adapters/RtdbGameSignalAdapter.h"
 #include "int/ConfigurationManager.h"
 #include "int/widgets/Table/TableWidget.h"
 #include "int/widgets/Playback/PlaybackWidget.h"
 #include "int/widgets/Field/EventHandlers/FieldMouseHoverEventHandler.h"
-#include "int/widgets/SettingsDialog.h"
+
+#include "falconsCommon.hpp" // isSimulatedEnvironment
 
 using namespace Visualizer;
 using std::map;
 
-static RefboxConfigAdapter::TeamColor teamColorFromString(QString value);
-static RefboxConfigAdapter::PlayingField playingFieldFromString(QString value);
-static RefboxConfigAdapter::TTAConfiguration ttaConfigurationFromString(QString value);
+const std::string RTDB_TEAM_A = std::string(RTDB_STORAGE_TEAMS)+'A';
+const std::string RTDB_TEAM_B = std::string(RTDB_STORAGE_TEAMS)+'B';
 
 MainWindow::MainWindow(PlaybackControl *pb)
     : _pbControl(pb)
@@ -27,16 +26,15 @@ MainWindow::MainWindow(PlaybackControl *pb)
 
     // Configure QSettings
     QCoreApplication::setOrganizationName("Falcons");
-    QCoreApplication::setApplicationName("visualizer");
+    QCoreApplication::setApplicationName("Visualizer");
 
-    // StackOverflow.com/a/9638420/1980516
-    this->centralWidget()->setAttribute(Qt::WA_TransparentForMouseEvents);
-    setMouseTracking(true);
-    this->setMouseTracking(true);
-    fieldWidget->setMouseTracking(true);
+    // // StackOverflow.com/a/9638420/1980516
+    // this->centralWidget()->setAttribute(Qt::WA_TransparentForMouseEvents);
+    // setMouseTracking(true);
+    // this->setMouseTracking(true);
+    // fieldWidget->setMouseTracking(true);
 
     // Connect window management signals
-    connect(actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(actionViewWorldView, SIGNAL(triggered()), this, SLOT(switchViewToWorld()));
     connect(actionViewGaussianWorldView, SIGNAL(triggered()), this, SLOT(switchViewToGaussianWorld()));
     connect(actionViewBallMeasurementsView, SIGNAL(triggered()), this, SLOT(switchViewToBallMeasurements()));
@@ -45,32 +43,49 @@ MainWindow::MainWindow(PlaybackControl *pb)
     connect(actionViewPathPlanningView, SIGNAL(triggered()), this, SLOT(switchViewToPathPlanning()));
     connect(actionViewTeamplayView, SIGNAL(triggered()), this, SLOT(switchViewToTeamplay()));
     connect(actionHeightmapNone, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToNone()));
+    connect(actionActiveHeightmap, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToActiveHeightmap()));
     connect(actionHeightmapDefendAttackingOpponent, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToDefendAttackingOpponent()));
     connect(actionHeightmapDribble, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToDribble()));
     connect(actionHeightmapMoveToFreeSpot, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToMoveToFreeSpot()));
     connect(actionHeightmapPositionForOppSetpiece, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToPositionForOppSetpiece()));
-    connect(actionHeightmapPositionForOwnSetpiece, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToPositionForOwnSetpiece()));
+    connect(actionHeightmapPositionAttackerForOwnSetpiece, SIGNAL(triggered()), fieldWidget, SLOT(switchHeightmapToPositionAttackerForOwnSetpiece()));
     connect(actionResetZoomPanRotate, SIGNAL(triggered()), fieldWidget, SLOT(resetZoomPanRotate()));
     connect(actionFlip, SIGNAL(toggled(bool)), fieldWidget, SLOT(flip(bool)));
+
+    connect(actionDark, SIGNAL(triggered()), this, SLOT(setDarkTheme()));
+    connect(actionLight, SIGNAL(triggered()), this, SLOT(setLightTheme()));
 
     // Allow enabling/disabling the dock widgets via the 'Window' menu option
     menuWindows->addAction(clockDockWidget->toggleViewAction());
     menuWindows->addAction(tableDockWidget->toggleViewAction());
     menuWindows->addAction(eventLogDockWidget->toggleViewAction());
-
-    // Add actions for Settings-dialogs
-    connect(toolButton, SIGNAL(pressed()), this, SLOT(showSettingsDialog()));
+    menuWindows->addAction(matchStateDockWidget->toggleViewAction());
+    menuWindows->addAction(playbackDockWidget->toggleViewAction());
+    menuWindows->addAction(robotStatusDockWidget->toggleViewAction());
 
     // Add actions to switch to team view
     connect(actionViewTeam, SIGNAL(triggered()), this, SLOT(switchViewToTeam()));
-    switchViewToTeam();
+
+    if (isSimulatedEnvironment())
+    {
+        std::string message("Team B");
+        _actionViewTeamB = new QAction(actionViewTeamGroup);
+
+        connect(_actionViewTeamB, SIGNAL(triggered()), this, SLOT(switchViewToTeamB()));
+
+        _actionViewTeamB->setCheckable(true);
+        _actionViewTeamB->setText(QApplication::translate("MainWindow", message.c_str(), 0));
+        menuViewTeamRobot->addAction(_actionViewTeamB);
+
+        _db_connection_B = std::make_shared<cDbConnection>(RTDB_TEAM_B);
+    }
 
     // Add actions to switch to robot view
     {
         QSignalMapper* mapper = new QSignalMapper(); // Use QSignalMapper to supply robot id to the signal
         connect(mapper, SIGNAL(mapped(int)), this, SLOT(switchViewToRobot(int)));
         boost::format format_robot("Robot %1%");
-        for (int id = 1; id < _NR_OF_ROBOTS_PER_TEAM + 1; id++)
+        for (int id = 1; id <= _NR_OF_ROBOTS_PER_TEAM; id++)
         {
             std::string message_robot = boost::str(format_robot % id);
             QAction* robotAction = new QAction(actionViewTeamGroup);
@@ -105,6 +120,25 @@ MainWindow::MainWindow(PlaybackControl *pb)
         }
     }
 
+    // Add actions to switch heightmap for role
+    {
+        std::array<QString, 6> roles{"STOP", "GOALKEEPER", "ATTACKER_MAIN", "ATTACKER_ASSIST", "DEFENDER_MAIN", "DEFENDER_ASSIST"};
+
+        QSignalMapper* mapper = new QSignalMapper(); // Use QSignalMapper to supply role to the signal
+        connect(mapper, SIGNAL(mapped(QString)), fieldWidget, SLOT(switchHeightmapForRole(QString)));
+        for (const auto& role : roles)
+        {
+            QAction* roleAction = new QAction(actionHeightmapRobotGroup);
+            mapper->setMapping(roleAction, role);
+            connect(roleAction, SIGNAL(triggered()), mapper, SLOT(map()));
+
+            roleAction->setCheckable(true);
+            roleAction->setText(QApplication::translate("MainWindow", role.toStdString().c_str(), 0));
+            menuHeightmapRobot->addAction(roleAction);
+            _roleHeightmapActions.push_back(roleAction);
+        }
+    }
+
     // Initialize table widget nr of columns
     tableWidget->initialize(_NR_OF_ROBOTS_PER_TEAM);
 
@@ -124,12 +158,14 @@ MainWindow::MainWindow(PlaybackControl *pb)
     playbackWidget->registerPlaybackControl(_pbControl);
 
     // Connect the signal adapter to each signal subscriber
-    _gameSignalAdapter = new RtdbGameSignalAdapter();
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    _db_connection_A = std::make_shared<cDbConnection>(RTDB_TEAM_A);
+    _gameSignalAdapter = std::make_unique<RtdbGameSignalAdapter>(_db_connection_A);
+    for (auto w : _widgets)
     {
-        _widgets[i]->getSignalSubscriber()->subscribe(_gameSignalAdapter);
+        w->getSignalSubscriber()->subscribe(_gameSignalAdapter.get());
     }
 
+    switchViewToTeam(); // Wholte team is observed initially.
     switchViewToWorld(); // Initially world view is selected.
     actionHeightmapNone->setChecked(true); // Initially no heightmap is selected.
     _robotHeightmapActions.at(0)->setChecked(true); // Initially heightmap for robot 1 is selected.
@@ -142,15 +178,15 @@ MainWindow::MainWindow(PlaybackControl *pb)
         restoreState(settings.value("mainwindow/windowState").toByteArray());
     }
 
-    refboxConfig = new RtdbRefboxConfigAdapter();
-
     // Restore widget layouts
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    for (auto w : _widgets)
     {
-        _widgets[i]->restoreState();
+        w->restoreState();
     }
 
     fieldWidget->resetZoomPanRotate();
+
+    showMaximized();
 }
 
 MainWindow::~MainWindow()
@@ -167,7 +203,11 @@ MainWindow::~MainWindow()
     }
     _robotHeightmapActions.clear();
 
-    delete refboxConfig;
+    for (QAction* action : _roleHeightmapActions)
+    {
+        delete action;
+    }
+    _roleHeightmapActions.clear();    
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) 
@@ -211,9 +251,9 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         settings.setValue("mainWindow/windowState", saveState());
 
         // Save widget layouts
-        for (size_t i = 0; i < _widgets.size(); ++i)
+        for (auto w : _widgets)
         {
-            _widgets[i]->saveState();
+            w->saveState();
         }
 
         settings.sync();
@@ -222,143 +262,110 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     return false;
 }
 
+void MainWindow::setDarkTheme(void)
+{
+    QFile file(":/dark/stylesheet.qss");
+    file.open(QFile::ReadOnly | QFile::Text);
+    QTextStream stream(&file);
+    qApp->setStyleSheet(stream.readAll());
+}
+
+void MainWindow::setLightTheme(void)
+{
+    QFile file(":/light/stylesheet.qss");
+    file.open(QFile::ReadOnly | QFile::Text);
+    QTextStream stream(&file);
+    qApp->setStyleSheet(stream.readAll());
+}
+
 void MainWindow::switchViewToWorld(void)
 {
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    for (auto w : _widgets)
     {
-        _widgets[i]->getSignalSubscriber()->setSignalMode(WORLD);
+        w->getSignalSubscriber()->setSignalMode(WORLD);
     }
     actionViewWorldView->setChecked(true);
 }
 
 void MainWindow::switchViewToGaussianWorld(void)
 {
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    for (auto w : _widgets)
     {
-        _widgets[i]->getSignalSubscriber()->setSignalMode(GAUSSIAN_WORLD);
+        w->getSignalSubscriber()->setSignalMode(GAUSSIAN_WORLD);
     }
     actionViewWorldView->setChecked(true);
 }
 
 void MainWindow::switchViewToBallMeasurements(void)
 {
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    for (auto w : _widgets)
     {
-        _widgets[i]->getSignalSubscriber()->setSignalMode(BALL_MEASUREMENTS);
+        w->getSignalSubscriber()->setSignalMode(BALL_MEASUREMENTS);
     }
     actionViewWorldView->setChecked(true);
 }
 
 void MainWindow::switchViewToObstacleMeasurements(void)
 {
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    for (auto w : _widgets)
     {
-        _widgets[i]->getSignalSubscriber()->setSignalMode(OBSTABLE_MEASUREMENTS);
+        w->getSignalSubscriber()->setSignalMode(OBSTABLE_MEASUREMENTS);
     }
     actionViewWorldView->setChecked(true);
 }
 
 void MainWindow::switchViewToVision(void)
 {
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    for (auto w : _widgets)
     {
-        _widgets[i]->getSignalSubscriber()->setSignalMode(VISION);
+        w->getSignalSubscriber()->setSignalMode(VISION);
     }
     actionViewVisionView->setChecked(true);
 }
 
 void MainWindow::switchViewToPathPlanning(void)
 {
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    for (auto w : _widgets)
     {
-        _widgets[i]->getSignalSubscriber()->setSignalMode(PATHPLANNING);
+        w->getSignalSubscriber()->setSignalMode(PATHPLANNING);
     }
     actionViewPathPlanningView->setChecked(true);
 }
 
 void MainWindow::switchViewToTeamplay(void)
 {
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    for (auto w : _widgets)
     {
-        _widgets[i]->getSignalSubscriber()->setSignalMode(TEAMPLAY);
+        w->getSignalSubscriber()->setSignalMode(TEAMPLAY);
     }
     actionViewTeamplayView->setChecked(true);
 }
 
 void MainWindow::switchViewToTeam(void)
 {
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    _gameSignalAdapter->set_db_connection(_db_connection_A);
+    for (auto w : _widgets)
     {
-        _widgets[i]->getTeamRobotSelection()->setTeamMode();
+        w->getTeamRobotSelection()->setTeamMode();
     }
     actionViewTeam->setChecked(true);
 }
 
+void MainWindow::switchViewToTeamB(void)
+{
+    _gameSignalAdapter->set_db_connection(_db_connection_B);
+    for (auto w : _widgets)
+    {
+        w->getTeamRobotSelection()->setTeamMode();
+    }
+    _actionViewTeamB->setChecked(true);
+}
+
 void MainWindow::switchViewToRobot(int robotId)
 {
-    for (size_t i = 0; i < _widgets.size(); ++i)
+    for (auto w : _widgets)
     {
-        _widgets[i]->getTeamRobotSelection()->setRobotMode((uint8_t)robotId);
+        w->getTeamRobotSelection()->setRobotMode((uint8_t)robotId);
     }
     _robotViewActions[robotId - 1]->setChecked(true);
 }
-
-void MainWindow::showSettingsDialog()
-{
-    Settings::SettingsDialog dialog;
-    QDialog::DialogCode result = (QDialog::DialogCode)dialog.exec();
-    if (result == QDialog::Accepted)
-    {
-        fieldWidget->reloadSettings();
-
-        // Need to update our settings here somehow...
-        QSettings settings;
-        QString teamColor = settings.value(Settings::teamColorSetting).toString();
-        QString playingField = settings.value(Settings::playingFieldSetting).toString();
-        QString ttaConfig = settings.value(Settings::ttaConfigSetting).toString();
-
-        refboxConfig->setTeamColor(teamColorFromString(teamColor));
-        refboxConfig->setPlayingField(playingFieldFromString(playingField));
-        refboxConfig->setTTAConfiguration(ttaConfigurationFromString(ttaConfig));
-    }
-}
-
-static RefboxConfigAdapter::TeamColor teamColorFromString(QString value)
-{
-    map<QString, RefboxConfigAdapter::TeamColor> teamColorMap = {
-            {"CYAN", RefboxConfigAdapter::TeamColor::CYAN},
-            {"MAGENTA", RefboxConfigAdapter::TeamColor::MAGENTA},
-    };
-
-    return teamColorMap[value];
-}
-
-static RefboxConfigAdapter::PlayingField playingFieldFromString(QString value)
-{
-    map<QString, RefboxConfigAdapter::PlayingField> playingFieldMap = {
-            {"FIELD_A", RefboxConfigAdapter::PlayingField::FIELD_A},
-            {"FIELD_B", RefboxConfigAdapter::PlayingField::FIELD_B},
-            {"FIELD_C", RefboxConfigAdapter::PlayingField::FIELD_C},
-            {"FIELD_D", RefboxConfigAdapter::PlayingField::FIELD_D},
-            {"FIELD_FALCONS", RefboxConfigAdapter::PlayingField::FIELD_FALCONS},
-            {"FIELD_LOCALHOST", RefboxConfigAdapter::PlayingField::FIELD_LOCALHOST},
-    };
-
-    return playingFieldMap[value];
-}
-
-static RefboxConfigAdapter::TTAConfiguration ttaConfigurationFromString(QString value)
-{
-    std::string s = value.toStdString();
-    tprintf("ttaConfigurationFromString %s", s.c_str());
-    map<QString, RefboxConfigAdapter::TTAConfiguration> ttaConfigMap = {
-            {"NONE", RefboxConfigAdapter::TTAConfiguration::NONE},
-            {"FRONT_LEFT", RefboxConfigAdapter::TTAConfiguration::FRONT_LEFT},
-            {"FRONT_RIGHT", RefboxConfigAdapter::TTAConfiguration::FRONT_RIGHT},
-            {"BACK_LEFT", RefboxConfigAdapter::TTAConfiguration::BACK_LEFT},
-            {"BACK_RIGHT", RefboxConfigAdapter::TTAConfiguration::BACK_RIGHT},
-    };
-
-    return ttaConfigMap.at(value);
-}
-

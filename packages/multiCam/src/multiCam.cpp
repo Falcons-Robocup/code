@@ -1,10 +1,12 @@
-// Copyright 2018-2020 Andre Pool (Falcons)
+// Copyright 2018-2022 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2014-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
 
 #include "multiCam.hpp"
+#ifndef NOROS
 #include "tracing.hpp"
+#endif
 
 #include <cerrno>
 #include <fcntl.h>    /* For O_RDWR */
@@ -39,6 +41,22 @@ multiCamLibrary::multiCamLibrary(int robotIdArg, bool guiEnabled) {
         exit( EXIT_FAILURE);
     }
 
+    // TODO_APOX: quick hack to get the correct route for the raspi boards
+    printf("INFO      : setup routes for 224.16.32.0 and 224.16.32.0 network\n");
+    int tmp = system("sudo route add -net 224.16.16.0 netmask 255.255.255.0 dev enp0s31f6 >/tmp/multiCamRoute.log 2>&1");
+    tmp += system("sudo ifconfig enp0s31f6 multicast >>/tmp/multiCamRoute.log 2>&1");
+
+    // TODO_APOX: quick hack to get the correct route for diagnostics
+    tmp += system("sudo route add -net 224.16.32.0 netmask 255.255.255.0 dev wlp2s0 >>/tmp/multiCamRoute.log 2>&1");
+    tmp += system("sudo ifconfig wlp2s0 multicast >>/tmp/multiCamRoute.log 2>&1");
+
+    tmp += system("sudo route add -net 224.16.32.0 netmask 255.255.255.0 dev wlp3s0 >>/tmp/multiCamRoute.log 2>&1");
+    tmp += system("sudo ifconfig wlp3s0 multicast >>/tmp/multiCamRoute.log 2>&1");
+    tmp += system("sudo route -n | grep 224 >>/tmp/multiCamRoute.log 2>&1");
+    tmp += system("sudo route -n | grep -v virbr | grep -v docker");
+    if( tmp != 0 ) {
+        printf("INFO      : route return value sum %d\n", tmp);
+    }
     conf = new configurator(robotId);
     prep = new preprocessor(conf);
     camAnaRecv = new cameraReceive(conf);
@@ -116,8 +134,8 @@ void multiCamLibrary::attach(observer *obs) {
 }
 
 bool multiCamLibrary::update() {
-    TRACE_FUNCTION("");
 #ifndef NOROS
+    TRACE_FUNCTION("");
     TRACE("multiCamLibrary::update start");
 #endif
     conf->update();

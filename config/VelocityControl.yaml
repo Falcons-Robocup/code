@@ -1,4 +1,3 @@
-nominalFrequency:                         30
 motionTypes:
     NORMAL:
         velocityControllers:
@@ -7,34 +6,35 @@ motionTypes:
                 type:                             VelocitySetpointControllerTypeEnum:SPG
                 coordinateSystem:                 CoordinateSystemEnum:RCS
             shortStroke:
-                type:                             VelocitySetpointControllerTypeEnum:PID
+                type:                             VelocitySetpointControllerTypeEnum:SPG
                 coordinateSystem:                 CoordinateSystemEnum:RCS
         limits:
-            maxVelX:                          0.7 # was 1.9 in pp1
-            maxVelYforward:                   1.8 # was 1.9 in pp1
-            maxVelYbackward:                  1.3
+            maxVelX:                          1.6 # was 1.9 in pp1
+            maxVelYforward:                   1.6 # was 1.9 in pp1
+            maxVelYbackward:                  1.6
             maxVelRz:                         2.0
             maxAccX:                          1.0 # was 1.6 in pp1
-            maxAccYforward:                   3.0 # was 1.6 in pp1
-            maxAccYbackward:                  2.0
-            maxAccRz:                         2.0
-            maxDecX:                         20.0 # was infinite in pp1
-            maxDecY:                         10.0 # was infinite in pp1
-            maxDecRz:                        60.0 # was infinite in pp1
+            maxAccYforward:                   1.0 # was 1.6 in pp1
+            maxAccYbackward:                  1.0
+            maxAccRz:                         1.5
+            maxDecX:                          2.5 # was infinite in pp1
+            maxDecY:                          2.5 # was infinite in pp1
+            maxDecRz:                         5.0 # was infinite in pp1
             accThresholdX:                    0.0
             accThresholdY:                    0.0
             accThresholdRz:                   0.0
         setPointGenerator:
             synchronizeRotation:                  false # true is good for motion crosstalk but not good for alwaysFacingBall since robot is choosing to rotate slow
-            weightFactorClosedLoop:               0.0
+            weightFactorClosedLoopVel:            0.0   #   0% velocity from WM, 100% computed new velocity from SPG
+            weightFactorClosedLoopPos:            0.7   #  30% position from WM,  70% computed new position from SPG
             latencyOffset:                        0.0
             convergenceWorkaround:                false
         pid:
-            XY_P:                                 3.0
+            XY_P:                                 1.5
             XY_I:                                 0.01
             XY_D:                                 0.0
-            RZ_P:                                 6.0
-            RZ_I:                                 5.5
+            RZ_P:                                 3.0
+            RZ_I:                                 2.5
             RZ_D:                                 0.3
             maxI_XY:                              0.5
             maxI_Rz:                              0.1
@@ -43,12 +43,12 @@ motionTypes:
     WITH_BALL:
         limits:
             maxVelX:                          0.5
-            maxVelYforward:                   1.2
+            maxVelYforward:                   1.4
             maxVelYbackward:                  0.5
-            maxVelRz:                         3.0
-            maxAccX:                          1.0
-            maxAccYforward:                   3.0
-            maxAccYbackward:                  1.5
+            maxVelRz:                         2.5
+            maxAccX:                          0.5
+            maxAccYforward:                   1.0
+            maxAccYbackward:                  0.5
             maxAccRz:                         3.0
     ACCURATE:
         limits:
@@ -62,14 +62,14 @@ motionTypes:
             maxAccRz:                         1.5
     INTERCEPT:
         limits:
-            maxVelX:                          0.7
-            maxVelYforward:                   1.8
-            maxVelYbackward:                  1.3
+            maxVelX:                          1.6
+            maxVelYforward:                   1.6
+            maxVelYbackward:                  1.6
             maxVelRz:                         2.0
             maxAccX:                          1.0
-            maxAccYforward:                   3.0
-            maxAccYbackward:                  2.0
-            maxAccRz:                         2.0
+            maxAccYforward:                   1.0
+            maxAccYbackward:                  1.0
+            maxAccRz:                         1.5
     SLOW:
         limits:
             maxVelX:                          0.25

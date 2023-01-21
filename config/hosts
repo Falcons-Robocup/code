@@ -2,6 +2,7 @@
 # The hosts are divided into sections using double comment hashes, which
 # is used in the setupLaptopInfo.py script to recognize laptop hostnames
 
+
 ## (wlan) wifi network
 172.16.74.51	r1
 172.16.74.52	r2
@@ -10,23 +11,10 @@
 172.16.74.55	r5
 172.16.74.56	r6
 172.16.74.57	r7
-172.16.74.68	r8 # TODO resolve conflict with nest
-# careful, .58-.60 are used already!
-
-# TODO: Jan: I think this can be removed? Erik/Andre, do you still see a use case? Robot ethernet connection nowadays works via r* host/IP addresses.
-# via ethernet (used during tournaments when wifi is saturated)
-10.0.0.51	e1
-10.0.0.52	e2
-10.0.0.53	e3
-10.0.0.54	e4
-10.0.0.55	e5
-10.0.0.56	e6
+172.16.74.58	r8
 
 172.16.74.1 	kroonsteentje
-172.16.74.58	nest
-172.16.74.59	git
-172.16.74.60	build
-# TODO: move to end of range (250+)? to free up robot domain
+172.16.74.2	nest
 
 # TODO: are these used? refer to wiki etc.
 172.16.1.1	switch

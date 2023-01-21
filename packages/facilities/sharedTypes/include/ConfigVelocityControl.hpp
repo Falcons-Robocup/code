@@ -1,4 +1,4 @@
-// Copyright 2020 Erik Kouters (Falcons)
+// Copyright 2020-2021 Erik Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 #ifndef CONFIGVELOCITYCONTROL_HPP_
 #define CONFIGVELOCITYCONTROL_HPP_
@@ -68,11 +68,12 @@ struct VelocitySetpointControllersConfig
 
 struct SpgConfig
 {
-    float weightFactorClosedLoop = 0.0;
+    float weightFactorClosedLoopVel = 0.0;
+    float weightFactorClosedLoopPos = 0.0;
     float latencyOffset = 0.0;
     bool convergenceWorkaround = false;
     bool synchronizeRotation = true;
-    SERIALIZE_DATA(weightFactorClosedLoop, latencyOffset, convergenceWorkaround, synchronizeRotation);
+    SERIALIZE_DATA(weightFactorClosedLoopVel, weightFactorClosedLoopPos, latencyOffset, convergenceWorkaround, synchronizeRotation);
 };
 
 struct MotionTypeConfig
@@ -86,10 +87,9 @@ struct MotionTypeConfig
 
 struct ConfigVelocityControl
 {
-    float                                           nominalFrequency = 20.0;
     std::map<std::string, MotionTypeConfig>         motionTypes; // maps to motionTypeEnum -> a new configuration per motionType
 
-    SERIALIZE_DATA(nominalFrequency, motionTypes);
+    SERIALIZE_DATA(motionTypes);
 };
 
 #endif

@@ -982,6 +982,9 @@ void multicastReceive::receive() {
 		else if (strcmp(ipAddress, "10.0.0.1") == 0) {
 			index = 2;
 		} // tweety acts as robot 2
+		else if (strcmp(ipAddress, "10.0.0.46") == 0) {
+			index = 4;
+		} // hansolo acts as robot 4
 		else if (strcmp(ipAddress, "10.0.0.61") == 0) {
 			index = 4;
 		} // pannekoek acts as robot 5
@@ -1010,7 +1013,7 @@ void multicastReceive::receive() {
 			index = 0;
 		} // robot 1
 		else {
-			printf(" %10s : ERROR     : do not know how to decode ip address %s\n", ipAddress, ipAddress);
+			printf("ERROR     : do not know how to decode ip address %s, add to list\n", ipAddress);
 			exit(EXIT_FAILURE);
 		}
 #endif

@@ -1,4 +1,4 @@
-// Copyright 2019 Jan Feitsma (Falcons)
+// Copyright 2019-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * tpOverrideState.hpp
@@ -12,20 +12,12 @@
 
 #include "RtDB2.h"
 
-#include "tpOverrideLevelEnum.hpp"
-#include "treeEnum.hpp"
-#include "tpActionEnum.hpp"
-
 struct tpOverrideState
 {
     bool                     active;
-    tpOverrideLevelEnum      level;
-    treeEnum                 treeValue;         // Used when level={GAMESTATE,ROLE,BEHAVIOR}
-    tpActionEnum             tpAction;          // Used when level=TP_ACTION
-    std::map< std::string, std::string> params; // Used when level={GAMESTATE,ROLE,BEHAVIOR,TP_ACTION}
-    action                   mpAction;          // Used when level=MP_ACTION
+    std::string              overrideStr;
     
-    SERIALIZE_DATA(active, level, treeValue, tpAction, params, mpAction);
+    SERIALIZE_DATA(active, overrideStr);
 };
 
 

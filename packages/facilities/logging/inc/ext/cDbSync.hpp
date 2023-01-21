@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cDbSync.hpp
@@ -18,7 +18,7 @@
 #define CDBSYNC_HPP_
 
 
-#include "RtDB2.h"
+#include "FalconsRTDB.hpp"
 
 
 class cDbSync
@@ -32,8 +32,8 @@ class cDbSync
     
   private:
     int _frequency;
-    RtDB2 *_src = NULL;
-    RtDB2 *_tgt = NULL;
+    FalconsRTDB *_src = NULL;
+    FalconsRTDB *_tgt = NULL;
     
 };
 

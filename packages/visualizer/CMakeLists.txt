@@ -3,17 +3,17 @@ cmake_minimum_required(VERSION 3.5.1)
 project(Visualizer)
 
 find_package(Boost COMPONENTS system thread REQUIRED QUIET)
+find_package(MixedTeamProtocol)
 find_package(Facilities)
-find_package(Teamplay)
+find_package(Teamplay2)
 find_package(PathPlanning)
 find_package(VelocityControl)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rdynamic")
 
-
-#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
+# support switching to debug via -DDEBUG_PACKAGES command line option
+apply_debug_if_in_debug_packages("${CMAKE_BUILD_TYPE}")
 
 # Graphics dependencies
 find_package(VTK REQUIRED)
@@ -23,6 +23,7 @@ include(${VTK_USE_FILE})
 
 # Instruct CMake to run moc automatically when needed.
 #set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -32,15 +33,14 @@ include_directories("include")
 # UserInterface files
 set(UI
     ui/MainWindow.ui
-    ui/FieldWidgetSettings.ui
 )
 
 set(MOC
     include/int/MainWindow.h
     include/int/GameSignalSubscriber.h
-    include/int/GameSignalAdapter.h
     include/int/PlaybackControl.h
-    include/int/RtdbGameSignalAdapter.h
+    include/int/adapters/GameSignalAdapter.h
+    include/int/adapters/RtdbGameSignalAdapter.h
     include/int/widgets/Field/FieldWidget3D.h
     include/int/widgets/Field/FieldVideoActor.h
     include/int/widgets/Field/EventHandlers/FieldMouseHoverEventHandler.h
@@ -55,27 +55,22 @@ set(MOC
     include/int/widgets/Field/Visualization/RobotVisualization.h
     include/int/widgets/Table/TableWidget.h
     include/int/widgets/Table/TableViewModel.h
-    include/int/widgets/GameTimeClock.h
+    include/int/widgets/GameTimeClock/GameTimeClock.h
     include/int/widgets/Playback/PlaybackWidget.h
-    include/int/widgets/EventLogger.h
-    include/int/widgets/MatchState.h
-    include/int/widgets/BatteryStatus.h
-)
-
-set(RCC
-    rc/visualizer.qrc
-    rc/robot.stl
+    include/int/widgets/EventLogger/EventLogger.h
+    include/int/widgets/MatchState/MatchState.h
+    include/int/widgets/RobotStatus/BatteryStatus.h
 )
 
 qt5_wrap_ui(UI_GENERATED ${UI})
 qt5_wrap_cpp(MOC_GENERATED ${MOC})
-qt5_add_resources(RC_GENERATED ${RCC})
 
 # Source files
 set(SRCS
-    src/RtdbGameSignalAdapter.cpp
-    src/RtdbRefboxConfigAdapter.cpp
+    src/MainWindow.cpp
+    src/PlaybackControl.cpp
     src/TeamRobotSelection.cpp
+    src/adapters/RtdbGameSignalAdapter.cpp
     src/widgets/Field/FieldWidget3D.cpp
     src/widgets/Field/FieldWidgetGameSignalSubscriber.cpp
     src/widgets/Field/CamFeedParams.cpp
@@ -97,19 +92,16 @@ set(SRCS
     src/widgets/Table/TableViewModel.cpp
     src/widgets/Table/TableWidget.cpp
     src/widgets/Table/TableViewModelGameSignalSubscriber.cpp
-    src/widgets/GameTimeClock.cpp
-    src/widgets/GameTimeClockGameSignalSubscriber.cpp
+    src/widgets/GameTimeClock/GameTimeClock.cpp
+    src/widgets/GameTimeClock/GameTimeClockGameSignalSubscriber.cpp
     src/widgets/Playback/PlaybackWidget.cpp
     src/widgets/Playback/PlaybackGameSignalSubscriber.cpp
-    src/PlaybackControl.cpp
-    src/widgets/SettingsDialog.cpp
-    src/widgets/EventLogger.cpp
-    src/widgets/EventLoggerGameSignalSubscriber.cpp
-    src/widgets/MatchState.cpp
-    src/widgets/MatchStateGameSignalSubscriber.cpp
-    src/widgets/BatteryStatus.cpp
-    src/widgets/BatteryStatusGameSignalSubscriber.cpp
-    src/MainWindow.cpp
+    src/widgets/EventLogger/EventLogger.cpp
+    src/widgets/EventLogger/EventLoggerGameSignalSubscriber.cpp
+    src/widgets/MatchState/MatchState.cpp
+    src/widgets/MatchState/MatchStateGameSignalSubscriber.cpp
+    src/widgets/RobotStatus/BatteryStatus.cpp
+    src/widgets/RobotStatus/BatteryStatusGameSignalSubscriber.cpp
 )
 
 # Binaries
@@ -118,7 +110,6 @@ add_library(
     ${SRCS}
     ${MOC_GENERATED}
     ${UI_GENERATED}
-    ${RCC_GENERATED}
 )
 
 target_link_libraries(
@@ -135,13 +126,15 @@ target_link_libraries(
     FalconsCommon
 )
 
+set_source_files_properties(qrc_breeze.cpp PROPERTIES GENERATED ON)
+
 add_executable(
     visualizer
     src/main.cpp
     ${SRCS}
     ${MOC_GENERATED}
     ${UI_GENERATED}
-    ${RCC_GENERATED}
+    rc/breeze.qrc
 )
 
 target_link_libraries(
@@ -154,7 +147,7 @@ target_link_libraries(
     opencv_imgproc
     opencv_videoio
     Tracing
-    rtdb2
+    FalconsRTDB
     EnvironmentField
     falconsGeometry
     logging

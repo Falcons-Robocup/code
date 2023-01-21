@@ -1,4 +1,4 @@
-// Copyright 2016-2020 Tim Kouters (Falcons)
+// Copyright 2016-2022 Tim Kouters (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * ballDiscriminator.hpp
@@ -26,6 +26,7 @@ class ballDiscriminator : public IballDiscriminator
     	virtual ~ballDiscriminator();
 
     	virtual void addMeasurement(const ballMeasurement& measurement);
+        virtual void addPossessionMeasurement(const Vector3D& ball_pos, uint8_t robotID, rtime timestamp);
     	virtual void performCalculation(rtime timeNow, const Vector2D& pos);
 
     	virtual std::vector<ballClass_t> getBalls() const;

@@ -1,11 +1,13 @@
-// Copyright 2018-2020 Andre Pool (Falcons)
+// Copyright 2018-2021 Andre Pool (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2014-2019 Andre Pool
 // SPDX-License-Identifier: Apache-2.0
 
 #include "configurator.hpp"
 
+#ifndef NOROS
 #include "falconsCommonDirs.hpp"
+#endif
 
 #include <unistd.h>
 #include <pwd.h>
@@ -24,7 +26,14 @@ configurator::configurator(int robot) {
     magentaMutex.lock();
     cyanMutex.lock();
 
+#ifdef NOROS
+	struct passwd *pw = getpwuid(getuid());
+	std::string configFile("");
+	configFile.append(pw->pw_dir);
+	configFile.append("/falcons/code/config/multiCam.yaml");
+#else
     std::string configFile = pathToConfig() + "/multiCam.yaml";
+#endif
     FileStorage fs(configFile, FileStorage::READ);
 
     FileNode global = fs["global"];

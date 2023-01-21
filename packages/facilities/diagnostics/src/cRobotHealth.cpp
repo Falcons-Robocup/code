@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Jan Feitsma (Falcons)
+// Copyright 2018-2021 Jan Feitsma (Falcons)
 // SPDX-License-Identifier: Apache-2.0
 /*
  * cRobotHealth.cpp
@@ -27,7 +27,7 @@ boost::mutex g_mutex_diag;
 
 cRobotHealth::cRobotHealth()
 {
-    _rtdb = RtDB2Store::getInstance().getRtDB2(getRobotNumber());
+    _rtdb = FalconsRTDBStore::getInstance().getFalconsRTDB(getRobotNumber());
     boost::thread_group threads;
     threads.create_thread(boost::bind(&cRobotHealth::runSlow, this));
     // let the threads run forever
